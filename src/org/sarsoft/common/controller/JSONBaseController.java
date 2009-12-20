@@ -105,7 +105,6 @@ public abstract class JSONBaseController {
 		System.out.println("XML is " + xml);
 		model.addAttribute("xml", new StringReader(xml));
 		model.addAttribute("template", template);
-		model.addAttribute("colors", Constants.colorsById);
 	}
 
 	protected String gpx(Model model, Object obj, String template) {
