@@ -55,4 +55,8 @@ public class Constants {
 		return strmap;
 	}
 
+	public static String getColorById(int id) {
+		return colorsById[id % colorsById.length];
+	}
+
 }

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:json="json" xmlns="http://www.opengis.net/kml/2.2" exclude-result-prefixes="json">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:json="json" xmlns="http://www.opengis.net/kml/2.2" xmlns:java="java" xmlns:org="org" exclude-result-prefixes="json java org">
 <xsl:param name="template"/>
-<xsl:param name="colors"/>
 <xsl:output method="xml"/>
 <xsl:template match="/json:o">
 <kml>
  <Document>
-   <name>Sarosft Export</name>
+   <name>Sarsoft Export</name>
    <description>Export from Sarsoft</description>
 	<xsl:choose>
 		<xsl:when test="$template='SearchAssignment'">
@@ -19,7 +18,7 @@
 <xsl:template match="/json:a">
 <kml xmlns="http://www.opengis.net/kml/2.2">
  <Document>
-   <name>Sarosft Export</name>
+   <name>Sarsoft Export</name>
    <description>Export from Sarsoft</description>
 	<xsl:choose>
 		<xsl:when test="$template='SearchAssignments'">
@@ -36,8 +35,7 @@
 </xsl:template>
 <xsl:template name="SearchAssignmentToKml">
 	<xsl:variable name="idx" select="number(json:id)"/>
-	<xsl:variable name="idxmod" select="$idx mod count($colors)"/>
-	<xsl:variable name="rgbcolor" select="$colors[$idxmod + 1]"/>
+	<xsl:variable name="rgbcolor" select="org:sarsoft.common.util.Constants.getColorById($idx)"/>
 	<xsl:variable name="color" select="concat(substring($rgbcolor,6,2),substring($rgbcolor,4,2),substring($rgbcolor,2,2))"/>
 	<xsl:variable name="name" select="concat('Assignment ', json:id, ': ', json:name)"/>
 	<xsl:for-each select="json:ways/json:e">
