@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation/DTD Tiles Configuration 2.1//EN" "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition name="App.Base" template="/global/AppTemplate.jsp">
+		<put-attribute name="breadcrumb" value="/plans/breadcrumb.jsp"/>
+		<put-attribute name="app" value=""/>
+	</definition>
+	<definition name="Assignment.Details" extends="App.Base">
+		<put-attribute name="content" value="/plans/assignment.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	<definition name="Assignment.Print" template="/plans/assignment-print.jsp"/>
+
+	<definition name="OperationalPeriod.List" extends="App.Base">
+		<put-attribute name="content" value="/plans/oplist.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+
+	<definition name="OperationalPeriod.Detail" extends="App.Base">
+		<put-attribute name="content" value="/plans/opdetail.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+
+	<definition name="Pages.Home" extends="App.Base">
+		<put-attribute name="content" value="/global/home.jsp"/>
+	</definition>
+	<definition name="Pages.Welcome" extends="App.Base">
+		<put-attribute name="content" value="/global/welcome.jsp"/>
+	</definition>
+	<definition name="Pages.Admin" extends="App.Base">
+		<put-attribute name="content" value="/admin/admin.jsp"/>
+		<put-attribute name="app" value="admin"/>
+	</definition>
+</tiles-definitions>
