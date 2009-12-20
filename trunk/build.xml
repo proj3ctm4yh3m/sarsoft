@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+
+<project name="sarsoft" default="build" basedir=".">
+
+	<target name="classpath">
+		<path id="local.class.path">
+			<fileset dir="lib" includes="*.jar"/>
+			<fileset dir="ext-lib" includes="*.jar"/>
+		</path>
+		<path id="local.source.path">
+				<pathelement location="src"/>
+		</path>
+	</target>
+
+	<target name="clean">
+		<delete dir="build"/>
+	</target>
+
+	<target name="prepare" depends="clean">
+		<mkdir dir="build"/>
+		<mkdir dir="build/classes"/>
+		<mkdir dir="build/lib"/>
+		<mkdir dir="build/jar"/>
+	</target>
+
+	<target name="classes" depends="prepare,classpath">
+			<javac debug="on" source="1.5" deprecation="on" destdir="build/classes">
+				<classpath><path refid="local.class.path"/></classpath>
+				<src path="src"/>
+			</javac>
+	</target>
+
+	<target name="jar" depends="classes">
+		<delete file="build/lib/sarsoft.jar"/>
+		<jar jarfile="build/lib/sarsoft.jar" basedir="build/classes"/>
+	</target>
+
+	<target name="build" depends="jar">
+		<delete file="build/jar/embedded.war"/>
+		<war destfile="build/jar/embedded.war" webxml="config/web.xml">
+			<classes dir="build/classes"/>
+			<classes dir="config" includes="commons-logging.properties simplelog.properties">
+			</classes>
+			<lib dir="lib"/>
+			<fileset dir="jsp"/>
+			<zipfileset dir="config" prefix="WEB-INF">
+				<exclude name="web.xml"/>
+			</zipfileset>
+			<zipfileset dir="static" prefix="static">
+			</zipfileset>
+		</war>
+		<delete file="runtime/sar.jar"/>
+		<copy file="winstone-jsp.jar" tofile="runtime/sar.jar"/>
+		<jar destfile="runtime/sar.jar" update="true" basedir="build/jar" includes="*.war"/>
+	</target>
+
+</project>
