@@ -1,0 +1,32 @@
+#summary Introduction to sarsoft.
+
+= Origins =
+
+Sarsoft grew out of frustration with the existing tools available for search management.  If you've ever tried matching up a park trails map with a USGS topo in unfamiliar terrain at 2AM, struggled to read someone's chicken scratch on the 3rd carbon copy of a form, walked in circles trying to figure out where your assignment boundary is, or spent the first hour of a search in "hurry up and wait" mode while the overhead team writes and staffs assignments, you'll understand some of the shortcomings that sarsoft was designed to address.
+
+The sarsoft "mission statement" is to *provide increased efficiency and situational awareness on search operations*.
+
+= Philosophy =
+
+The main design goals of sarsoft are as follows:
+ * Deploy and run locally, with minimal configuration.
+ * Work within (rather than replace) paper-based systems.
+ * Intuitive to new users with search overhead experience.
+
+= Deployment =
+
+You can run the sarsoft jar file as a local application without any further steps.  On an actual search, you'll probably want to set your network up so that multiple machines can access the application at the same time - an overhead projector for the room, plan writers, a station for uploading and downloading GPS data, etc.  In order to do this, you'll need to set your local network up so that the machine running sarsoft is identified by a unique machine name, and obtain an google maps API key for that name.  You can update the google maps key through the sarsoft admin console.
+
+If you'll be operating with a slow network (like a satellite link), you should set up a caching proxy server as well.  In keeping with the first design goal of minimal configuration, sarsoft will eventually be updated to handle low-connectivity situations.
+
+Unless you're running on server-grade hardware, you should back your work up frequently.  You can do this in 3 ways:
+ * Copy the hsqldb data in the searches/search_name folder.
+ * Export operational periods to GPX or KML files and save them on a local machine.
+ * Backup to hard copy!  Print your assignments out as soon as they're ready.
+
+= Roadmap =
+
+The first stage of development is focused on building a robust plans writing tool.  The next two stages will be:
+
+ * Offline operation.  Created a degraded-performance mode for operating without an internet connection using cached files, OpenStreetMap viewer and data, and custom map sources created with maptiler.
+ * Operations module.  Integrate with APRS and Spot beacons to provide constant position updates, track team welfare checks, etc.
