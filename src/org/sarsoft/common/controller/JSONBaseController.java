@@ -1,5 +1,6 @@
 package org.sarsoft.common.controller;
 
+import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
@@ -12,29 +13,50 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.sarsoft.admin.model.Config;
+import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.dao.GenericHibernateDAO;
-import org.sarsoft.common.model.Config;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
-import org.sarsoft.common.util.Constants;
+import org.sarsoft.common.util.RuntimeProperties;
+
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.ui.Model;
 
 public abstract class JSONBaseController {
 
 	@Autowired
+	@Qualifier("genericDAO")
 	protected GenericHibernateDAO dao;
 
-	public void setGenericDao(GenericHibernateDAO dao) {
+	@Autowired
+	@Qualifier("genericConfigDAO")
+	protected GenericHibernateDAO configDao;
+
+	@Autowired
+	protected RuntimeProperties runtimeProperties;
+
+	public void setDao(GenericHibernateDAO dao) {
 		this.dao = dao;
 	}
 
+	public void setConfigDao(GenericHibernateDAO dao) {
+		this.configDao = dao;
+	}
+
+	public void setRuntimeProperties(RuntimeProperties runtimeProperties) {
+		this.runtimeProperties = runtimeProperties;
+	}
+
 	protected String getConfigValue(String name) {
-		return ((Config) dao.getByAttr(Config.class, "name", name)).getValue();
+		Config config = (Config) configDao.getByAttr(Config.class, "name", name);
+		if(config != null) return config.getValue();
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -48,6 +70,18 @@ public abstract class JSONBaseController {
 			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(obj));
 		}
 		return "/json";
+	}
+
+	protected String app(Model model, String view) {
+		model.addAttribute("mapsources", dao.loadAll(MapSource.class));
+		if(!runtimeProperties.isInitialized()) {
+			File dir = new File("searches");
+			model.addAttribute("searches", dir.list());
+			return "Pages.Welcome";
+		}
+		model.addAttribute("searchName", runtimeProperties.getSearchName());
+		model.addAttribute("mapkey", getConfigValue("maps.key"));
+		return view;
 	}
 
 	protected Object parse(JSONForm json) {

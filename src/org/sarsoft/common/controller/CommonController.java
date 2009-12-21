@@ -2,18 +2,14 @@ package org.sarsoft.common.controller;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.sarsoft.common.model.Config;
+import org.sarsoft.admin.model.Config;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.model.SearchProperty;
 import org.sarsoft.common.util.Constants;
-import org.sarsoft.plans.model.Probability;
-import org.sarsoft.plans.model.SearchAssignment.ResourceType;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,18 +48,18 @@ public class CommonController extends JSONBaseController {
 
 	@RequestMapping(value="/rest/config", method = RequestMethod.GET)
 	public String getAllConfigs(Model model) {
-		return json(model, dao.loadAll(Config.class));
+		return json(model, configDao.loadAll(Config.class));
 	}
 
 	@RequestMapping(value="/rest/config/{name}", method = RequestMethod.GET)
 	public String getConfig(Model model, @PathVariable("name") String name) {
-		return json(model, dao.getByAttr(Config.class, "name", name));
+		return json(model, configDao.getByAttr(Config.class, "name", name));
 	}
 
 	@RequestMapping(value="/rest/config/{name}", method = RequestMethod.POST)
 	public String setConfig(Model model, @PathVariable("name") String name, JSONForm json) {
 		Config config = Config.createFromJSON(parseObject(json));
-		Config realConfig = (Config) dao.getByAttr(Config.class, "name", name);
+		Config realConfig = (Config) configDao.getByAttr(Config.class, "name", name);
 		if(realConfig == null) {
 			config.setName(name);
 			realConfig = config;
@@ -71,8 +67,33 @@ public class CommonController extends JSONBaseController {
 			realConfig.setValue(config.getValue());
 		}
 		System.out.println("Saving config " + realConfig.getName() + " " + realConfig.getValue());
-		dao.save(realConfig);
+		configDao.save(realConfig);
 		return json(model, config);
+	}
+
+	@RequestMapping(value="/rest/searchProperty", method = RequestMethod.GET)
+	public String getAllSearchProperties(Model model) {
+		return json(model, dao.loadAll(SearchProperty.class));
+	}
+
+	@RequestMapping(value="/rest/searchProperty/{name}", method = RequestMethod.GET)
+	public String getSearchProperty(Model model, @PathVariable("name") String name) {
+		return json(model, dao.getByAttr(SearchProperty.class, "name", name));
+	}
+
+	@RequestMapping(value="/rest/searchProperty/{name}", method = RequestMethod.POST)
+	public String setSearchProperty(Model model, @PathVariable("name") String name, JSONForm json) {
+		SearchProperty property = SearchProperty.createFromJSON(parseObject(json));
+		SearchProperty realProperty = (SearchProperty) dao.getByAttr(SearchProperty.class, "name", name);
+		if(realProperty == null) {
+			property.setName(name);
+			realProperty = property;
+		} else {
+			realProperty.setValue(property.getValue());
+		}
+		System.out.println("Saving search property " + realProperty.getName() + " " + realProperty.getValue());
+		dao.save(realProperty);
+		return json(model, property);
 	}
 
 }

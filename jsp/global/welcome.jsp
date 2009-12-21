@@ -9,4 +9,4 @@
 </c:forEach>
 </ul>
 <br/>
-Create a new search named: <input type="text" size="15" name="newsearch" id="newsearch"/>&nbsp;<button onclick="document.location='/rest/dataschema/'+document.getElementById('newsearch').value">Create</button>
+Create a new search named: <input type="text" size="15" name="newsearch" id="newsearch"/>&nbsp;<button onclick="document.location='/app/dataschema/'+document.getElementById('newsearch').value">Create</button>

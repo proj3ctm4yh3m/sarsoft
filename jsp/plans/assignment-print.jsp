@@ -90,7 +90,7 @@ TABLE.comms TD,TH {
 </div>
 
 <div style="width: 100%; height: 16pt; border-bottom: 1px solid black">
-	<div class="lbox" style="width: 100%"><div class="label" style="float: left">4. RESOURCE TYPE</div>&nbsp;&nbsp;${assignment.resourceType}</div>
+	<div class="lbox" style="width: 100%; text-align: left"><div class="label" style="float: left">4. RESOURCE TYPE</div>&nbsp;&nbsp;${assignment.resourceType}</div>
 </div>
 
 <div style="width: 100%; height: 135pt; border-bottom: 1px solid black">

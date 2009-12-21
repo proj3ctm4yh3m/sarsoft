@@ -361,6 +361,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.emap = emap;
 	this.period = operationalperiod;
 	this.configDAO = new org.sarsoft.ConfigDAO(function() { that._handleServerError(); });
+	this.propertyDAO = new org.sarsoft.SearchPropertyDAO(function() { that._handleServerError(); });
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
 	this.periodDAO = new org.sarsoft.OperationalPeriodDAO(function() { that._handleServerError(); });
 	this.assignments = new Object();
@@ -375,7 +376,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.contextMenu.setItems([
 		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.show({operationalPeriodId : that.period.id}); }},
 		{text : "Map Setup", applicable : function(obj) { return obj == null }, handler : function(data) { that.setupDlg.show(that._mapsetup); }},
-		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); that.configDAO.save("map_settings", { name: "map_settings", value: YAHOO.lang.JSON.stringify(that.emap.getConfig())})}},
+		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); that.propertyDAO.save("map_settings", { name: "map_settings", value: YAHOO.lang.JSON.stringify(that.emap.getConfig())})}},
 		{text : "Hide Previous Operational Periods", applicable : function(obj) { return obj == null && that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = false; that._handleSetupChange(); }},
 		{text : "Show Previous Operational Periods", applicable : function(obj) { return obj == null && !that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = true; that._handleSetupChange(); }},
 		{text : "Return to Operational Period " + operationalperiod.id, applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/operationalperiod/" + operationalperiod.id; }},
@@ -391,7 +392,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		that.contextMenu.show(point, that._getAssignmentFromWay(way));
 	});
 
-	this.configDAO.loadAll(function(configs) {
+	this.propertyDAO.loadAll(function(configs) {
 		for(var i = 0; i < configs.length; i++) {
 			if(configs[i].name == "map_settings") {
 				var mapConfig = YAHOO.lang.JSON.parse(configs[i].value);
