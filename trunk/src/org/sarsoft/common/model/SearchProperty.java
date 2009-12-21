@@ -1,27 +1,29 @@
 package org.sarsoft.common.model;
 
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.common.model.JSONAnnotatedEntity;
+import org.sarsoft.common.model.JSONSerializable;
 import net.sf.json.JSONObject;
 
 @JSONAnnotatedEntity
 @Entity
-public class Config {
+public class SearchProperty {
 
 	private String name;
 	private String value;
 
-	public static Config createFromJSON(JSONObject json) {
-		return (Config) JSONObject.toBean(json, Config.class);
+	public static SearchProperty createFromJSON(JSONObject json) {
+		return (SearchProperty) JSONObject.toBean(json, SearchProperty.class);
 	}
 
-	public Config() {
+	public SearchProperty() {
 		super();
 	}
 
-	public Config(String name, String value) {
+	public SearchProperty(String name, String value) {
 		super();
 		setName(name);
 		setValue(value);

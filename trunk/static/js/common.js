@@ -71,6 +71,14 @@ org.sarsoft.ConfigDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.ConfigDAO.prototype = new org.sarsoft.BaseDAO();
 
+org.sarsoft.SearchPropertyDAO = function(errorHandler, baseURL) {
+	if(baseURL == undefined) baseURL = "/rest/searchProperty";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+}
+
+org.sarsoft.SearchPropertyDAO.prototype = new org.sarsoft.BaseDAO();
+
 org.sarsoft.Loader = new Object();
 org.sarsoft.Loader._tasks = new Array();
 org.sarsoft.Loader.queue = function(task) {

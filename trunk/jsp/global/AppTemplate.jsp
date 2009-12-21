@@ -22,7 +22,7 @@
 
 <tiles:importAttribute name="app"/>
 <div class="header">
-<span style="font-weight: bold"><a href="/" class="sarsoft">SARSOFT</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<div style="font-weight: bold; float: left"><a href="/" class="sarsoft">SARSOFT</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <c:choose>
  <c:when test="${app eq 'plans'}">
   <a href="/app/operationalperiod">plans</a>
@@ -39,7 +39,8 @@
   &nbsp;:&nbsp;${period.description}
  </c:when>
 </c:choose>
-</span>
+</div>
+<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>${searchName}</div>
 </div>
 <div class="headerbottom"></div>
 </div>

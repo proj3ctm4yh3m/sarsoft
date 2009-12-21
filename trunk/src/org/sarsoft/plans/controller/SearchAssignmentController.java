@@ -7,13 +7,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.FileUploadForm;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.MapConfig;
-import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.view.Breadcrumb;
@@ -45,17 +45,11 @@ public class SearchAssignmentController extends JSONBaseController {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		model.addAttribute("assignment", assignment);
-		model.addAttribute("mapsources", dao.loadAll(MapSource.class));
 		switch(format) {
 		case PRINT :
-			return "Assignment.Print";
+			return app(model, "Assignment.Print");
 		default :
-			OperationalPeriod op = assignment.getOperationalPeriod();
-			if(op != null) {
-				Breadcrumb[] bc = { new Breadcrumb("/app/operationalperiod/" + op.getId(), op.getDescription()), new Breadcrumb("/app/searchassignment/" + assignment.getId(), assignment.getName())};
-				model.addAttribute("breadcrumb", bc);
-			}
-			return "Assignment.Details";
+			return app(model, "Assignment.Details");
 		}
 	}
 
@@ -71,8 +65,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		assignment.setStatus(SearchAssignment.Status.DRAFT);
 		dao.save(assignment);
 		model.addAttribute("assignment", assignment);
-		model.addAttribute("mapsources", dao.loadAll(MapSource.class));
-		return "Assignment.Details";
+		return app(model, "Assignment.Details");
 	}
 
 
