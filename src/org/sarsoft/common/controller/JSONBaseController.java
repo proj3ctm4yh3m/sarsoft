@@ -66,6 +66,8 @@ public abstract class JSONBaseController {
 			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray((List) obj));
 		} else if(obj instanceof Set) {
 			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray(obj));
+		} else if(obj.getClass().isArray()) {
+			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray(obj));
 		} else {
 			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(obj));
 		}

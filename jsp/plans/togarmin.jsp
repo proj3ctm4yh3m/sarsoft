@@ -25,66 +25,111 @@
 
 <script>
 
-function console(str) {
-  document.getElementById('console').value += str + "\n";
+
+function WriteToGarmin(gpxstr, name) {
+	control = new Garmin.DeviceControl();
+	control.register(new GarminListener(gpxstr, name));
+	console("attempting to unlock with domain, key: TBD");
+	var unlocked = control.unlock( ["http://mydomain.com","pasteYourKeyInHere"] );
+	if(unlocked) {
+		control.findDevices();
+	} else {
+		fail('find', 'Error unlocking Garmin control plugin.  Please verify that the Garmin plugin is installed and check your device key in the admin console');
+	}
 }
 
-    var control;
-    var found = false;
-    //create a call-back listener class
-    var listener = Class.create();
-    var fn = function() {};
-    listener.prototype = {
-        initialize: function() { },
-        onFinishFindDevices: function(json) {
-            var devices = json.controller.getDevices();
-            var str = "Devices Found: "+devices.length+"\n";
-            if (json.controller.numDevices > 0) {
-                for( var i=0; i < devices.length; i++ ) {
-                    str += " -"+devices[i].getDisplayName()+"\n";
-                }
-            }
-            console(str);
-            fn();
-            found = true;
-        },
-        onFinishWriteToDevice : function(json) { console('done writing to device'); },
-        onCancelWriteToDevice : function(json) { console('write cancelled'); },
-        onException : function(json) { console(json.msg);}
-    }
+function GarminListener(gpxstr, name) {
+	console('GPX data is:\n' + gpxstr);
+	this.gpxstr = gpxstr;
+	this.name = name;
+}
 
-    function load() {
-        try {
-            document.getElementById('console').value='';
-            control = new Garmin.DeviceControl();
-            control.register(new listener());
-            var unlocked = control.unlock( ["http://mydomain.com","pasteYourKeyInHere"] );
-            console("Found Plugin, unlocked="+unlocked);
-            control.findDevices();
-        } catch(e) { alert(e); }
+GarminListener.prototype.onFinishFindDevices = function(obj) {
+	var devices = obj.controller.getDevices();
+	console("GPS Devices Found:");
+    for( var i=0; i < devices.length; i++ ) {
+        console((0*i+1) + ". "+devices[i].getDisplayName());
     }
+	if(devices.length == 1) {
+		pass('find');
+		control.writeDataToDevice(Garmin.DeviceControl.FILE_TYPES.gpx, this.gpxstr, this.name);
+	} else if(devices.length > 1) {
+		fail('find', 'Multiple GPS devices found.  Please attach 1 GPS device at a time');
+	} else {
+		fail('find', 'No GPS device found');
+	}
+}
+
+GarminListener.prototype.onFinishWriteToDevice = function(obj) {
+	pass('copy');
+	pass('done');
+}
+
+GarminListener.prototype.onCancelWriteToDevice = function(obj) {
+	fai('copy', 'Operation Canceled');
+}
+
+GarminListener.prototype.onException = function(obj) {
+	fail('copy', 'GPS Exception: ' + obj.msg);
+}
 
 org.sarsoft.Loader.queue(function() {
   YAHOO.util.Connect.asyncRequest('GET', '${file}', { success : function(response) {
-  			fn = function() {
-  				console('writing to device');
-  				try {
-  					console(response.responseText);
-	  				control.writeDataToDevice(Garmin.DeviceControl.FILE_TYPES.gpx, response.responseText, '${name}');
-	  			} catch (e) { alert(e); }
-  			}
-  			if(found) fn();
+	  		WriteToGarmin(response.responseText, '${name}');
 		}, failure : function(response) {
-			alert('error loading gpx');
+			fail('find', 'Error loading GPX file from server');
 		}});
 });
 
+function pass(id) {
+	document.getElementById(id).style.color="green";
+}
+function fail(id, message) {
+	document.getElementById(id).style.color="red";
+	document.getElementById('err').innerHTML=message;
+	errorDlg.show();
+}
+function console(str) {
+  document.getElementById('console').innerHTML += str + "\n";
+}
+function showDetails() {
+	document.getElementById('details').style.visibility="visible";
+}
 </script>
 
 </head>
-<body class="yui-skin-sam" onload="load()">
+<body class="yui-skin-sam">
 
-<textarea id="console" rows="20" cols="60"></textarea>
+<div style="margin-left: 4em; margin-top: 4em">
+<h2 id="find">Searching For Devices</h2>
+<h2 id="copy">Downloading Route</h2>
+<h2 id="done">All Done</h2>
+</div>
+<div style="margin-top: 2em; margin-left: 4em">
+<a href="javascript:window.back()">Return to Assigment</a><br/><br/>
+<a href="javascript:showDetails()">Show Details &gt;&gt;</a>
+</div>
 
+<div id="details" style="visibility: hidden; margin-left: 4em">
+<b>Detailed Log:</b><br/>
+
+<textarea id="console" rows="30" cols="80"></textarea>
+
+</div>
+
+<div style="position: absolute; left: 100px; top: 100px;">
+<div id="errorDlg" style="width: 300px;">
+	<div class="hd">Error Downloading to GPS Device</div>
+	<div class="bd">
+		<span id="err" style="font-weight: bold; font-size: 150%"></span>
+	</div>
+</div>
+</div>
+<script>
+var errorDlg = new YAHOO.widget.Dialog("errorDlg");
+errorDlg.cfg.queueProperty("buttons", [{ text : "Try Again", handler : function() {window.location.reload(true);}}, { text : "OK", handler : function() {errorDlg.hide();}}]);
+errorDlg.render();
+errorDlg.hide();
+</script>
 </body>
 </html>
