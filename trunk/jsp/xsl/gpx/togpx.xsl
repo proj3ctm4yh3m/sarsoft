@@ -27,14 +27,17 @@
 </xsl:template>
 <xsl:template name="SearchAssignmentToGpx">
 	<xsl:for-each select="json:ways/json:e">
-		<xsl:call-template name="WayToGpx"/>
+		<xsl:call-template name="WayToGpx">
+			<xsl:with-param name="name" select="concat(json:id, ': ', json:name)"/>
+		</xsl:call-template>
 	</xsl:for-each>
 </xsl:template>
 <xsl:template name="WayToGpx">
+	<xsl:param name="name"/>
 	<xsl:choose>
 	<xsl:when test="json:type='ROUTE'">
 	<rte>
-		<name><xsl:value-of select="json:id"/>: <xsl:value-of select="json:name"/></name>
+		<name><xsl:value-of select="$name"/></name>
 		<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
 			<xsl:call-template name="WaypointToGpx"/>
 		</xsl:for-each>
