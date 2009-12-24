@@ -177,7 +177,8 @@ public class Way implements IPreSave {
 	}
 
 	@Transient
-	public Waypoint[] getBoundingWpt() {
+	@JSONSerializable
+	public Waypoint[] getBoundingBox() {
 		ListIterator<Waypoint> it = waypoints.listIterator();
 		double minLat = waypoints.get(0).getLat();
 		double minLng = waypoints.get(0).getLng();

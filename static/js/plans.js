@@ -19,6 +19,10 @@ org.sarsoft.SearchAssignmentDAO.prototype.createWay = function(handler, assignme
 	this._doPost("/" + assignment.id + "/way", handler, route);
 }
 
+org.sarsoft.SearchAssignmentDAO.prototype.deleteWay = function(assignment, idx, way) {
+	this._doPost("/" + assignment.id + "/way/" + idx + "?action=delete", function() {}, way);
+}
+
 org.sarsoft.SearchAssignmentDAO.prototype.saveWaypoints = function(assignment, idx, waypoints) {
 	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", function() {}, waypoints);
 }
@@ -91,6 +95,16 @@ org.sarsoft.view.SearchAssignmentTable = function() {
 }
 org.sarsoft.view.SearchAssignmentTable.prototype = new org.sarsoft.view.EntityTable();
 
+org.sarsoft.view.WayTable = function(handler, onDelete) {
+	var coldefs = [
+		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
+		{ key : "id", label : "ID"},
+		{ key : "updated", label : "Uploaded", formatter : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}
+	];
+	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Tracks" }, handler);
+}
+org.sarsoft.view.WayTable.prototype = new org.sarsoft.view.EntityTable();
+
 org.sarsoft.view.SearchAssignmentForm = function() {
 	var fields = [
 		{ name : "name", type : "string" },
@@ -122,7 +136,7 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	dlg.appendChild(hd);
 	var bd = document.createElement("div");
 	bd.className = "bd";
-	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/rest/assignment/" + id + "/way'><input type='file' name='file'/><input type'hidden' name='format' value='gpx'/></form>";
+	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/rest/assignment/" + id + "/way'><input type='file' name='file'/><input type='hidden' name='format' value='gpx'/></form>";
 	dlg.appendChild(bd);
 	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
 	var buttons = [ { text : "Import", handler: function() {
@@ -188,22 +202,19 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 
 }
 
-org.sarsoft.controller.AssignmentViewMapController = function(div, id) {
+org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, ways, defaultConfig) {
 	var that = this;
 	this.div = div;
-	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
-	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
-}
-
-org.sarsoft.controller.AssignmentViewMapController.prototype._loadAssignmentCallback = function(assignment) {
-	var that = this;
 	this.assignment = assignment;
+	this.ways = ways;
 
 	var config = new Object();
+	if(defaultConfig == null) defaultConfig = new Object();
 	config.clickable = false;
 	config.fill = false;
-	config.color = "#FF0000";
-	config.opacity = 100;
+	config.color = (defaultConfig.color == null) ? "#888888" : defaultConfig.color;
+	config.opacity = (defaultConfig.opacity == null) ? 100 : defaultConfig.opacity;
+	this.baseConfig = config;
 
 	var mapConfig = assignment.mapConfigs[0];
 
@@ -215,17 +226,42 @@ org.sarsoft.controller.AssignmentViewMapController.prototype._loadAssignmentCall
 	this.setMapConfig(mapConfig);
 	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 
-	this.assignmentDAO.getWays(function(ways) {
-		for(var i = 0; i < ways.length; i++) {
-			var way = ways[i];
-			way.waypoints = way.zoomAdjustedWaypoints;
-			that.fmap.addWay(way, config);
-		}
-	}, assignment, 10);
+	for(var i = 0; i < this.ways.length; i++) {
+		var way = this.ways[i];
+		way.waypoints = way.zoomAdjustedWaypoints;
+		that.fmap.addWay(way, config);
+	}
 }
 
 org.sarsoft.controller.AssignmentViewMapController.prototype.setMapConfig = function(mapConfig) {
 	if(mapConfig != null) this.fmap.setMapLayers(mapConfig.base, mapConfig.overlay, mapConfig.opacity/100);
+}
+
+org.sarsoft.controller.AssignmentViewMapController.prototype.addWay = function(way, config) {
+	way.waypoints = way.zoomAdjustedWaypoints;
+	this.fmap.addWay(way, config);
+}
+
+org.sarsoft.controller.AssignmentViewMapController.prototype.highlight = function(way) {
+	if(this.highlighted != null) {
+		this.fmap.removeWay(this.highlighted);
+		this.addWay(this.highlighted, this.baseConfig);
+		this.highlighted = null;
+	}
+
+	this.fmap.removeWay(way);
+	var config = new Object();
+	config.clickable = false;
+	config.fill = false;
+	config.color = "#FF0000";
+	config.opacity = 100;
+	this.addWay(way, config);
+
+	var bb = way.boundingBox;
+	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
+	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+
+	this.highlighted = way;
 }
 
 org.sarsoft.view.OperationalPeriodTFXDlg2 = function(id) {

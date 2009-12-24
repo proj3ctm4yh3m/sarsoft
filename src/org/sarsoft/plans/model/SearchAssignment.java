@@ -224,9 +224,9 @@ public class SearchAssignment implements IPreSave {
 	@Transient
 	@JSONSerializable
 	public Waypoint[] getBoundingBox() {
-		Waypoint[] box = ways.get(0).getBoundingWpt();
+		Waypoint[] box = ways.get(0).getBoundingBox();
 		for(Way way : ways) {
-			Waypoint[] bound = way.getBoundingWpt();
+			Waypoint[] bound = way.getBoundingBox();
 			if(bound[0].getLat() < box[0].getLat()) box[0] = new Waypoint(bound[0].getLat(), box[0].getLng());
 			if(bound[0].getLng() < box[0].getLng()) box[0] = new Waypoint(box[0].getLat(), bound[0].getLng());
 			if(bound[1].getLat() > box[1].getLat()) box[1] = new Waypoint(bound[1].getLat(), box[1].getLng());
