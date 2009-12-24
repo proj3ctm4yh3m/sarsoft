@@ -13,7 +13,7 @@ function export() {
 }
 
 function import() {
-  var select = document.getElementById('export');
+  var select = document.getElementById('import');
   var format = select.options[select.selectedIndex].value;
   if(format == "gpx") gpxdlg.dialog.show();
   if(format == "garmin") window.location="/app/fromgarmin?id=${assignment.id}";
@@ -52,6 +52,7 @@ This ${assignment.status} assignment covers ${assignment.area} km&sup2; (${assig
 	<ul class="yui-nav">
 		<li class="selected"><a href="#details"><em>Assignment Details</em></a></li>
 		<li><a href="#map"><em>Map</em></a></li>
+		<li><a href="#tracks"><em>Tracks</em></a></li>
 	</ul>
 
 	<div class="yui-content">
@@ -111,23 +112,23 @@ you can see how it relates to neighboring assignments.</i></div>
 			});
 			</script>
 			</div>
-			<div id="mapview" style="width: 450px; height: 450px; float: left; margin-left: 20px;">
+			<div id="mapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
 			</div>
 
-			<script>
-			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), ${assignment.id});
-			</script>
+		</div>
+
+		<div id="tracks">
+			<div id="attachedtrackscontainer" style="float: left">
+			</div>
+			<div id="trackmapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
+			</div>
 		</div>
 	</div>
 </div>
 
-<script>
-var tabView = new YAHOO.widget.TabView('tabs');
-</script>
-
 <div style="display: none">
 <form name="togarmin" action="/app/togarmin" method="GET">
-	<input type="hidden" name="file" value="/rest/assignment/${assignment.id}/gpx"/>
+	<input type="hidden" name="file" value="/rest/assignment/${assignment.id}?format=gpx"/>
 	<input type="hidden" name="name" value="${assignment.id}"/>
 </form>
 </div>
@@ -141,8 +142,33 @@ var tabView = new YAHOO.widget.TabView('tabs');
 </div>
 
 <script>
-finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200"});
-finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
-finalizeDlg.render(document.body);
-finalizeDlg.hide();
+org.sarsoft.Loader.queue(function() {
+    tracktable = new org.sarsoft.view.WayTable(function(way) { avtc.highlight(way);}, function(record) {
+    	var way = record.getData();
+    	var idx = 100;
+    	for(var i = 0; i < assignment.ways.length; i++) {
+    		if(assignment.ways[i].id == way.id) idx = i;
+    	}
+    	assignmentDAO.deleteWay(assignment, idx, way);
+    	tracktable.table.deleteRow(record);
+	});
+    tracktable.create(document.getElementById("attachedtrackscontainer"));
+	assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
+	assignmentDAO.load(function(obj) {
+		assignment = obj;
+		assignmentDAO.getWays(function(ways) {
+			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), assignment, ways, { color: "#FF0000" });
+			avtc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('trackmapview'), assignment, ways);
+			for(var i = 0; i < ways.length; i++) {
+				if(ways[i].type == "TRACK") tracktable.table.addRow(ways[i]);
+			}
+		}, assignment, 10);
+	}, ${assignment.id});
+	var tabView = new YAHOO.widget.TabView('tabs');
+	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200"});
+	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
+	finalizeDlg.render(document.body);
+	finalizeDlg.hide();
+});
 </script>
+

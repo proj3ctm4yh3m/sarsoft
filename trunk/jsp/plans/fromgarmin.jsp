@@ -76,7 +76,7 @@ GarminReadListener.prototype.onException = function(obj) {
 }
 
 function load() {
-	ReadFromGarmin('${id}');
+	ReadFromGarmin(${id});
 }
 
 function pass(id) {

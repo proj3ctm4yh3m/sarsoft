@@ -157,15 +157,32 @@ public class SearchAssignmentController extends JSONBaseController {
 		Way[] ways;
 		switch(format) {
 		case GPX :
-			ways = Way.createFromJSON((JSONArray) parseGPXFile(request, params.getFile()));
+			String gpx = params.getFile() != null ? params.getFile() : params.getJson();
+			ways = Way.createFromJSON((JSONArray) parseGPXFile(request, gpx));
 			break;
 		default :
 			ways = new Way[] { Way.createFromJSON(parseObject(params)) };
 		}
 
-		for(Way way : ways) assignment.getWays().add(way);
+		for(Way way : ways) {
+			way.setUpdated(new Date());
+			assignment.getWays().add(way);
+		}
 		dao.save(assignment);
 		return (ways.length == 1) ? json(model, ways[0]) : json(model, ways);
+	}
+
+	@RequestMapping(value = "/rest/assignment/{assignmentId}/way/{wayId}", method = RequestMethod.POST)
+	public String updateWay(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("wayId") int wayId, Model model, HttpServletRequest request) {
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		if(action == Action.DELETE) {
+			Way way = assignment.getWays().get(wayId);
+			assignment.getWays().remove(wayId);
+			dao.save(assignment);
+			dao.delete(way);
+		}
+		return json(model, assignment);
 	}
 
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/way/{wayId}/waypoints", method= RequestMethod.POST)
