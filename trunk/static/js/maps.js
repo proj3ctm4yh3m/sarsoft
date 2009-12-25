@@ -1,8 +1,7 @@
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 
-org.sarsoft.EnhancedGMap = function() {
-}
+if(org.sarsoft.EnhancedGMap == undefined) org.sarsoft.EnhancedGMap = function() {}
 
 org.sarsoft.EnhancedGMap.prototype.createMapType = function(config) {
 	if(config.type == "NATIVE") return eval(config.template);
@@ -40,7 +39,7 @@ org.sarsoft.EnhancedGMap.prototype._getWMSTileUrl = function(tile, zoom, config)
     return url;
 }
 
-org.sarsoft.EnhancedGMap.defaultMapTypes = [
+org.sarsoft.EnhancedGMap.backupMapTypes = [
 	{name: "OpenStreetMap", type: "TILE", copyright: 'Map data from OpenStreetMap.org', minresolution: 0, maxresolution: 17, png: true, template: 'http://tile.openstreetmap.org/{Z}/{X}/{Y}.png'},
 	{name: "MyTopo", type: "TILE", copyright: "mytopo.com", minresolution: 7, maxresolution: 16, png: true, template : 'http://maps.mytopo.com/gpsvisualizer/tilecache.py/1.0.0/topoG/{Z}/{X}/{Y}.png'},
 	{name: "USGS Topo", type: "WMS", copyright: 'Topo maps by USGS via terraserver-usa.com', minresolution: 5, maxresolution: 17, png: false,

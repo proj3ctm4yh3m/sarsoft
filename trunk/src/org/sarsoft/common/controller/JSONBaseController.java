@@ -75,7 +75,7 @@ public abstract class JSONBaseController {
 	}
 
 	protected String app(Model model, String view) {
-		model.addAttribute("mapsources", dao.loadAll(MapSource.class));
+		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
 		if(!runtimeProperties.isInitialized()) {
 			File dir = new File("searches");
 			model.addAttribute("searches", dir.list());

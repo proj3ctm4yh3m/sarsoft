@@ -32,7 +32,11 @@ org.sarsoft.SearchAssignmentDAO.prototype.createWaysFromGpx = function(handler, 
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.createMapConfig = function(id, config, handler) {
-	this._doPost("/" + id + "/mapConfig/new", handler ? handler : function() {}, config);
+	this._doPost("/" + id + "/mapConfig", handler ? handler : function() {}, config);
+}
+
+org.sarsoft.SearchAssignmentDAO.prototype.deleteMapConfig = function(id, config, handler) {
+	this._doPost("/" + id + "/mapConfig/" + config.id + "?action=delete", handler ? handler : function() {}, config);
 }
 
 org.sarsoft.OperationalPeriodDAO = function(errorHandler, baseURL) {
@@ -51,8 +55,9 @@ org.sarsoft.OperationalPeriodDAO.prototype.createAssignmentsFromTFX = function(h
 	this._doPost("/" + id + "/assignment/tfx", handler, obj);
 }
 
-org.sarsoft.view.MapConfigTable = function(handler) {
+org.sarsoft.view.MapConfigTable = function(handler, onDelete) {
 	var coldefs = [
+		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
 	  	{ key:"base", sortable: false, resizeable: false},
 	  	{ key:"overlay", sortable: false, resizeable: false},
 		{ key:"opacity", sortable: false, resizeable: false, formatter: "number"}

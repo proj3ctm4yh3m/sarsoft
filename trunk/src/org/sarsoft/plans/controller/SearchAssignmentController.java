@@ -195,13 +195,31 @@ public class SearchAssignmentController extends JSONBaseController {
 		return json(model, way);
 	}
 
-	@RequestMapping(value = "/rest/assignment/{assignmentId}/mapConfig/new", method= RequestMethod.POST)
+	@RequestMapping(value = "/rest/assignment/{assignmentId}/mapConfig", method= RequestMethod.POST)
 	public String addMapconfig(JSONForm params, @PathVariable("assignmentId") long assignmentId, Model model) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
 		MapConfig config = MapConfig.createFromJSON(parseObject(params));
 		assignment.getMapConfigs().add(config);
 		dao.save(assignment);
 		return json(model, config);
+	}
+
+	@RequestMapping(value = "/rest/assignment/{assignmentId}/mapConfig/{configId}", method= RequestMethod.POST)
+	public String updateMapConfig(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("configId") long configId, Model model, HttpServletRequest request) {
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		for(MapConfig config : assignment.getMapConfigs()) {
+			if(config.getId() == configId) {
+				switch(action) {
+				case DELETE :
+					assignment.getMapConfigs().remove(config);
+					dao.save(assignment);
+					dao.delete(config);
+				}
+				return json(model, config);
+			}
+		}
+		return json(model, null);
 	}
 
 

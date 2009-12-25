@@ -63,7 +63,7 @@ org.sarsoft.Loader.queue(function() {
 });
 
 function loadDefaults() {
-	var types = org.sarsoft.EnhancedGMap.defaultMapTypes;
+	var types = org.sarsoft.EnhancedGMap.backupMapTypes;
 	for(var i = 0; i < types.length; i++) {
 		mapDAO.create(function(obj) {
 			dataTable.addRow(obj);
