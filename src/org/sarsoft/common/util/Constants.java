@@ -18,20 +18,20 @@ public class Constants {
 	public static Map<String, Object> all = new HashMap<String, Object>();
 
 	static {
-		colorsByResourceType.put(ResourceType.GROUND, "#0000FF");
-		colorsByResourceType.put(ResourceType.DOG, "#00FF00");
-		colorsByResourceType.put(ResourceType.MOUNTED, "#FF0000");
-		colorsByResourceType.put(ResourceType.OHV, "#FFFF00");
+		colorsByResourceType.put(ResourceType.GROUND, "#FF0000");
+		colorsByResourceType.put(ResourceType.DOG, "#0000DD");
+		colorsByResourceType.put(ResourceType.MOUNTED, "#FF8800");
+		colorsByResourceType.put(ResourceType.OHV, "#00FF00");
 
-		colorsByProbability.put(Probability.LOW, "#0000FF");
-		colorsByProbability.put(Probability.MEDIUM, "#00FF00");
-		colorsByProbability.put(Probability.HIGH, "#FF0000");
-		colorsByProbability.put(Probability.VERY_HIGH, "#FFFF00");
+		colorsByProbability.put(Probability.LOW, "#8800FF");
+		colorsByProbability.put(Probability.MEDIUM, "#00AA00");
+		colorsByProbability.put(Probability.HIGH, "#FF8800");
+		colorsByProbability.put(Probability.VERY_HIGH, "#FF0000");
 
-		colorsByStatus.put(SearchAssignment.Status.DRAFT, "#0000FF");
-		colorsByStatus.put(SearchAssignment.Status.PREPARED, "#00FF00");
-		colorsByStatus.put(SearchAssignment.Status.INPROGRESS, "#FF0000");
-		colorsByStatus.put(SearchAssignment.Status.COMPLETED, "#FFFF00");
+		colorsByStatus.put(SearchAssignment.Status.DRAFT, "#8800FF");
+		colorsByStatus.put(SearchAssignment.Status.PREPARED, "#00AA00");
+		colorsByStatus.put(SearchAssignment.Status.INPROGRESS, "#FF8800");
+		colorsByStatus.put(SearchAssignment.Status.COMPLETED, "#FF0000");
 
 		all.put("colorsById", colorsById);
 		all.put("colorsByResourceType", colorsByResourceType);
