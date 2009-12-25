@@ -36,7 +36,7 @@ public class Way implements IPreSave {
 	private WayType type = WayType.ROUTE;
 	private List<Waypoint> waypoints;
 	private Date updated;
-	private int precision = 200;
+	private int precision = 100;
 
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
 

@@ -29,8 +29,8 @@
 function WriteToGarmin(gpxstr, name) {
 	control = new Garmin.DeviceControl();
 	control.register(new GarminListener(gpxstr, name));
-	console("attempting to unlock with domain, key: TBD");
-	var unlocked = control.unlock( ["http://mydomain.com","pasteYourKeyInHere"] );
+	console("attempting to unlock with domain, key: (${hostName}, ${garminKey})");
+	var unlocked = control.unlock( ["${hostName}","${garminKey}"] );
 	if(unlocked) {
 		control.findDevices();
 	} else {

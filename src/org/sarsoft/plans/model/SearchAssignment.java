@@ -19,6 +19,7 @@ import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.MapConfig;
 import org.sarsoft.common.model.Way;
+import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import net.sf.json.JSONObject;
 
@@ -217,6 +218,26 @@ public class SearchAssignment implements IPreSave {
 		double distance = 0;
 		for(Way way : ways) {
 			distance += way.getDistance();
+		}
+		return distance;
+	}
+
+	@Transient
+	@JSONSerializable
+	public double getTrackDistance() {
+		double distance = 0;
+		for(Way way : ways) {
+			if(way.getType() == WayType.TRACK) distance += way.getDistance();
+		}
+		return distance;
+	}
+
+	@Transient
+	@JSONSerializable
+	public double getRouteDistance() {
+		double distance = 0;
+		for(Way way : ways) {
+			if(way.getType() == WayType.ROUTE) distance += way.getDistance();
 		}
 		return distance;
 	}

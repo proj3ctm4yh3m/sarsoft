@@ -34,6 +34,15 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	}
 
 	@SuppressWarnings("unchecked")
+	public Object load(final Class cls, final String id) {
+		return getHibernateTemplate().execute(new HibernateCallback() {
+			public Object doInHibernate(final Session session) throws HibernateException {
+				return session.load(cls, id);
+			}
+		});
+	}
+
+	@SuppressWarnings("unchecked")
 	public List loadAll(final Class cls) {
 		return (List) getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
