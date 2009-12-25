@@ -92,7 +92,7 @@ org.sarsoft.view.SearchAssignmentTable = function() {
 		{ key : "area", label : "Area (km&sup2;)", sortable: true},
 		{ key : "timeAllocated", label : "Time Allocated", sortable : true},
 		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByProbability) },
-		{ key : "details", label : "Details"}
+		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { cell.style.overflow="hidden"; cell.style.maxHeight="1em"; cell.style.maxWidth="40em"; cell.innerHTML = data;}}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Search Assignments" }, function(assignment) {
 		window.location="/app/assignment/" + assignment.id;
