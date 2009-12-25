@@ -313,7 +313,8 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
 		{ name: "show", label: "Show", type : ["ALL","GROUND","DOG","MOUNTED","OHV"]},
 		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
 		{ name : "fill", label: "Fill Opacity", type: "number"},
-		{ name : "opacity", label: "Line Opacity", type : "number"}
+		{ name : "opacity", label: "Line Opacity", type : "number"},
+		{ name : "showtracks", label: "Show Tracks", type : "boolean"}
 	];
 	this.pastEntityForm = new org.sarsoft.view.EntityForm(fields);
 	this.presentEntityForm = new org.sarsoft.view.EntityForm(fields);
@@ -409,8 +410,8 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this._assignmentAttrs = new Object();
 	this.showOtherPeriods = false;
 	this._mapsetup = {
-		past : { show : "ALL", colorby : "Disabled", fill : 0, opacity : 50 },
-		present : { show : "ALL", colorby : "Assignment Number", fill : 35, opacity : 100}
+		past : { show : "ALL", colorby : "Disabled", fill : 0, opacity : 50, showtracks : false },
+		present : { show : "ALL", colorby : "Assignment Number", fill : 35, opacity : 100, showtracks : true}
 		};
 
 	this.contextMenu = new org.sarsoft.view.ContextMenu();
@@ -578,6 +579,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 
 		config.fill = setup.fill;
 		config.opacity = setup.opacity;
+		config.showtracks = setup.showtracks;
 
 		if(setup.colorby == "Disabled") {
 			config.color ="#000000";
@@ -614,6 +616,6 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		var way = ways[i];
 		way.waypoints = way.zoomAdjustedWaypoints;
 		way.displayMessage = assignment.id + ": " + assignment.name + "<br/>" + assignment.resourceType + ", " + assignment.status + ", " + assignment.responsivePOD;
-		this.emap.addWay(way, config);
+		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config);
 	}
 }

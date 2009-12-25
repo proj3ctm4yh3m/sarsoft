@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.model.Action;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,15 @@ public class AdminController extends JSONBaseController {
 	@Autowired
 	@Qualifier("searchSessionFactory")
 	LocalSessionFactoryBean sessionFactory;
+
+	@Autowired
+	@Qualifier("configDataSource")
+	ComboPooledDataSource configDataSource;
+
+	@Autowired
+	@Qualifier("configSessionFactory")
+	LocalSessionFactoryBean configSessionFactory;
+
 
 	@RequestMapping(value="/app/shutdown", method = RequestMethod.GET)
 	public String shutdown(Model model) {
@@ -68,6 +78,23 @@ public class AdminController extends JSONBaseController {
 		return homePage(model, request);
 	}
 
+	@RequestMapping(value="/rest/configschema/{ds}", method = RequestMethod.GET)
+	public String setConfigDataSchema(Model model, @PathVariable("ds") String schema, HttpServletRequest request) {
+		String jdbcUrl = "jdbc:hsqldb:config/" + schema + "/sarsoft";
+		if(!jdbcUrl.equalsIgnoreCase(configDataSource.getJdbcUrl())) {
+			configDataSource.setJdbcUrl("jdbc:hsqldb:config/" + schema + "/sarsoft");
+			configSessionFactory.updateDatabaseSchema();
+		}
+		return "/blank";
+	}
+
+	@RequestMapping(value="/app/configschema/{ds}", method = RequestMethod.GET)
+	public String setAppConfigDataSchema(Model model, @PathVariable("ds") String schema, HttpServletRequest request) {
+		setConfigDataSchema(model, schema, request);
+		return homePage(model, request);
+	}
+
+
 	@RequestMapping(value="/app/admin", method = RequestMethod.GET)
 	public String admin(Model model) {
 		String url = dataSource.getJdbcUrl();
@@ -76,7 +103,17 @@ public class AdminController extends JSONBaseController {
 		model.addAttribute("search", search);
 		File dir = new File("searches");
 		model.addAttribute("searches", dir.list());
+
+		url = configDataSource.getJdbcUrl();
+		url = url.substring(url.indexOf('/')+1);
+		String config = url.substring(0, url.indexOf('/'));
+		model.addAttribute("config", search);
+		dir = new File("config");
+		model.addAttribute("configs", dir.list());
+
 		model.addAttribute("mapkey", getConfigValue("maps.key"));
+		model.addAttribute("hostName", getConfigValue("server.name"));
+		model.addAttribute("garminKey", getConfigValue("garmin.key"));
 		return app(model, "Pages.Admin");
 	}
 
@@ -93,4 +130,14 @@ public class AdminController extends JSONBaseController {
 		return json(model, source);
 	}
 
+	@RequestMapping(value="/rest/mapsource/{name}", method = RequestMethod.POST)
+	public String updateMapSource(@PathVariable("name") String name, Model model, JSONForm params, HttpServletRequest request) {
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		MapSource source = (MapSource) configDao.load(MapSource.class, name);
+		switch(action) {
+		case DELETE :
+			configDao.delete(source);
+		}
+		return json(model, source);
+	}
 }
