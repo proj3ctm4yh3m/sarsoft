@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sarsoft.admin.model.Config;
+import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.SearchProperty;
 import org.sarsoft.common.util.Constants;
@@ -35,6 +36,7 @@ public class CommonController extends JSONBaseController {
 	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
 	public String getConstants(Model model) {
 		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
+		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
 		return "/global/constants";
 	}
 

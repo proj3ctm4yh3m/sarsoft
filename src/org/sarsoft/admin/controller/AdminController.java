@@ -9,6 +9,7 @@ import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.plans.model.OperationalPeriod;
+import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
@@ -83,6 +84,13 @@ public class AdminController extends JSONBaseController {
 	@RequestMapping(value="/rest/mapsource", method = RequestMethod.GET)
 	public String MapSources(Model model) {
 		return json(model, configDao.loadAll(MapSource.class));
+	}
+
+	@RequestMapping(value="/rest/mapsource", method = RequestMethod.POST)
+	public String createMapSource(Model model, JSONForm params) {
+		MapSource source = MapSource.createFromJSON(parseObject(params));
+		configDao.save(source);
+		return json(model, source);
 	}
 
 }
