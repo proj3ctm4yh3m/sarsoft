@@ -57,7 +57,7 @@ org.sarsoft.EnhancedGMap.prototype.createMap = function(element) {
 
 		this.mapTypes = this.setMapTypes(org.sarsoft.EnhancedGMap.defaultMapTypes);
 
-		map.setCenter(new GLatLng(37.814, -122.2188), 9);
+		map.setCenter(new GLatLng(38.617, -97.207), 5);
 		map.addControl(new OverlayDropdownMapControl());
 		map.addControl(new GLargeMapControl3D());
 		map.addControl(new GScaleControl());
