@@ -53,3 +53,7 @@ The assignment detail view lets you edit the details of the assignment, decide w
 
 <img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/assignmentdetail.png"/>
 <img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/assignmentmap.png"/>
+
+=== Assignment Hardcopy ===
+
+You can view a PDF of an assignment printed to hardcopy at <a href="http://sarsoft.googlecode.com/svn/wiki/screenshots/assignment-print.pdf">http://sarsoft.googlecode.com/svn/wiki/screenshots/assignment-print.pdf</a>
