@@ -192,9 +192,10 @@ org.sarsoft.FixedGMap = function(map) {
 				GEvent.addListener(map, "moveend", function() { that._drawUTMGrid(); });
 				GEvent.addListener(map, "zoomend", function(foo, bar) { that._drawUTMGrid(); });
 				GEvent.addListener(map, "dragstart", function() {
-					for(var i = 0; i < that.text.lenght; i++) {
-						that.text[i].style.display="none";
+					for(var i = 0; i < that.text.length; i++) {
+						that.map.getContainer().removeChild(that.text[i]);
 					}
+					that.text = new Array();
 				});
 				that.utminitialized=true;
 			}
