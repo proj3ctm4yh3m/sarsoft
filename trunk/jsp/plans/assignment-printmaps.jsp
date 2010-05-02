@@ -6,7 +6,7 @@
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 <html>
 <head>
-<title>Search Assignment ${assignment.id} - ${assignment.name}</title>
+<title>Assignment Number ${assignment.name}</title>
 <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=${mapkey}" type="text/javascript"></script>
 <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yuiloader/yuiloader-min.js" ></script>
 <script src="/app/constants.js"></script>

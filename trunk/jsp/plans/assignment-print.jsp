@@ -6,7 +6,7 @@
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 <html>
 <head>
-<title>Search Assignment ${assignment.id} - ${assignment.name}</title>
+<title>Assigment Number ${assignment.name}</title>
 <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=${mapkey}" type="text/javascript"></script>
 <script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yuiloader/yuiloader-min.js" ></script>
 <script src="/app/constants.js"></script>
@@ -79,7 +79,7 @@ TABLE.comms TD,TH {
 	<div class="lbox" style="width: 25%;"><b>TEAM ASSIGNMENT</b></div>
 	<div class="box" style="width: 25%"><div class="label">1. INCIDENT NAME</div>CURRENT SEARCH</div>
 	<div class="box" style="width: 25%"><div class="label">2. OPERATIONAL PERIOD</div>${assignment.operationalPeriod.id}</div>
-	<div class="box" style="width: 24%"><div class="label">3. ASSIGNMENT NUMBER</div>${assignment.id}</div>
+	<div class="box" style="width: 24%"><div class="label">3. ASSIGNMENT NUMBER</div>${assignment.name}</div>
 </div>
 
 <div style="width: 100%; height: 16pt; border-bottom: 1px solid black">

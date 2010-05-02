@@ -72,10 +72,9 @@ org.sarsoft.view.OperationalPeriodTable.prototype = new org.sarsoft.view.EntityT
 
 org.sarsoft.view.SearchAssignmentTable = function() {
 	var coldefs = [
-		{ key : "id", label : "ID", sortable: true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsById) },
+		{ key : "name", label : "Number", sortable: true},
 		{ key : "resourceType", label : "Resource Type", sortable: true},
 		{ key : "status", label : "Status", sortable: true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByStatus) },
-		{ key : "name", label : "Name", sortable: true},
 		{ key : "area", label : "Area (km&sup2;)", sortable: true},
 		{ key : "timeAllocated", label : "Time Allocated", sortable : true},
 		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByProbability) },
@@ -99,7 +98,7 @@ org.sarsoft.view.WayTable.prototype = new org.sarsoft.view.EntityTable();
 
 org.sarsoft.view.SearchAssignmentForm = function() {
 	var fields = [
-		{ name : "name", type : "string" },
+		{ name : "name", label: "Assignment Number", type : "string"},
 		{ name : "operationalPeriodId", label: "Operational Period", type: "number"},
 		{ name : "resourceType", type : ["GROUND","DOG","MOUNTED","OHV"] },
 		{ name : "unresponsivePOD", type : ["LOW","MEDIUM","HIGH","VERY_HIGH"] },
