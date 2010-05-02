@@ -182,7 +182,24 @@ org.sarsoft.FixedGMap = function(map) {
 	this.map = map;
 	this.polys = new Object();
 	this.overlays = new Array();
-
+	this.text = new Array();
+	this.utmgridlines = new Array();
+	this.utminitialized = false;
+	if(map != undefined) {
+		GEvent.addListener(map, "tilesloaded", function() {
+			if(that.utminitialized == false) {
+				that._drawUTMGrid();
+				GEvent.addListener(map, "moveend", function() { that._drawUTMGrid(); });
+				GEvent.addListener(map, "zoomend", function(foo, bar) { that._drawUTMGrid(); });
+				GEvent.addListener(map, "dragstart", function() {
+					for(var i = 0; i < that.text.lenght; i++) {
+						that.text[i].style.display="none";
+					}
+				});
+				that.utminitialized=true;
+			}
+		});
+	}
 }
 
 org.sarsoft.FixedGMap.prototype.getConfig = function() {
@@ -210,6 +227,101 @@ org.sarsoft.FixedGMap.prototype.setMapLayers = function(baseName, overlayName, o
 		if(types[i].getName() == overlayName) overlay = types[i];
 	}
 	this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity);
+}
+
+org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
+	if(this.utmgridcoverage != undefined && this.utmgridcoverage.getSouthWest().distanceFrom(this.map.getBounds().getSouthWest()) == 0 &&
+		this.utmgridcoverage.getNorthEast().distanceFrom(this.map.getBounds().getNorthEast()) == 0) return;
+
+	this.utmgridcoverage = this.map.getBounds();
+
+	for(var i = 0; i < this.utmgridlines.length; i++) {
+		this.map.removeOverlay(this.utmgridlines[i]);
+	}
+	this.utmgridlines = new Array();
+	for(var i = 0; i < this.text.length; i++) {
+		this.map.getContainer().removeChild(this.text[i]);
+	}
+	this.text = new Array();
+	var bounds = this.map.getBounds();
+	var span = bounds.getSouthWest().distanceFrom(bounds.getNorthEast());
+	var spacing = 1000;
+	if(span > 30000) spacing = 10000;
+	if(span > 300000) spacing = 100000;
+
+	var sw = GeoUtil.GLatLngToUTM(bounds.getSouthWest());
+	var ne = GeoUtil.GLatLngToUTM(bounds.getNorthEast());
+	this._drawUTMGridForZone(sw.zone, spacing, false);
+	if(sw.zone != ne.zone)  this._drawUTMGridForZone(ne.zone, spacing, true);
+}
+
+org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, right) {
+	var bounds = this.map.getBounds();
+	var sw = GeoUtil.GLatLngToUTM(bounds.getSouthWest(), zone);
+	var ne = GeoUtil.GLatLngToUTM(bounds.getNorthEast(), zone);
+	sw.e = sw.e-spacing;
+	sw.n = sw.n-spacing;
+	ne.e = ne.e+spacing;
+	ne.n = ne.n+spacing;
+
+	var east = GeoUtil.getEastBorder(zone);
+	var west = GeoUtil.getWestBorder(zone);
+
+	var easting = Math.round(sw.e / spacing)  * spacing;
+
+	function createText(meters) {
+		var element = document.createElement("div");
+		element.style.position="absolute";
+		element.style.color="#0000FF";
+		element.innerHTML="<b>" + Math.round(meters/1000) + "</b><span style=\"font-size: smaller\">000</span>";
+		return element;
+	}
+
+	while(easting < ne.e) {
+		var vertices = new Array();
+		vertices.push(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
+		vertices.push(GeoUtil.UTMToGLatLng({e: easting, n: ne.n, zone: zone}));
+
+		if(west < vertices[0].lng() && vertices[0].lng() < east) {
+			var overlay = new GPolyline(vertices, "#0000FF", 1, 1);
+			this.utmgridlines.push(overlay);
+			this.map.addOverlay(overlay);
+
+			var element = createText(easting);
+			element.style.bottom="2px";
+			element.style.left=(this.map.fromLatLngToContainerPixel(vertices[0]).x)+"px";
+			element.style.padding="0 0 0 .5em";
+			this.map.getContainer().appendChild(element);
+			this.text.push(element);
+		}
+		easting = easting + spacing;
+	}
+
+	var northing = Math.round(sw.n / spacing) * spacing;
+	while(northing < ne.n) {
+		var vertices = new Array();
+		var start = GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone});
+		vertices.push(new GLatLng(start.lat(), Math.max(start.lng(), west)));
+		var end = GeoUtil.UTMToGLatLng({e: ne.e, n: northing, zone: zone});
+		vertices.push(new GLatLng(start.lat(), Math.min(end.lng(), east)));
+
+		var overlay = new GPolyline(vertices, "#0000FF", 1, 1);
+		this.utmgridlines.push(overlay);
+		this.map.addOverlay(overlay);
+		northing = northing + spacing;
+
+		var element = createText(northing);
+		if(right) {
+			element.style.right="2px";
+		} else {
+			element.style.left="2px";
+		}
+		element.style.top=(this.map.fromLatLngToContainerPixel(vertices[0]).y)+"px";
+		element.style.padding=".5em 0 0 0";
+		this.map.getContainer().appendChild(element);
+		this.text.push(element);
+	}
+
 }
 
 org.sarsoft.FixedGMap.prototype._createPolygon = function(vertices, config) {
@@ -397,11 +509,19 @@ GeoUtil.UTMToGLatLng = function(utm) {
 	return new GLatLng(RadToDeg(ll[0]),RadToDeg(ll[1]));
 }
 
-GeoUtil.GLatLngToUTM = function(gll) {
+GeoUtil.GLatLngToUTM = function(gll, zone) {
 	var xy = new Object();
-	zone = Math.floor ((gll.lng() + 180.0) / 6) + 1;
+	if(zone == undefined) zone = Math.floor ((gll.lng() + 180.0) / 6) + 1;
 	var zone = LatLonToUTMXY (DegToRad(gll.lat()), DegToRad(gll.lng()), zone, xy);
 	return new UTM(xy[0], xy[1], zone);
+}
+
+GeoUtil.getWestBorder = function(zone) {
+	return (zone - 1)*6 - 180;
+}
+
+GeoUtil.getEastBorder = function(zone) {
+	return GeoUtil.getWestBorder(zone + 1);
 }
 
 // Copyright 1997-1998 by Charles L. Taylor -->
