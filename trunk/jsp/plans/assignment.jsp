@@ -43,7 +43,8 @@ This ${assignment.status} assignment covers ${assignment.area} km&sup2; (${assig
  	<li><a href="javascript:finalizeDlg.show()">Prepare Assignment</a> (this will allow you to print it)</li>
  </c:when>
  <c:otherwise>
-    <li><a href="/app/assignment/${assignment.id}?format=print">Print Assignment</a></li>
+    <li><a target="_new" href="/app/assignment/${assignment.id}?format=print&content=forms">Print SAR 104 Forms</a></li>
+    <li><a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Print Maps</a></li>
  </c:otherwise>
 </c:choose>
 <li>Export to: <select id="export"><option value="gpx">GPX File</option><option value="kml">KML File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:export()">GO</button></li>
@@ -99,28 +100,6 @@ back to draft status; if you do this, you must track down any existing copies in
 		<div id="map">
 <div><i>Note: In order to modify the assignment's bounds, you must use the <a href="/app/operationalperiod/${assignment.operationalPeriod.id}/map">operational period map view</a>, so that
 you can see how it relates to neighboring assignments.</i></div>
-			<div id="attachedmapscontainer" style="float: left">
-			<script>
-			org.sarsoft.Loader.queue(function() {
-			gpxdlg = new org.sarsoft.view.SearchAssignmentGPXDlg(${assignment.id});
-			});
-			org.sarsoft.Loader.queue(function() {
-			  datatable = new org.sarsoft.view.MapConfigTable(function(config) { avmc.setMapConfig(config);}, function(record) {
-			  	var config = record.getData();
-			  	assignmentDAO.deleteMapConfig(assignment.id, config);
-			  	datatable.table.deleteRow(record);
-			  });
-			  datatable.create(document.getElementById("attachedmapscontainer"));
-
-			  <c:forEach var="config" items="${assignment.mapConfigs}">
-			    datatable.table.addRow({base : "${config.base}", overlay : "${config.overlay}", opacity : "${config.opacity}", id : ${config.id}});
-			  </c:forEach>
-			});
-			</script>
-			<div style="text-align: right">
-				<a href="javascript:newMapDlg.show()">Attach New Map</a>
-			</div>
-			</div>
 			<div id="mapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
 			</div>
 
@@ -147,24 +126,6 @@ you can see how it relates to neighboring assignments.</i></div>
 	<div class="bd">
 		<label for="dlgpreparedby">Your Name:</label>
 		<input id="dlgpreparedby" length="20" type="text"/>
-	</div>
-</div>
-
-<div id="newMap" style="top: 150px; left: 150px; position: absolute; z-index: 200; width: 300px">
-	<div class="hd">New Map</div>
-	<div class="bd">
-		<label for="base">Base:</label>
-		<select id="base">
-			<c:forEach var="source" items="${mapSources}"><option>${source.name}</option></c:forEach>
-		</select>
-		<br/>
-		<label for="overlay">Overlay:</label>
-		<select id="overlay">
-			<c:forEach var="source" items="${mapSources}"><option>${source.name}</option></c:forEach>
-		</select>
-		<br/>
-		<label for="opacity">Opacity:</label>
-		<input id="opacity" length="4" type="text" value="50"/>
 	</div>
 </div>
 
@@ -196,19 +157,7 @@ org.sarsoft.Loader.queue(function() {
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
 	finalizeDlg.render(document.body);
 	finalizeDlg.hide();
-	newMapDlg = new YAHOO.widget.Dialog("newMap", {zIndex: "200"});
-	newMapDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { newMapDlg.hide(); }}, { text : "Create", handler: function() { newMapDlg.hide(); createNewMap();}, isDefault: true }]);
-	newMapDlg.render(document.body);
-	newMapDlg.hide();
 });
 
-function createNewMap() {
-	var baseElt = document.getElementById("base");
-	var overlayElt = document.getElementById("overlay");
-	var config = { base : baseElt.options[baseElt.selectedIndex].value, overlay : overlayElt.options[overlayElt.selectedIndex].value, opacity : document.getElementById("opacity").value};
-	assignmentDAO.createMapConfig(${assignment.id}, config, function(obj) {
-		datatable.table.addRow(obj);
-	});
-}
 </script>
 

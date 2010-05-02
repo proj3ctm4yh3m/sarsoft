@@ -14,13 +14,6 @@
 <script src="/static/js/maps.js"></script>
 <script src="/static/js/plans.js"></script>
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
-<script>
-
-org.sarsoft.Loader.queue(function() {
-  var controller = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps"), ${assignment.id});
-});
-
-</script>
 <style tyle="text/css">
 .box {
 	border-left: 1px solid black; float: left; height: 100%; overflow: hidden;
@@ -112,7 +105,7 @@ TABLE.comms TD,TH {
 	  </div>
 </div>
 <div style="width: 100%; height: 14pt; border-bottom: 1px solid black">
-	<div style="float: right">${fn:length(assignment.mapConfigs)} MAP(S) ATTACHED</div>
+	<div style="float: right">MAP(S) ATTACHED</div>
 </div>
 
 <div style="width: 100%; height: 72pt; border-bottom: 1px solid black">
@@ -177,7 +170,5 @@ TABLE.comms TD,TH {
 
 </c:forEach>
 
-<div id="maps">
-</div>
 </body>
 </html>

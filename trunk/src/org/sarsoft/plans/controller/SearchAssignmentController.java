@@ -47,7 +47,11 @@ public class SearchAssignmentController extends JSONBaseController {
 		model.addAttribute("assignment", assignment);
 		switch(format) {
 		case PRINT :
-			return app(model, "Assignment.Print");
+			if("maps".equalsIgnoreCase(request.getParameter("content"))) {
+				return app(model, "Assignment.PrintMaps");
+			} else {
+				return app(model, "Assignment.PrintForms");
+			}
 		default :
 			return app(model, "Assignment.Details");
 		}
