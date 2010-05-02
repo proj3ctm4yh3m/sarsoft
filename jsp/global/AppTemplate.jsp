@@ -25,7 +25,7 @@
 <div style="font-weight: bold; float: left"><a href="/" class="sarsoft">SARSOFT</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <c:choose>
  <c:when test="${app eq 'plans'}">
-  <a href="/app/operationalperiod">plans</a>
+  <a href="/app/operationalperiod">Plans</a>
  </c:when>
  <c:when test="${app eq 'admin'}">
   <a href="/app/admin">admin console</a>
@@ -33,7 +33,7 @@
 </c:choose>
 <c:choose>
  <c:when test="${assignment ne null}">
-  &nbsp;:&nbsp;<a href="/app/operationalperiod/${assignment.operationalPeriod.id}">${assignment.operationalPeriod.description}</a>&nbsp;:&nbsp;assignment ${assignment.id}
+  &nbsp;:&nbsp;<a href="/app/operationalperiod/${assignment.operationalPeriod.id}">${assignment.operationalPeriod.description}</a>&nbsp;:&nbsp;Assignment ${assignment.name}
  </c:when>
  <c:when test="${period ne null}">
   &nbsp;:&nbsp;${period.description}
