@@ -33,7 +33,7 @@ function finalize() {
 </script>
 
 <h2>Assignment ${assignment.name}</h2>
-This ${assignment.status} assignment covers ${assignment.area} km&sup2; (${assignment.routeDistance} km perimeter) with ${assignment.timeAllocated} hours allocated.
+This ${assignment.status} assignment covers ${assignment.formattedSize} with ${assignment.timeAllocated} hours allocated.
 <c:if test="${assignment.trackDistance gt 0}">  ${assignment.trackDistance} km of tracks have been downloaded.</c:if>
   You can:<br/>
 

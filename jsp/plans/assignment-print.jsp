@@ -114,7 +114,7 @@ TABLE.comms TD,TH {
 
 <div style="width: 100%; height: 24pt; border-bottom: 1px solid black">
 	<div class="lbox" style="width: 25%"><div class="label">8. TIME ALLOCATED</div>${assignment.timeAllocated} hours</div>
-	<div class="box" style="width: 30%"><div class="label">9. SIZE OF ASSIGNMENT</div>${assignment.area} km&sup2; / ${assignment.routeDistance} km</div>
+	<div class="box" style="width: 30%"><div class="label">9. SIZE OF ASSIGNMENT</div>${assignment.formattedSize}</div>
 	<div class="box" style="width: 44%"><div class="label">10. EXPECTED P.O.D.</div><b>${assignment.responsivePOD}</b> (responsive), <b>${assignment.unresponsivePOD}</b> (unresponsive)</div>
 </div>
 

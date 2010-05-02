@@ -75,7 +75,7 @@ org.sarsoft.view.SearchAssignmentTable = function() {
 		{ key : "name", label : "Number", sortable: true},
 		{ key : "resourceType", label : "Resource Type", sortable: true},
 		{ key : "status", label : "Status", sortable: true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByStatus) },
-		{ key : "area", label : "Area (km&sup2;)", sortable: true},
+		{ key : "formattedSize", label : "Size", sortable: true},
 		{ key : "timeAllocated", label : "Time Allocated", sortable : true},
 		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByProbability) },
 		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { cell.style.overflow="hidden"; cell.style.maxHeight="1em"; cell.style.maxWidth="40em"; cell.innerHTML = data;}}
@@ -99,6 +99,7 @@ org.sarsoft.view.WayTable.prototype = new org.sarsoft.view.EntityTable();
 org.sarsoft.view.SearchAssignmentForm = function() {
 	var fields = [
 		{ name : "name", label: "Assignment Number", type : "string"},
+		{ name : "polygon", label: "Area Assignment?", type: "boolean", value: true},
 		{ name : "operationalPeriodId", label: "Operational Period", type: "number"},
 		{ name : "resourceType", type : ["GROUND","DOG","MOUNTED","OHV"] },
 		{ name : "unresponsivePOD", type : ["LOW","MEDIUM","HIGH","VERY_HIGH"] },
@@ -410,7 +411,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 
 	this.contextMenu = new org.sarsoft.view.ContextMenu();
 	this.contextMenu.setItems([
-		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.show({operationalPeriodId : that.period.id}); }},
+		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
 		{text : "Map Setup", applicable : function(obj) { return obj == null }, handler : function(data) { that.setupDlg.show(that._mapsetup); }},
 		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); that.propertyDAO.save("map_settings", { name: "map_settings", value: YAHOO.lang.JSON.stringify(that.emap.getConfig())})}},
 		{text : "Hide Previous Operational Periods", applicable : function(obj) { return obj == null && that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = false; that._handleSetupChange(); }},
@@ -441,7 +442,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 
 	var handler = function(assignment) {
 		var mapconfig = that.emap.getConfig();
-		var way = { name: assignment.name, polygon: true };
+		var way = { name: assignment.name, polygon: assignment.polygon };
 		assignment.ways = [way];
 		way.waypoints = that.emap.getNewWaypoints(that.newAssignmentDlg.point, way.polygon);
 		that.assignmentDAO.create(function(obj) {

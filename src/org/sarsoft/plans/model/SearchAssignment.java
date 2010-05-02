@@ -244,6 +244,16 @@ public class SearchAssignment implements IPreSave {
 
 	@Transient
 	@JSONSerializable
+	public String getFormattedSize() {
+		if(ways.get(0).isPolygon()) {
+			return ways.get(0).getArea() + " km&sup2;";
+		} else {
+			return ways.get(0).getDistance() + " km";
+		}
+	}
+
+	@Transient
+	@JSONSerializable
 	public Waypoint[] getBoundingBox() {
 		Waypoint[] box = ways.get(0).getBoundingBox();
 		for(Way way : ways) {
