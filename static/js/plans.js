@@ -55,19 +55,6 @@ org.sarsoft.OperationalPeriodDAO.prototype.createAssignmentsFromTFX = function(h
 	this._doPost("/" + id + "/assignment/tfx", handler, obj);
 }
 
-org.sarsoft.view.MapConfigTable = function(handler, onDelete) {
-	var coldefs = [
-		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
-	  	{ key:"base", sortable: false, resizeable: false},
-	  	{ key:"overlay", sortable: false, resizeable: false},
-		{ key:"opacity", sortable: false, resizeable: false, formatter: "number"}
-	];
-	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Attached Maps" }, function(mapConfig) {
-		handler(mapConfig);
-	});
-}
-org.sarsoft.view.MapConfigTable.prototype = new org.sarsoft.view.EntityTable();
-
 org.sarsoft.view.OperationalPeriodTable = function() {
 	var coldefs = [
 		{ key : "id", label : "ID"},
@@ -155,7 +142,6 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 org.sarsoft.controller.AssignmentPrintMapController = function(container, id) {
 	var that = this;
 	this.container = container;
-	this.fmaps = new Array();
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
 	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
 }
@@ -163,7 +149,6 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id) {
 org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCallback = function(assignment) {
 	var that = this;
 	this.assignment = assignment;
-	this.tilesLoaded = 0;
 
 	var config = new Object();
 	config.clickable = false;
@@ -171,40 +156,46 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	config.color = "#FF0000";
 	config.opacity = 100;
 
-	for(var i = 0; i < assignment.mapConfigs.length; i++) {
-		var mapConfig = assignment.mapConfigs[i];
+	this.div = document.createElement("div");
+	this.div.className="page";
+	this.container.appendChild(this.div);
+	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
+	this.fmap = new org.sarsoft.FixedGMap(map);
+//    GEvent.addListener(map, "tilesloaded", function() {
+//       	window.print();
+//	});
 
-		var div = document.createElement("div");
-		div.style.width="8in";
-		div.style.height="10in";
-		div.className="page";
-		this.container.appendChild(div);
-		var map = new org.sarsoft.EnhancedGMap().createMap(div);
-		var fmap = new org.sarsoft.FixedGMap(map);
-	    GEvent.addListener(map, "tilesloaded", function() {
-	        that.tilesLoaded++;
-	        if(that.tilesLoaded == that.fmaps.length) {
-	        	window.print();
-	        }
-		});
-		this.fmaps.push(fmap);
+	var propertyDAO = new org.sarsoft.SearchPropertyDAO(function() { that._handleServerError(); });
+	propertyDAO.loadAll(function(configs) {
+		for(var i = 0; i < configs.length; i++) {
+			if(configs[i].name == "map_settings") {
+				var mapConfig = YAHOO.lang.JSON.parse(configs[i].value);
+				that.fmap.setConfig(mapConfig);
+				var bb = that.assignment.boundingBox;
+				that.setSize("8in","10in");
+				that.fmap.map.setCenter(that.fmap.map.center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+			}
+		}
+	});
 
-		var bb = assignment.boundingBox;
-		var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-		fmap.setMapLayers(mapConfig.base, mapConfig.overlay, mapConfig.opacity/100);
-		fmap.map.setCenter(center, fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-	}
 
 	this.assignmentDAO.getWays(function(ways) {
 		for(var i = 0; i < ways.length; i++) {
 			var way = ways[i];
 			way.waypoints = way.zoomAdjustedWaypoints;
-			for(j = 0; j < that.fmaps.length; j++) {
-				that.fmaps[j].addWay(way, config);
-			}
+			that.fmap.addWay(way, config);
 		}
 	}, assignment, 10);
 
+}
+
+org.sarsoft.controller.AssignmentPrintMapController.prototype.setSize = function(width, height) {
+	this.div.style.width=width;
+	this.div.style.height=height;
+	this.fmap.map.checkResize();
+	var bb = this.assignment.boundingBox;
+	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
+	this.fmap.map.setCenter(center);
 }
 
 org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, ways, defaultConfig) {
@@ -221,25 +212,29 @@ org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, w
 	config.opacity = (defaultConfig.opacity == null) ? 100 : defaultConfig.opacity;
 	this.baseConfig = config;
 
-	var mapConfig = assignment.mapConfigs[0];
 
 	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
 	this.fmap = new org.sarsoft.FixedGMap(map);
 
 	var bb = assignment.boundingBox;
 	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-	this.setMapConfig(mapConfig);
-	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+
+	var propertyDAO = new org.sarsoft.SearchPropertyDAO(function() { that._handleServerError(); });
+	propertyDAO.loadAll(function(configs) {
+		for(var i = 0; i < configs.length; i++) {
+			if(configs[i].name == "map_settings") {
+				var mapConfig = YAHOO.lang.JSON.parse(configs[i].value);
+				that.fmap.setConfig(mapConfig);
+				that.fmap.map.setCenter(center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+			}
+		}
+	});
 
 	for(var i = 0; i < this.ways.length; i++) {
 		var way = this.ways[i];
 		way.waypoints = way.zoomAdjustedWaypoints;
 		that.fmap.addWay(way, config);
 	}
-}
-
-org.sarsoft.controller.AssignmentViewMapController.prototype.setMapConfig = function(mapConfig) {
-	if(mapConfig != null) this.fmap.setMapLayers(mapConfig.base, mapConfig.overlay, mapConfig.opacity/100);
 }
 
 org.sarsoft.controller.AssignmentViewMapController.prototype.addWay = function(way, config) {
@@ -424,7 +419,6 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "Return to Operational Period " + operationalperiod.id, applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/operationalperiod/" + operationalperiod.id; }},
 		{text : "Edit Assignment Bounds", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.edit(data.subject) }},
 		{text : "View Assignment Details", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable"); }, handler : function(data) { window.open('/app/assignment/' + data.subject.id); }},
-		{text : "Attach this map to assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable"); }, handler : function(data) { var config = that.emap.getConfig(); that.assignmentDAO.createMapConfig(data.subject.id, {base: config.base, overlay: config.overlay, opacity: config.opacity*100}); }},
 		{text : "Delete Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.assignmentDAO.delete(data.subject.id); that.removeAssignment(data.subject); }},
 		{text : "Save Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.save(data.subject) }},
 		{text : "Discard Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.discard(data.subject) }}
@@ -448,7 +442,6 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 
 	var handler = function(assignment) {
 		var mapconfig = that.emap.getConfig();
-		assignment.mapConfigs = [{base: mapconfig.base, overlay: mapconfig.overlay, opacity: mapconfig.opacity}];
 		var way = { name: assignment.name, polygon: true };
 		assignment.ways = [way];
 		way.waypoints = that.emap.getNewWaypoints(that.newAssignmentDlg.point, way.polygon);

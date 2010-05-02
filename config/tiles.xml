@@ -9,7 +9,8 @@
 		<put-attribute name="content" value="/plans/assignment.jsp"/>
 		<put-attribute name="app" value="plans"/>
 	</definition>
-	<definition name="Assignment.Print" template="/plans/assignment-print.jsp"/>
+	<definition name="Assignment.PrintForms" template="/plans/assignment-print.jsp"/>
+	<definition name="Assignment.PrintMaps" template="/plans/assignment-printmaps.jsp"/>
 
 	<definition name="OperationalPeriod.List" extends="App.Base">
 		<put-attribute name="content" value="/plans/oplist.jsp"/>

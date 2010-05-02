@@ -251,6 +251,7 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 
 	var sw = GeoUtil.GLatLngToUTM(bounds.getSouthWest());
 	var ne = GeoUtil.GLatLngToUTM(bounds.getNorthEast());
+	if(ne.zone - sw.zone > 1) return;
 	this._drawUTMGridForZone(sw.zone, spacing, false);
 	if(sw.zone != ne.zone)  this._drawUTMGridForZone(ne.zone, spacing, true);
 }
