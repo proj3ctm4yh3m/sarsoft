@@ -268,7 +268,6 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 	var east = GeoUtil.getEastBorder(zone);
 	var west = GeoUtil.getWestBorder(zone);
 
-	var easting = Math.round(sw.e / spacing)  * spacing;
 
 	function createText(meters) {
 		var element = document.createElement("div");
@@ -278,6 +277,8 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		return element;
 	}
 
+	var easting = Math.round(sw.e / spacing)  * spacing;
+	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getNorthEast()).x;
 	while(easting < ne.e) {
 		var vertices = new Array();
 		vertices.push(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
@@ -288,17 +289,21 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 			this.utmgridlines.push(overlay);
 			this.map.addOverlay(overlay);
 
-			var element = createText(easting);
-			element.style.bottom="2px";
-			element.style.left=(this.map.fromLatLngToContainerPixel(vertices[0]).x)+"px";
-			element.style.padding="0 0 0 .5em";
-			this.map.getContainer().appendChild(element);
-			this.text.push(element);
+			var offset = this.map.fromLatLngToContainerPixel(vertices[0]).x;
+			if(0 < offset && offset < pxmax) {
+				var element = createText(easting);
+				element.style.bottom="2px";
+				element.style.left=offset+"px";
+				element.style.padding="0 0 0 .5em";
+				this.map.getContainer().appendChild(element);
+				this.text.push(element);
+			}
 		}
 		easting = easting + spacing;
 	}
 
 	var northing = Math.round(sw.n / spacing) * spacing;
+	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	while(northing < ne.n) {
 		var vertices = new Array();
 		var start = GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone});
@@ -311,16 +316,19 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		this.map.addOverlay(overlay);
 		northing = northing + spacing;
 
-		var element = createText(northing);
-		if(right) {
-			element.style.right="2px";
-		} else {
-			element.style.left="2px";
+		var offset = this.map.fromLatLngToContainerPixel(vertices[0]).y;
+		if(0 < offset && offset < pxmax) {
+			var element = createText(northing);
+			if(right) {
+				element.style.right="2px";
+			} else {
+				element.style.left="2px";
+			}
+			element.style.top=offset+"px";
+			element.style.padding=".5em 0 0 0";
+			this.map.getContainer().appendChild(element);
+			this.text.push(element);
 		}
-		element.style.top=(this.map.fromLatLngToContainerPixel(vertices[0]).y)+"px";
-		element.style.padding=".5em 0 0 0";
-		this.map.getContainer().appendChild(element);
-		this.text.push(element);
 	}
 
 }
