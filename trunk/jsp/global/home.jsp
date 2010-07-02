@@ -20,6 +20,7 @@ gpxdlg = new org.sarsoft.view.BulkGPXDlg();
 <li><a href="/app/operationalperiod/${lastperiod.id}/map">Map view</a> of the most recent Operational Period</a></li>
 <li><a href="javascript:gotoAssignment()">Jump to</a> assignment number <input id="assignmentid" length="4" type="text"/></li>
  <li><a href="javascript:gpxdlg.dialog.show()">Bulk import from GPX</a></li>
+ <li><a href="/rest/operationalperiod?format=GPX">Bulk export to GPX</a></li>
 </ul>
 
 
