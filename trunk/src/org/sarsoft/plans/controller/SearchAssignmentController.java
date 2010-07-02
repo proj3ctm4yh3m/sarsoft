@@ -164,6 +164,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	public String addWay(JSONForm params, @PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
+		WayType type = (request.getParameter("type") != null) ? WayType.valueOf(request.getParameter("type").toUpperCase()) : null;
 
 		Way[] ways;
 		switch(format) {
@@ -179,8 +180,10 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 
 		for(Way way : ways) {
-			way.setUpdated(new Date());
-			assignment.getWays().add(way);
+			if(type == null || way.getType() == type) {
+				way.setUpdated(new Date());
+				assignment.getWays().add(way);
+			}
 		}
 		dao.save(assignment);
 		return (ways.length == 1) ? json(model, ways[0]) : json(model, ways);

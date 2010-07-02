@@ -138,6 +138,7 @@ org.sarsoft.Loader.queue(function() {
     		if(assignment.ways[i].id == way.id) idx = i;
     	}
     	assignmentDAO.deleteWay(assignment, idx, way);
+    	assignment.ways.splice(idx, 1);
     	tracktable.table.deleteRow(record);
 	});
     tracktable.create(document.getElementById("attachedtrackscontainer"));
