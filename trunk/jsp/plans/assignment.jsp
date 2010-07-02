@@ -32,7 +32,7 @@ function finalize() {
 
 </script>
 
-<h2>Assignment ${assignment.name}</h2>
+<h2>Assignment ${assignment.id}</h2>
 This ${assignment.status} assignment covers ${assignment.formattedSize} with ${assignment.timeAllocated} hours allocated.
 <c:if test="${assignment.trackDistance gt 0}">  ${assignment.trackDistance} km of tracks have been downloaded.</c:if>
   You can:<br/>
@@ -66,7 +66,7 @@ back to draft status; if you do this, you must track down any existing copies in
 </c:if>
 			<form name="assignment" action="/app/assignment/${assignment.id}" method="post">
 			 <table border="0">
-			 <tr><td>Name</td><td><input name="name" type="text" value="${assignment.name}"/></td></tr>
+			 <tr><td>Name</td><td><input name="name" type="text" value="${assignment.id}"/></td></tr>
 			 <tr><td>Resource Type</td><td>
 				 <select name="resourceType" value="${assignment.resourceType}">
 				  <c:forEach var="type" items="<%= SearchAssignment.ResourceType.values() %>">

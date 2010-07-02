@@ -10,7 +10,7 @@ import net.sf.json.JSONObject;
 
 @JSONAnnotatedEntity
 @Entity
-public class SearchProperty {
+public class SearchProperty extends SarModelObject {
 
 	private String name;
 	private String value;
@@ -29,7 +29,6 @@ public class SearchProperty {
 		setValue(value);
 	}
 
-	@Id
 	@JSONSerializable
 	public String getName() {
 		return name;

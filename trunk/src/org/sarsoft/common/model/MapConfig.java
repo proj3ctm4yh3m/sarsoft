@@ -10,9 +10,8 @@ import org.hibernate.annotations.GenericGenerator;
 
 @JSONAnnotatedEntity
 @Entity
-public class MapConfig {
+public class MapConfig extends SarModelObject {
 
-	private Long id;
 	private String base;
 	private String overlay;
 	private int opacity;
@@ -21,16 +20,6 @@ public class MapConfig {
 		return (MapConfig) JSONObject.toBean(json, MapConfig.class);
 	}
 
-	@Id
-	@JSONSerializable
-	@GenericGenerator(name = "generator", strategy="increment")
-	@GeneratedValue(generator="generator")
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
 	@JSONSerializable
 	public String getBase() {
 		return base;

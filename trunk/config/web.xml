@@ -36,6 +36,10 @@
 		<param-value>configSessionFactory</param-value>
 	</init-param>
 </filter>
+<filter>
+	<filter-name>requestPropertyFilter</filter-name>
+	<filter-class>org.sarsoft.common.util.RequestPropertyFilter</filter-class>
+</filter>
 <filter-mapping>
 	<filter-name>hibernateFilter</filter-name>
 	<url-pattern>/rest/*</url-pattern>
@@ -50,6 +54,14 @@
 </filter-mapping>
 <filter-mapping>
 	<filter-name>hibernateFilter2</filter-name>
+	<url-pattern>/app/*</url-pattern>
+</filter-mapping>
+<filter-mapping>
+	<filter-name>requestPropertyFilter</filter-name>
+	<url-pattern>/rest/*</url-pattern>
+</filter-mapping>
+<filter-mapping>
+	<filter-name>requestPropertyFilter</filter-name>
 	<url-pattern>/app/*</url-pattern>
 </filter-mapping>
 <servlet>

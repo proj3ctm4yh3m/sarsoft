@@ -51,10 +51,6 @@ org.sarsoft.OperationalPeriodDAO.prototype.loadAssignments = function(handler, p
 	this._doGet("/" + periodId + "/assignment", handler);
 }
 
-org.sarsoft.OperationalPeriodDAO.prototype.createAssignmentsFromTFX = function(handler, id, obj) {
-	this._doPost("/" + id + "/assignment/tfx", handler, obj);
-}
-
 org.sarsoft.view.OperationalPeriodTable = function() {
 	var coldefs = [
 		{ key : "id", label : "ID"},
@@ -72,7 +68,7 @@ org.sarsoft.view.OperationalPeriodTable.prototype = new org.sarsoft.view.EntityT
 
 org.sarsoft.view.SearchAssignmentTable = function() {
 	var coldefs = [
-		{ key : "name", label : "Number", sortable: true},
+		{ key : "id", label : "Number", sortable: true},
 		{ key : "resourceType", label : "Resource Type", sortable: true},
 		{ key : "status", label : "Status", sortable: true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByStatus) },
 		{ key : "formattedSize", label : "Size", sortable: true},
@@ -98,7 +94,7 @@ org.sarsoft.view.WayTable.prototype = new org.sarsoft.view.EntityTable();
 
 org.sarsoft.view.SearchAssignmentForm = function() {
 	var fields = [
-		{ name : "name", label: "Assignment Number", type : "string"},
+		{ name : "id", label: "Assignment Number", type : "string"},
 		{ name : "polygon", label: "Area Assignment?", type: "boolean", value: true},
 		{ name : "operationalPeriodId", label: "Operational Period", type: "number"},
 		{ name : "resourceType", type : ["GROUND","DOG","MOUNTED","OHV"] },
@@ -262,33 +258,6 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.highlight = functio
 	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 
 	this.highlighted = way;
-}
-
-org.sarsoft.view.OperationalPeriodTFXDlg2 = function(id) {
-	var that = this;
-	this.id = id;
-	var dao = new org.sarsoft.OperationalPeriodDAO();
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="200";
-	dlg.style.top="200px";
-	dlg.style.left="200px";
-	dlg.style.width="420px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Upload TFX File"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
-	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='tfxupload' action='/rest/operationalperiod/" + id + "/assignment/tfx'><input type='file' name='file'/></form>";
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
-	var buttons = [ { text : "Import", handler: function() {
-		that.dialog.hide(); document.forms['tfxupload'].submit();
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this.dialog.render(document.body);
-	this.dialog.hide();
 }
 
 org.sarsoft.view.OperationalPeriodForm = function() {
@@ -612,3 +581,32 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config);
 	}
 }
+
+
+org.sarsoft.view.BulkGPXDlg = function(id) {
+	var that = this;
+	this.id = id;
+	var dao = new org.sarsoft.OperationalPeriodDAO();
+	var dlg = document.createElement("div");
+	dlg.style.position="absolute";
+	dlg.style.zIndex="200";
+	dlg.style.top="200px";
+	dlg.style.left="200px";
+	dlg.style.width="420px";
+	var hd = document.createElement("div");
+	hd.appendChild(document.createTextNode("Upload GPX File"));
+	hd.className = "hd";
+	dlg.appendChild(hd);
+	var bd = document.createElement("div");
+	bd.className = "bd";
+	dlg.appendChild(bd);
+	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/rest/search'><input type='hidden' name'format' value='GPX'/><input type='file' name='file'/></form>";
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
+	var buttons = [ { text : "Import", handler: function() {
+		that.dialog.hide(); document.forms['gpxupload'].submit();
+	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
+	this.dialog.cfg.queueProperty("buttons", buttons);
+	this.dialog.render(document.body);
+	this.dialog.hide();
+}
+

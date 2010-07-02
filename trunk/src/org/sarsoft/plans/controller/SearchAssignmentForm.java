@@ -4,7 +4,7 @@ import org.sarsoft.plans.model.Probability;
 import org.sarsoft.plans.model.SearchAssignment;
 
 public class SearchAssignmentForm {
-	private String name;
+	private long id;
 	private SearchAssignment.ResourceType resourceType;
 	private String details;
 	private long timeAllocated;
@@ -17,11 +17,11 @@ public class SearchAssignmentForm {
 	public void setDetails(String details) {
 		this.details = details;
 	}
-	public String getName() {
-		return name;
+	public long getId() {
+		return id;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setId(long id) {
+		this.id = id;
 	}
 	public SearchAssignment.ResourceType getResourceType() {
 		return resourceType;

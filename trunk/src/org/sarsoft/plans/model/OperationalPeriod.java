@@ -1,6 +1,7 @@
 package org.sarsoft.plans.model;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Entity;
@@ -16,6 +17,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
+import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.plans.controller.SearchAssignmentController;
@@ -23,25 +25,14 @@ import net.sf.json.JSONObject;
 
 @JSONAnnotatedEntity
 @Entity
-public class OperationalPeriod {
+public class OperationalPeriod extends SarModelObject {
 
-	private Integer id;
 	private String description;
 	private Date start;
-	private Set<SearchAssignment> assignments;
+	private Set<SearchAssignment> assignments = new HashSet<SearchAssignment>();
 
 	public static OperationalPeriod createFromJSON(JSONObject json) {
 		return (OperationalPeriod) JSONObject.toBean(json, OperationalPeriod.class);
-	}
-
-	@Id
-	@JSONSerializable
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
 	}
 
 	@JSONSerializable

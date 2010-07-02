@@ -9,6 +9,7 @@ import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,21 +61,10 @@ public class AdminController extends JSONBaseController {
 		return app(model, "Pages.Home");
 	}
 
-	@RequestMapping(value="/rest/dataschema/{ds}", method = RequestMethod.GET)
-	public String setDataSchema(Model model, @PathVariable("ds") String schema, HttpServletRequest request) {
-		runtimeProperties.setInitialized(true);
-		runtimeProperties.setSearchName(schema);
-		String jdbcUrl = "jdbc:hsqldb:searches/" + schema + "/sarsoft";
-		if(!jdbcUrl.equalsIgnoreCase(dataSource.getJdbcUrl())) {
-			dataSource.setJdbcUrl("jdbc:hsqldb:searches/" + schema + "/sarsoft");
-			sessionFactory.updateDatabaseSchema();
-		}
-		return "/blank";
-	}
-
-	@RequestMapping(value="/app/dataschema/{ds}", method = RequestMethod.GET)
-	public String setAppDataSchema(Model model, @PathVariable("ds") String schema, HttpServletRequest request) {
-		setDataSchema(model, schema, request);
+	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
+	public String setAppDataSchema(Model model, @PathVariable("ds") String search, HttpServletRequest request) {
+		request.getSession().setAttribute("search", search);
+		RuntimeProperties.setSearch(search);
 		return homePage(model, request);
 	}
 
@@ -97,18 +87,14 @@ public class AdminController extends JSONBaseController {
 
 	@RequestMapping(value="/app/admin", method = RequestMethod.GET)
 	public String admin(Model model) {
-		String url = dataSource.getJdbcUrl();
-		url = url.substring(url.indexOf('/')+1);
-		String search = url.substring(0, url.indexOf('/'));
-		model.addAttribute("search", search);
-		File dir = new File("searches");
-		model.addAttribute("searches", dir.list());
+		model.addAttribute("search", RuntimeProperties.getSearch());
+		model.addAttribute("searches", dao.getAllSearchNames());
 
-		url = configDataSource.getJdbcUrl();
+		String url = configDataSource.getJdbcUrl();
 		url = url.substring(url.indexOf('/')+1);
 		String config = url.substring(0, url.indexOf('/'));
-		model.addAttribute("config", search);
-		dir = new File("config");
+		model.addAttribute("config", config);
+		File dir = new File("config");
 		model.addAttribute("configs", dir.list());
 
 		model.addAttribute("mapkey", getConfigValue("maps.key"));
@@ -133,7 +119,7 @@ public class AdminController extends JSONBaseController {
 	@RequestMapping(value="/rest/mapsource/{name}", method = RequestMethod.POST)
 	public String updateMapSource(@PathVariable("name") String name, Model model, JSONForm params, HttpServletRequest request) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
-		MapSource source = (MapSource) configDao.load(MapSource.class, name);
+		MapSource source = (MapSource) configDao.getByAttr(MapSource.class, "name", name);
 		switch(action) {
 		case DELETE :
 			configDao.delete(source);

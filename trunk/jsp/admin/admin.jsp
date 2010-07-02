@@ -21,10 +21,10 @@
 You are currently working with the search <b>${search}</b>.  You can switch to one of these existing searches:<br/>
 <ul>
 <c:forEach var="srch" items="${searches}">
-<li><a href="/rest/dataschema/${srch}">${srch}</a></li>
+<li><a href="/app/setsearch/${srch}">${srch}</a></li>
 </c:forEach>
 </ul>
-Or, create a new search: <input type="text" size="15" name="newsearch" id="newsearch"/><button onclick="document.location='/app/dataschema/'+document.getElementById('newsearch').value">Go</button>
+Or, create a new search: <input type="text" size="15" name="newsearch" id="newsearch"/><button onclick="document.location='/app/setsearch/'+document.getElementById('newsearch').value">Go</button>
 
 <br/><br/>
 <h4>Configuration</h4>
@@ -35,7 +35,7 @@ Your current configuration is <b>${config}</b>.  You can switch to one of these 
 <li><a href="/rest/configschema/${cfg}">${cfg}</a></li>
 </c:forEach>
 </ul>
-Or, create a new configuration: <input type="text" size="15" name="newconfig" id="newconfig"/><button onclick="document.location='/app/configschema/'+document.getElementById('newconfig').value">Go</button>
+Or, create a new configuration: <input type="text" size="15" name="newconfig" id="newconfig"/><button onclick="document.location='/app/setsearch/'+document.getElementById('newconfig').value">Go</button>
 
 </div>
 <div id="api">

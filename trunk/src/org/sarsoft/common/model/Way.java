@@ -28,9 +28,8 @@ import org.hibernate.annotations.LazyCollectionOption;
 @JSONAnnotatedEntity
 @Entity
 @Inheritance(strategy=InheritanceType.TABLE_PER_CLASS)
-public class Way implements IPreSave {
+public class Way extends SarModelObject implements IPreSave {
 
-	private Long id;
 	private String name;
 	private boolean polygon;
 	private WayType type = WayType.ROUTE;
@@ -54,16 +53,10 @@ public class Way implements IPreSave {
 		return (Way[]) JSONArray.toArray(json, Way.class, classHints);
 	}
 
-	@Id
 	@JSONSerializable
-	@GenericGenerator(name = "generator", strategy="increment")
-	@GeneratedValue(generator="generator")
+	@Transient
 	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
+		return getPk();
 	}
 
 	@JSONSerializable

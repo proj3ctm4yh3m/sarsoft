@@ -5,6 +5,9 @@
 function gotoAssignment() {
 	window.location = "/app/assignment/" + document.getElementById("assignmentid").value;
 }
+org.sarsoft.Loader.queue(function() {
+gpxdlg = new org.sarsoft.view.BulkGPXDlg();
+});
 </script>
 
 <h1>Welcome to Sarsoft!</h1>
@@ -16,4 +19,7 @@ function gotoAssignment() {
 <li><a href="/app/operationalperiod/${lastperiod.id}">List view</a> of the most recent Operational Period</a></li>
 <li><a href="/app/operationalperiod/${lastperiod.id}/map">Map view</a> of the most recent Operational Period</a></li>
 <li><a href="javascript:gotoAssignment()">Jump to</a> assignment number <input id="assignmentid" length="4" type="text"/></li>
+ <li><a href="javascript:gpxdlg.dialog.show()">Bulk import from GPX</a></li>
 </ul>
+
+
