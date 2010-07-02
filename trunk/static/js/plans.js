@@ -393,14 +393,15 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		that.contextMenu.show(point, that._getAssignmentFromWay(way));
 	});
 
-	this.searchDAO.load(function(config) {
-			var mapConfig = YAHOO.lang.JSON.parse(config.value);
-			that.emap.setConfig(mapConfig);
-	}, "mapConfig");
-
-//		var bb = that.period.boundingBox;
-//		var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-//		that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+	this.periodDAO.load(function(period) {
+		that.searchDAO.load(function(config) {
+				var mapConfig = YAHOO.lang.JSON.parse(config.value);
+				that.emap.setConfig(mapConfig);
+				var bb = period.boundingBox;
+				var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
+				that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+		}, "mapConfig");
+	}, that.period.id);
 
 	var handler = function(assignment) {
 		var mapconfig = that.emap.getConfig();
