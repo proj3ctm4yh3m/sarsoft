@@ -9,6 +9,7 @@ import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.plans.model.Search;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;
@@ -62,9 +63,14 @@ public class AdminController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
-	public String setAppDataSchema(Model model, @PathVariable("ds") String search, HttpServletRequest request) {
-		request.getSession().setAttribute("search", search);
-		RuntimeProperties.setSearch(search);
+	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request) {
+		request.getSession().setAttribute("search", name);
+		RuntimeProperties.setSearch(name);
+		if(dao.getByAttr(Search.class, "name", name) == null) {
+			Search search = new Search();
+			search.setName(name);
+			dao.save(search);
+		}
 		return homePage(model, request);
 	}
 
