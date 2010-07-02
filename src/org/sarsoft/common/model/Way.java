@@ -141,7 +141,7 @@ public class Way extends SarModelObject implements IPreSave {
 
 	@Transient
 	public double getArea() {
-		if(polygon == false) return 0;
+		if(polygon == false || waypoints.size() == 0) return 0;
 		double area = 0;
 		Waypoint origin = waypoints.get(0);
 		for(int i = 0; i < waypoints.size()-1; i++) {
@@ -157,6 +157,7 @@ public class Way extends SarModelObject implements IPreSave {
 	@Transient
 	public double getDistance() {
 		double distance = 0;
+		if(waypoints.size() == 0) return 0;
 		Waypoint wpt = waypoints.get(0);
 		ListIterator<Waypoint> it = waypoints.listIterator();
 		while(it.hasNext()) {
@@ -172,6 +173,7 @@ public class Way extends SarModelObject implements IPreSave {
 	@Transient
 	@JSONSerializable
 	public Waypoint[] getBoundingBox() {
+		if(waypoints.size() == 0) return null;
 		ListIterator<Waypoint> it = waypoints.listIterator();
 		double minLat = waypoints.get(0).getLat();
 		double minLng = waypoints.get(0).getLng();

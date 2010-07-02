@@ -27,8 +27,12 @@ org.sarsoft.SearchAssignmentDAO.prototype.saveWaypoints = function(assignment, i
 	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", function() {}, waypoints);
 }
 
-org.sarsoft.SearchAssignmentDAO.prototype.createWaysFromGpx = function(handler, id, obj) {
-	this._doPost("/" + id + "/way", handler, obj, "format=gpx");
+org.sarsoft.SearchAssignmentDAO.prototype.createWaysFromGpx = function(handler, id, obj, type) {
+	if(type != null) {
+		this._doPost("/" + id + "/way", handler, obj, "format=gpx&type="+type);
+	} else {
+		this._doPost("/" + id + "/way", handler, obj, "format=gpx");
+	}
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.createMapConfig = function(id, config, handler) {
@@ -85,7 +89,7 @@ org.sarsoft.view.SearchAssignmentTable.prototype = new org.sarsoft.view.EntityTa
 org.sarsoft.view.WayTable = function(handler, onDelete) {
 	var coldefs = [
 		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
-		{ key : "id", label : "ID"},
+		{ key : "name", label : "Name"},
 		{ key : "updated", label : "Uploaded", formatter : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Tracks" }, handler);

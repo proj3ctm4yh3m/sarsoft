@@ -17,7 +17,7 @@
 </xsl:template>
 
 <xsl:template name="GpxToTrack">
-	<name type="string"><xsl:value-of select="gpx:name"/>:<xsl:value-of select="gpx:desc"/></name>
+	<name type="string"><xsl:value-of select="gpx:name"/><xsl:if test="string-length(normalize-space(gpx:desc))&gt;0">:<xsl:value-of select="gpx:desc"/></xsl:if></name>
 	<polygon type="boolean">false</polygon>
 	<type type="string">TRACK</type>
 	<waypoints class="array">

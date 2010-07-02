@@ -244,10 +244,12 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 		Waypoint[] box = ways.get(0).getBoundingBox();
 		for(Way way : ways) {
 			Waypoint[] bound = way.getBoundingBox();
-			if(bound[0].getLat() < box[0].getLat()) box[0] = new Waypoint(bound[0].getLat(), box[0].getLng());
-			if(bound[0].getLng() < box[0].getLng()) box[0] = new Waypoint(box[0].getLat(), bound[0].getLng());
-			if(bound[1].getLat() > box[1].getLat()) box[1] = new Waypoint(bound[1].getLat(), box[1].getLng());
-			if(bound[1].getLng() > box[1].getLng()) box[1] = new Waypoint(box[1].getLat(), bound[1].getLng());
+			if(bound != null) {
+				if(bound[0].getLat() < box[0].getLat()) box[0] = new Waypoint(bound[0].getLat(), box[0].getLng());
+				if(bound[0].getLng() < box[0].getLng()) box[0] = new Waypoint(box[0].getLat(), bound[0].getLng());
+				if(bound[1].getLat() > box[1].getLat()) box[1] = new Waypoint(bound[1].getLat(), box[1].getLng());
+				if(bound[1].getLng() > box[1].getLng()) box[1] = new Waypoint(box[1].getLat(), bound[1].getLng());
+			}
 		}
 		return box;
 	}

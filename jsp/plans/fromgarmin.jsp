@@ -28,6 +28,7 @@
 
 
 function ReadFromGarmin(id) {
+	start('find');
 	control = new Garmin.DeviceControl();
 	control.register(new GarminReadListener(id));
 	console("attempting to unlock with domain, key: (${hostName}, ${garminKey})");
@@ -51,6 +52,7 @@ GarminReadListener.prototype.onFinishFindDevices = function(obj) {
     }
 	if(devices.length == 1) {
 		pass('find');
+		start('copy');
 		if(control.checkDeviceReadSupport(Garmin.DeviceControl.FILE_TYPES.gpx)) {
 			control.readFromDevice();
 		} else {
@@ -67,8 +69,10 @@ GarminReadListener.prototype.onFinishReadFromDevice = function(obj) {
 	var gpx = control.gpsDataString;
 	console('GPX is:');
 	console(gpx);
+	pass('copy');
+	start('post');
 	var dao = new org.sarsoft.SearchAssignmentDAO();
-	dao.createWaysFromGpx(function() { pass('copy'); pass('done'); }, this.id, {gpx: gpx});
+	dao.createWaysFromGpx(function() { pass('post');start('done');pass('done'); }, this.id, {gpx: gpx}, "TRACK");
 }
 
 GarminReadListener.prototype.onException = function(obj) {
@@ -79,12 +83,17 @@ function load() {
 	ReadFromGarmin(${id});
 }
 
+function start(id) {
+	document.getElementById(id).style.visibility = "visible";
+}
+
 function pass(id) {
 	document.getElementById(id).style.color="green";
 }
 function fail(id, message) {
 	document.getElementById(id).style.color="red";
 	document.getElementById('err').innerHTML=message;
+	document.getElementById(id).style.textDecoration="none";
 	errorDlg.show();
 }
 function console(str) {
@@ -100,9 +109,10 @@ function showDetails() {
 <body class="yui-skin-sam" onload="load()">
 
 <div style="margin-left: 4em; margin-top: 4em">
-<h2 id="find">Searching For Devices</h2>
-<h2 id="copy">Copying Tracks</h2>
-<h2 id="done">All Done</h2>
+<h2 id="find" style="visibility: hidden">Searching For Devices</h2>
+<h2 id="copy" style="visibility: hidden">Copying Tracks</h2>
+<h2 id="post" style="visibility: hidden">Posting Data to Server</h2>
+<h2 id="done" style="visibility: hidden">All Done</h2>
 </div>
 <div style="margin-top: 2em; margin-left: 4em">
 <a href="javascript:window.back()">Return to Assigment</a><br/><br/>
