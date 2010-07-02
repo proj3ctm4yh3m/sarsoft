@@ -71,13 +71,13 @@ org.sarsoft.ConfigDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.ConfigDAO.prototype = new org.sarsoft.BaseDAO();
 
-org.sarsoft.SearchPropertyDAO = function(errorHandler, baseURL) {
-	if(baseURL == undefined) baseURL = "/rest/searchProperty";
+org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
+	if(baseURL == undefined) baseURL = "/rest/search";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
 }
 
-org.sarsoft.SearchPropertyDAO.prototype = new org.sarsoft.BaseDAO();
+org.sarsoft.SearchDAO.prototype = new org.sarsoft.BaseDAO();
 
 org.sarsoft.Loader = new Object();
 org.sarsoft.Loader._tasks = new Array();

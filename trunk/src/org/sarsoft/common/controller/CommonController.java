@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.sarsoft.admin.model.Config;
 import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
-import org.sarsoft.common.model.SearchProperty;
 import org.sarsoft.common.util.Constants;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -75,31 +74,6 @@ public class CommonController extends JSONBaseController {
 		System.out.println("Saving config " + realConfig.getName() + " " + realConfig.getValue());
 		configDao.save(realConfig);
 		return json(model, config);
-	}
-
-	@RequestMapping(value="/rest/searchProperty", method = RequestMethod.GET)
-	public String getAllSearchProperties(Model model) {
-		return json(model, dao.loadAll(SearchProperty.class));
-	}
-
-	@RequestMapping(value="/rest/searchProperty/{name}", method = RequestMethod.GET)
-	public String getSearchProperty(Model model, @PathVariable("name") String name) {
-		return json(model, dao.getByAttr(SearchProperty.class, "name", name));
-	}
-
-	@RequestMapping(value="/rest/searchProperty/{name}", method = RequestMethod.POST)
-	public String setSearchProperty(Model model, @PathVariable("name") String name, JSONForm json) {
-		SearchProperty property = SearchProperty.createFromJSON(parseObject(json));
-		SearchProperty realProperty = (SearchProperty) dao.getByAttr(SearchProperty.class, "name", name);
-		if(realProperty == null) {
-			property.setName(name);
-			realProperty = property;
-		} else {
-			realProperty.setValue(property.getValue());
-		}
-		System.out.println("Saving search property " + realProperty.getName() + " " + realProperty.getValue());
-		dao.save(realProperty);
-		return json(model, property);
 	}
 
 }

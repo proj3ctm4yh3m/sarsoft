@@ -161,18 +161,14 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 //       	window.print();
 //	});
 
-	var propertyDAO = new org.sarsoft.SearchPropertyDAO(function() { that._handleServerError(); });
-	propertyDAO.loadAll(function(configs) {
-		for(var i = 0; i < configs.length; i++) {
-			if(configs[i].name == "map_settings") {
-				var mapConfig = YAHOO.lang.JSON.parse(configs[i].value);
-				that.fmap.setConfig(mapConfig);
-				var bb = that.assignment.boundingBox;
-				that.setSize("8in","10in");
-				that.fmap.map.setCenter(that.fmap.map.center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-			}
-		}
-	});
+	var searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
+	searchDAO.load(function(config) {
+			var mapConfig = YAHOO.lang.JSON.parse(config.value);
+			that.fmap.setConfig(mapConfig);
+			var bb = that.assignment.boundingBox;
+			that.setSize("8in","10in");
+			that.fmap.map.setCenter(that.fmap.map.center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+	}, "mapConfig");
 
 
 	this.assignmentDAO.getWays(function(ways) {
@@ -215,16 +211,12 @@ org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, w
 	var bb = assignment.boundingBox;
 	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
 
-	var propertyDAO = new org.sarsoft.SearchPropertyDAO(function() { that._handleServerError(); });
-	propertyDAO.loadAll(function(configs) {
-		for(var i = 0; i < configs.length; i++) {
-			if(configs[i].name == "map_settings") {
-				var mapConfig = YAHOO.lang.JSON.parse(configs[i].value);
-				that.fmap.setConfig(mapConfig);
-				that.fmap.map.setCenter(center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-			}
-		}
-	});
+	var searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
+	searchDAO.load(function(config) {
+		var mapConfig = YAHOO.lang.JSON.parse(config.value);
+		that.fmap.setConfig(mapConfig);
+		that.fmap.map.setCenter(center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+	}, "mapConfig");
 
 	for(var i = 0; i < this.ways.length; i++) {
 		var way = this.ways[i];
@@ -367,7 +359,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.emap = emap;
 	this.period = operationalperiod;
 	this.configDAO = new org.sarsoft.ConfigDAO(function() { that._handleServerError(); });
-	this.propertyDAO = new org.sarsoft.SearchPropertyDAO(function() { that._handleServerError(); });
+	this.searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
 	this.periodDAO = new org.sarsoft.OperationalPeriodDAO(function() { that._handleServerError(); });
 	this.assignments = new Object();
@@ -382,7 +374,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.contextMenu.setItems([
 		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
 		{text : "Map Setup", applicable : function(obj) { return obj == null }, handler : function(data) { that.setupDlg.show(that._mapsetup); }},
-		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); that.propertyDAO.save("map_settings", { name: "map_settings", value: YAHOO.lang.JSON.stringify(that.emap.getConfig())})}},
+		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(that.emap.getConfig())})}},
 		{text : "Hide Previous Operational Periods", applicable : function(obj) { return obj == null && that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = false; that._handleSetupChange(); }},
 		{text : "Show Previous Operational Periods", applicable : function(obj) { return obj == null && !that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = true; that._handleSetupChange(); }},
 		{text : "Return to Operational Period " + operationalperiod.id, applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/operationalperiod/" + operationalperiod.id; }},
@@ -397,17 +389,14 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		that.contextMenu.show(point, that._getAssignmentFromWay(way));
 	});
 
-	this.propertyDAO.loadAll(function(configs) {
-		for(var i = 0; i < configs.length; i++) {
-			if(configs[i].name == "map_settings") {
-				var mapConfig = YAHOO.lang.JSON.parse(configs[i].value);
-				that.emap.setConfig(mapConfig);
-			}
-		}
+	this.searchDAO.load(function(config) {
+			var mapConfig = YAHOO.lang.JSON.parse(config.value);
+			that.emap.setConfig(mapConfig);
+	}, "mapConfig");
+
 //		var bb = that.period.boundingBox;
 //		var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
 //		that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-	});
 
 	var handler = function(assignment) {
 		var mapconfig = that.emap.getConfig();
