@@ -1,6 +1,7 @@
 package org.sarsoft.plans.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -48,26 +49,35 @@ public class OperationalPeriodController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}", method = RequestMethod.GET)
-	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") int id) {
+	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
 		return app(model, "OperationalPeriod.Detail");
 	}
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}/map", method = RequestMethod.GET)
-	public String plansEditor(Model model, @PathVariable("periodId") int id) {
+	public String plansEditor(Model model, @PathVariable("periodId") long id) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
+//		return app(model, "/olplans");
 		return app(model, "/plans");
 	}
 
 
 	// REST PERIOD
 	@RequestMapping(value="/rest/operationalperiod", method = RequestMethod.GET)
-	public String getOperationalPeriods(Model model) {
-		return json(model, dao.loadAll(OperationalPeriod.class));
+	public String getOperationalPeriods(Model model, HttpServletRequest request, HttpServletResponse response) {
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
+		switch (format) {
+		case GPX :
+			response.setHeader("Content-Disposition", "attachment; filename=search.gpx");
+			List<SearchAssignment> assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
+			return gpx(model, assignments, "SearchAssignments");
+		default :
+			return json(model, dao.loadAll(OperationalPeriod.class));
+		}
 	}
 
 	@RequestMapping(value ="/rest/operationalperiod/{opid}", method = RequestMethod.GET)
-	public String getOperationalPeriod(Model model, @PathVariable("opid") int id, HttpServletRequest request, HttpServletResponse response) {
+	public String getOperationalPeriod(Model model, @PathVariable("opid") long id, HttpServletRequest request, HttpServletResponse response) {
 		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 
@@ -90,57 +100,8 @@ public class OperationalPeriodController extends JSONBaseController {
 		return json(model, period);
 	}
 
-	@RequestMapping(value = "/rest/operationalperiod/{periodId}/assignment/tfx", method=RequestMethod.POST)
-	public String addAssignmentsFromTFX(FileUploadForm params, @PathVariable("periodId") int periodId, Model model, HttpServletRequest request) {
-		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, periodId);
-//		JSONObject obj = (JSONObject) parse(params);
-//		String[] tfx = ((String) obj.get("tfx")).split("\n");
-		String[] tfx = params.getFile().split("\n");
-		Map<String, List<Waypoint>> ways = new HashMap<String, List<Waypoint>>();
-		for(String row : tfx) {
-			String[] cols = row.split(",");
-			String name = cols[2].trim().replaceAll("\"", "");
-			if(!ways.containsKey(name)) {
-				List<Waypoint> way = new ArrayList<Waypoint>();
-				ways.put(name, way);
-			}
-			double lat = Double.parseDouble(cols[0].trim());
-			double lng = Double.parseDouble(cols[1].trim());
-			Waypoint wpt = new Waypoint();
-			wpt.setLat(lat);
-			wpt.setLng(lng);
-			List<Waypoint> list = ways.get(name);
-			if(list.size() == 0) {
-				list.add(wpt);
-			} else {
-				Waypoint lastwpt = list.get(list.size() - 1);
-				if(wpt.distanceFrom(lastwpt) > 5 && wpt.distanceFrom(lastwpt) < 400) {
-					list.add(wpt);
-				}
-			}
-		}
-
-		Iterator<String> it = ways.keySet().iterator();
-		while(it.hasNext()) {
-			String name = it.next();
-			SearchAssignment assignment = new SearchAssignment();
-			assignment.setName(name);
-			Way way = new Way();
-			way.setName(name);
-			way.setType(WayType.TRACK);
-			way.setPolygon(false);
-			way.setWaypoints(ways.get(name));
-			ArrayList<Way> list = new ArrayList<Way>();
-			list.add(way);
-			assignment.setWays(list);
-			period.addAssignment(assignment);
-		}
-		dao.save(period);
-		return json(model, period);
-	}
-
 	@RequestMapping(value="/rest/operationalperiod/{periodId}/assignment", method = RequestMethod.GET)
-	public String getAssignmentsForOperationalPeriod(Model model, @PathVariable("periodId") int id) {
+	public String getAssignmentsForOperationalPeriod(Model model, @PathVariable("periodId") long id) {
 		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
 		return json(model, period.getAssignments());
 	}

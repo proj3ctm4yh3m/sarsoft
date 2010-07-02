@@ -2,23 +2,14 @@ package org.sarsoft.common.util;
 
 public class RuntimeProperties {
 
-	private boolean initialized = false;
-	private String searchName;
+	private static ThreadLocal<String> tSearch = new ThreadLocal<String>();
 
-	public String getSearchName() {
-		return searchName;
+	public static void setSearch(String search) {
+		tSearch.set(search);
 	}
 
-	public void setSearchName(String searchName) {
-		this.searchName = searchName;
-	}
-
-	public boolean isInitialized() {
-		return initialized;
-	}
-
-	public void setInitialized(boolean initialized) {
-		this.initialized = initialized;
+	public static String getSearch() {
+		return tSearch.get();
 	}
 
 }

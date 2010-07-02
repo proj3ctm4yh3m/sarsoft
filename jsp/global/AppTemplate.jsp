@@ -33,7 +33,7 @@
 </c:choose>
 <c:choose>
  <c:when test="${assignment ne null}">
-  &nbsp;:&nbsp;<a href="/app/operationalperiod/${assignment.operationalPeriod.id}">${assignment.operationalPeriod.description}</a>&nbsp;:&nbsp;Assignment ${assignment.name}
+  &nbsp;:&nbsp;<a href="/app/operationalperiod/${assignment.operationalPeriod.id}">${assignment.operationalPeriod.description}</a>&nbsp;:&nbsp;Assignment ${assignment.id}
  </c:when>
  <c:when test="${period ne null}">
   &nbsp;:&nbsp;${period.description}

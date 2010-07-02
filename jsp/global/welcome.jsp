@@ -5,7 +5,7 @@
 <p>Before you get started, you need to select a search.  You can choose from one of the existing searches below, or create your own.</p>
 <ul>
 <c:forEach var="srch" items="${searches}">
-<li><a href="/app/dataschema/${srch}">${srch}</a></li>
+<li><a href="/app/setsearch/${srch}">${srch}</a></li>
 </c:forEach>
 </ul>
 <br/>

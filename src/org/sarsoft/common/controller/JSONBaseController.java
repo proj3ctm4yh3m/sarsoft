@@ -38,19 +38,12 @@ public abstract class JSONBaseController {
 	@Qualifier("genericConfigDAO")
 	protected GenericHibernateDAO configDao;
 
-	@Autowired
-	protected RuntimeProperties runtimeProperties;
-
 	public void setDao(GenericHibernateDAO dao) {
 		this.dao = dao;
 	}
 
 	public void setConfigDao(GenericHibernateDAO dao) {
 		this.configDao = dao;
-	}
-
-	public void setRuntimeProperties(RuntimeProperties runtimeProperties) {
-		this.runtimeProperties = runtimeProperties;
 	}
 
 	protected String getConfigValue(String name) {
@@ -76,12 +69,11 @@ public abstract class JSONBaseController {
 
 	protected String app(Model model, String view) {
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
-		if(!runtimeProperties.isInitialized()) {
-			File dir = new File("searches");
-			model.addAttribute("searches", dir.list());
+		if(RuntimeProperties.getSearch() == null) {
+			model.addAttribute("searches", dao.getAllSearchNames());
 			return "Pages.Welcome";
 		}
-		model.addAttribute("searchName", runtimeProperties.getSearchName());
+		model.addAttribute("searchName", RuntimeProperties.getSearch());
 		model.addAttribute("mapkey", getConfigValue("maps.key"));
 		return view;
 	}
@@ -99,14 +91,14 @@ public abstract class JSONBaseController {
 	}
 
 	protected Object parseGPXJson(HttpServletRequest request, String json) {
-		return parseGPXInternal(request.getSession().getServletContext(), json);
+		System.out.println("GPX STR is\n" + json);
+		JSONObject obj = (JSONObject) JSONSerializer.toJSON(json);
+		String gpx = (String) obj.get("gpx");
+		return parseGPXInternal(request.getSession().getServletContext(), gpx);
 	}
 
-	protected Object parseGPXInternal(ServletContext sc, String gpxstr) {
+	protected Object parseGPXInternal(ServletContext sc, String gpx) {
 		try {
-			System.out.println("GPX STR is\n" + gpxstr);
-			JSONObject obj = (JSONObject) JSONSerializer.toJSON(gpxstr);
-			String gpx = (String) obj.get("gpx");
 			System.out.println("GPX is " + gpx);
 			TransformerFactory factory = TransformerFactory.newInstance();
 			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream("/xsl/gpx/fromgpx.xsl")));

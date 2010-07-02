@@ -11,9 +11,8 @@ import org.hibernate.annotations.GenericGenerator;
 
 @JSONAnnotatedEntity
 @Entity
-public class Waypoint {
+public class Waypoint extends SarModelObject {
 
-	private long id;
 	private double lat;
 	private double lng;
 	private Date time;
@@ -37,15 +36,10 @@ public class Waypoint {
 		this.lng = latlng[1];
 	}
 
-	@Id
 	@JSONSerializable
-	@GenericGenerator(name = "generator", strategy="increment")
-	@GeneratedValue(generator="generator")
-	public long getId() {
-		return id;
-	}
-	public void setId(long id) {
-		this.id = id;
+	@Transient
+	public Long getId() {
+		return getPk();
 	}
 
 	@JSONSerializable
@@ -229,5 +223,13 @@ public class Waypoint {
 
         double cmeridian = UTMCentralMeridian (zone);
         return MapXYToLatLon (x, y, cmeridian);
+    }
+
+    public boolean equals(Object o) {
+    	if(o instanceof Waypoint) {
+    		Waypoint wpt = (Waypoint) o;
+    		return (wpt.getLat() == lat && wpt.getLng() == lng);
+    	}
+    	return false;
     }
 }

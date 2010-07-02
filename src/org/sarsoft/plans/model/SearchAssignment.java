@@ -1,5 +1,6 @@
 package org.sarsoft.plans.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.MapConfig;
+import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
@@ -30,7 +32,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 
 @JSONAnnotatedEntity
 @Entity
-public class SearchAssignment implements IPreSave {
+public class SearchAssignment extends SarModelObject implements IPreSave {
 
 	public enum ResourceType {
 		GROUND,MOUNTED,DOG,OHV
@@ -40,12 +42,10 @@ public class SearchAssignment implements IPreSave {
 		DRAFT,PREPARED,INPROGRESS,COMPLETED
 	}
 
-	private Long id;
-	private String name;
 	private String details;
 	private ResourceType resourceType;
 	private Status status = Status.DRAFT;
-	private Integer operationalPeriodId;
+	private Long operationalPeriodId;
 	private long timeAllocated = 0;
 	private String transportation;
 	private Set<MapConfig> mapConfigs;
@@ -76,27 +76,11 @@ public class SearchAssignment implements IPreSave {
 	@LazyCollection(LazyCollectionOption.FALSE)
 	@JSONSerializable
 	public List<Way> getWays() {
+		if(ways == null) ways = new ArrayList<Way>();
 		return ways;
 	}
 	public void setWays(List<Way> ways) {
 		this.ways = ways;
-	}
-	@Id
-	@JSONSerializable
-	@GenericGenerator(name = "generator", strategy="increment")
-	@GeneratedValue(generator="generator")
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	@JSONSerializable
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
 	}
 	@JSONSerializable
 	public Date getUpdated() {
@@ -111,7 +95,7 @@ public class SearchAssignment implements IPreSave {
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("SearchAssignment " + id + ": (" + name + ", " + updated + ")\n[");
+		builder.append("SearchAssignment " + id + ": (" + updated + ")\n[");
 		for(Way way : ways) {
 			builder.append(way.toString() + ",");
 		}
@@ -184,12 +168,12 @@ public class SearchAssignment implements IPreSave {
 
 	@Transient
 	@JSONSerializable
-	public Integer getOperationalPeriodId() {
+	public Long getOperationalPeriodId() {
 		if(operationalPeriodId != null) return operationalPeriodId;
 		return (operationalPeriod == null) ? null : operationalPeriod.getId();
 	}
 
-	public void setOperationalPeriodId(Integer operationalPeriodId) {
+	public void setOperationalPeriodId(Long operationalPeriodId) {
 		this.operationalPeriodId = operationalPeriodId;
 	}
 
@@ -207,7 +191,8 @@ public class SearchAssignment implements IPreSave {
 	public double getArea() {
 		double area = 0;
 		for(Way way : ways) {
-			area += way.getArea();
+			if(way.getType() == WayType.ROUTE && way.isPolygon() == true)
+				area += way.getArea();
 		}
 		return area;
 	}
@@ -215,11 +200,7 @@ public class SearchAssignment implements IPreSave {
 	@Transient
 	@JSONSerializable
 	public double getDistance() {
-		double distance = 0;
-		for(Way way : ways) {
-			distance += way.getDistance();
-		}
-		return distance;
+		return getRouteDistance();
 	}
 
 	@Transient
@@ -245,11 +226,16 @@ public class SearchAssignment implements IPreSave {
 	@Transient
 	@JSONSerializable
 	public String getFormattedSize() {
-		if(ways.get(0).isPolygon()) {
-			return ways.get(0).getArea() + " km&sup2;";
-		} else {
-			return ways.get(0).getDistance() + " km";
+		for(Way way : ways) {
+			if(way.getType() == WayType.ROUTE) {
+				if(way.isPolygon()) {
+					return way.getArea() + " km&sup2;";
+				} else {
+					return way.getDistance() + " km";
+				}
+			}
 		}
+		return "--";
 	}
 
 	@Transient

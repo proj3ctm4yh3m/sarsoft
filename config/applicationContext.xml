@@ -16,8 +16,6 @@
 		</property>
 	</bean>
 
-	<bean name="runtimeProperties" class="org.sarsoft.common.util.RuntimeProperties"/>
-
 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
 
 	<bean id="jsp-view-resolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -70,7 +68,7 @@
 
 	<bean id="searchDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
 		<property name="driverClass" value="${hibernate.connection.driver_class}"/>
-		<property name="jdbcUrl" value="jdbc:hsqldb:searches/${search}/sarsoft"/>
+		<property name="jdbcUrl" value="jdbc:hsqldb:hsqldb/searches"/>
 		<property name="user" value="${hibernate.connection.username}"/>
 		<property name="password" value="${hibernate.connection.password}"/>
 		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
