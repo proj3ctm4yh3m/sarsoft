@@ -8,11 +8,16 @@
 		<xsl:call-template name="GpxToTrack"/>
 		</e>
 	</xsl:for-each>
+	<xsl:for-each select="gpx:rte">
+		<e class="object">
+		<xsl:call-template name="GpxToRoute"/>
+		</e>
+	</xsl:for-each>
 </a>
 </xsl:template>
 
 <xsl:template name="GpxToTrack">
-	<name type="string"><xsl:value-of select="gpx:name"/></name>
+	<name type="string"><xsl:value-of select="gpx:name"/>:<xsl:value-of select="gpx:desc"/></name>
 	<polygon type="boolean">false</polygon>
 	<type type="string">TRACK</type>
 	<waypoints class="array">
@@ -24,8 +29,22 @@
 	</waypoints>
 </xsl:template>
 
+<xsl:template name="GpxToRoute">
+	<name type="string"><xsl:value-of select="gpx:name"/>,details:<xsl:value-of select="gpx:desc"/>,<xsl:value-of select="gpx:cmt"/></name>
+	<polygon type="boolean">false</polygon>
+	<type type="string">ROUTE</type>
+	<waypoints class="array">
+		<xsl:for-each select="gpx:rtept">
+		<e class="object">
+			<xsl:call-template name="GpxToWaypoint"/>
+		</e>
+		</xsl:for-each>
+	</waypoints>
+</xsl:template>
+
 <xsl:template name="GpxToWaypoint">
 	<lat type="number"><xsl:value-of select="@lat"/></lat>
 	<lng type="number"><xsl:value-of select="@lon"/></lng>
 </xsl:template>
+
 </xsl:stylesheet>
