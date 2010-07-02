@@ -205,8 +205,8 @@ org.sarsoft.FixedGMap = function(map) {
 
 org.sarsoft.FixedGMap.prototype.getConfig = function() {
 	var config = new Object();
-	config.center = { lat: this.map.getCenter().lat(), lng: this.map.getCenter().lng() };
-	config.zoom = this.map.getZoom();
+//	config.center = { lat: this.map.getCenter().lat(), lng: this.map.getCenter().lng() };
+//	config.zoom = this.map.getZoom();
 	config.base = this.map.getCurrentMapType().getName();
 	config.overlay = this.map._sarsoft_overlay_type ? this.map._sarsoft_overlay_type.getName() : null;
 	config.opacity = this.map._sarsoft_overlay_opacity;
@@ -214,7 +214,7 @@ org.sarsoft.FixedGMap.prototype.getConfig = function() {
 }
 
 org.sarsoft.FixedGMap.prototype.setConfig = function(config) {
-	this.map.setCenter(new GLatLng(config.center.lat, config.center.lng), config.zoom);
+//	this.map.setCenter(new GLatLng(config.center.lat, config.center.lng), config.zoom);
 	this.setMapLayers(config.base, config.overlay, config.opacity);
 }
 
