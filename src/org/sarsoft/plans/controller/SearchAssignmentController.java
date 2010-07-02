@@ -168,8 +168,11 @@ public class SearchAssignmentController extends JSONBaseController {
 		Way[] ways;
 		switch(format) {
 		case GPX :
-			String gpx = params.getFile() != null ? params.getFile() : params.getJson();
-			ways = Way.createFromJSON((JSONArray) parseGPXFile(request, gpx));
+			if(params.getFile() != null) {
+				ways = Way.createFromJSON((JSONArray) parseGPXFile(request, params.getFile()));
+			} else {
+				ways = Way.createFromJSON((JSONArray) parseGPXJson(request, params.getJson()));
+			}
 			break;
 		default :
 			ways = new Way[] { Way.createFromJSON(parseObject(params)) };
