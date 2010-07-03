@@ -87,21 +87,29 @@ public abstract class JSONBaseController {
 	}
 
 	protected Object parseGPXFile(HttpServletRequest request, String file) {
-		return parseGPXInternal(request.getSession().getServletContext(), file);
+		return parseGPXFile(request, file, "/xsl/gpx/gpx2way.xsl");
+	}
+
+	protected Object parseGPXFile(HttpServletRequest request, String file, String template) {
+		return parseGPXInternal(request.getSession().getServletContext(), file, template);
 	}
 
 	protected Object parseGPXJson(HttpServletRequest request, String json) {
+		return parseGPXJson(request, json, "/xsl/gpx/gpx2way.xsl");
+	}
+
+	protected Object parseGPXJson(HttpServletRequest request, String json, String template) {
 		System.out.println("GPX STR is\n" + json);
 		JSONObject obj = (JSONObject) JSONSerializer.toJSON(json);
 		String gpx = (String) obj.get("gpx");
-		return parseGPXInternal(request.getSession().getServletContext(), gpx);
+		return parseGPXInternal(request.getSession().getServletContext(), gpx, template);
 	}
 
-	protected Object parseGPXInternal(ServletContext sc, String gpx) {
+	protected Object parseGPXInternal(ServletContext sc, String gpx, String template) {
 		try {
 			System.out.println("GPX is " + gpx);
 			TransformerFactory factory = TransformerFactory.newInstance();
-			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream("/xsl/gpx/fromgpx.xsl")));
+			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream(template)));
 			StringWriter writer = new StringWriter();
 			transformer.transform(new StreamSource(new StringReader(gpx)), new StreamResult(writer));
 			String xml = writer.toString();

@@ -27,6 +27,10 @@ org.sarsoft.SearchAssignmentDAO.prototype.saveWaypoints = function(assignment, i
 	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", function() {}, waypoints);
 }
 
+org.sarsoft.SearchAssignmentDAO.prototype.deleteWaypoint = function(assignment, idx, wpt) {
+	this._doPost("/" + assignment.id + "/wpt/" + idx + "?action=delete", function() {}, wpt);
+}
+
 org.sarsoft.SearchAssignmentDAO.prototype.createWaysFromGpx = function(handler, id, obj, type) {
 	if(type != null) {
 		this._doPost("/" + id + "/way", handler, obj, "format=gpx&type="+type);
@@ -95,6 +99,16 @@ org.sarsoft.view.WayTable = function(handler, onDelete) {
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Tracks" }, handler);
 }
 org.sarsoft.view.WayTable.prototype = new org.sarsoft.view.EntityTable();
+
+org.sarsoft.view.WaypointTable = function(handler, onDelete) {
+	var coldefs = [
+		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
+		{ key : "name", label : "Name"},
+		{ key : "time", label : "Uploaded", formatter : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}
+	];
+	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Waypoints" }, handler);
+}
+org.sarsoft.view.WaypointTable.prototype = new org.sarsoft.view.EntityTable();
 
 org.sarsoft.view.SearchAssignmentForm = function() {
 	var fields = [
@@ -227,6 +241,11 @@ org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, w
 		way.waypoints = way.zoomAdjustedWaypoints;
 		that.fmap.addWay(way, config);
 	}
+
+	for(var i = 0; i < this.assignment.waypoints.length; i++) {
+		var waypoint = this.assignment.waypoints[i];
+		that.fmap.addWaypoint(waypoint, config);
+	}
 }
 
 org.sarsoft.controller.AssignmentViewMapController.prototype.addWay = function(way, config) {
@@ -234,11 +253,15 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.addWay = function(w
 	this.fmap.addWay(way, config);
 }
 
+org.sarsoft.controller.AssignmentViewMapController.prototype.addWaypoint = function(waypoint, config) {
+	this.fmap.addWaypoint(way, config);
+}
+
 org.sarsoft.controller.AssignmentViewMapController.prototype.highlight = function(way) {
-	if(this.highlighted != null) {
-		this.fmap.removeWay(this.highlighted);
-		this.addWay(this.highlighted, this.baseConfig);
-		this.highlighted = null;
+	if(this.highlightedWay != null) {
+		this.fmap.removeWay(this.highlightedWay);
+		this.addWay(this.highlightedWay, this.baseConfig);
+		this.highlightedWay = null;
 	}
 
 	this.fmap.removeWay(way);
@@ -253,7 +276,12 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.highlight = functio
 	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
 	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 
-	this.highlighted = way;
+	this.highlightedWay = way;
+}
+
+org.sarsoft.controller.AssignmentViewMapController.prototype.highlightWaypoint = function(waypoint) {
+	var center = new GLatLng(waypoint.lat, waypoint.lng);
+	this.fmap.map.setCenter(center);
 }
 
 org.sarsoft.view.OperationalPeriodForm = function() {

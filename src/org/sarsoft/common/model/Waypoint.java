@@ -7,12 +7,16 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
 import org.hibernate.annotations.GenericGenerator;
 
 @JSONAnnotatedEntity
 @Entity
 public class Waypoint extends SarModelObject {
 
+	private String name;
 	private double lat;
 	private double lng;
 	private Date time;
@@ -34,6 +38,22 @@ public class Waypoint extends SarModelObject {
 		double[] latlng = UTMXYToLatLon(easting, northing, zone, false);
 		this.lat = latlng[0];
 		this.lng = latlng[1];
+	}
+
+	public static Waypoint createFromJSON(JSONObject json) {
+		return (Waypoint) JSONObject.toBean(json, Waypoint.class);
+	}
+
+	public static Waypoint[] createFromJSON(JSONArray json) {
+		return (Waypoint[]) JSONArray.toArray(json, Waypoint.class);
+	}
+
+	@JSONSerializable
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@JSONSerializable
