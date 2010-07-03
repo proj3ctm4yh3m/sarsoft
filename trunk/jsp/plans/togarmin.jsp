@@ -42,6 +42,7 @@ function GarminListener(gpxstr, name) {
 	console('GPX data is:\n' + gpxstr);
 	this.gpxstr = gpxstr;
 	this.name = name;
+	alert("name is " + name);
 }
 
 GarminListener.prototype.onFinishFindDevices = function(obj) {

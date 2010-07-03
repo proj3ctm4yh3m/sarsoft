@@ -106,7 +106,11 @@ you can see how it relates to neighboring assignments.</i></div>
 		</div>
 
 		<div id="tracks">
-			<div id="attachedtrackscontainer" style="float: left">
+			<div style="float: left">
+				<div id="attachedtrackscontainer">
+				</div>
+				<div id="attachedwptcontainer">
+				</div>
 			</div>
 			<div id="trackmapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
 			</div>
@@ -117,7 +121,7 @@ you can see how it relates to neighboring assignments.</i></div>
 <div style="display: none">
 <form name="togarmin" action="/app/togarmin" method="GET">
 	<input type="hidden" name="file" value="/rest/assignment/${assignment.id}?format=gpx"/>
-	<input type="hidden" name="name" value="${assignment.id}"/>
+	<input type="hidden" name="name" value="Assignment ${assignment.id}"/>
 </form>
 </div>
 
@@ -142,9 +146,25 @@ org.sarsoft.Loader.queue(function() {
     	tracktable.table.deleteRow(record);
 	});
     tracktable.create(document.getElementById("attachedtrackscontainer"));
+
+    wpttable = new org.sarsoft.view.WaypointTable(function(waypoint) { avtc.highlightWaypoint(waypoint);}, function(record) {
+    	var waypoint = record.getData();
+    	var idx = 100;
+    	for(var i = 0; i < assignment.waypoints.length; i++) {
+    		if(assignment.waypoints[i].id == waypoint.id) idx = i;
+    	}
+    	assignmentDAO.deleteWaypoint(assignment, idx, waypoint);
+    	assignment.waypoints.splice(idx, 1);
+    	wpttable.table.deleteRow(record);
+	});
+    wpttable.create(document.getElementById("attachedwptcontainer"));
+
 	assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
 	assignmentDAO.load(function(obj) {
 		assignment = obj;
+		for(var i = 0; i < assignment.waypoints.length; i++) {
+			wpttable.table.addRow(assignment.waypoints[i]);
+		}
 		assignmentDAO.getWays(function(ways) {
 			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), assignment, ways, { color: "#FF0000" });
 			avtc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('trackmapview'), assignment, ways);
@@ -153,6 +173,7 @@ org.sarsoft.Loader.queue(function() {
 			}
 		}, assignment, 10);
 	}, ${assignment.id});
+
 	var tabView = new YAHOO.widget.TabView('tabs');
 	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200"});
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);

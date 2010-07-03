@@ -183,6 +183,7 @@ org.sarsoft.FixedGMap = function(map) {
 	this.polys = new Object();
 	this.overlays = new Array();
 	this.text = new Array();
+	this.markers = new Array();
 	this.utmgridlines = new Array();
 	this.utminitialized = false;
 	if(map != undefined) {
@@ -388,6 +389,33 @@ org.sarsoft.FixedGMap.prototype.removeWay = function(way) {
 org.sarsoft.FixedGMap.prototype.addWay = function(way, config) {
 	this.removeWay(way);
 	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config), config: config};
+}
+
+org.sarsoft.FixedGMap.prototype._removeMarker = function(waypoint) {
+	this.map.removeOverlay(this.markers[waypoint.id].overlay);
+}
+
+org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config) {
+	var that = this;
+	var id = waypoint.id;
+	var gll = new GLatLng(waypoint.lat, waypoint.lng);
+	var marker = new GMarker(gll, { title : waypoint.name });
+	this.map.addOverlay(marker);
+	marker.id = waypoint.id;
+	return marker;
+}
+
+org.sarsoft.FixedGMap.prototype.removeWaypoint = function(waypoint) {
+	var id = waypoint.id;
+	if(this.markers[id] != undefined) {
+		this._removeMarker(waypoint);
+		this.markers[id] = undefined;
+	}
+}
+
+org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config) {
+	this.removeWaypoint(waypoint);
+	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config), config: config};
 }
 
 org.sarsoft.EditableGMap = function(map, infodiv) {

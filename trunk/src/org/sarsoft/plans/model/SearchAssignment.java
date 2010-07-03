@@ -52,6 +52,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private Probability responsivePOD;
 	private Probability unresponsivePOD;
 	private List<Way> ways;
+	private List<Waypoint> waypoints;
 	private Date updated;
 	private Date preparedOn;
 	private String preparedBy;
@@ -82,6 +83,19 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	public void setWays(List<Way> ways) {
 		this.ways = ways;
 	}
+
+	@OneToMany
+	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@LazyCollection(LazyCollectionOption.FALSE)
+	@JSONSerializable
+	public List<Waypoint> getWaypoints() {
+		if(waypoints == null) waypoints = new ArrayList<Waypoint>();
+		return waypoints;
+	}
+	public void setWaypoints(List<Waypoint> waypoints) {
+		this.waypoints = waypoints;
+	}
+
 	@JSONSerializable
 	public Date getUpdated() {
 		return updated;

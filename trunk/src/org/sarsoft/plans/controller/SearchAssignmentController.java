@@ -185,6 +185,25 @@ public class SearchAssignmentController extends JSONBaseController {
 				assignment.getWays().add(way);
 			}
 		}
+
+		Waypoint[] waypoints;
+		switch(format) {
+		case GPX :
+			if(params.getFile() != null) {
+				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2waypoint.xsl"));
+			} else {
+				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2waypoint.xsl"));
+			}
+			break;
+		default :
+			waypoints = new Waypoint[] { Waypoint.createFromJSON(parseObject(params)) };
+		}
+
+		for(Waypoint waypoint : waypoints) {
+			waypoint.setTime(new Date());
+			assignment.getWaypoints().add(waypoint);
+		}
+
 		dao.save(assignment);
 		return (ways.length == 1) ? json(model, ways[0]) : json(model, ways);
 	}
@@ -198,6 +217,19 @@ public class SearchAssignmentController extends JSONBaseController {
 			assignment.getWays().remove(wayId);
 			dao.save(assignment);
 			dao.delete(way);
+		}
+		return json(model, assignment);
+	}
+
+	@RequestMapping(value = "/rest/assignment/{assignmentId}/wpt/{waypointId}", method = RequestMethod.POST)
+	public String updateWaypoint(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("waypointId") int waypointId, Model model, HttpServletRequest request) {
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		if(action == Action.DELETE) {
+			Waypoint waypoint = assignment.getWaypoints().get(waypointId);
+			assignment.getWaypoints().remove(waypointId);
+			dao.save(assignment);
+			dao.delete(waypoint);
 		}
 		return json(model, assignment);
 	}
@@ -242,6 +274,22 @@ public class SearchAssignmentController extends JSONBaseController {
 	@RequestMapping(value = "/rest/search", method= RequestMethod.POST)
 	public String bulkGPXUpload(JSONForm params, Model model, HttpServletRequest request) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.GPX;
+
+		Waypoint[] waypoints;
+		switch(format) {
+		case GPX :
+			if(params.getFile() != null) {
+				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2waypoint.xsl"));
+			} else {
+				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2waypoint.xsl"));
+			}
+			break;
+		default :
+			waypoints = new Waypoint[] { Waypoint.createFromJSON(parseObject(params)) };
+		}
+
+
+		// TODO need to handle importing named waypoints from a search-wide backup
 
 		Way[] ways;
 		switch(format) {
