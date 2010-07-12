@@ -575,7 +575,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function
 				that.removeAssignment(assignments[i]);
 				that.addAssignment(assignments[i]);
 			} else {
-				throw("Assignment open for edit has been modified on the server");
+//				throw("Assignment open for edit has been modified on the server");
 			}
 		}
 		that.assignmentDAO.mark();
