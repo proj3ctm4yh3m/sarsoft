@@ -71,6 +71,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
 		if(RuntimeProperties.getSearch() == null) {
 			model.addAttribute("searches", dao.getAllSearchNames());
+			model.addAttribute("mapkey", getConfigValue("maps.key"));
 			return "Pages.Welcome";
 		}
 		model.addAttribute("searchName", RuntimeProperties.getSearch());

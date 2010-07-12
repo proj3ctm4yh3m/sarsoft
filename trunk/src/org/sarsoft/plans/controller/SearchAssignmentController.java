@@ -108,9 +108,24 @@ public class SearchAssignmentController extends JSONBaseController {
 		return json(model, dao.loadSince(SearchAssignment.class, new Date(date)));
 	}
 
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/assignment", method = RequestMethod.POST)
 	public String createAssignment(JSONForm params, Model model, HttpServletRequest request) {
 		SearchAssignment assignment = SearchAssignment.createFromJSON(parseObject(params));
+		if(assignment.getId() != null) {
+			SearchAssignment existing = (SearchAssignment) dao.load(SearchAssignment.class, assignment.getId());
+			if(existing != null) assignment.setId(null);
+		}
+		if(assignment.getId() == null) {
+			List<SearchAssignment> assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
+			long maxId = 0L;
+			System.out.println(assignments.size() + " assignments");
+			for(SearchAssignment obj : assignments) {
+				System.out.println("OBJ: " + obj);
+				maxId = Math.max(maxId, obj.getId());
+			}
+			assignment.setId(maxId+1);
+		}
 		Long opid = assignment.getOperationalPeriodId();
 		if(opid != null) {
 			OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, opid);
@@ -276,16 +291,21 @@ public class SearchAssignmentController extends JSONBaseController {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.GPX;
 
 		Waypoint[] waypoints;
+		Object obj;
 		switch(format) {
 		case GPX :
 			if(params.getFile() != null) {
-				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2waypoint.xsl"));
+				obj = parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2waypoint.xsl");
 			} else {
-				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2waypoint.xsl"));
+				obj = parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2waypoint.xsl");
 			}
 			break;
 		default :
-			waypoints = new Waypoint[] { Waypoint.createFromJSON(parseObject(params)) };
+			obj = parseObject(params);
+		}
+
+		if(obj instanceof JSONArray) {
+			waypoints = Waypoint.createFromJSON((JSONArray) obj);
 		}
 
 

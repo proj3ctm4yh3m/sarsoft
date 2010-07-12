@@ -3,7 +3,8 @@
 
 <h2>Operational Period ${period.id}: ${period.description}</h2>
 
-This period has ${fn:length(period.assignments)} assignments, covering ${period.area} km&sup2; and ${period.timeAllocated} team-hours.  You can:<br/>
+This period has ${fn:length(period.assignments)} assignments, covering ${period.area} km&sup2; and ${period.timeAllocated} team-hours.
+<c:if test="${period.trackDistance gt 0}">${period.trackDistance} km of tracks have been downloaded.</c:if>  You can:<br/>
 
 <ul>
  <li><a href="/app/operationalperiod/${period.id}/map">View assignments in a map</a> (new assignments can be created on this page)</li>
@@ -20,7 +21,11 @@ org.sarsoft.Loader.queue(function() {
   datatable.create(document.getElementById("listcontainer"));
   dao = new org.sarsoft.OperationalPeriodDAO();
   dao.loadAssignments(function(rows) {
-  	datatable.table.addRows(rows);
+    if(rows == null || rows.length == 0) {
+    	datatable.table.showTableMessage("<i>No Assignments Found</i>");
+    } else {
+	  	datatable.table.addRows(rows);
+	}
   }, ${period.id});
 });
 
