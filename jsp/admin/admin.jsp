@@ -17,16 +17,6 @@
 </div>
 <div id="database">
 
-<h4>Searches</h4>
-You are currently working with the search <b>${search}</b>.  You can switch to one of these existing searches:<br/>
-<ul>
-<c:forEach var="srch" items="${searches}">
-<li><a href="/app/setsearch/${srch}">${srch}</a></li>
-</c:forEach>
-</ul>
-Or, create a new search: <input type="text" size="15" name="newsearch" id="newsearch"/><button onclick="document.location='/app/setsearch/'+document.getElementById('newsearch').value">Go</button>
-
-<br/><br/>
 <h4>Configuration</h4>
 The configuration database controls available map backgrounds, API keys, and other information related to the runtime environment rather than individual searches.
 Your current configuration is <b>${config}</b>.  You can switch to one of these existing configurations:<br/>
@@ -44,7 +34,8 @@ Host Name: <input type="text" size="40" name="hostname" id="hostname" value="${h
 Google Maps API Key: <input type="text" size="40" name="mapkey" id="mapkey" value="${mapkey}"/><button onclick="updateMapKey()"/>Update</button><br/>
 For more information, see <a href="http://code.google.com/apis/maps/signup.html">http://code.google.com/apis/maps/signup.html</a>
 <br/><br/>
-Garmin GPS Key: <input type="text" size="40" name="garminkey" id="garminkey" value="${garminKey}"/><button onclick="updateGarminKey()"/>Update</button>
+Garmin GPS Key: <input type="text" size="40" name="garminkey" id="garminkey" value="${garminKey}"/><button onclick="updateGarminKey()"/>Update</button><br/>
+To receive a ke, see <a href="http://developer.garmin.com/web-device/garmin-communicator-plugin/get-your-site-key/">http://developer.garmin.com/web-device/garmin-communicator-plugin/get-your-site-key/</a>
 </div>
 <div id="maps">
 

@@ -162,12 +162,14 @@ org.sarsoft.Loader.queue(function() {
 	assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
 	assignmentDAO.load(function(obj) {
 		assignment = obj;
+		if(assignment.waypoints.length == 0) wpttable.table.showTableMessage("<i>No Waypoints Found</i>");
 		for(var i = 0; i < assignment.waypoints.length; i++) {
 			wpttable.table.addRow(assignment.waypoints[i]);
 		}
 		assignmentDAO.getWays(function(ways) {
 			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), assignment, ways, { color: "#FF0000" });
 			avtc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('trackmapview'), assignment, ways);
+			tracktable.table.showTableMessage("<i>No Tracks Found</i>");
 			for(var i = 0; i < ways.length; i++) {
 				if(ways[i].type == "TRACK") tracktable.table.addRow(ways[i]);
 			}

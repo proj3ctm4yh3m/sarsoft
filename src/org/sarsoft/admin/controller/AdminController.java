@@ -45,7 +45,11 @@ public class AdminController extends JSONBaseController {
 
 
 	@RequestMapping(value="/app/shutdown", method = RequestMethod.GET)
-	public String shutdown(Model model) {
+	public String shutdown(Model model, HttpServletRequest request) {
+		String password = System.getProperty("sarsoft.admin.password");
+		if(request.getSession().getAttribute("loggedin") != Boolean.TRUE) {
+			if(password != null) return app(model, "Pages.Login");
+		}
 		System.exit(0);
 		return "ain't gonna happen";
 	}
@@ -59,7 +63,15 @@ public class AdminController extends JSONBaseController {
 			if(lastPeriod == null || lastPeriod.getId() < period.getId()) lastPeriod = period;
 		}
 		model.addAttribute("lastperiod", lastPeriod);
+		model.addAttribute("periods", periods);
+		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
 		return app(model, "Pages.Home");
+	}
+
+	@RequestMapping(value="/app/setsearch", method = RequestMethod.GET)
+	public String chooseNewSearch(Model model) {
+		model.addAttribute("searches", dao.getAllSearchNames());
+		return app(model, "Pages.Welcome");
 	}
 
 	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
@@ -92,7 +104,16 @@ public class AdminController extends JSONBaseController {
 
 
 	@RequestMapping(value="/app/admin", method = RequestMethod.GET)
-	public String admin(Model model) {
+	public String admin(Model model, HttpServletRequest request) {
+		String password = System.getProperty("sarsoft.admin.password");
+		if(request.getSession().getAttribute("loggedin") != Boolean.TRUE) {
+			if(password != null) {
+				if(!password.equals(request.getParameter("password"))) {
+					return app(model, "Pages.Login");
+				}
+				request.getSession().setAttribute("loggedin", true);
+			}
+		}
 		model.addAttribute("search", RuntimeProperties.getSearch());
 		model.addAttribute("searches", dao.getAllSearchNames());
 

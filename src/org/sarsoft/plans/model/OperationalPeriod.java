@@ -87,6 +87,18 @@ public class OperationalPeriod extends SarModelObject {
 
 	@Transient
 	@JSONSerializable
+	public double getTrackDistance() {
+		double trackDistance = 0;
+		if(assignments == null) return trackDistance;
+		for(SearchAssignment assignment : assignments) {
+			trackDistance += assignment.getTrackDistance();
+		}
+		return trackDistance;
+	}
+
+
+	@Transient
+	@JSONSerializable
 	public Waypoint[] getBoundingBox() {
 		Waypoint[] box = null;
 		for(SearchAssignment assignment : assignments) {

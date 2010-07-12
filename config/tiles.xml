@@ -32,4 +32,9 @@
 		<put-attribute name="content" value="/admin/admin.jsp"/>
 		<put-attribute name="app" value="admin"/>
 	</definition>
+	<definition name="Pages.Login" extends="App.Base">
+		<put-attribute name="content" value="/admin/login.jsp"/>
+		<put-attribute name="app" value="admin"/>
+	</definition>
+
 </tiles-definitions>
