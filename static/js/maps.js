@@ -395,7 +395,7 @@ org.sarsoft.FixedGMap.prototype._removeMarker = function(waypoint) {
 	this.map.removeOverlay(this.markers[waypoint.id].marker);
 }
 
-org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config) {
+org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip) {
 	var that = this;
 	var id = waypoint.id;
 	var gll = new GLatLng(waypoint.lat, waypoint.lng);
@@ -408,7 +408,9 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config) {
 	iconOptions.labelColor = "#000000";
 	iconOptions.shape = "circle";
 	var icon = MapIconMaker.createFlatIcon(iconOptions);
-	var marker = new GMarker(gll, { title : waypoint.name +  "  (" + GeoUtil.GLatLngToUTM(gll).toString() + ")", icon : icon});
+	if(tooltip == undefined) tooltip = waypoint.name;
+	tooltip = tooltip +  "  (" + GeoUtil.GLatLngToUTM(gll).toString() + ")";
+	var marker = new GMarker(gll, { title : tooltip, icon : icon});
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
 	return marker;
@@ -422,9 +424,9 @@ org.sarsoft.FixedGMap.prototype.removeWaypoint = function(waypoint) {
 	}
 }
 
-org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config) {
+org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config, tooltip) {
 	this.removeWaypoint(waypoint);
-	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config), config: config};
+	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config, tooltip), config: config};
 }
 
 org.sarsoft.EditableGMap = function(map, infodiv) {

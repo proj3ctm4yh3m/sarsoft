@@ -13,6 +13,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import org.sarsoft.common.model.IPreSave;
@@ -23,6 +24,8 @@ import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.ops.model.Resource;
+
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
@@ -57,6 +60,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private Date preparedOn;
 	private String preparedBy;
 	private OperationalPeriod operationalPeriod;
+	private Set<Resource> resources;
 
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
 
@@ -278,6 +282,23 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 
 	public void setMapConfigs(Set<MapConfig> mapConfigs) {
 		this.mapConfigs = mapConfigs;
+	}
+
+	@OneToMany
+	@JSONSerializable
+	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@LazyCollection(LazyCollectionOption.FALSE)
+	public Set<Resource> getResources() {
+		return resources;
+	}
+
+	public void setResources(Set<Resource> resources) {
+		this.resources = resources;
+	}
+
+	public void addResource(Resource resource) {
+		this.resources.add(resource);
+		resource.setAssignment(this);
 	}
 
 	public String getPreparedBy() {
