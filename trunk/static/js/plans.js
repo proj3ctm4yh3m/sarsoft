@@ -458,10 +458,13 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.configDAO = new org.sarsoft.ConfigDAO(function() { that._handleServerError(); });
 	this.searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
+	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that._handleServerError(); });
 	this.periodDAO = new org.sarsoft.OperationalPeriodDAO(function() { that._handleServerError(); });
 	this.assignments = new Object();
+	this.resources = new Object();
 	this._assignmentAttrs = new Object();
 	this.showOtherPeriods = false;
+	this.showLocations = true;
 	this._mapsetup = {
 		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50, showtracks : true },
 		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 35, opacity : 100, showtracks : true}
@@ -472,6 +475,8 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
 		{text : "Hide Previous Operational Periods", applicable : function(obj) { return obj == null && that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = false; that._handleSetupChange(); }},
 		{text : "Show Previous Operational Periods", applicable : function(obj) { return obj == null && !that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = true; that._handleSetupChange(); }},
+		{text : "Hide Locations", applicable : function(obj) { return obj == null && that.showLocations; }, handler : function(data) { that.showLocations = false; that._handleSetupChange(); }},
+		{text : "Show Locations", applicable : function(obj) { return obj == null && !that.showLocations; }, handler : function(data) { that.showLocations = true; that._handleSetupChange(); }},
 		{text : "Return to Operational Period " + operationalperiod.id, applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/operationalperiod/" + operationalperiod.id; }},
 		{text : "Map Setup", applicable : function(obj) { return obj == null }, handler : function(data) { that.setupDlg.show(that._mapsetup); }},
 		{text : "Adjust page size for printing", applicable: function(obj) { return obj == null}, handler : function(data) { that.pageSizeDlg.show(); }},
@@ -537,6 +542,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	});
 
 	this.assignmentDAO.mark();
+	this.resourceDAO.mark();
 
 }
 
@@ -564,6 +570,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._handleSetupChan
 		}
 		this.addAssignment(assignment);
 	}
+	this.reprocessResourceData();
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function() {
@@ -579,6 +586,11 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function
 			}
 		}
 		that.assignmentDAO.mark();
+	});
+
+	this.resourceDAO.loadSince(function(resources) {
+		that.refreshResourceData(resources);
+		that.resourceDAO.mark();
 	});
 }
 
@@ -624,6 +636,60 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.removeAssignment
 		this.emap.removeWay(assignment.ways[i]);
 	}
 	delete this.assignments[assignment.id];
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = function(resource) {
+	var assignment = this.assignments[resource.assignmentId];
+	if(assignment.operationalPeriodId == this.period.id) {
+		if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].plk);
+		this.resources[resource.id] = resource;
+		if(!this.showLocations) return; // need lines above this in case the user re-enables resources
+		var setup = this._mapsetup.present;
+		var config = new Object();
+		if(setup.colorby == "Disabled") {
+			config.color ="#000000";
+		} else if(setup.colorby == "Assignment Number") {
+			config.color = org.sarsoft.Constants.colorsById[assignment.id%org.sarsoft.Constants.colorsById.length];
+		} else if(setup.colorby == "Resource Type") {
+			config.color = org.sarsoft.Constants.colorsByResourceType[assignment.resourceType];
+		} else if(setup.colorby == "POD") {
+			config.color = org.sarsoft.Constants.colorsByProbability[assignment.responsivePOD];
+		} else if(setup.colorby == "Assignment Status") {
+			config.color = org.sarsoft.Constants.colorsByStatus[assignment.status];
+		}
+		var date = new Date(1*resource.plk.time);
+		var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
+		this.emap.addWaypoint(resource.plk, config, resource.assignmentId + "-" + resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()));
+	}
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.refreshResourceData = function(resources) {
+	var that = this;
+
+	var timestamp = this.resourceDAO._timestamp;
+	for(var i = 0; i < resources.length; i++) {
+		this.showResource(resources[i]);
+	}
+
+	for(var key in this.resources) {
+		var resource = this.resources[key];
+		if(timestamp - (1*resource.plk.time) > 300000) {
+			this.emap.removeWaypoint(resource.plk);
+			delete this.resources[key];
+		}
+	}
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.reprocessResourceData = function() {
+	if(!this.showLocations) {
+		for(var key in this.resources) {
+			this.emap.removeWaypoint(this.resources[key].plk);
+		}
+	} else {
+		for(var key in this.resources) {
+			this.showResource(this.resources[key]);
+		}
+	}
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = function(assignment) {
@@ -688,7 +754,6 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 	}
 	if(config.clickable) {
 		for(var i = 0; i < assignment.waypoints.length; i++) {
-			alert("adding waypoint " + assignment.waypoints[i].name);
 			this.emap.addWaypoint(assignment.waypoints[i], config);
 		}
 	}

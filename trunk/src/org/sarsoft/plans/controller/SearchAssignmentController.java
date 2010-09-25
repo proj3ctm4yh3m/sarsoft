@@ -148,6 +148,9 @@ public class SearchAssignmentController extends JSONBaseController {
 			assignment.setPreparedBy(request.getParameter("preparedby"));
 			assignment.setPreparedOn(new Date());
 			break;
+		case START :
+			assignment.setStatus(SearchAssignment.Status.INPROGRESS);
+			break;
 		case DELETE :
 			assignment.getOperationalPeriod().removeAssignment(assignment);
 			dao.delete(assignment);

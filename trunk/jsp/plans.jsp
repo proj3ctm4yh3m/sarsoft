@@ -6,6 +6,7 @@
 <script src="/static/js/common.js"></script>
 <script src="/static/js/maps.js"></script>
 <script src="/static/js/plans.js"></script>
+<script src="/static/js/ops.js"></script>
 <script type="text/javascript">
 function doload() {
 org.sarsoft.Loader.queue(function() {

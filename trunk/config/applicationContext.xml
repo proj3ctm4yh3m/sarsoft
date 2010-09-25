@@ -87,6 +87,7 @@
 			<list>
 				<value>org.sarsoft.common.model</value>
 				<value>org.sarsoft.plans.model</value>
+				<value>org.sarsoft.ops.model</value>
 			</list>
 		</property>
 

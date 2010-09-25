@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 <% pageContext.setAttribute("draft", SearchAssignment.Status.DRAFT); %>
+<% pageContext.setAttribute("prepared", SearchAssignment.Status.PREPARED); %>
 
 <script>
 function export() {
@@ -28,6 +29,16 @@ function finalize() {
 		}}, postdata);
 }
 
+function transition(state) {
+	var postdata = "action=" + state;
+	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
+			window.location.href = window.location.href;
+		}, failure : function(response) {
+			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
+		}}, postdata);
+}
+
+
 
 
 </script>
@@ -47,6 +58,9 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
     <li><a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Print Maps</a></li>
  </c:otherwise>
 </c:choose>
+<c:if test="${assignment.status == prepared}">
+    <li><a href="javascript:transition('start')"">Mark Assignment as In Progress</a></li>
+</c:if>
 <li>Export to: <select id="export"><option value="gpx">GPX File</option><option value="kml">KML File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:export()">GO</button></li>
 <li>Import tracks from: <select id="import"><option value="gpx">GPX File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:import()">GO</button></li>
 </ul>
@@ -56,6 +70,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 		<li class="selected"><a href="#details"><em>Assignment Details</em></a></li>
 		<li><a href="#map"><em>Map</em></a></li>
 		<li><a href="#tracks"><em>Tracks</em></a></li>
+		<li><a href="#operations"><em>Ops</em></a></li>
 	</ul>
 
 	<div class="yui-content">
@@ -115,6 +130,13 @@ you can see how it relates to neighboring assignments.</i></div>
 			<div id="trackmapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
 			</div>
 		</div>
+
+		<div id="operations">
+			Description: <input type="text" name="latitude_desc" id="latitude_desc" size="20"/>
+			<a href="javascript:window.location='/rest/assignment/${assignment.id}/newlatituderesource?name=' + document.getElementById('latitude_desc').value">Add a Google Latitude Device</a><br/><br/>
+			<div id="attachedresourcecontainer">
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -159,12 +181,18 @@ org.sarsoft.Loader.queue(function() {
 	});
     wpttable.create(document.getElementById("attachedwptcontainer"));
 
+    resourcetable = new org.sarsoft.view.ResourceTable(function(resource) {}, function(resource) {});
+    resourcetable.create(document.getElementById("attachedresourcecontainer"));
+
 	assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
 	assignmentDAO.load(function(obj) {
 		assignment = obj;
 		if(assignment.waypoints.length == 0) wpttable.table.showTableMessage("<i>No Waypoints Found</i>");
 		for(var i = 0; i < assignment.waypoints.length; i++) {
 			wpttable.table.addRow(assignment.waypoints[i]);
+		}
+		for(var i = 0; i < assignment.resources.length; i++) {
+			resourcetable.table.addRow(assignment.resources[i]);
 		}
 		assignmentDAO.getWays(function(ways) {
 			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), assignment, ways, { color: "#FF0000" });

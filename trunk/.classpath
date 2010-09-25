@@ -43,5 +43,6 @@
 	<classpathentry kind="lib" path="lib/hsqldb.jar"/>
 	<classpathentry kind="lib" path="lib/commons-io-1.4.jar"/>
 	<classpathentry kind="lib" path="lib/commons-fileupload-1.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/google-api-client-1.0.10-alpha.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
