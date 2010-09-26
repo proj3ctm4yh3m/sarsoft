@@ -22,7 +22,7 @@ public class LocationEngine extends Thread {
 
 	@SuppressWarnings("unchecked")
 	private void checkLocations() {
-		System.out.println("Entering checkLocations . . .");
+		System.out.println("Checking locations . . .");
 		Session session = null;
 		SessionFactory sessionFactory = null;
 		try {

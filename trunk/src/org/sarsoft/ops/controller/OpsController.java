@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.ops.model.APRSDevice;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.ops.model.LatitudeDevice;
 import org.sarsoft.ops.service.location.LocationEngine;
@@ -43,6 +44,15 @@ public class OpsController extends JSONBaseController {
 		return json(model, resource);
 	}
 
+	@RequestMapping(value="/rest/resource/{resourceid}/detach/{assignmentid}", method = RequestMethod.GET)
+	public String detachResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		assignment.removeResource(resource);
+		dao.save(assignment);
+		return json(model, null);
+	}
+
 	@RequestMapping(value="/rest/resource/{resourceid}/assign/{assignmentid}", method = RequestMethod.GET)
 	public String assignResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
@@ -74,6 +84,25 @@ public class OpsController extends JSONBaseController {
 			e.printStackTrace();
 		}
 		return "/error";
+	}
+
+	@RequestMapping(value="/rest/assignment/{assignmentid}/newaprsresource", method = RequestMethod.GET)
+	public String createNewAPRSDevice(Model model, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request, HttpServletResponse response) {
+		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
+		List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
+		long maxId = 0L;
+		for(Resource resource : resources) {
+			maxId = Math.max(maxId, resource.getId());
+		}
+		Resource resource = new Resource();
+		resource.setId(maxId+1);
+		resource.setName(request.getParameter("name"));
+		assignment.addResource(resource);
+		APRSDevice device = new APRSDevice();
+		device.setDeviceId(request.getParameter("callsign"));
+		resource.getLocators().add(device);
+		dao.save(assignment);
+		return json(model, assignment);
 	}
 
 	@SuppressWarnings("unchecked")

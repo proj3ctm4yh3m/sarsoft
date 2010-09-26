@@ -9,11 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import org.sarsoft.common.model.IPreSave;
@@ -29,7 +26,6 @@ import org.sarsoft.ops.model.Resource;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
@@ -299,6 +295,13 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	public void addResource(Resource resource) {
 		this.resources.add(resource);
 		resource.setAssignment(this);
+	}
+
+	public void removeResource(Resource resource) {
+		if(resources.contains(resource)) {
+			resources.remove(resource);
+			resource.setAssignment(null);
+		}
 	}
 
 	public String getPreparedBy() {

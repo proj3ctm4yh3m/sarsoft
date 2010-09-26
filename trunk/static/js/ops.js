@@ -7,8 +7,8 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete) {
 	var coldefs = [
 		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
 		{ key : "name", label : "Name"},
-		{ key : "plk", label : "PLK", formatter : function(cell, record, column, data) { var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(gll).toString();}},
-		{ key : "plk", label : "Last Update", formatter : function(cell, record, column, data) { cell.innerHTML = new Date(1*data.time).toUTCString(); }}
+		{ key : "plk", label : "PLK", formatter : function(cell, record, column, data) { if(data == null) data = new Object(); var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(gll).toString();}},
+		{ key : "plk", label : "Last Update", formatter : function(cell, record, column, data) { if (data == null) data = new Object(); cell.innerHTML = new Date(1*data.time).toUTCString(); }}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Resources" }, handler);
 }
@@ -21,3 +21,7 @@ org.sarsoft.ResourceDAO = function(errorHandler, baseURL) {
 }
 
 org.sarsoft.ResourceDAO.prototype = new org.sarsoft.BaseDAO();
+
+org.sarsoft.ResourceDAO.prototype.detachResource = function(resource, assignmentid) {
+	this._doGet("/" + resource.id + "/detach/" + assignmentid, function() {});
+}

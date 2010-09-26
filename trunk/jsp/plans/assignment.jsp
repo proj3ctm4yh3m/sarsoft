@@ -132,8 +132,10 @@ you can see how it relates to neighboring assignments.</i></div>
 		</div>
 
 		<div id="operations">
-			Description: <input type="text" name="latitude_desc" id="latitude_desc" size="20"/>
-			<a href="javascript:window.location='/rest/assignment/${assignment.id}/newlatituderesource?name=' + document.getElementById('latitude_desc').value">Add a Google Latitude Device</a><br/><br/>
+			Name: <input type="text" name="latitude_desc" id="latitude_desc" size="20"/>
+			<a href="javascript:window.location='/rest/assignment/${assignment.id}/newlatituderesource?name=' + document.getElementById('latitude_desc').value">Add a Google Latitude Device</a><br/>
+			Name: <input type="text" name="aprs_name" id="aprs_name" size=20"/>&nbsp; Callsign: <input type="text" name="aprs_callsign" id="aprs_callsign" size="10"/>
+			<a href="javascript:window.location='/rest/assignment/${assignment.id}/newaprsresource?name=' + document.getElementById('aprs_name').value + '&callsign=' + document.getElementById('aprs_callsign').value">Add an APRS Device from aprs.fi</a><br/><br/>
 			<div id="attachedresourcecontainer">
 			</div>
 		</div>
@@ -181,7 +183,17 @@ org.sarsoft.Loader.queue(function() {
 	});
     wpttable.create(document.getElementById("attachedwptcontainer"));
 
-    resourcetable = new org.sarsoft.view.ResourceTable(function(resource) {}, function(resource) {});
+    resourcetable = new org.sarsoft.view.ResourceTable(function(resource) {}, function(record) {
+    	var resource = record.getData();
+    	var idx = 100;
+    	for(var i = 0; i < assignment.resources.length; i++) {
+    		if(assignment.resources[i].id == resource.id) idx = i;
+    	}
+    	assignment.resources.splice(idx, 1);
+    	resourceDAO.detachResource(resource, '${assignment.id}');
+    	resourcetable.table.deleteRow(record);
+	});
+
     resourcetable.create(document.getElementById("attachedresourcecontainer"));
 
 	assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
@@ -203,6 +215,8 @@ org.sarsoft.Loader.queue(function() {
 			}
 		}, assignment, 10);
 	}, ${assignment.id});
+
+	resourceDAO = new org.sarsoft.ResourceDAO();
 
 	var tabView = new YAHOO.widget.TabView('tabs');
 	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200"});
