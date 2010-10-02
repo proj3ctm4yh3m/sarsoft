@@ -27,46 +27,17 @@ import com.google.api.client.http.HttpTransport;
 @Entity
 public class LatitudeDevice extends LocationEnabledDevice {
 
-	  private static Integer idxCounter = 0;
-
 	  public OAuthHmacSigner signer = new OAuthHmacSigner();
 	  public OAuthCredentialsResponse credentials;
 	  public HttpTransport transport = GoogleTransport.create();
 	  public boolean authed = false;
-	  public String token;
-	  public int id;
 	  private String domain;
-	  private String tokenSharedSecret;
+	  public static String clientSharedSecret = null;
 
 	  public LatitudeDevice() {
 		  transport.addParser(new JsonCParser());
-		  synchronized(idxCounter) {
-			  id = idxCounter;
-			  idxCounter++;
-		  }
-		  signer.clientSharedSecret = "";
+		  signer.clientSharedSecret = clientSharedSecret;
 	  }
-
-	  @Transient
-	  public boolean isInitialized() {
-		  return authed;
-	  }
-
-	public String getToken() {
-		return token;
-	}
-
-	public void setToken(String token) {
-		this.token = token;
-	}
-
-	public String getTokenSharedSecret() {
-		return tokenSharedSecret;
-	}
-
-	public void setTokenSharedSecret(String tokenSharedSecret) {
-		this.tokenSharedSecret = tokenSharedSecret;
-	}
 
 	public String getDomain() {
 		return domain;
@@ -86,8 +57,8 @@ public class LatitudeDevice extends LocationEnabledDevice {
 		temporaryToken.displayName = appName;
 		temporaryToken.callback = callbackUrl;
 		OAuthCredentialsResponse tempCredentials = temporaryToken.execute();
-		setTokenSharedSecret(tempCredentials.tokenSecret);
-		signer.tokenSharedSecret = getTokenSharedSecret();
+		setDeviceKey(tempCredentials.tokenSecret);
+		signer.tokenSharedSecret = getDeviceKey();
 
 		OAuthAuthorizeTemporaryTokenUrl authorizeUrl = new OAuthAuthorizeTemporaryTokenUrl("https://www.google.com/latitude/apps/OAuthAuthorizeToken");
 		authorizeUrl.put("domain", domain);
@@ -99,32 +70,29 @@ public class LatitudeDevice extends LocationEnabledDevice {
 
 	public void handleAuthRequest(String requestToken, String verifier) throws IOException {
 
-		setDeviceId(requestToken);
-		setDeviceKey(verifier);
-
 		GoogleOAuthGetAccessToken accessToken = new GoogleOAuthGetAccessToken();
-		signer.tokenSharedSecret = getTokenSharedSecret();
-		accessToken.temporaryToken = getDeviceId();
+		signer.tokenSharedSecret = getDeviceKey();
+		accessToken.temporaryToken = requestToken;
 		accessToken.signer = signer;
 		accessToken.consumerKey = getDomain();
-		accessToken.verifier = getDeviceKey();
+		accessToken.verifier = verifier;
 		OAuthCredentialsResponse credentials = accessToken.execute();
-		setToken(credentials.token);
-		setTokenSharedSecret(credentials.tokenSecret);
+		setDeviceId(credentials.token);
+		setDeviceKey(credentials.tokenSecret);
 
 		initialize();
 		checkLocation();
 	}
 
-	public boolean initialize() {
+	protected void initialize() {
 		authed = false;
 		try {
-			signer.tokenSharedSecret = getTokenSharedSecret();
+			signer.tokenSharedSecret = getDeviceKey();
 
 			OAuthParameters authorizer = new OAuthParameters();
 			authorizer.consumerKey = "http://mattj.net/";
 			authorizer.signer = signer;
-			authorizer.token = getToken();
+			authorizer.token = getDeviceId();
 			authorizer.signRequestsUsingAuthorizationHeader(transport);
 
 			authed = true;
@@ -132,13 +100,11 @@ public class LatitudeDevice extends LocationEnabledDevice {
 			// authed already false
 			t.printStackTrace();
 		}
-		return authed;
 	}
 
 	public Waypoint checkLocation() {
 		try {
-		if(getToken() == null) return null;
-		if(!isInitialized()) initialize();
+		if(!authed) initialize();
 		HttpRequest request = transport.buildGetRequest();
 		request.setUrl("https://www.googleapis.com/latitude/v1/location?granularity=best");
 		String json = request.execute().parseAsString();

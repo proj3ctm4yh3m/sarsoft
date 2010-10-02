@@ -52,16 +52,4 @@ public class APRSDevice extends LocationEnabledDevice {
 		return wpt;
 	}
 
-	@Override
-	public boolean initialize() {
-		return true;
-	}
-
-	@Override
-	@Transient
-	public boolean isInitialized() {
-		return true;
-	}
-
-
 }
