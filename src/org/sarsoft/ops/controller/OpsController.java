@@ -2,7 +2,9 @@ package org.sarsoft.ops.controller;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,15 +25,35 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class OpsController extends JSONBaseController {
 
-	private LocationEngine locationEngine = new LocationEngine();
+	private static Map<String, LocationEngine> locationEngines = new HashMap<String, LocationEngine>();
+
+	public static boolean isLocationEnabled(String search) {
+		return locationEngines.containsKey(search);
+	}
 
 	@RequestMapping(value = "/rest/location/start", method = RequestMethod.GET)
 	public String startLocationEngine(Model model) {
-		locationEngine.dao = this.dao;
-		locationEngine.setSearch(RuntimeProperties.getSearch());
-		if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
-		locationEngine.setRefreshInterval(getConfigValue("location.refreshInterval"));
-		locationEngine.start();
+		String search = RuntimeProperties.getSearch();
+		if(!locationEngines.containsKey(search)) {
+			LocationEngine engine = new LocationEngine();
+			locationEngines.put(search, engine);
+			engine.dao = this.dao;
+			engine.setSearch(search);
+			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
+			engine.setRefreshInterval(getConfigValue("location.refreshInterval"));
+			engine.start();
+		}
+		return "/json";
+	}
+
+	@RequestMapping(value = "/rest/location/stop", method = RequestMethod.GET)
+	public String stopLocationEngine(Model model) {
+		String search = RuntimeProperties.getSearch();
+		if(locationEngines.containsKey(search)) {
+			LocationEngine engine = locationEngines.get(search);
+			locationEngines.remove(search);
+			engine.quit();
+		}
 		return "/json";
 	}
 
