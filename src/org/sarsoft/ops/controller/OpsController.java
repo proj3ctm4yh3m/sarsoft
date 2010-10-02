@@ -29,6 +29,8 @@ public class OpsController extends JSONBaseController {
 	public String startLocationEngine(Model model) {
 		locationEngine.dao = this.dao;
 		locationEngine.setSearch(RuntimeProperties.getSearch());
+		if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
+		locationEngine.setRefreshInterval(getConfigValue("location.refreshInterval"));
 		locationEngine.start();
 		return "/json";
 	}
@@ -74,11 +76,13 @@ public class OpsController extends JSONBaseController {
 		resource.setId(maxId+1);
 		resource.setName(request.getParameter("name"));
 		assignment.addResource(resource);
+		if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
 		LatitudeDevice device = new LatitudeDevice();
 		resource.getLocators().add(device);
+		String domain = getConfigValue("latitude.domain");
 		dao.save(assignment);
 		try {
-			response.sendRedirect(device.createAuthUrl("http://localhost:8080/rest/latitude/" + device.getPk() + "/callback", "mattj.net", "SARSOFT Search and Rescue Software"));
+			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/rest/latitude/" + device.getPk() + "/callback", domain, "SARSOFT Search and Rescue Software"));
 			dao.save(device);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -115,10 +119,12 @@ public class OpsController extends JSONBaseController {
 	public String createLatitudeDevice(Model model, @PathVariable("resourceid") long resourceid, HttpServletRequest request, HttpServletResponse response) {
 		try {
 			Resource resource = (Resource) dao.load(Resource.class, resourceid);
+			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
 			LatitudeDevice device = new LatitudeDevice();
 			resource.getLocators().add(device);
 			dao.save(resource);
-			response.sendRedirect(device.createAuthUrl("http://localhost:8080/rest/latitude/" + device.getPk() + "/callback", "mattj.net", "SARSOFT Search and Rescue Software"));
+			String domain = getConfigValue("latitude.domain");
+			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/rest/latitude/" + device.getPk() + "/callback", domain, "SARSOFT Search and Rescue Software"));
 			dao.save(device);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -134,7 +140,7 @@ public class OpsController extends JSONBaseController {
 			dao.save(device);
 		} catch (IOException e) {
 			e.printStackTrace();
-			return "error";
+			return "/error";
 		}
 		return json(model, device);
 	}

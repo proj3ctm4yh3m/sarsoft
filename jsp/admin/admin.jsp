@@ -36,6 +36,10 @@ For more information, see <a href="http://code.google.com/apis/maps/signup.html"
 <br/><br/>
 Garmin GPS Key: <input type="text" size="40" name="garminkey" id="garminkey" value="${garminKey}"/><button onclick="updateGarminKey()"/>Update</button><br/>
 To receive a ke, see <a href="http://developer.garmin.com/web-device/garmin-communicator-plugin/get-your-site-key/">http://developer.garmin.com/web-device/garmin-communicator-plugin/get-your-site-key/</a>
+<br/><br/>
+Google Latitude Domain: <input type="text" size="40" name="latitudedomain" id="latitudedomain" value="${latitudedomain}"/><button onclick="updateLatitudeDomain()"/>Update</button><br/>
+Google Latitude Shared Secret: <input type="text" size="40" name="latitudesharedsecret" id="latitudesharedsecret" value="${latitudesharedsecret}"/><button onclick="updateLatitudeSharedSecret()"/>Update</button><br/>
+Location Refresh Interval: <input type="text" size="40" name="locationRefreshInterval" id="locationRefreshInterval" value="${locationRefreshInterval}"/><button onclick="updateLocationRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
 </div>
 <div id="maps">
 
@@ -93,6 +97,20 @@ function updateGarminKey() {
 var configDAO = new org.sarsoft.ConfigDAO();
 configDAO.save("garmin.key", { name: "garmin.key", value: YAHOO.lang.JSON.stringify(document.getElementById('garminkey').value)});
 }
+function updateLatitudeDomain() {
+var configDAO = new org.sarsoft.ConfigDAO();
+configDAO.save("latitude.domain", { name: "latitude.domain", value: YAHOO.lang.JSON.stringify(document.getElementById('latitudedomain').value)});
+}
+function updateLatitudeSharedSecret() {
+var configDAO = new org.sarsoft.ConfigDAO();
+configDAO.save("latitude.clientSharedSecret", { name: "latitude.clientSharedSecret", value: YAHOO.lang.JSON.stringify(document.getElementById('latitudesharedsecret').value)});
+}
+function updateLocationRefreshInterval() {
+var configDAO = new org.sarsoft.ConfigDAO();
+configDAO.save("location.refreshInterval", { name: "location.refreshInterval", value: YAHOO.lang.JSON.stringify(document.getElementById('locationRefreshInterval').value)});
+}
+
+
 mapSourceDlg = new org.sarsoft.view.EntityCreateDialog("New Map Source", new org.sarsoft.view.MapSourceForm(), function(obj) {
 	mapDAO.create(function(source) { dataTable.addRow(source); }, obj);
 });

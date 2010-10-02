@@ -1,6 +1,8 @@
 package org.sarsoft.ops.model;
 
 import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.Transient;
 
 import org.sarsoft.common.model.SarModelObject;
@@ -25,9 +27,6 @@ public abstract class LocationEnabledDevice extends SarModelObject {
 		this.deviceKey = deviceKey;
 	}
 
-	public abstract boolean initialize();
-	@Transient
-	public abstract boolean isInitialized();
 	public abstract Waypoint checkLocation();
 
 }

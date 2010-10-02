@@ -127,6 +127,9 @@ public class AdminController extends JSONBaseController {
 		model.addAttribute("mapkey", getConfigValue("maps.key"));
 		model.addAttribute("hostName", getConfigValue("server.name"));
 		model.addAttribute("garminKey", getConfigValue("garmin.key"));
+		model.addAttribute("latitudedomain", getConfigValue("latitude.domain"));
+		model.addAttribute("latitudesharedsecret", getConfigValue("latitude.clientSharedSecret"));
+		model.addAttribute("locationRefreshInterval", getConfigValue("location.refreshInterval"));
 		return app(model, "Pages.Admin");
 	}
 
