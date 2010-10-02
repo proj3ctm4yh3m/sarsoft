@@ -30,10 +30,10 @@ public class LocationEngine extends Thread {
 	private Map<Long, Long> tracks = new HashMap<Long, Long>();
 	private Map<Long, Long> lastRefreshed = new HashMap<Long, Long>();
 	private long refreshInterval = 30000;
+	private boolean enabled = true;
 
 	@SuppressWarnings("unchecked")
 	private void checkLocations() {
-		System.out.println("Checking locations . . .");
 		Session session = null;
 		SessionFactory sessionFactory = null;
 		try {
@@ -52,7 +52,6 @@ public class LocationEngine extends Thread {
 						for(LocationEnabledDevice device : resource.getLocators()) {
 							try {
 								if(!lastRefreshed.containsKey(device.getPk()) || lastRefreshed.get(device.getPk()) < time - refreshInterval) {
-									System.out.println("Updating " + resource.getName() + ": " + device.getDeviceId());
 									Waypoint wpt = device.checkLocation();
 									if(wpt != null) {
 										// Update resource PLK
@@ -79,7 +78,6 @@ public class LocationEngine extends Thread {
 										}
 
 										if(createNewTrack) {
-											System.out.println("creating new track");
 											track = new Way();
 											track.setName("Position track for " + resource.getName());
 											track.setType(WayType.TRACK);
@@ -91,7 +89,6 @@ public class LocationEngine extends Thread {
 										}
 
 										if(addWaypointToTrack) {
-											System.out.println("adding waypoint to track");
 											track.getWaypoints().add(wpt);
 											dao.save(track);
 										}
@@ -112,18 +109,14 @@ public class LocationEngine extends Thread {
 	}
 
 	public void run() {
-		System.out.println("Thread Running");
 		RuntimeProperties.setSearch(search);
 		while(true) {
 			try {
-				sleep(10000);
+				sleep(15000);
 			} catch (InterruptedException e) {
 			}
-			try {
-				checkLocations();
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}
+			if(!enabled) return;
+			checkLocations();
 		}
 	}
 
@@ -134,6 +127,10 @@ public class LocationEngine extends Thread {
 	public void setRefreshInterval(String refreshInterval) {
 		if(refreshInterval == null || "".equals(refreshInterval)) refreshInterval = "30000";
 		this.refreshInterval = Long.parseLong(refreshInterval);
+	}
+
+	public void quit() {
+		enabled = false;
 	}
 
 }
