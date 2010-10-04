@@ -88,7 +88,13 @@ public class OpsController extends JSONBaseController {
 
 	@RequestMapping(value="/{mode}/resource", method = RequestMethod.GET)
 	public String getResources(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
-		if(APP.equals(mode)) return app(model, "Resource.List");
+		if(APP.equals(mode)) {
+			List<String> searches = dao.getAllSearchNames();
+			searches.remove(RuntimeProperties.getSearch());
+			model.addAttribute("resources", Boolean.TRUE);
+			model.addAttribute("searches", searches);
+			return app(model, "Resource.List");
+		}
 		String section = request.getParameter("section");
 		List<Resource> resources;
 		if(section != null) {
@@ -161,7 +167,7 @@ public class OpsController extends JSONBaseController {
 		String domain = getConfigValue("latitude.domain");
 		dao.save(assignment);
 		try {
-			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/" + mode + "/latitude/" + device.getPk() + "/callback?assignmentId=" + assignment.getId(), domain, "SARSOFT Search and Rescue Software"));
+			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/" + mode + "/latitude/" + device.getPk() + "/callback?assignmentId=" + assignment.getId() + "#operations", domain, "SARSOFT Search and Rescue Software"));
 			dao.save(device);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -238,6 +244,7 @@ public class OpsController extends JSONBaseController {
 		if (resourceId != null && resourceId.length() > 0) return getResource(model, mode, Long.parseLong(resourceId));
 		String assignmentId = request.getParameter("assignmentId");
 		if (assignmentId != null && assignmentId.length() > 0) return searchAssignmentController.getAssignment(model, Long.parseLong(assignmentId), request);
+		return adminController.homePage(model, request);
 	}
 
 
@@ -275,6 +282,45 @@ public class OpsController extends JSONBaseController {
 			}
 		}
 		return getResource(model, APP, resource.getId());
+	}
+
+	@RequestMapping(value="/{mode}/resource/bulkimport", method = RequestMethod.GET)
+	public String bulkImport(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
+		String searchToImportFrom = request.getParameter("search");
+		String search = RuntimeProperties.getSearch();
+		if(search.equals(searchToImportFrom)) return "";
+		RuntimeProperties.setSearch(searchToImportFrom);
+		List<Resource> toImport = (List<Resource>) dao.loadAll(Resource.class);
+		RuntimeProperties.setSearch(search);
+		List<Resource> existing = (List<Resource>) dao.loadAll(Resource.class);
+
+		long maxId = 0L;
+		for(Resource existingResource : existing) {
+			maxId = Math.max(maxId, existingResource.getId());
+		}
+
+		for(Resource importResource : toImport) {
+			maxId++;
+			Resource newResource = new Resource();
+			newResource.setId(maxId);
+			newResource.setName(importResource.getName());
+			for(LocationEnabledDevice importLocator : importResource.getLocators()) {
+				if(importLocator instanceof APRSDevice) {
+					APRSDevice device = new APRSDevice();
+					device.setDeviceId(importLocator.getDeviceId());
+					device.setDeviceKey(importLocator.getDeviceKey());
+					newResource.getLocators().add(device);
+				} else if(importLocator instanceof LatitudeDevice) {
+					LatitudeDevice device = new LatitudeDevice();
+					device.setDeviceId(importLocator.getDeviceId());
+					device.setDeviceKey(importLocator.getDeviceKey());
+					device.setDomain(((LatitudeDevice) importLocator).getDomain());
+					newResource.getLocators().add(device);
+				}
+			}
+			dao.save(newResource);
+		}
+		return this.getResources(model, mode, request);
 	}
 
 

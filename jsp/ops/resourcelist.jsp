@@ -5,6 +5,14 @@
 
 <ul>
   <li><a href="/app/resource/map">Map View</a> of all resources.</li>
+  <li>Bulk import resource information from a different search:</a>
+	 <select name="bulkImport" id="bulkImport">
+	  <c:forEach var="search" items="${searches}">
+	   <option value="${search}">${search}</option>
+	  </c:forEach>
+	 </select>
+     <button onclick="window.location='/app/resource/bulkimport?search=' + document.getElementById('bulkImport').options[document.getElementById('bulkImport').selectedIndex].value">GO</button>
+  </li>
   <li>Create a new resource named <input type="text" id="newresourcename" size="20"/> <button onclick="window.location='/app/resource/new?name='+document.getElementById('newresourcename').value">GO</button></li>
 </ul>
 <br/>

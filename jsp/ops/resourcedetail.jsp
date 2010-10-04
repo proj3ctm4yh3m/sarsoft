@@ -60,21 +60,23 @@ ${resource.plk.formattedUTM}
 <c:if test="${fn:length(resource.locators) gt 0}">
 <h4>Existing Locators</h4>
 <c:forEach var="locator" items="${resource.locators}">
-${locator.description} &nbsp;&nbsp; <a href="/app/resource/${resource.id}/locator/${locator.pk}/detach">Remove</a><br/>
+${locator.description} &nbsp;&nbsp; <a href="/app/resource/${resource.id}/locator/${locator.pk}/detach#locators">Remove</a><br/>
 </c:forEach>
 <br/>
 </c:if>
 
 <h4>Add a Locator</h4>
-<a href="javascript:window.location='/rest/latitude/${resource.id}/new">Add a Google Latitude Device</a><br/>
+<a href="javascript:window.location='/app/latitude/${resource.id}/new'">Add a Google Latitude Device</a><br/>
 Callsign: <input type="text" name="aprs_callsign" id="aprs_callsign" size="10"/>
-<a href="javascript:window.location='/rest/aprs/${resource.id}/new?callsign=' + document.getElementById('aprs_callsign').value">Add an APRS Device from aprs.fi</a><br/><br/>
+<a href="javascript:window.location='/app/aprs/${resource.id}/new?callsign=' + document.getElementById('aprs_callsign').value + '#locators'">Add an APRS Device from aprs.fi</a><br/><br/>
 </div>
 </div>
 
 <script>
 org.sarsoft.Loader.queue(function() {
   var tabView = new YAHOO.widget.TabView('tabs');
+  var url = location.href.split('#');
+  if(url[1] == "locators") tabView.set('activeIndex', 1);
   rvmc = new org.sarsoft.controller.ResourceViewMapController(document.getElementById('mapview'), ${resource.id});
 });
 </script>
