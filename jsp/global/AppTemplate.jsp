@@ -28,8 +28,11 @@
  <c:when test="${app eq 'plans'}">
   <a href="/app/operationalperiod">Plans</a>
  </c:when>
+ <c:when test="${app eq 'ops'}">
+  <a href="/">Operations</a>
+ </c:when>
  <c:when test="${app eq 'admin'}">
-  <a href="/app/admin">admin console</a>
+  <a href="/app/admin">Admin Console</a>
  </c:when>
 </c:choose>
 <c:choose>

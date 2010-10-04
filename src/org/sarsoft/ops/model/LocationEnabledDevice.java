@@ -29,4 +29,7 @@ public abstract class LocationEnabledDevice extends SarModelObject {
 
 	public abstract Waypoint checkLocation();
 
+	@Transient
+	public abstract String getDescription();
+
 }

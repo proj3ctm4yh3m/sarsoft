@@ -30,6 +30,9 @@ import org.springframework.ui.Model;
 
 public abstract class JSONBaseController {
 
+	protected static String REST = "rest";
+	protected static String APP = "app";
+
 	@Autowired
 	@Qualifier("genericDAO")
 	protected GenericHibernateDAO dao;

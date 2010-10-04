@@ -22,6 +22,16 @@
 		<put-attribute name="app" value="plans"/>
 	</definition>
 
+	<definition name="Resource.List" extends="App.Base">
+		<put-attribute name="content" value="/ops/resourcelist.jsp"/>
+		<put-attribute name="app" value="ops"/>
+	</definition>
+
+	<definition name="Resource.Detail" extends="App.Base">
+		<put-attribute name="content" value="/ops/resourcedetail.jsp"/>
+		<put-attribute name="app" value="ops"/>
+	</definition>
+
 	<definition name="Pages.Home" extends="App.Base">
 		<put-attribute name="content" value="/global/home.jsp"/>
 	</definition>

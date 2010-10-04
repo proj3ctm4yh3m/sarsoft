@@ -16,7 +16,7 @@ You are working on ${searchName}.  <a href="/app/setsearch">Select a different s
 <h4>Administration</h4>
 <ul>
  <li><a href="/app/admin">Administration Console</a></li>
- <li>Location Tracking: <c:choose><c:when test="${locationenabled}">ENABLED   (<a href="/rest/location/stop">disable</a>)</c:when><c:otherwise>DISABLED   (<a href="/rest/location/start">enable</a>)</c:otherwise></c:choose></li>
+ <li>Location Tracking: <c:choose><c:when test="${locationenabled}">ENABLED   (<a href="/app/location/stop">disable</a>)</c:when><c:otherwise>DISABLED   (<a href="/app/location/start">enable</a>)</c:otherwise></c:choose></li>
 </ul>
 <h4>Plans</h4>
 <ul>
@@ -28,6 +28,10 @@ You are working on ${searchName}.  <a href="/app/setsearch">Select a different s
  </c:forEach>
  </select>
  <a href="javascript:gotoAssignment()">GO</a></li>
+</ul>
+<h4>Operations</h4>
+<ul>
+ <li><a href="/app/resource/">Resources</a></li>
 </ul>
 <h4>Bulk Transfer</h4>
 <ul>
