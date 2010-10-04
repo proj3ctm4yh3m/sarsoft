@@ -9,13 +9,19 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sarsoft.admin.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
+import org.sarsoft.common.model.Action;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.APRSDevice;
+import org.sarsoft.ops.model.LocationEnabledDevice;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.ops.model.LatitudeDevice;
 import org.sarsoft.ops.service.location.LocationEngine;
+import org.sarsoft.plans.controller.SearchAssignmentController;
+import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,14 +31,19 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class OpsController extends JSONBaseController {
 
+	@Autowired
+	AdminController adminController;
 	private static Map<String, LocationEngine> locationEngines = new HashMap<String, LocationEngine>();
+
+	@Autowired
+	SearchAssignmentController searchAssignmentController;
 
 	public static boolean isLocationEnabled(String search) {
 		return locationEngines.containsKey(search);
 	}
 
-	@RequestMapping(value = "/rest/location/start", method = RequestMethod.GET)
-	public String startLocationEngine(Model model) {
+	@RequestMapping(value = "/{mode}/location/start", method = RequestMethod.GET)
+	public String startLocationEngine(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
 		String search = RuntimeProperties.getSearch();
 		if(!locationEngines.containsKey(search)) {
 			LocationEngine engine = new LocationEngine();
@@ -43,51 +54,96 @@ public class OpsController extends JSONBaseController {
 			engine.setRefreshInterval(getConfigValue("location.refreshInterval"));
 			engine.start();
 		}
-		return "/json";
+		if(REST.equals(mode)) return "/json";
+		return adminController.homePage(model, request);
+
 	}
 
-	@RequestMapping(value = "/rest/location/stop", method = RequestMethod.GET)
-	public String stopLocationEngine(Model model) {
+	@RequestMapping(value = "/{mode}/location/stop", method = RequestMethod.GET)
+	public String stopLocationEngine(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
 		String search = RuntimeProperties.getSearch();
 		if(locationEngines.containsKey(search)) {
 			LocationEngine engine = locationEngines.get(search);
 			locationEngines.remove(search);
 			engine.quit();
 		}
-		return "/json";
+		if(REST.equals(mode)) return "/json";
+		return adminController.homePage(model, request);
 	}
 
-	@RequestMapping(value="/rest/resource/new", method = RequestMethod.GET)
-	public String createResource(Model model, HttpServletRequest request) {
+	@RequestMapping(value="/{mode}/resource/new", method = RequestMethod.GET)
+	public String createResource(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
 		String resourceName = request.getParameter("name");
-		Long id = Long.parseLong(request.getParameter("id"));
+		long maxId = 0L;
+		List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
+		for(Resource resource : resources) {
+			maxId = Math.max(maxId, resource.getId());
+		}
 		Resource resource = new Resource();
+		resource.setId(maxId+1);
 		resource.setName(resourceName);
-		resource.setId(id);
 		dao.save(resource);
+		return getResource(model, mode, resource.getId());
+	}
+
+	@RequestMapping(value="/{mode}/resource", method = RequestMethod.GET)
+	public String getResources(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
+		if(APP.equals(mode)) return app(model, "Resource.List");
+		String section = request.getParameter("section");
+		List<Resource> resources;
+		if(section != null) {
+			resources = (List<Resource>) dao.getByAttr(Resource.class, "section", section);
+		} else {
+			resources = (List<Resource>) dao.loadAll(Resource.class);
+		}
+		return json(model, resources);
+	}
+
+	@RequestMapping(value="/{mode}/resource/{resourceid}", method = RequestMethod.GET)
+	public String getResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid) {
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		if(REST.equals(mode)) return json(model, resource);
+		model.addAttribute("resource", resource);
+		return app(model, "Resource.Detail");
+	}
+
+	@RequestMapping(value="/rest/resource/{resourceid}", method = RequestMethod.POST)
+	public String modifyResource(Model model, @PathVariable("resourceid") long resourceid, HttpServletRequest request) {
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		switch(action) {
+		case DELETE :
+			dao.delete(resource);
+			return json(model, resource);
+		}
 		return json(model, resource);
 	}
 
-	@RequestMapping(value="/rest/resource/{resourceid}/detach/{assignmentid}", method = RequestMethod.GET)
-	public String detachResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+	@RequestMapping(value="/{mode}/resource/{resourceid}/detach/{assignmentid}", method = RequestMethod.GET)
+	public String detachResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
 		Resource resource = (Resource) dao.load(Resource.class, resourceid);
 		assignment.removeResource(resource);
+		resource.setSection(Resource.Section.REHAB);
 		dao.save(assignment);
-		return json(model, null);
+		dao.save(resource);
+		if(REST.equals(mode)) return json(model, null);
+		return searchAssignmentController.getAssignment(model, assignmentid, request);
 	}
 
-	@RequestMapping(value="/rest/resource/{resourceid}/assign/{assignmentid}", method = RequestMethod.GET)
-	public String assignResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+	@RequestMapping(value="/{mode}/resource/{resourceid}/attach/{assignmentid}", method = RequestMethod.GET)
+	public String assignResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
 		Resource resource = (Resource) dao.load(Resource.class, resourceid);
 		assignment.addResource(resource);
+		resource.setSection(Resource.Section.FIELD);
 		dao.save(assignment);
-		return json(model, null);
+		if(REST.equals(mode)) return json(model, null);
+		return searchAssignmentController.getAssignment(model, assignmentid, request);
 	}
 
-	@RequestMapping(value="/rest/assignment/{assignmentid}/newlatituderesource", method = RequestMethod.GET)
-	public String createNewLatitudeDevice(Model mode, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request, HttpServletResponse response) {
+	@RequestMapping(value="/{mode}/assignment/{assignmentid}/newlatituderesource", method = RequestMethod.GET)
+	public String createNewLatitudeDevice(Model model, @PathVariable("mode") String mode, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request, HttpServletResponse response) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
 		List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
 		long maxId = 0L;
@@ -97,6 +153,7 @@ public class OpsController extends JSONBaseController {
 		Resource resource = new Resource();
 		resource.setId(maxId+1);
 		resource.setName(request.getParameter("name"));
+		resource.setSection(Resource.Section.FIELD);
 		assignment.addResource(resource);
 		if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
 		LatitudeDevice device = new LatitudeDevice();
@@ -104,7 +161,7 @@ public class OpsController extends JSONBaseController {
 		String domain = getConfigValue("latitude.domain");
 		dao.save(assignment);
 		try {
-			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/rest/latitude/" + device.getPk() + "/callback", domain, "SARSOFT Search and Rescue Software"));
+			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/" + mode + "/latitude/" + device.getPk() + "/callback?assignmentId=" + assignment.getId(), domain, "SARSOFT Search and Rescue Software"));
 			dao.save(device);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -112,8 +169,8 @@ public class OpsController extends JSONBaseController {
 		return "/error";
 	}
 
-	@RequestMapping(value="/rest/assignment/{assignmentid}/newaprsresource", method = RequestMethod.GET)
-	public String createNewAPRSDevice(Model model, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request, HttpServletResponse response) {
+	@RequestMapping(value="/{mode}/assignment/{assignmentid}/newaprsresource", method = RequestMethod.GET)
+	public String createNewAPRSDevice(Model model, @PathVariable("mode") String mode, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request, HttpServletResponse response) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
 		List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
 		long maxId = 0L;
@@ -123,12 +180,14 @@ public class OpsController extends JSONBaseController {
 		Resource resource = new Resource();
 		resource.setId(maxId+1);
 		resource.setName(request.getParameter("name"));
+		resource.setSection(Resource.Section.FIELD);
 		assignment.addResource(resource);
 		APRSDevice device = new APRSDevice();
 		device.setDeviceId(request.getParameter("callsign"));
 		resource.getLocators().add(device);
 		dao.save(assignment);
-		return json(model, assignment);
+		if(REST.equals(mode)) return json(model, assignment);
+		return searchAssignmentController.getAssignment(model, assignmentid, request);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -137,8 +196,8 @@ public class OpsController extends JSONBaseController {
 		return json(model, dao.loadSince(Resource.class, new Date(date)));
 	}
 
-	@RequestMapping(value="/rest/latitude/{resourceid}/new", method = RequestMethod.GET)
-	public String createLatitudeDevice(Model model, @PathVariable("resourceid") long resourceid, HttpServletRequest request, HttpServletResponse response) {
+	@RequestMapping(value="/{mode}/latitude/{resourceid}/new", method = RequestMethod.GET)
+	public String createLatitudeDevice(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, HttpServletRequest request, HttpServletResponse response) {
 		try {
 			Resource resource = (Resource) dao.load(Resource.class, resourceid);
 			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
@@ -146,7 +205,7 @@ public class OpsController extends JSONBaseController {
 			resource.getLocators().add(device);
 			dao.save(resource);
 			String domain = getConfigValue("latitude.domain");
-			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/rest/latitude/" + device.getPk() + "/callback", domain, "SARSOFT Search and Rescue Software"));
+			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/" + mode + "/latitude/" + device.getPk() + "/callback?resourceId=" + resource.getId(), domain, "SARSOFT Search and Rescue Software"));
 			dao.save(device);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -154,8 +213,18 @@ public class OpsController extends JSONBaseController {
 		return "/error";
 	}
 
-	@RequestMapping(value ="/rest/latitude/{pk}/callback", method = RequestMethod.GET)
-	public String latitudeCallback(Model model, @PathVariable ("pk") long pk, HttpServletRequest request) {
+	@RequestMapping(value="/{mode}/aprs/{resourceid}/new", method = RequestMethod.GET)
+	public String createAPRSDevice(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, HttpServletRequest request, HttpServletResponse response) {
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		APRSDevice device = new APRSDevice();
+		device.setDeviceId(request.getParameter("callsign"));
+		resource.getLocators().add(device);
+		dao.save(resource);
+		return getResource(model, mode, resourceid);
+	}
+
+	@RequestMapping(value ="/{mode}/latitude/{pk}/callback", method = RequestMethod.GET)
+	public String latitudeCallback(Model model, @PathVariable("mode") String mode, @PathVariable ("pk") long pk, HttpServletRequest request) {
 		LatitudeDevice device = (LatitudeDevice) dao.loadByPk(LatitudeDevice.class, pk);
 		try {
 			device.handleAuthRequest(request.getParameter("oauth_token"), request.getParameter("oauth_verifier"));
@@ -164,7 +233,48 @@ public class OpsController extends JSONBaseController {
 			e.printStackTrace();
 			return "/error";
 		}
-		return json(model, device);
+		if(REST.equals(mode)) return json(model, device);
+		String resourceId = request.getParameter("resourceId");
+		if (resourceId != null && resourceId.length() > 0) return getResource(model, mode, Long.parseLong(resourceId));
+		String assignmentId = request.getParameter("assignmentId");
+		if (assignmentId != null && assignmentId.length() > 0) return searchAssignmentController.getAssignment(model, Long.parseLong(assignmentId), request);
+	}
+
+
+	@RequestMapping(value="/app/resource/map", method = RequestMethod.GET)
+	public String plansEditor(Model model) {
+		return app(model, "/ops/resourcemap");
+	}
+
+
+	@RequestMapping(value="/app/resource/{resourceid}/move")
+	public String updateResource(Model model, @PathVariable("resourceid") long resourceid, HttpServletRequest request) {
+		String sect = request.getParameter("section");
+		Resource.Section section = (sect == null || sect.length() == 0) ? null : Resource.Section.valueOf(sect.toUpperCase());
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		resource.setSection(section);
+		if(section != Resource.Section.FIELD && resource.getAssignment() != null) {
+			SearchAssignment assignment = resource.getAssignment();
+			assignment.removeResource(resource);
+			resource.setAssignment(null);
+			dao.save(assignment);
+		}
+		dao.save(resource);
+		if("list".equals(request.getParameter("view"))) return app(model, "Resource.List");
+		return getResource(model, APP, resource.getId());
+	}
+
+	@RequestMapping(value="/app/resource/{resourceid}/locator/{locatorpk}/detach", method = RequestMethod.GET)
+	public String detachLocator(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("locatorpk") long locatorpk) {
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		for(LocationEnabledDevice device : resource.getLocators()) {
+			if(device.getPk().equals(locatorpk)) {
+				resource.getLocators().remove(device);
+				dao.save(resource);
+				return getResource(model, APP, resource.getId());
+			}
+		}
+		return getResource(model, APP, resource.getId());
 	}
 
 

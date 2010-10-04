@@ -48,8 +48,13 @@ public class APRSDevice extends LocationEnabledDevice {
 		Waypoint wpt = new Waypoint();
 		wpt.setLat(Double.parseDouble((String) bean.get("lat")));
 		wpt.setLng(Double.parseDouble((String) bean.get("lng")));
-		wpt.setTime(new Date(Long.parseLong((String) bean.get("lasttime"))));
+		wpt.setTime(new Date(Long.parseLong((String) bean.get("lasttime"))*1000));
 		return wpt;
+	}
+
+	@Transient
+	public String getDescription() {
+		return "APRS: " + getDeviceId();
 	}
 
 }

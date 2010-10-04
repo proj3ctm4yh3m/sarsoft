@@ -437,11 +437,14 @@ org.sarsoft.EditableGMap = function(map, infodiv) {
 	this._infodiv = infodiv;
 
 	GEvent.addListener(map, "singlerightclick", function(point, src, overlay) {
-		var way = undefined;
-		if(overlay != null) way = that.polys[overlay.id].way;
+		var obj = undefined;
+		if(overlay != null) {
+			if(that.polys[overlay.id] != null) obj = that.polys[overlay.id].way;
+			if(that.markers[overlay.id] != null) obj = that.markers[overlay.id].waypoint;
+		}
 		if(that._handlers["singlerightclick"] != undefined) {
 			for(var i = 0; i < that._handlers["singlerightclick"].length; i++) {
-				that._handlers["singlerightclick"][i](point, way);
+				that._handlers["singlerightclick"][i](point, obj);
 				}
 		}
 	});

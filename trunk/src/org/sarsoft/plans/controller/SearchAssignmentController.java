@@ -21,6 +21,7 @@ import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.view.Breadcrumb;
+import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Probability;
 import org.sarsoft.plans.model.SearchAssignment;
@@ -60,6 +61,8 @@ public class SearchAssignmentController extends JSONBaseController {
 				return app(model, "Assignment.PrintForms");
 			}
 		default :
+			// for new resources - need to find a better way to do this
+			model.addAttribute("rehabresources", dao.getAllByAttr(Resource.class, "section", Resource.Section.REHAB));
 			return app(model, "Assignment.Details");
 		}
 	}

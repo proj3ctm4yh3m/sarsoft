@@ -132,10 +132,19 @@ you can see how it relates to neighboring assignments.</i></div>
 		</div>
 
 		<div id="operations">
-			Name: <input type="text" name="latitude_desc" id="latitude_desc" size="20"/>
-			<a href="javascript:window.location='/rest/assignment/${assignment.id}/newlatituderesource?name=' + document.getElementById('latitude_desc').value">Add a Google Latitude Device</a><br/>
-			Name: <input type="text" name="aprs_name" id="aprs_name" size=20"/>&nbsp; Callsign: <input type="text" name="aprs_callsign" id="aprs_callsign" size="10"/>
-			<a href="javascript:window.location='/rest/assignment/${assignment.id}/newaprsresource?name=' + document.getElementById('aprs_name').value + '&callsign=' + document.getElementById('aprs_callsign').value">Add an APRS Device from aprs.fi</a><br/><br/>
+		<h4>Create and attach a new resource</h4>
+			Name: <input type="text" id="new_resource_name" size="20"/>&nbsp;&nbsp;<button onclick="createNewResource()">Create</button><br/>
+			<input type="radio" id="newblankresource" name="new_resource_locator" checked="checked">No Locator</input>&nbsp;&nbsp;
+			<input type="radio" id="newlatituderesource" name="new_resource_locator">Google Latitude Device</input>&nbsp;&nbsp;
+			<input type="radio" id="newaprsresource" name="new_resource_locator">APRS callsign</input>&nbsp; <input type="text" id="aprs_callsign" size="10"/> (from APRS.fi)
+		<h4>Attach an existing resource from REHAB</h4>
+		<select id="rehabresources">
+		<c:forEach var="resource" items="${rehabresources}">
+			<option value="${resource.id}">${resource.name}</option>
+		</c:forEach>
+		</select>
+		<button onclick="attachExistingResource()">GO</button>
+			<br/>
 			<div id="attachedresourcecontainer">
 			</div>
 		</div>
@@ -158,6 +167,22 @@ you can see how it relates to neighboring assignments.</i></div>
 </div>
 
 <script>
+function attachExistingResource() {
+	var select = document.getElementById("rehabresources");
+	var id = select.options[select.selectedIndex].value
+	window.location="/rest/resource/" + id + "/attach/${assignment.id}";
+}
+function createNewResource() {
+	var name = document.getElementById("new_resource_name").value;
+	if(document.getElementById('newblankresource').checked) {
+		// do nothing
+	} else if(document.getElementById('newlatituderesource').checked) {
+		window.location='/rest/assignment/${assignment.id}/newlatituderesource?name=' + name;
+	} else if(document.getElementById('newaprsresource').checked) {
+		window.location='/rest/assignment/${assignment.id}/newaprsresource?name=' + name + '&callsign=' + document.getElementById('aprs_callsign').value;
+	}
+}
+
 org.sarsoft.Loader.queue(function() {
     tracktable = new org.sarsoft.view.WayTable(function(way) { avtc.highlight(way);}, function(record) {
     	var way = record.getData();
@@ -183,7 +208,7 @@ org.sarsoft.Loader.queue(function() {
 	});
     wpttable.create(document.getElementById("attachedwptcontainer"));
 
-    resourcetable = new org.sarsoft.view.ResourceTable(function(resource) {}, function(record) {
+    resourcetable = new org.sarsoft.view.ResourceTable(null, function(record) {
     	var resource = record.getData();
     	var idx = 100;
     	for(var i = 0; i < assignment.resources.length; i++) {

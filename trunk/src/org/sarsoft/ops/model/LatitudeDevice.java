@@ -128,4 +128,9 @@ public class LatitudeDevice extends LocationEnabledDevice {
 		}
 	}
 
+	@Transient
+	public String getDescription() {
+		return "Latitude: " + getPk();
+	}
+
 }
