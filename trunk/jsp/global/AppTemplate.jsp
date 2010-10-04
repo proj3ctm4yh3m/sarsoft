@@ -42,6 +42,12 @@
  <c:when test="${period ne null}">
   &nbsp;:&nbsp;${period.description}
  </c:when>
+ <c:when test="${resources ne null}">
+ 	&nbsp;:&nbsp;Resources
+ </c:when>
+ <c:when test="${resource ne null}">
+ 	&nbsp;:&nbsp;<a href="/app/resource/">Resources</a>&nbsp;:&nbsp;${resource.name}
+ </c:when>
 </c:choose>
 </div>
 <div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>${searchName}</div>

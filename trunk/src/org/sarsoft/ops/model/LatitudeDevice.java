@@ -117,9 +117,7 @@ public class LatitudeDevice extends LocationEnabledDevice {
 		Waypoint wpt = new Waypoint();
 		wpt.setLat((Double) bean.get("latitude"));
 		wpt.setLng((Double) bean.get("longitude"));
-//		wpt.setTime(new Date(Long.parseLong((String) bean.get("timestampMs"))));
-//		set to current time to avoid clock skew issues
-		wpt.setTime(new Date());
+		wpt.setTime(new Date(Long.parseLong((String) bean.get("timestampMs"))));
 
 		return wpt;
 		} catch (Exception e) {

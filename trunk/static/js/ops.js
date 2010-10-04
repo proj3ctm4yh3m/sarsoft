@@ -169,15 +169,17 @@ org.sarsoft.controller.ResourceMapController.prototype.expireResources = functio
 	for(var key in this.resources) {
 		var resource = this.resources[key];
 		if(resource.plk != null && timestamp - (1*resource.plk.time) > 300000) {
-			this.addResource(resource);
+			this.addResource(resource, true);
 		}
 	}
 }
 
-org.sarsoft.controller.ResourceMapController.prototype.addResource = function(resource) {
+org.sarsoft.controller.ResourceMapController.prototype.addResource = function(resource, expireCheck) {
 	if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].plk);
+	if(expireCheck != true) {
+		this.resources[resource.id] = resource;
+	}
 	if(resource.plk == null) return;
-	this.resources[resource.id] = resource;
 	var config = new Object();
 	if(resource.section == null) {
 		if(!this.showROW) return;

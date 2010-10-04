@@ -170,16 +170,16 @@ you can see how it relates to neighboring assignments.</i></div>
 function attachExistingResource() {
 	var select = document.getElementById("rehabresources");
 	var id = select.options[select.selectedIndex].value
-	window.location="/rest/resource/" + id + "/attach/${assignment.id}";
+	window.location="/app/resource/" + id + "/attach/${assignment.id}#operations";
 }
 function createNewResource() {
 	var name = document.getElementById("new_resource_name").value;
 	if(document.getElementById('newblankresource').checked) {
 		// do nothing
 	} else if(document.getElementById('newlatituderesource').checked) {
-		window.location='/rest/assignment/${assignment.id}/newlatituderesource?name=' + name;
+		window.location='/app/assignment/${assignment.id}/newlatituderesource?name=' + name;
 	} else if(document.getElementById('newaprsresource').checked) {
-		window.location='/rest/assignment/${assignment.id}/newaprsresource?name=' + name + '&callsign=' + document.getElementById('aprs_callsign').value;
+		window.location='/app/assignment/${assignment.id}/newaprsresource?name=' + name + '&callsign=' + document.getElementById('aprs_callsign').value + "#operations";
 	}
 }
 
@@ -244,6 +244,8 @@ org.sarsoft.Loader.queue(function() {
 	resourceDAO = new org.sarsoft.ResourceDAO();
 
 	var tabView = new YAHOO.widget.TabView('tabs');
+	var url = location.href.split('#');
+ 	if(url[1] == "operations") tabView.set('activeIndex', 3);
 	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200"});
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
 	finalizeDlg.render(document.body);
