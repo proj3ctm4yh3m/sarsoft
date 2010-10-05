@@ -39,7 +39,8 @@ To receive a ke, see <a href="http://developer.garmin.com/web-device/garmin-comm
 <br/><br/>
 Google Latitude Domain: <input type="text" size="40" name="latitudedomain" id="latitudedomain" value="${latitudedomain}"/><button onclick="updateLatitudeDomain()"/>Update</button><br/>
 Google Latitude Shared Secret: <input type="text" size="40" name="latitudesharedsecret" id="latitudesharedsecret" value="${latitudesharedsecret}"/><button onclick="updateLatitudeSharedSecret()"/>Update</button><br/>
-Location Refresh Interval: <input type="text" size="40" name="locationRefreshInterval" id="locationRefreshInterval" value="${locationRefreshInterval}"/><button onclick="updateLocationRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
+Latitude Refresh Interval: <input type="text" size="40" name="latitudeRefreshInterval" id="locationRefreshInterval" value="${latitudeRefreshInterval}"/><button onclick="updateLatitudeRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
+APRS Refresh Interval: <input type="text" size="40" name="aprsRefreshInterval" id="locationRefreshInterval" value="${aprsRefreshInterval}"/><button onclick="updateAPRSRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
 </div>
 <div id="maps">
 
@@ -105,9 +106,14 @@ function updateLatitudeSharedSecret() {
 var configDAO = new org.sarsoft.ConfigDAO();
 configDAO.save("latitude.clientSharedSecret", { name: "latitude.clientSharedSecret", value: YAHOO.lang.JSON.stringify(document.getElementById('latitudesharedsecret').value)});
 }
-function updateLocationRefreshInterval() {
+function updateLatitudeRefreshInterval() {
 var configDAO = new org.sarsoft.ConfigDAO();
-configDAO.save("location.refreshInterval", { name: "location.refreshInterval", value: YAHOO.lang.JSON.stringify(document.getElementById('locationRefreshInterval').value)});
+configDAO.save("location.refreshInterval.latitude", { name: "location.refreshInterval.latitude", value: YAHOO.lang.JSON.stringify(document.getElementById('latitudeRefreshInterval').value)});
+}
+
+function updateARPSRefreshInterval() {
+var configDAO = new org.sarsoft.ConfigDAO();
+configDAO.save("location.refreshInterval.aprs", { name: "location.refreshInterval.aprs", value: YAHOO.lang.JSON.stringify(document.getElementById('aprsRefreshInterval').value)});
 }
 
 

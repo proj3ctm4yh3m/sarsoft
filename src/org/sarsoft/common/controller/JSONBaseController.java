@@ -103,7 +103,6 @@ public abstract class JSONBaseController {
 	}
 
 	protected Object parseGPXJson(HttpServletRequest request, String json, String template) {
-		System.out.println("GPX STR is\n" + json);
 		JSONObject obj = (JSONObject) JSONSerializer.toJSON(json);
 		String gpx = (String) obj.get("gpx");
 		return parseGPXInternal(request.getSession().getServletContext(), gpx, template);
@@ -111,18 +110,15 @@ public abstract class JSONBaseController {
 
 	protected Object parseGPXInternal(ServletContext sc, String gpx, String template) {
 		try {
-			System.out.println("GPX is " + gpx);
 			TransformerFactory factory = TransformerFactory.newInstance();
 			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream(template)));
 			StringWriter writer = new StringWriter();
 			transformer.transform(new StreamSource(new StringReader(gpx)), new StreamResult(writer));
 			String xml = writer.toString();
-			System.out.println("JSON-XML is " + xml);
 			XMLSerializer serializer = new XMLSerializer();
 			serializer.setRemoveNamespacePrefixFromElements(true);
 			serializer.removeNamespace("gpx");
 			JSON json = serializer.read(xml);
-			System.out.println("JSON is " + json.toString());
 			return json;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -142,7 +138,6 @@ public abstract class JSONBaseController {
 		String xml = new XMLSerializer().write(json);
 		xml = xml.replaceFirst("<o>", "<o xmlns=\"json\">");
 		xml = xml.replaceFirst("<a>", "<a xmlns=\"json\">");
-		System.out.println("XML is " + xml);
 		model.addAttribute("xml", new StringReader(xml));
 		model.addAttribute("template", template);
 	}

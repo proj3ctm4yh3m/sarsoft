@@ -46,7 +46,6 @@ public class JSONAnnotatedPropertyFilter implements PropertyFilter {
 		config.setJsonPropertyFilter(new JSONAnnotatedPropertyFilter());
 		config.registerJsonValueProcessor(Date.class, new DateProcessor());
 		config.registerJsonValueProcessor(List.class, new ListProcessor());
-		System.out.println("Object is " + obj);
 		return JSONObject.fromObject(obj, config);
 	}
 

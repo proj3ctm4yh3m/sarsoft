@@ -15,6 +15,7 @@ import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.ops.model.APRSDevice;
 import org.sarsoft.ops.model.LatitudeDevice;
 import org.sarsoft.ops.model.LocationEnabledDevice;
 import org.sarsoft.ops.model.Resource;
@@ -29,27 +30,14 @@ public class LocationEngine extends Thread {
 	private String search;
 	private Map<Long, Long> tracks = new HashMap<Long, Long>();
 	private Map<Long, Long> lastRefreshed = new HashMap<Long, Long>();
-	private long refreshInterval = 30000;
+	private long latitudeRefreshInterval = 30000;
+	private long aprsRefreshInterval = 240000;
 	private boolean enabled = true;
 
 	private void updateTrack(Resource resource, LocationEnabledDevice device, Waypoint wpt) {
-		// Update the track associated with this device
-		boolean createNewTrack = false;
-		boolean addWaypointToTrack = true;
-		Way track = null;
-		if(!tracks.containsKey(device.getPk())) {
-			createNewTrack = true;
-		} else {
-			track = (Way) dao.loadByPk(Way.class, tracks.get(device.getPk()));
-			List<Waypoint> waypoints = track.getWaypoints();
-			if(waypoints.size() > 0) {
-				Waypoint lastWaypoint = waypoints.get(waypoints.size() - 1);
-				if(lastWaypoint.distanceFrom(wpt) > 500) createNewTrack = true;
-				if(lastWaypoint.distanceFrom(wpt) == 0) addWaypointToTrack = false;
-			}
-		}
+		Way track = (Way) dao.getByPk(Way.class, tracks.get(device.getPk()));
 
-		if(createNewTrack) {
+		if(track == null) {
 			track = new Way();
 			track.setName("Position track for " + resource.getName());
 			track.setType(WayType.TRACK);
@@ -60,7 +48,8 @@ public class LocationEngine extends Thread {
 			tracks.put(device.getPk(), track.getPk());
 		}
 
-		if(addWaypointToTrack) {
+		int size = track.getWaypoints().size();
+		if(size == 0 || track.getWaypoints().get(size - 1).distanceFrom(wpt) > 0) {
 			track.getWaypoints().add(wpt);
 			dao.save(track);
 		}
@@ -71,7 +60,7 @@ public class LocationEngine extends Thread {
 			long time = new Date().getTime();
 			for(LocationEnabledDevice device : resource.getLocators()) {
 				try {
-					if(!lastRefreshed.containsKey(device.getPk()) || lastRefreshed.get(device.getPk()) < time - refreshInterval) {
+					if(!lastRefreshed.containsKey(device.getPk()) || (device instanceof LatitudeDevice && lastRefreshed.get(device.getPk()) < time - latitudeRefreshInterval) || (device instanceof APRSDevice && lastRefreshed.get(device.getPk()) < time - aprsRefreshInterval)) {
 						Waypoint wpt = device.checkLocation();
 						if(wpt != null) {
 							// Update resource PLK
@@ -143,9 +132,14 @@ public class LocationEngine extends Thread {
 		this.search = search;
 	}
 
-	public void setRefreshInterval(String refreshInterval) {
-		if(refreshInterval == null || "".equals(refreshInterval)) refreshInterval = "30000";
-		this.refreshInterval = Long.parseLong(refreshInterval);
+	public void setLatitudeRefreshInterval(String refreshInterval) {
+		if(refreshInterval == null || "".equals(latitudeRefreshInterval)) return;
+		this.latitudeRefreshInterval = Long.parseLong(refreshInterval);
+	}
+
+	public void setAPRSRefreshInterval(String refreshInterval) {
+		if(refreshInterval == null || "".equals(aprsRefreshInterval)) return;
+		this.aprsRefreshInterval = Long.parseLong(refreshInterval);
 	}
 
 	public void quit() {

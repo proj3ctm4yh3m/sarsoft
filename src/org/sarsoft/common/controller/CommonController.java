@@ -73,7 +73,6 @@ public class CommonController extends JSONBaseController {
 		} else {
 			realConfig.setValue(config.getValue());
 		}
-		System.out.println("Saving config " + realConfig.getName() + " " + realConfig.getValue());
 		configDao.save(realConfig);
 		return json(model, config);
 	}

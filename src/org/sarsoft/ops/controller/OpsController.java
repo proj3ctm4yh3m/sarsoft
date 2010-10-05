@@ -51,7 +51,8 @@ public class OpsController extends JSONBaseController {
 			engine.dao = this.dao;
 			engine.setSearch(search);
 			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
-			engine.setRefreshInterval(getConfigValue("location.refreshInterval"));
+			engine.setLatitudeRefreshInterval(getConfigValue("location.refreshInterval.latitude"));
+			engine.setAPRSRefreshInterval(getConfigValue("location.refreshInterval.aprs"));
 			engine.start();
 		}
 		if(REST.equals(mode)) return "/json";

@@ -2,6 +2,7 @@ package org.sarsoft.plans.controller;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -82,6 +83,51 @@ public class SearchAssignmentController extends JSONBaseController {
 		return app(model, "Assignment.Details");
 	}
 
+	@RequestMapping(value="/app/assignment/{assignmentId}/cleantracks", method = RequestMethod.POST)
+	public String cleanTracks(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
+		long radius = Math.abs(Long.parseLong(request.getParameter("radius"))*1000);
+		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		Waypoint center = null;
+		double assignmentRadius = 0;
+
+		// compute the center of the assignment and the maximum distance to the edge of the bounding box
+		for(Way way : assignment.getWays()) {
+			if(way.getType() == WayType.ROUTE) {
+				Waypoint[] bounds = way.getBoundingBox();
+				if(center == null)
+					center = new Waypoint((bounds[0].getLat() + bounds[1].getLat()) / 2, (bounds[0].getLng() + bounds[1].getLng()) / 2);
+				assignmentRadius = Math.max(assignmentRadius, Math.max(center.distanceFrom(bounds[0]), center.distanceFrom(bounds[1])));
+			}
+		}
+
+		if(center != null) {
+			Iterator<Way> ways = assignment.getWays().iterator();
+			while(ways.hasNext()) {
+				Way way = ways.next();
+				// clean trackpoints, deleting entire tracks if necessary
+				if(way.getType() == WayType.TRACK) {
+					Iterator<Waypoint> wpts = way.getWaypoints().iterator();
+					while(wpts.hasNext()) {
+						Waypoint wpt = wpts.next();
+						if(wpt.distanceFrom(center) > radius + assignmentRadius)
+							wpts.remove();
+					}
+					if(way.getWaypoints().size() == 0) ways.remove();
+				}
+			}
+			Iterator<Waypoint> waypoints = assignment.getWaypoints().iterator();
+			while(waypoints.hasNext()) {
+				// clean stray waypoints
+				Waypoint waypoint = waypoints.next();
+				if(waypoint.distanceFrom(center) > radius + assignmentRadius)
+					waypoints.remove();
+			}
+		}
+
+		dao.save(assignment);
+		return getAssignment(model, assignmentId, request);
+	}
+
 
 	// ASSIGNMENT REST
 	@RequestMapping(value="/rest/assignment", method = RequestMethod.GET)
@@ -154,8 +200,23 @@ public class SearchAssignmentController extends JSONBaseController {
 		case START :
 			assignment.setStatus(SearchAssignment.Status.INPROGRESS);
 			break;
+		case STOP :
+			assignment.setStatus(SearchAssignment.Status.COMPLETED);
+			Iterator<Resource> it = assignment.getResources().iterator();
+			while(it.hasNext()) {
+				Resource resource = it.next();
+				it.remove();
+				resource.setSection(Resource.Section.REHAB);
+				dao.save(resource);
+			}
+			break;
 		case DELETE :
 			assignment.getOperationalPeriod().removeAssignment(assignment);
+			for(Resource resource : assignment.getResources()) {
+				assignment.removeResource(resource);
+				resource.setSection(Resource.Section.REHAB);
+				dao.save(resource);
+			}
 			dao.delete(assignment);
 			return json(model, assignment);
 		}
