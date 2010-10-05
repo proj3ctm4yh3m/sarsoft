@@ -3,6 +3,8 @@
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 <% pageContext.setAttribute("draft", SearchAssignment.Status.DRAFT); %>
 <% pageContext.setAttribute("prepared", SearchAssignment.Status.PREPARED); %>
+<% pageContext.setAttribute("inprogress", SearchAssignment.Status.INPROGRESS); %>
+<% pageContext.setAttribute("completed", SearchAssignment.Status.COMPLETED); %>
 
 <script>
 function export() {
@@ -32,14 +34,11 @@ function finalize() {
 function transition(state) {
 	var postdata = "action=" + state;
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
-			window.location.href = window.location.href;
+			window.location.href = '/app/assignment/${assignment.id}';
 		}, failure : function(response) {
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
 }
-
-
-
 
 </script>
 
@@ -58,8 +57,11 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
     <li><a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Print Maps</a></li>
  </c:otherwise>
 </c:choose>
-<c:if test="${assignment.status == prepared}">
-    <li><a href="javascript:transition('start')"">Mark Assignment as In Progress</a></li>
+<c:if test="${assignment.status == prepared or assignment.status == completed}">
+    <li><a href="javascript:transition('start')">Start Assignment</a></li>
+</c:if>
+<c:if test="${assignment.status ==  inprogress}">
+	<li><a href="javascript:transition('stop')">Finish Assignment</a></li>
 </c:if>
 <li>Export to: <select id="export"><option value="gpx">GPX File</option><option value="kml">KML File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:export()">GO</button></li>
 <li>Import tracks from: <select id="import"><option value="gpx">GPX File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:import()">GO</button></li>
@@ -128,6 +130,11 @@ you can see how it relates to neighboring assignments.</i></div>
 				</div>
 			</div>
 			<div id="trackmapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
+			</div>
+			<div style="float: left; margin-left: 20px">
+			<form name="cleanuptracks" method="POST" action="/app/assignment/${assignment.id}/cleantracks#tracks">
+			<i>Clean Up Track Data:</i><br/>Remove all trackpoints waypoints more than<br/><input name="radius" type="text" size="5" value="100"/>&nbsp;km from assignment.&nbsp;&nbsp;<input type="submit" value="GO"/>
+			</form>
 			</div>
 		</div>
 
@@ -245,7 +252,11 @@ org.sarsoft.Loader.queue(function() {
 
 	var tabView = new YAHOO.widget.TabView('tabs');
 	var url = location.href.split('#');
+	if(url[1] == "tracks") tabView.set('activeIndex', 2);
  	if(url[1] == "operations") tabView.set('activeIndex', 3);
+
+ 	gpxdlg = new org.sarsoft.view.SearchAssignmentGPXDlg(${assignment.id});
+
 	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200"});
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
 	finalizeDlg.render(document.body);

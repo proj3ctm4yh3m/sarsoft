@@ -26,7 +26,6 @@
 
 <script>
 
-
 function ReadFromGarmin(id) {
 	start('find');
 	control = new Garmin.DeviceControl();
@@ -72,7 +71,7 @@ GarminReadListener.prototype.onFinishReadFromDevice = function(obj) {
 	pass('copy');
 	start('post');
 	var dao = new org.sarsoft.SearchAssignmentDAO();
-	dao.createWaysFromGpx(function() { pass('post');start('done');pass('done'); }, this.id, {gpx: gpx}, "TRACK");
+	dao.createWaysFromGpx(function() { pass('post');start('done');pass('done'); window.location="/app/assignment/${id}#tracks"}, this.id, {gpx: gpx}, "TRACK");
 }
 
 GarminReadListener.prototype.onException = function(obj) {

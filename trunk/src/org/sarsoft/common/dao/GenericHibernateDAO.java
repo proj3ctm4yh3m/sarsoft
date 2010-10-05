@@ -52,6 +52,15 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	}
 
 	@SuppressWarnings("unchecked")
+	public Object getByPk(final Class cls, final long pk) {
+		return getHibernateTemplate().execute(new HibernateCallback() {
+			public Object doInHibernate(final Session session) throws HibernateException {
+				return checkTenantPermission(session.get(cls, pk));
+			}
+		});
+	}
+
+	@SuppressWarnings("unchecked")
 	public Object getByPk(final Class cls, final Serializable id) {
 		return getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
