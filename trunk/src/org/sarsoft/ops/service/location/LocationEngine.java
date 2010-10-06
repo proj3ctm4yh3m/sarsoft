@@ -19,6 +19,7 @@ import org.sarsoft.ops.model.APRSDevice;
 import org.sarsoft.ops.model.LatitudeDevice;
 import org.sarsoft.ops.model.LocationEnabledDevice;
 import org.sarsoft.ops.model.Resource;
+import org.sarsoft.ops.model.SpotDevice;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
 import org.springframework.orm.hibernate3.SessionHolder;
@@ -32,10 +33,11 @@ public class LocationEngine extends Thread {
 	private Map<Long, Long> lastRefreshed = new HashMap<Long, Long>();
 	private long latitudeRefreshInterval = 30000;
 	private long aprsRefreshInterval = 240000;
+	private long spotRefreshInterval = 120000;
 	private boolean enabled = true;
 
 	private void updateTrack(Resource resource, LocationEnabledDevice device, Waypoint wpt) {
-		Way track = (Way) dao.getByPk(Way.class, tracks.get(device.getPk()));
+		Way track = tracks.get(device.getPk()) == null ? null : (Way) dao.getByPk(Way.class, tracks.get(device.getPk()));
 
 		if(track == null) {
 			track = new Way();
@@ -60,7 +62,10 @@ public class LocationEngine extends Thread {
 			long time = new Date().getTime();
 			for(LocationEnabledDevice device : resource.getLocators()) {
 				try {
-					if(!lastRefreshed.containsKey(device.getPk()) || (device instanceof LatitudeDevice && lastRefreshed.get(device.getPk()) < time - latitudeRefreshInterval) || (device instanceof APRSDevice && lastRefreshed.get(device.getPk()) < time - aprsRefreshInterval)) {
+					if(!lastRefreshed.containsKey(device.getPk()) ||
+							(device instanceof LatitudeDevice && lastRefreshed.get(device.getPk()) < time - latitudeRefreshInterval) ||
+							(device instanceof SpotDevice && lastRefreshed.get(device.getPk()) < time - spotRefreshInterval) ||
+							(device instanceof APRSDevice && lastRefreshed.get(device.getPk()) < time - aprsRefreshInterval)) {
 						Waypoint wpt = device.checkLocation();
 						if(wpt != null) {
 							// Update resource PLK
@@ -140,6 +145,11 @@ public class LocationEngine extends Thread {
 	public void setAPRSRefreshInterval(String refreshInterval) {
 		if(refreshInterval == null || "".equals(aprsRefreshInterval)) return;
 		this.aprsRefreshInterval = Long.parseLong(refreshInterval);
+	}
+
+	public void setSpotRefreshInterval(String refreshInterval) {
+		if(refreshInterval == null || "".equals(aprsRefreshInterval)) return;
+		this.spotRefreshInterval = Long.parseLong(refreshInterval);
 	}
 
 	public void quit() {

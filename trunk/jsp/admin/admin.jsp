@@ -39,8 +39,9 @@ To receive a ke, see <a href="http://developer.garmin.com/web-device/garmin-comm
 <br/><br/>
 Google Latitude Domain: <input type="text" size="40" name="latitudedomain" id="latitudedomain" value="${latitudedomain}"/><button onclick="updateLatitudeDomain()"/>Update</button><br/>
 Google Latitude Shared Secret: <input type="text" size="40" name="latitudesharedsecret" id="latitudesharedsecret" value="${latitudesharedsecret}"/><button onclick="updateLatitudeSharedSecret()"/>Update</button><br/>
-Latitude Refresh Interval: <input type="text" size="40" name="latitudeRefreshInterval" id="locationRefreshInterval" value="${latitudeRefreshInterval}"/><button onclick="updateLatitudeRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
-APRS Refresh Interval: <input type="text" size="40" name="aprsRefreshInterval" id="locationRefreshInterval" value="${aprsRefreshInterval}"/><button onclick="updateAPRSRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
+Latitude Refresh Interval: <input type="text" size="40" name="latitudeRefreshInterval" id="latitudeRefreshInterval" value="${latitudeRefreshInterval}"/><button onclick="updateLatitudeRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
+APRS Refresh Interval: <input type="text" size="40" name="aprsRefreshInterval" id="aprsRefreshInterval" value="${aprsRefreshInterval}"/><button onclick="updateAPRSRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
+SPOT Refresh Interval: <input type="text" size="40" name="spotRefreshInterval" id="spotRefreshInterval" value="${spotRefreshInterval}"/><button onclick="updateSpotRefreshInterval()"/>Update</button>(In Milliseconds)<br/>
 </div>
 <div id="maps">
 
@@ -114,6 +115,10 @@ configDAO.save("location.refreshInterval.latitude", { name: "location.refreshInt
 function updateARPSRefreshInterval() {
 var configDAO = new org.sarsoft.ConfigDAO();
 configDAO.save("location.refreshInterval.aprs", { name: "location.refreshInterval.aprs", value: YAHOO.lang.JSON.stringify(document.getElementById('aprsRefreshInterval').value)});
+}
+function updateSpotRefreshInterval() {
+var configDAO = new org.sarsoft.ConfigDAO();
+configDAO.save("location.refreshInterval.spot", { name: "location.refreshInterval.spot", value: YAHOO.lang.JSON.stringify(document.getElementById('spotRefreshInterval').value)});
 }
 
 

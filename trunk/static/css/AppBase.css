@@ -29,8 +29,7 @@ div.header a {
 }
 
 div.headerbottom {
-	background-color: #D20000;
-	height: 3px;
+	border-top: 3px solid #D20000;
 	width: 100%;
 }
 
