@@ -68,7 +68,10 @@ ${locator.description} &nbsp;&nbsp; <a href="/app/resource/${resource.id}/locato
 <h4>Add a Locator</h4>
 <a href="javascript:window.location='/app/latitude/${resource.id}/new'">Add a Google Latitude Device</a><br/>
 Callsign: <input type="text" name="aprs_callsign" id="aprs_callsign" size="10"/>
-<a href="javascript:window.location='/app/aprs/${resource.id}/new?callsign=' + document.getElementById('aprs_callsign').value + '#locators'">Add an APRS Device from aprs.fi</a><br/><br/>
+<a href="javascript:window.location='/app/aprs/${resource.id}/new?callsign=' + document.getElementById('aprs_callsign').value + '#locators'">Add an APRS Device from aprs.fi</a><br/>
+Shared Feed Id: <input type="text" id="spot_id" size="20"/>&nbsp;Passsword: <input type="text" id="spot_password" size="10"/>
+<a href="javascript:window.location='/app/spot/${resource.id}/new?id=' + document.getElementById('spot_id').value + '&password=' + document.getElementById('spot_password').value + '#locators'">Add a SPOT beacon.</a><br/>
+<br/><br/>
 </div>
 </div>
 

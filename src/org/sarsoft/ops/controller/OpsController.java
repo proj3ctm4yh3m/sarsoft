@@ -17,6 +17,7 @@ import org.sarsoft.ops.model.APRSDevice;
 import org.sarsoft.ops.model.LocationEnabledDevice;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.ops.model.LatitudeDevice;
+import org.sarsoft.ops.model.SpotDevice;
 import org.sarsoft.ops.service.location.LocationEngine;
 import org.sarsoft.plans.controller.SearchAssignmentController;
 import org.sarsoft.plans.model.OperationalPeriod;
@@ -53,6 +54,7 @@ public class OpsController extends JSONBaseController {
 			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
 			engine.setLatitudeRefreshInterval(getConfigValue("location.refreshInterval.latitude"));
 			engine.setAPRSRefreshInterval(getConfigValue("location.refreshInterval.aprs"));
+			engine.setSpotRefreshInterval(getConfigValue("location.refreshInterval.spot"));
 			engine.start();
 		}
 		if(REST.equals(mode)) return "/json";
@@ -225,6 +227,18 @@ public class OpsController extends JSONBaseController {
 		Resource resource = (Resource) dao.load(Resource.class, resourceid);
 		APRSDevice device = new APRSDevice();
 		device.setDeviceId(request.getParameter("callsign"));
+		resource.getLocators().add(device);
+		dao.save(resource);
+		return getResource(model, mode, resourceid);
+	}
+
+	@RequestMapping(value="/{mode}/spot/{resourceid}/new", method = RequestMethod.GET)
+	public String createSpotDevice(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, HttpServletRequest request, HttpServletResponse response) {
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		SpotDevice device = new SpotDevice();
+		device.setDeviceId(request.getParameter("id"));
+		String password = request.getParameter("password");
+		if(password != null && password.length() > 0)device.setDeviceKey(password);
 		resource.getLocators().add(device);
 		dao.save(resource);
 		return getResource(model, mode, resourceid);
