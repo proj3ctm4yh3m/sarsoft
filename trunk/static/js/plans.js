@@ -472,7 +472,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 
 	this.contextMenu = new org.sarsoft.view.ContextMenu();
 	this.contextMenu.setItems([
-		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
+		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.original = null; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
 		{text : "Hide Previous Operational Periods", applicable : function(obj) { return obj == null && that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = false; that._handleSetupChange(); }},
 		{text : "Show Previous Operational Periods", applicable : function(obj) { return obj == null && !that.showOtherPeriods; }, handler : function(data) { that.showOtherPeriods = true; that._handleSetupChange(); }},
 		{text : "Hide Locations", applicable : function(obj) { return obj == null && that.showLocations; }, handler : function(data) { that.showLocations = false; that._handleSetupChange(); }},
@@ -484,6 +484,8 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "Edit Assignment Bounds", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.edit(data.subject) }},
 		{text : "View Assignment Details", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable"); }, handler : function(data) { window.open('/app/assignment/' + data.subject.id); }},
 		{text : "Delete Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.assignmentDAO.del(data.subject.id); that.removeAssignment(data.subject); }},
+		{text : "Clone Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable")}, handler : function(data) { that.newAssignmentDlg.point = null; that.newAssignmentDlg.original = data.subject;
+			that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: data.subject.resourceType, unresponsivePOD: data.subject.unresponsivePOD, responsivePOD: data.subject.responsivePOD, timeAllocated: data.subject.timeAllocated, details: data.subject.details}); }},
 		{text : "Save Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.save(data.subject) }},
 		{text : "Discard Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.discard(data.subject) }}
 		]);
@@ -520,7 +522,20 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		var mapconfig = that.emap.getConfig();
 		var way = { name: assignment.name, polygon: assignment.polygon };
 		assignment.ways = [way];
-		way.waypoints = that.emap.getNewWaypoints(that.newAssignmentDlg.point, way.polygon);
+		if(that.newAssignmentDlg.point != null) {
+			way.waypoints = that.emap.getNewWaypoints(that.newAssignmentDlg.point, way.polygon);
+		} else {
+			for(var i = 0; i < that.newAssignmentDlg.original.ways.length; i++) {
+				var origWay = that.newAssignmentDlg.original.ways[i];
+				if(origWay.type == "ROUTE") {
+					way.polygon = origWay.polygon;
+					way.waypoints = new Array();
+					for(var j = 0; j < origWay.zoomAdjustedWaypoints.length; j++) {
+						way.waypoints.push({lat: origWay.zoomAdjustedWaypoints[j].lat, lng: origWay.zoomAdjustedWaypoints[j].lng});
+					}
+				}
+			}
+		}
 		that.assignmentDAO.create(function(obj) {
 			that.addAssignment(obj);
 		}, assignment);
