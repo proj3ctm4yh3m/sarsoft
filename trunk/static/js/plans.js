@@ -153,9 +153,10 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	this.dialog.hide();
 }
 
-org.sarsoft.controller.AssignmentPrintMapController = function(container, id) {
+org.sarsoft.controller.AssignmentPrintMapController = function(container, id, mapConfig) {
 	var that = this;
 	this.container = container;
+	this.mapConfig = mapConfig;
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
 	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
 }
@@ -171,7 +172,6 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	config.opacity = 100;
 
 	this.div = document.createElement("div");
-	this.div.className="page";
 	this.container.appendChild(this.div);
 	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
 	this.fmap = new org.sarsoft.FixedGMap(map);
@@ -182,11 +182,11 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	var searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
 	searchDAO.load(function(config) {
 			try {
-				var mapConfig = YAHOO.lang.JSON.parse(config.value);
-				that.fmap.setConfig(mapConfig);
+				if(that.mapConfig == null) that.mapConfig = YAHOO.lang.JSON.parse(config.value);
+				that.fmap.setConfig(that.mapConfig);
 			} catch (e) {}
 			var bb = that.assignment.boundingBox;
-			that.setSize("8in","10in");
+			that.setSize("7in","8.8in");
 			that.fmap.map.setCenter(that.fmap.map.center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 	}, "mapConfig");
 
@@ -541,6 +541,10 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		}
 	});
 
+	this.resourceDAO.loadAllBySection(function(resources) {
+		that.refreshResourceData(resources);
+	}, "FIELD");
+
 	this.assignmentDAO.mark();
 	this.resourceDAO.mark();
 
@@ -639,8 +643,9 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.removeAssignment
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = function(resource) {
+	if(resource.assignmentId == null) return;
 	var assignment = this.assignments[resource.assignmentId];
-	if(assignment.operationalPeriodId == this.period.id) {
+	if(assignment != null && assignment.operationalPeriodId == this.period.id) {
 		if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].plk);
 		this.resources[resource.id] = resource;
 		if(!this.showLocations) return; // need lines above this in case the user re-enables resources

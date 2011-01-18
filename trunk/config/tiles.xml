@@ -11,6 +11,7 @@
 	</definition>
 	<definition name="Assignment.PrintForms" template="/plans/assignment-print.jsp"/>
 	<definition name="Assignment.PrintMaps" template="/plans/assignment-printmaps.jsp"/>
+	<definition name="Assignment.PrintBulk" template="/plans/assignment-printbulk.jsp"/>
 
 	<definition name="OperationalPeriod.List" extends="App.Base">
 		<put-attribute name="content" value="/plans/oplist.jsp"/>

@@ -29,6 +29,10 @@ org.sarsoft.ResourceDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.ResourceDAO.prototype = new org.sarsoft.BaseDAO();
 
+org.sarsoft.ResourceDAO.prototype.loadAllBySection = function(handler, section) {
+	this._doGet("?section=" + section, handler);
+}
+
 org.sarsoft.ResourceDAO.prototype.detachResource = function(resource, assignmentid) {
 	this._doGet("/" + resource.id + "/detach/" + assignmentid, function() {});
 }

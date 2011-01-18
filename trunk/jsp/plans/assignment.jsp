@@ -82,8 +82,9 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 back to draft status; if you do this, you must track down any existing copies in order to avoid confusion.</i></div>
 </c:if>
 			<form name="assignment" action="/app/assignment/${assignment.id}" method="post">
+			<div style="float: left; width: 20em">
 			 <table border="0">
-			 <tr><td>Name</td><td><input name="name" type="text" value="${assignment.id}"/></td></tr>
+			 <tr><td>Number</td><td>${assignment.id}</td></tr>
 			 <tr><td>Resource Type</td><td>
 				 <select name="resourceType" value="${assignment.resourceType}">
 				  <c:forEach var="type" items="<%= SearchAssignment.ResourceType.values() %>">
@@ -98,20 +99,36 @@ back to draft status; if you do this, you must track down any existing copies in
 			    </c:forEach>
 			    </select>
 			  </td></tr>
-			  <tr><td style="padding-right: 5px">POD (Unresponsive)</td><td>
+			<tr><td style="padding-right: 5px">POD (Unresponsive)</td><td>
 			    <select name="unresponsivePOD">
 			    <c:forEach var="type" items="<%= org.sarsoft.plans.model.Probability.values() %>">
 			      <option value="${type}"<c:if test="${assignment.unresponsivePOD == type}"> selected="selected"</c:if>>${type}</option>
 			    </c:forEach>
 			    </select>
 			  </td></tr>
+			<tr><td style="padding-right: 5px">Primary Freq</td><td><input name="primaryFrequency" type="text" size="10" value="${assignment.primaryFrequency}"></td></tr>
+			<tr><td style="padding-right: 5px">Secondary Freq</td><td><input name="secondaryFrequency" type="text" size="10" value="${assignment.secondaryFrequency}"></td></tr>
 			  </table>
 
-			<b>Assignment:</b><br/>
-			<textarea name="details" style="width: 100%; height: 100px">${assignment.details}</textarea>
+			 <br/><br/>
+			 <a style="left: 20px" href="javascript:document.forms['assignment'].submit()">Save Changes</a>
+
+			 </div>
+			 <div style="float: left; width: 40em">
+
+			<b>Details:</b><br/>
+			<textarea name="details" style="width: 100%; height: 80px">${assignment.details}</textarea>
 
 			<br/><br/>
-			<a style="left: 20px" href="javascript:document.forms['assignment'].submit()">Save Changes</a>
+			<b>Previous Efforts in Search Area:</b><br/>
+			<textarea name="previousEfforts" style="width: 100%; height: 80px">${assignment.previousEfforts}</textarea>
+
+			<br/><br/>
+			<b>Dropoff and Pickup Instructions:</b><br/>
+			<textarea name="transportation" style="width: 100%; height: 80px">${assignment.transportation}</textarea>
+
+			</div>
+
 			</form>
 		</div>
 		<div id="map">

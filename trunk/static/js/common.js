@@ -139,6 +139,7 @@ org.sarsoft.view.EntityTable = function(coldefs, config, clickhandler) {
 	this.coldefs = coldefs;
 	this.config = config;
 	this.clickhandler = clickhandler;
+	this.clickoverride = true;
 	this.datasource = new YAHOO.util.DataSource([]);
 	this.datasource.responseType = YAHOO.util.DataSource.TYPE_JSARRAY;
 	var schema = { fields: [] };
@@ -146,6 +147,25 @@ org.sarsoft.view.EntityTable = function(coldefs, config, clickhandler) {
 		schema.fields.push(coldefs[i].key);
 	}
 	this.datasource.responseSchema = schema;
+}
+
+org.sarsoft.view.EntityTable.prototype.getSelectedData = function() {
+	var data = new Array();
+	var rows = this.table.getSelectedRows();
+	for(var i = 0; i < rows.length; i++) {
+		data.push(this.table.getRecordSet().getRecord(rows[i]).getData());
+	}
+	return data;
+}
+
+org.sarsoft.view.EntityTable.prototype.setClickOverride = function(override) {
+	this.clickoverride = override;
+	if(override) this.table.unselectAllRows();
+}
+
+org.sarsoft.view.EntityTable.prototype.click = function(record) {
+	if(this.clickoverride)
+		this.clickhandler(record.getData());
 }
 
 org.sarsoft.view.EntityTable.prototype.create = function(container) {
@@ -159,7 +179,7 @@ org.sarsoft.view.EntityTable.prototype.create = function(container) {
 		this.table.subscribe("rowMouseoutEvent", this.table.onEventUnhighlightRow);
 		this.table.subscribe("rowClickEvent", this.table.onEventSelectRow);
 		this.table.subscribe("rowSelectEvent", function(args) {
-			that.clickhandler(args.record.getData());
+			that.click(args.record);
 		});
 	}
 }

@@ -20,7 +20,6 @@ import org.sarsoft.ops.model.LatitudeDevice;
 import org.sarsoft.ops.model.SpotDevice;
 import org.sarsoft.ops.service.location.LocationEngine;
 import org.sarsoft.plans.controller.SearchAssignmentController;
-import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -101,7 +100,7 @@ public class OpsController extends JSONBaseController {
 		String section = request.getParameter("section");
 		List<Resource> resources;
 		if(section != null) {
-			resources = (List<Resource>) dao.getByAttr(Resource.class, "section", section);
+			resources = (List<Resource>) dao.getAllByAttr(Resource.class, "section", Resource.Section.valueOf(section));
 		} else {
 			resources = (List<Resource>) dao.loadAll(Resource.class);
 		}
@@ -330,6 +329,11 @@ public class OpsController extends JSONBaseController {
 					device.setDeviceId(importLocator.getDeviceId());
 					device.setDeviceKey(importLocator.getDeviceKey());
 					device.setDomain(((LatitudeDevice) importLocator).getDomain());
+					newResource.getLocators().add(device);
+				} else if(importLocator instanceof SpotDevice) {
+					SpotDevice device = new SpotDevice();
+					device.setDeviceId(importLocator.getDeviceId());
+					device.setDeviceKey(importLocator.getDeviceKey());
 					newResource.getLocators().add(device);
 				}
 			}

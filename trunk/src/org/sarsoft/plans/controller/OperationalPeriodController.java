@@ -12,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.FileUploadForm;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
@@ -51,6 +52,7 @@ public class OperationalPeriodController extends JSONBaseController {
 	@RequestMapping(value="/app/operationalperiod/{periodId}", method = RequestMethod.GET)
 	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
+		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
 		return app(model, "OperationalPeriod.Detail");
 	}
 
