@@ -158,7 +158,7 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	public List<String> getAllSearchNames() {
 		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
-				return session.createSQLQuery("select distinct search from OperationalPeriod").addScalar("search", Hibernate.STRING).list();
+				return session.createSQLQuery("select distinct name from search").addScalar("name", Hibernate.STRING).list();
 			}
 		});
 		return (List<String>) list;

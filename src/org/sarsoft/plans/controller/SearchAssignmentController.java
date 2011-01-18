@@ -1,5 +1,8 @@
 package org.sarsoft.plans.controller;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,6 +52,54 @@ public class SearchAssignmentController extends JSONBaseController {
 	}
 
 	// ASSIGNMENT APP
+	@RequestMapping(value="/app/assignment", method = RequestMethod.GET)
+	public String getAssignment(Model model, HttpServletRequest request) {
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
+		switch(format) {
+		case PRINT:
+			String print104 = request.getParameter("print104");
+			model.addAttribute("print104", print104.length() > 0 ? Boolean.parseBoolean(print104) : false);
+
+			String[] ids = request.getParameter("bulkIds").split(",");
+			Arrays.sort(ids);
+			List<SearchAssignment> assignments = new ArrayList<SearchAssignment>();
+			List<SearchAssignment> rejected = new ArrayList<SearchAssignment>();
+			for(String id : ids) {
+				if(id.length() == 0) continue;
+				SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, Long.parseLong(id));
+				if(assignment.getStatus() == SearchAssignment.Status.DRAFT) {
+					rejected.add(assignment);
+				} else {
+					assignments.add(assignment);
+				}
+			}
+			model.addAttribute("assignments", assignments);
+			model.addAttribute("rejected", rejected);
+
+			List<MapConfig> mapConfigs = new ArrayList<MapConfig>();
+			for(int i = 1; i < 6; i++) {
+				String foreground = request.getParameter("map" + i + "f");
+				String background = request.getParameter("map" + i + "b");
+				String opacity = request.getParameter("map" + i + "o");
+				if(foreground != null && foreground.length() > 0) {
+					MapConfig config = new MapConfig();
+					config.setBase(foreground);
+					config.setOverlay(background);
+					try {
+						config.setOpacity(Integer.parseInt(opacity));
+					} catch (Exception e) {
+						config.setOpacity(0);
+					}
+					mapConfigs.add(config);
+				}
+			}
+			model.addAttribute("mapConfigs", mapConfigs);
+			return app(model, "Assignment.PrintBulk");
+		default :
+			return "error";
+		}
+	}
+
 	@RequestMapping(value="/app/assignment/{assignmentId}", method = RequestMethod.GET)
 	public String getAssignment(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
@@ -68,16 +119,42 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 	}
 
+	@RequestMapping(value="/app/assignment", method = RequestMethod.POST)
+	public String setBulkAssignmentDetail(Model model, SearchAssignmentForm form, HttpServletResponse response) {
+		OperationalPeriod period = null;
+		String[] ids = form.getBulkIds().split(",");
+		for(String id : ids) {
+			if(id.length() == 0) continue;
+			SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, Long.parseLong(id));
+			if(period == null) period = assignment.getOperationalPeriod();
+			if(form.getResourceType() != null) assignment.setResourceType(form.getResourceType());
+			if(form.getTimeAllocated() != null) assignment.setTimeAllocated(form.getTimeAllocated());
+			if(form.getResponsivePOD() != null) assignment.setResponsivePOD(form.getResponsivePOD());
+			if(form.getUnresponsivePOD() != null) assignment.setUnresponsivePOD(form.getUnresponsivePOD());
+			if(form.getPrimaryFrequency() != null) assignment.setPrimaryFrequency(form.getPrimaryFrequency());
+			if(form.getSecondaryFrequency() != null) assignment.setSecondaryFrequency(form.getSecondaryFrequency());
+			if(form.getPreviousEfforts() != null) assignment.setPreviousEfforts(form.getPreviousEfforts());
+			if(form.getTransportation() != null) assignment.setTransportation(form.getTransportation());
+			assignment.setStatus(SearchAssignment.Status.DRAFT);
+			dao.save(assignment);
+		}
+		return "redirect:/app/operationalperiod/" + period.getId();
+	}
+
 	@RequestMapping(value="/app/assignment/{assignmentId}", method = RequestMethod.POST)
 	public String setAssignmentDetail(Model model, @PathVariable("assignmentId") long assignmentId, SearchAssignmentForm form) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
-		assignment.setId(form.getId());
+//		assignment.setId(form.getId());
 		assignment.setDetails(form.getDetails());
 		assignment.setResourceType(form.getResourceType());
 		assignment.setTimeAllocated(form.getTimeAllocated());
 		assignment.setResponsivePOD(form.getResponsivePOD());
 		assignment.setUnresponsivePOD(form.getUnresponsivePOD());
 		assignment.setStatus(SearchAssignment.Status.DRAFT);
+		assignment.setPrimaryFrequency(form.getPrimaryFrequency());
+		assignment.setSecondaryFrequency(form.getSecondaryFrequency());
+		assignment.setPreviousEfforts(form.getPreviousEfforts());
+		assignment.setTransportation(form.getTransportation());
 		dao.save(assignment);
 		model.addAttribute("assignment", assignment);
 		return app(model, "Assignment.Details");

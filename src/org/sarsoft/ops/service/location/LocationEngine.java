@@ -75,8 +75,8 @@ public class LocationEngine extends Thread {
 
 							lastRefreshed.put(device.getPk(), time);
 
-							if(resource.getAssignment() != null && resource.getAssignment().getStatus() == SearchAssignment.Status.INPROGRESS)
-								updateTrack(resource, device, wpt);
+//							if(resource.getAssignment() != null && resource.getAssignment().getStatus() == SearchAssignment.Status.INPROGRESS)
+//								updateTrack(resource, device, wpt);
 						}
 					}
 				} catch (Exception e) {

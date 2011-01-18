@@ -46,6 +46,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private Status status = Status.DRAFT;
 	private Long operationalPeriodId;
 	private long timeAllocated = 0;
+	private String previousEfforts;
 	private String transportation;
 	private Set<MapConfig> mapConfigs;
 	private Probability responsivePOD;
@@ -57,6 +58,8 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private String preparedBy;
 	private OperationalPeriod operationalPeriod;
 	private Set<Resource> resources;
+	private String primaryFrequency;
+	private String secondaryFrequency;
 
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
 
@@ -318,6 +321,30 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 
 	public void setPreparedOn(Date preparedOn) {
 		this.preparedOn = preparedOn;
+	}
+
+	public String getPrimaryFrequency() {
+		return primaryFrequency;
+	}
+
+	public void setPrimaryFrequency(String primaryFrequency) {
+		this.primaryFrequency = primaryFrequency;
+	}
+
+	public String getSecondaryFrequency() {
+		return secondaryFrequency;
+	}
+
+	public void setSecondaryFrequency(String secondaryFrequency) {
+		this.secondaryFrequency = secondaryFrequency;
+	}
+
+	public String getPreviousEfforts() {
+		return previousEfforts;
+	}
+
+	public void setPreviousEfforts(String previousEfforts) {
+		this.previousEfforts = previousEfforts;
 	}
 
 }

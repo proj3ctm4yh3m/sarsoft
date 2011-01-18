@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 
 <h2>Operational Period ${period.id}: ${period.description}</h2>
 
@@ -10,7 +11,92 @@ This period has ${fn:length(period.assignments)} assignments, covering ${period.
  <li><a href="/app/operationalperiod/${period.id}/map">View assignments in a map</a> (new assignments can be created on this page)</li>
  <li><a href="/rest/operationalperiod/${period.id}?format=gpx">Export as GPX</a></li>
  <li><a href="/rest/operationalperiod/${period.id}?format=kml">Export as KML</a></li>
+ <li><a href="javascript:showbulkupdate()">Bulk Update</a></li>
+ <li><a href="javascript:showbulkprint()">Bulk Print</a></li>
 </ul>
+
+<div id="bulkupdate" style="display: none">
+<h3>Bulk Update Assignments</h3>
+
+<p>Update multiple assignments at once.  Use shift+click and ctrl+click to select assignments from the list, and fill in all fields you want to update.  Blank fields will be ignored;
+you can not clear fields through bulk update.</p>
+
+			<form name="assignment" action="/app/assignment" method="post">
+			 <input type="hidden" value="" name="bulkIds" id="bulkIds"/>
+			 <table border="0">
+			 <tr><td>Resource Type</td><td>
+				 <select name="resourceType" value="">
+				  <option value="">--</option>
+				  <c:forEach var="type" items="<%= SearchAssignment.ResourceType.values() %>">
+				   <option value="${type}"<c:if test="${assignment.resourceType == type}"> selected="selected"</c:if>>${type}</option>
+				  </c:forEach>
+				 </select></td></tr>
+			 <tr><td>Time Allocated</td><td><input name="timeAllocated" type="text" size="4" value=""/> hours</td></tr>
+			 <tr><td>POD (Responsive)</td><td>
+			    <select name="responsivePOD">
+			    <option value="">--</option>
+			    <c:forEach var="type" items="<%= org.sarsoft.plans.model.Probability.values() %>">
+			      <option value="${type}">${type}</option>
+			    </c:forEach>
+			    </select>
+			  </td></tr>
+			<tr><td style="padding-right: 5px">POD (Unresponsive)</td><td>
+			    <select name="unresponsivePOD">
+			    <option value="">--</option>
+			    <c:forEach var="type" items="<%= org.sarsoft.plans.model.Probability.values() %>">
+			      <option value="${type}">${type}</option>
+			    </c:forEach>
+			    </select>
+			  </td></tr>
+			<tr><td style="padding-right: 5px">Primary Freq</td><td><input name="primaryFrequency" type="text" size="10" value=""></td></tr>
+			<tr><td style="padding-right: 5px">Secondary Freq</td><td><input name="secondaryFrequency" type="text" size="10" value=""></td></tr>
+			  </table>
+
+			<b>Previous Efforts in Search Area:</b><br/>
+			<textarea name="previousEfforts" style="width: 30em; height: 80px"></textarea>
+
+			<br/><br/>
+			<b>Dropoff and Pickup Instructions:</b><br/>
+			<textarea name="transportation" style="width: 30em; height: 80px"></textarea>
+
+			 <a style="left: 20px" href="javascript:submitbulkupdate()">Save Changes</a>
+			 &nbsp;&nbsp;
+			 <a style="left: 20px" href="javascript:hidebulkupdate()">Cancel</a>
+
+			</form>
+
+</div>
+
+<div id="bulkprint" style="display: none">
+<h3>Bulk Print</h3>
+
+<p>Print multiple assignments at once.  Use shift+click and ctrl+click to select assignments from the list, and choose the forms/maps you wish to print.</p>
+
+<input type="checkbox" name="print104" id="print104">Print SAR 104 forms</input><br/><br/>
+
+<c:forEach var="num" items='<%= new Integer[] {1,2,3,4,5} %>' varStatus='status'>
+<input type="checkbox" name="printmap${num}" id="printmap${num}">Print this map:</input>
+Foreground&nbsp;<select name="map${num}f" id="map${num}f">
+  <c:forEach var="source" items="${mapSources}">
+  <option value="${source.name}">${source.name}</option>
+  </c:forEach>
+</select>
+,&nbsp;&nbsp;Background&nbsp;
+<select name="map${num}b" id="map${num}b">
+  <c:forEach var="source" items="${mapSources}">
+  <option value="${source.name}">${source.name}</option>
+  </c:forEach>
+</select>
+,&nbsp;&nbsp;Opacity&nbsp;
+<input type="text" id="map${num}o" name="map${num}o" value="0" size="2"> percent<br/>
+</c:forEach>
+
+<br/>
+ <a style="left: 20px" href="javascript:submitbulkprint()">Print</a>
+ &nbsp;&nbsp;
+ <a style="left: 20px" href="javascript:hidebulkprint()">Cancel</a>
+
+</div>
 
 <div id="listcontainer">
 </div>
@@ -28,5 +114,62 @@ org.sarsoft.Loader.queue(function() {
 	}
   }, ${period.id});
 });
+
+function showbulkupdate() {
+hidebulkprint();
+datatable.setClickOverride(false);
+document.getElementById('bulkupdate').style.display="block";
+}
+
+function hidebulkupdate() {
+datatable.setClickOverride(true);
+document.getElementById('bulkupdate').style.display="none";
+}
+
+function submitbulkupdate() {
+var data = datatable.getSelectedData();
+if(data.length == 0) {
+	alert("Please select at least one assignment to update.");
+} else {
+	var value = "";
+	for(var i = 0; i < data.length; i++) {
+		value = value + data[i].id + ",";
+	}
+	document.getElementById("bulkIds").value=value;
+	document.forms['assignment'].submit();
+}
+}
+
+function showbulkprint() {
+  hidebulkupdate();
+  datatable.setClickOverride(false);
+  document.getElementById('bulkprint').style.display="block";
+}
+
+function hidebulkprint() {
+  datatable.setClickOverride(true);
+  document.getElementById('bulkprint').style.display="none";
+}
+
+function submitbulkprint() {
+var data = datatable.getSelectedData();
+if(data.length == 0) {
+	alert("Please select at least one assignment to print.");
+} else {
+	var value = "";
+	for(var i = 0; i < data.length; i++) {
+		value = value + data[i].id + ",";
+	}
+	var url = "/app/assignment?format=print&bulkIds=" + value;
+	url = url + "&print104=" + document.getElementById('print104').checked;
+	for(var i = 1; i < 6; i++) {
+    if(document.getElementById("printmap" + i).checked) {
+		url = url + "&map" + i + "f=" + document.getElementById("map" + i + "f").value + "&map" + i + "b=" + document.getElementById("map" + i + "b").value +
+			"&map" + i + "o=" + document.getElementById("map" + i + "o").value;
+	}
+  	}
+  	window.location=url;
+}
+}
 
 </script>
