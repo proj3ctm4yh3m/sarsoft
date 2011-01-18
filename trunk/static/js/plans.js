@@ -371,6 +371,7 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
 	];
 	this.pastEntityForm = new org.sarsoft.view.EntityForm(fields);
 	this.presentEntityForm = new org.sarsoft.view.EntityForm(fields);
+	this.mapForm = new org.sarsoft.view.EntityForm([{name : "rangerings", label: "Range Rings", type: "string"}]);
 	var dlg = document.createElement("div");
 	dlg.style.position="absolute";
 	dlg.style.zIndex="200";
@@ -390,16 +391,22 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
 	var past = document.createElement("div");
 	past.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>Previous OPs:</span><br/>";
 	bd.appendChild(past);
+	var map = document.createElement("div");
+	map.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>Map:</span><br/>";
+	bd.appendChild(map);
 	this.pastEntityForm.create(past);
 	this.presentEntityForm.create(present);
+	this.mapForm.create(map);
 	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
 	var buttons = [ { text : "Update", handler: function() {
 		that.dialog.hide();
 		var obj = new Object();
 		obj.past = that.pastEntityForm.read();
 		obj.present = that.presentEntityForm.read();
+		obj.map = that.mapForm.read();
 		that.pastEntityForm.write(new Object());
 		that.presentEntityForm.write(new Object());
+		that.mapForm.write(new Object());
 		handler(obj);
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
 	this.dialog.cfg.queueProperty("buttons", buttons);
@@ -412,6 +419,7 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg.prototype.show = function(obj) {
 	if(obj != null) {
 		this.pastEntityForm.write(obj.past);
 		this.presentEntityForm.write(obj.present);
+		this.mapForm.write(obj.map);
 	}
 	this.dialog.show();
 }
@@ -467,7 +475,8 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.showLocations = true;
 	this._mapsetup = {
 		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50, showtracks : true },
-		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 35, opacity : 100, showtracks : true}
+		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 35, opacity : 100, showtracks : true},
+		map : {}
 		};
 
 	this.contextMenu = new org.sarsoft.view.ContextMenu();
@@ -479,8 +488,9 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "Show Locations", applicable : function(obj) { return obj == null && !that.showLocations; }, handler : function(data) { that.showLocations = true; that._handleSetupChange(); }},
 		{text : "Return to Operational Period " + operationalperiod.id, applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/operationalperiod/" + operationalperiod.id; }},
 		{text : "Map Setup", applicable : function(obj) { return obj == null }, handler : function(data) { that.setupDlg.show(that._mapsetup); }},
+		{text : "Set PLK here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setPlk(data.point); }},
 		{text : "Adjust page size for printing", applicable: function(obj) { return obj == null}, handler : function(data) { that.pageSizeDlg.show(); }},
-		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(that.emap.getConfig())})}},
+		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); config.rangerings = that._mapsetup.map.rangerings; that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)})}},
 		{text : "Edit Assignment Bounds", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.edit(data.subject) }},
 		{text : "View Assignment Details", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable"); }, handler : function(data) { window.open('/app/assignment/' + data.subject.id); }},
 		{text : "Delete Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.assignmentDAO.del(data.subject.id); that.removeAssignment(data.subject); }},
@@ -498,6 +508,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		that.searchDAO.load(function(config) {
 				try {
 					var mapConfig = YAHOO.lang.JSON.parse(config.value);
+					that._mapsetup.map.rangerings = mapConfig.rangerings;
 					that.emap.setConfig(mapConfig);
 				} catch (e) {}
 				var bb = period.boundingBox;
@@ -516,6 +527,12 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 					that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 				}
 		}, "mapConfig");
+		that.searchDAO.load(function(config) {
+			if(config.value != null) {
+				that.plk = config.value;
+				that.placePlk(config.value);
+				}
+		}, "plk");
 	}, that.period.id);
 
 	var handler = function(assignment) {
@@ -589,6 +606,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._handleSetupChan
 		}
 		this.addAssignment(assignment);
 	}
+	this.placePlk(this.plk);
 	this.reprocessResourceData();
 }
 
@@ -634,6 +652,26 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.edit = function(
 		this.emap.edit(assignment.ways[i].id);
 	}
 	this.setAssignmentAttr(assignment, "inedit", true);
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.setPlk = function(plk) {
+	plk = this.emap.map.fromContainerPixelToLatLng(new GPoint(plk.x, plk.y));
+	plk = {lat: plk.lat(), lng: plk.lng()};
+	this.searchDAO.save("plk", { value: plk});
+	this.placePlk(plk);
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.placePlk = function(plk) {
+	if(this.plk != null) this.emap.removeWaypoint(this.plk);
+	this.plk = plk;
+	this.emap.addWaypoint(plk, {color: "#FF0000"}, "PLK");
+	this.emap.removeRangeRings();
+	if(this._mapsetup.map.rangerings != null) {
+		var radii = this._mapsetup.map.rangerings.split(",");
+		for(var i = 0; i < radii.length; i++) {
+			this.emap.addRangeRing(new GLatLng(plk.lat, plk.lng), radii[i], 32);
+		}
+	}
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setAssignmentAttr = function(assignment, key, value) {

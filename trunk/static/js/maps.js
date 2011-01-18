@@ -182,6 +182,7 @@ org.sarsoft.FixedGMap = function(map) {
 	this.map = map;
 	this.polys = new Object();
 	this.overlays = new Array();
+	this.rangerings = new Array();
 	this.text = new Array();
 	this.markers = new Array();
 	this.utmgridlines = new Array();
@@ -386,9 +387,29 @@ org.sarsoft.FixedGMap.prototype.removeWay = function(way) {
 	}
 }
 
+
 org.sarsoft.FixedGMap.prototype.addWay = function(way, config) {
 	this.removeWay(way);
 	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config), config: config};
+}
+
+org.sarsoft.FixedGMap.prototype.addRangeRing = function(center, radius, vertices) {
+	var glls = new Array();
+	var centerUTM = GeoUtil.GLatLngToUTM(center);
+	for(var i = 0; i <= vertices; i++) {
+		var vertexUTM = new UTM(centerUTM.e + radius*Math.sin(i*2*Math.PI/vertices), centerUTM.n + radius*Math.cos(i*2*Math.PI/vertices), centerUTM.zone);
+		glls.push(GeoUtil.UTMToGLatLng(vertexUTM));
+	}
+	var poly = new GPolyline(glls, "000000", 1, 100);
+	this.map.addOverlay(poly);
+	this.rangerings.push(poly);
+}
+
+org.sarsoft.FixedGMap.prototype.removeRangeRings = function() {
+	for(var i = 0; i < this.rangerings.length; i++) {
+		this.map.removeOverlay(this.rangerings[i]);
+	}
+	this.rangerings = new Array();
 }
 
 org.sarsoft.FixedGMap.prototype._removeMarker = function(waypoint) {
