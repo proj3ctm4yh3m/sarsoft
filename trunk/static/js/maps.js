@@ -304,7 +304,6 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		}
 		easting = easting + spacing;
 	}
-
 	var northing = Math.round(sw.n / spacing) * spacing;
 	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	while(northing < ne.n) {
@@ -312,12 +311,11 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		var start = GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone});
 		vertices.push(new GLatLng(start.lat(), Math.max(start.lng(), west)));
 		var end = GeoUtil.UTMToGLatLng({e: ne.e, n: northing, zone: zone});
-		vertices.push(new GLatLng(start.lat(), Math.min(end.lng(), east)));
+		vertices.push(new GLatLng(end.lat(), Math.min(end.lng(), east)));
 
 		var overlay = new GPolyline(vertices, "#0000FF", 1, 1);
 		this.utmgridlines.push(overlay);
 		this.map.addOverlay(overlay);
-		northing = northing + spacing;
 
 		var offset = this.map.fromLatLngToContainerPixel(vertices[0]).y;
 		if(0 < offset && offset < pxmax) {
@@ -332,6 +330,7 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 			this.map.getContainer().appendChild(element);
 			this.text.push(element);
 		}
+		northing = northing + spacing;
 	}
 
 }
@@ -354,18 +353,34 @@ org.sarsoft.FixedGMap.prototype._createPolyline = function(vertices, config) {
 }
 
 org.sarsoft.FixedGMap.prototype._removeOverlay = function(way) {
-	this.map.removeOverlay(this.polys[way.id].overlay);
+	var overlay = this.polys[way.id].overlay;
+	this.map.removeOverlay(overlay);
+	if(overlay.label != null) this.map.removeOverlay(overlay.label);
 }
 
-org.sarsoft.FixedGMap.prototype._addOverlay = function(way, config) {
+org.sarsoft.FixedGMap.prototype._addOverlay = function(way, config, label) {
 	var that = this;
 	var id = way.id;
 	var vertices = new Array();
+	var labelOverlay = null;
 	if(config == null) config = new Object();
 	if(way.waypoints != undefined && way.waypoints != null) {
+		// all this sw/labelwpt/distance junk is simply to place the label on the bottom-right waypoint
+		var sw = new GLatLng(way.boundingBox[0].lat, way.boundingBox[0].lng);
+		var labelwpt = way.waypoints[0];
+		var distance = 0;
 		for(var i = 0; i < way.waypoints.length; i++) {
 			var wpt = way.waypoints[i];
-			vertices.push(new GLatLng(wpt.lat, wpt.lng));
+			var gll = new GLatLng(wpt.lat, wpt.lng);
+			vertices.push(gll);
+			if(sw.distanceFrom(gll) > distance) {
+				distance = sw.distanceFrom(gll);
+				labelwpt = wpt;
+			}
+		}
+		if(label != null) {
+			labelOverlay = new ELabel(new GLatLng(labelwpt.lat, labelwpt.lng), label);
+			this.map.addOverlay(labelOverlay);
 		}
 	}
 	var poly;
@@ -376,6 +391,7 @@ org.sarsoft.FixedGMap.prototype._addOverlay = function(way, config) {
 		poly = this._createPolyline(vertices, config);
 	}
 	poly.id = id;
+	poly.label = labelOverlay;
 	return poly;
 }
 
@@ -388,9 +404,9 @@ org.sarsoft.FixedGMap.prototype.removeWay = function(way) {
 }
 
 
-org.sarsoft.FixedGMap.prototype.addWay = function(way, config) {
+org.sarsoft.FixedGMap.prototype.addWay = function(way, config, label) {
 	this.removeWay(way);
-	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config), config: config};
+	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config, label), config: config};
 }
 
 org.sarsoft.FixedGMap.prototype.addRangeRing = function(center, radius, vertices) {
@@ -413,10 +429,12 @@ org.sarsoft.FixedGMap.prototype.removeRangeRings = function() {
 }
 
 org.sarsoft.FixedGMap.prototype._removeMarker = function(waypoint) {
-	this.map.removeOverlay(this.markers[waypoint.id].marker);
+	var marker = this.markers[waypoint.id].marker;
+	this.map.removeOverlay(marker);
+	if(marker.label != null) this.map.removeOverlay(marker.label);
 }
 
-org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip) {
+org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip, label) {
 	var that = this;
 	var id = waypoint.id;
 	var gll = new GLatLng(waypoint.lat, waypoint.lng);
@@ -434,6 +452,11 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip)
 	var marker = new GMarker(gll, { title : tooltip, icon : icon});
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
+	if(label != null) {
+		labelOverlay = new ELabel(gll, label);
+		this.map.addOverlay(labelOverlay);
+		marker.label = labelOverlay;
+	}
 	return marker;
 }
 
@@ -445,9 +468,9 @@ org.sarsoft.FixedGMap.prototype.removeWaypoint = function(waypoint) {
 	}
 }
 
-org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config, tooltip) {
+org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config, tooltip, label) {
 	this.removeWaypoint(waypoint);
-	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config, tooltip), config: config};
+	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config, tooltip, label), config: config};
 }
 
 org.sarsoft.EditableGMap = function(map, infodiv) {
@@ -485,9 +508,9 @@ org.sarsoft.EditableGMap.prototype._infomessage = function(message) {
 	document.getElementById(this._infodiv.id + "_message").innerHTML = message;
 }
 
-org.sarsoft.EditableGMap.prototype._addOverlay = function(way, config) {
+org.sarsoft.EditableGMap.prototype._addOverlay = function(way, config, label) {
 	var that = this;
-	var poly = org.sarsoft.FixedGMap.prototype._addOverlay.call(this, way, config);
+	var poly = org.sarsoft.FixedGMap.prototype._addOverlay.call(this, way, config, label);
 	GEvent.addListener(poly, "mouseover", function() {
 		if(way.displayMessage == null) {
 			that._infomessage("<b>" + way.name + "</b>");
@@ -549,8 +572,11 @@ org.sarsoft.EditableGMap.prototype.save = function(id) {
 }
 
 org.sarsoft.EditableGMap.prototype.discard = function(id) {
+	var label = this.polys[id].overlay.label;
 	this._removeOverlay(this.polys[id].overlay);
 	this.polys[id].overlay = this._addOverlay(this.polys[id].way, this.polys[id].config);
+	this.polys[id].overlay.label = label;
+	this.map.addOverlay(label);
 }
 
 org.sarsoft.EditableGMap.prototype.addListener = function(event, handler) {
@@ -598,7 +624,7 @@ GeoUtil.getEastBorder = function(zone) {
 }
 
 // Copyright 1997-1998 by Charles L. Taylor -->
-    var pi = 3.14159265358979;
+    var pi = 3.14159265358979323;
 
     /* Ellipsoid model constants (actual values here are for WGS84) */
     var sm_a = 6378137.0;
@@ -1281,4 +1307,118 @@ MapIconMaker.escapeUserText_ = function (text) {
   text = text.replace(/\]/, "@]");
   return encodeURIComponent(text);
 };
+
+
+function ELabel(point, html, classname, pixelOffset, percentOpacity, overlap) {
+  // Mandatory parameters
+  this.point = point;
+  this.html = html;
+
+  // Optional parameters
+  this.classname = classname||"";
+  this.pixelOffset = pixelOffset||new GSize(0,0);
+  if (percentOpacity) {
+    if(percentOpacity<0){percentOpacity=0;}
+    if(percentOpacity>100){percentOpacity=100;}
+  }
+  this.percentOpacity = percentOpacity;
+  this.overlap=overlap||false;
+  this.hidden = false;
+}
+
+ELabel.prototype = new GOverlay();
+
+ELabel.prototype.initialize = function(map) {
+  var div = document.createElement("div");
+  div.style.position = "absolute";
+  div.innerHTML = '<div class="' + this.classname + '">' + this.html + '</div>' ;
+  map.getPane(G_MAP_FLOAT_SHADOW_PANE).appendChild(div);
+  this.map_ = map;
+  this.div_ = div;
+  if (this.percentOpacity) {
+    if(typeof(div.style.filter)=='string'){div.style.filter='alpha(opacity:'+this.percentOpacity+')';}
+    if(typeof(div.style.KHTMLOpacity)=='string'){div.style.KHTMLOpacity=this.percentOpacity/100;}
+    if(typeof(div.style.MozOpacity)=='string'){div.style.MozOpacity=this.percentOpacity/100;}
+    if(typeof(div.style.opacity)=='string'){div.style.opacity=this.percentOpacity/100;}
+  }
+  if (this.overlap) {
+    var z = GOverlay.getZIndex(this.point.lat());
+    this.div_.style.zIndex = z;
+  }
+  if (this.hidden) {
+    this.hide();
+  }
+}
+
+ELabel.prototype.remove = function() {
+  this.div_.parentNode.removeChild(this.div_);
+}
+
+ELabel.prototype.copy = function() {
+  return new ELabel(this.point, this.html, this.classname, this.pixelOffset, this.percentOpacity, this.overlap);
+}
+
+ELabel.prototype.redraw = function(force) {
+  var p = this.map_.fromLatLngToDivPixel(this.point);
+  var h = parseInt(this.div_.clientHeight);
+  this.div_.style.left = (p.x + this.pixelOffset.width) + "px";
+  this.div_.style.top = (p.y +this.pixelOffset.height - h) + "px";
+}
+
+ELabel.prototype.show = function() {
+  if (this.div_) {
+    this.div_.style.display="";
+    this.redraw();
+  }
+  this.hidden = false;
+}
+
+ELabel.prototype.hide = function() {
+  if (this.div_) {
+    this.div_.style.display="none";
+  }
+  this.hidden = true;
+}
+
+ELabel.prototype.isHidden = function() {
+  return this.hidden;
+}
+
+ELabel.prototype.supportsHide = function() {
+  return true;
+}
+
+ELabel.prototype.setContents = function(html) {
+  this.html = html;
+  this.div_.innerHTML = '<div class="' + this.classname + '">' + this.html + '</div>' ;
+  this.redraw(true);
+}
+
+ELabel.prototype.setPoint = function(point) {
+  this.point = point;
+  if (this.overlap) {
+    var z = GOverlay.getZIndex(this.point.lat());
+    this.div_.style.zIndex = z;
+  }
+  this.redraw(true);
+}
+
+ELabel.prototype.setOpacity = function(percentOpacity) {
+  if (percentOpacity) {
+    if(percentOpacity<0){percentOpacity=0;}
+    if(percentOpacity>100){percentOpacity=100;}
+  }
+  this.percentOpacity = percentOpacity;
+  if (this.percentOpacity) {
+    if(typeof(this.div_.style.filter)=='string'){this.div_.style.filter='alpha(opacity:'+this.percentOpacity+')';}
+    if(typeof(this.div_.style.KHTMLOpacity)=='string'){this.div_.style.KHTMLOpacity=this.percentOpacity/100;}
+    if(typeof(this.div_.style.MozOpacity)=='string'){this.div_.style.MozOpacity=this.percentOpacity/100;}
+    if(typeof(this.div_.style.opacity)=='string'){this.div_.style.opacity=this.percentOpacity/100;}
+  }
+}
+
+ELabel.prototype.getPoint = function() {
+  return this.point;
+}
+
 

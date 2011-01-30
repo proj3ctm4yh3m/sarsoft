@@ -21,8 +21,10 @@ This period has ${fn:length(period.assignments)} assignments, covering ${period.
 <p>Update multiple assignments at once.  Use shift+click and ctrl+click to select assignments from the list, and fill in all fields you want to update.  Blank fields will be ignored;
 you can not clear fields through bulk update.</p>
 
+
 			<form name="assignment" action="/app/assignment" method="post">
 			 <input type="hidden" value="" name="bulkIds" id="bulkIds"/>
+			 <input type="hidden" value="" name="action" id="action"/>
 			 <table border="0">
 			 <tr><td>Resource Type</td><td>
 				 <select name="resourceType" value="">
@@ -59,7 +61,13 @@ you can not clear fields through bulk update.</p>
 			<b>Dropoff and Pickup Instructions:</b><br/>
 			<textarea name="transportation" style="width: 30em; height: 80px"></textarea>
 
-			 <a style="left: 20px" href="javascript:submitbulkupdate()">Save Changes</a>
+			<br/><br/>
+
+			If you'd like to prepare these assignments, please enter your name here:<br/>
+			<input type="text" size="20" name="preparedBy"/><br/><br/>
+			 <a style="left: 20px" href="javascript:submitbulkupdate(false)">Save Changes</a>
+			 &nbsp;&nbsp;
+			 <a style="left: 20px" href="javascript:submitbulkupdate(true)">Save Changes and Prepare Assignment</a>
 			 &nbsp;&nbsp;
 			 <a style="left: 20px" href="javascript:hidebulkupdate()">Cancel</a>
 
@@ -126,7 +134,7 @@ datatable.setClickOverride(true);
 document.getElementById('bulkupdate').style.display="none";
 }
 
-function submitbulkupdate() {
+function submitbulkupdate(finalize) {
 var data = datatable.getSelectedData();
 if(data.length == 0) {
 	alert("Please select at least one assignment to update.");
@@ -136,6 +144,7 @@ if(data.length == 0) {
 		value = value + data[i].id + ",";
 	}
 	document.getElementById("bulkIds").value=value;
+	if(finalize) document.getElementById("action").value="FINALIZE";
 	document.forms['assignment'].submit();
 }
 }

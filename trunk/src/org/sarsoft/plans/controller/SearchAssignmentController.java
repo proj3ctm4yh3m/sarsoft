@@ -120,7 +120,8 @@ public class SearchAssignmentController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/app/assignment", method = RequestMethod.POST)
-	public String setBulkAssignmentDetail(Model model, SearchAssignmentForm form, HttpServletResponse response) {
+	public String setBulkAssignmentDetail(Model model, SearchAssignmentForm form, HttpServletRequest request, HttpServletResponse response) {
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		OperationalPeriod period = null;
 		String[] ids = form.getBulkIds().split(",");
 		for(String id : ids) {
@@ -136,8 +137,14 @@ public class SearchAssignmentController extends JSONBaseController {
 			if(form.getPreviousEfforts() != null) assignment.setPreviousEfforts(form.getPreviousEfforts());
 			if(form.getTransportation() != null) assignment.setTransportation(form.getTransportation());
 			assignment.setStatus(SearchAssignment.Status.DRAFT);
+			switch(action) {
+			case FINALIZE :
+				assignment.setPreparedBy(form.getPreparedBy());
+				assignment.setStatus(SearchAssignment.Status.PREPARED);
+				break;
+			}
 			dao.save(assignment);
-		}
+ 		}
 		return "redirect:/app/operationalperiod/" + period.getId();
 	}
 

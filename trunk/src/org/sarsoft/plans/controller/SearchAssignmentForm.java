@@ -11,6 +11,7 @@ public class SearchAssignmentForm {
 	private Long timeAllocated;
 	private String previousEfforts;
 	private String transportation;
+	private String preparedBy;
 	private Probability responsivePOD;
 	private Probability unresponsivePOD;
 	private String primaryFrequency;
@@ -81,6 +82,12 @@ public class SearchAssignmentForm {
 	}
 	public void setBulkIds(String bulkIds) {
 		this.bulkIds = bulkIds;
+	}
+	public String getPreparedBy() {
+		return preparedBy;
+	}
+	public void setPreparedBy(String preparedBy) {
+		this.preparedBy = preparedBy;
 	}
 
 }
