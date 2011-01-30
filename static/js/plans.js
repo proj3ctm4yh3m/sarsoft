@@ -195,10 +195,14 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 		for(var i = 0; i < ways.length; i++) {
 			var way = ways[i];
 			way.waypoints = way.zoomAdjustedWaypoints;
-			that.fmap.addWay(way, config);
+			that.fmap.addWay(way, config, (way.type == "ROUTE") ? null : way.name);
 		}
 	}, assignment, 10);
 
+	for(var i = 0; i < assignment.waypoints.length; i++) {
+		var wpt = assignment.waypoints[i];
+		that.fmap.addWaypoint(wpt, config, wpt.name, wpt.name);
+	}
 }
 
 org.sarsoft.controller.AssignmentPrintMapController.prototype.setSize = function(width, height) {
@@ -243,28 +247,28 @@ org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, w
 	for(var i = 0; i < this.ways.length; i++) {
 		var way = this.ways[i];
 		way.waypoints = way.zoomAdjustedWaypoints;
-		that.fmap.addWay(way, config);
+		that.fmap.addWay(way, config, (way.type == "ROUTE") ? null : way.name);
 	}
 
 	for(var i = 0; i < this.assignment.waypoints.length; i++) {
 		var waypoint = this.assignment.waypoints[i];
-		that.fmap.addWaypoint(waypoint, config);
+		that.fmap.addWaypoint(waypoint, config, waypoint.name, waypoint.name);
 	}
 }
 
 org.sarsoft.controller.AssignmentViewMapController.prototype.addWay = function(way, config) {
 	way.waypoints = way.zoomAdjustedWaypoints;
-	this.fmap.addWay(way, config);
+	this.fmap.addWay(way, config, (way.type == "ROUTE") ? null : way.name);
 }
 
 org.sarsoft.controller.AssignmentViewMapController.prototype.addWaypoint = function(waypoint, config) {
-	this.fmap.addWaypoint(waypoint, config);
+	this.fmap.addWaypoint(waypoint, config, waypoint.name, waypoint.name);
 }
 
 org.sarsoft.controller.AssignmentViewMapController.prototype._dehighlight = function() {
 	if(this.highlightedWay != null) {
 		this.fmap.removeWay(this.highlightedWay);
-		this.addWay(this.highlightedWay, this.baseConfig);
+		this.addWay(this.highlightedWay, this.baseConfig, (this.highlightedWay.type == "ROUTE") ? null : this.highlightedWay.name);
 		this.highlightedWay = null;
 	}
 }
@@ -290,7 +294,7 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.highlight = functio
 org.sarsoft.controller.AssignmentViewMapController.prototype._dehighlightWaypoint = function() {
 	if(this.highlightedWaypoint != null) {
 		this.fmap.removeWaypoint(this.highlightedWaypoint);
-		this.addWaypoint(this.highlightedWaypoint, this.baseConfig);
+		this.addWaypoint(this.highlightedWaypoint, this.baseConfig, this.highlightedWaypoint.name, this.highlightedWaypoint.name);
 		this.highlightedWaypoint = null;
 	}
 }
@@ -371,7 +375,7 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
 	];
 	this.pastEntityForm = new org.sarsoft.view.EntityForm(fields);
 	this.presentEntityForm = new org.sarsoft.view.EntityForm(fields);
-	this.mapForm = new org.sarsoft.view.EntityForm([{name : "rangerings", label: "Range Rings", type: "string"}]);
+	this.mapForm = new org.sarsoft.view.EntityForm([{name : "rangerings", label: "Range Rings", type: "string"},{name : "labeltw", label: "Label Tracks & Waypoints", type: "boolean"}]);
 	var dlg = document.createElement("div");
 	dlg.style.position="absolute";
 	dlg.style.zIndex="200";
@@ -504,13 +508,18 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		that.contextMenu.show(point, that._getAssignmentFromWay(way));
 	});
 
+	this.isCenterSet=false;
 	this.periodDAO.load(function(period) {
 		that.searchDAO.load(function(config) {
-				try {
+				that._mapsetup.map.labeltw = false;
+				if(config.value == null) {
+					that._mapsetup.map.rangerings = "500,1000,1500";
+				} else try {
 					var mapConfig = YAHOO.lang.JSON.parse(config.value);
 					that._mapsetup.map.rangerings = mapConfig.rangerings;
 					that.emap.setConfig(mapConfig);
 				} catch (e) {}
+				if(that.plk != null) that.placePlk(that.plk);
 				var bb = period.boundingBox;
 				if(bb.length == 0) {
 					that.periodDAO.loadAll(function(periods) {
@@ -519,18 +528,23 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 								bb = periods[i].boundingBox;
 								var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
 								that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+								that.isCenterSet=true;
 							}
 						}
 					});
 				} else {
 					var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
 					that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+					that.isCenterSet=true;
 				}
 		}, "mapConfig");
 		that.searchDAO.load(function(config) {
 			if(config.value != null) {
 				that.plk = config.value;
 				that.placePlk(config.value);
+				if(that.isCenterSet==false) {
+					that.emap.map.setCenter(new GLatLng(that.plk.lat, that.plk.lng), 14);
+				}
 				}
 		}, "plk");
 	}, that.period.id);
@@ -664,12 +678,12 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.setPlk = functio
 org.sarsoft.controller.OperationalPeriodMapController.prototype.placePlk = function(plk) {
 	if(this.plk != null) this.emap.removeWaypoint(this.plk);
 	this.plk = plk;
-	this.emap.addWaypoint(plk, {color: "#FF0000"}, "PLK");
+	this.emap.addWaypoint(plk, {color: "#FF0000"}, "PLK", "PLK");
 	this.emap.removeRangeRings();
 	if(this._mapsetup.map.rangerings != null) {
 		var radii = this._mapsetup.map.rangerings.split(",");
 		for(var i = 0; i < radii.length; i++) {
-			this.emap.addRangeRing(new GLatLng(plk.lat, plk.lng), radii[i], 32);
+			this.emap.addRangeRing(new GLatLng(plk.lat, plk.lng), radii[i], 36);
 		}
 	}
 }
@@ -717,7 +731,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = f
 		}
 		var date = new Date(1*resource.plk.time);
 		var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-		this.emap.addWaypoint(resource.plk, config, resource.assignmentId + "-" + resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()));
+		this.emap.addWaypoint(resource.plk, config, resource.assignmentId + "-" + resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), (this._mapsetup.map.labeltw == true) ? assignmentId + "-" + resource.name : null);
 	}
 }
 
@@ -808,11 +822,15 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		var way = ways[i];
 		way.waypoints = way.zoomAdjustedWaypoints;
 		way.displayMessage = assignment.id + ": " + assignment.name + "<br/>" + assignment.resourceType + ", " + assignment.status + ", " + assignment.responsivePOD;
-		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config);
+		var label = null;
+		if(this._mapsetup.map.labeltw) label = way.name;
+		if(way.type == "ROUTE") label = assignment.id
+		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config, label);
 	}
 	if(config.clickable) {
 		for(var i = 0; i < assignment.waypoints.length; i++) {
-			this.emap.addWaypoint(assignment.waypoints[i], config);
+			var wpt = assignment.waypoints[i];
+			this.emap.addWaypoint(wpt, config, wpt.name, (this._mapsetup.map.labeltw == true) ? wpt.name : null);
 		}
 	}
 }

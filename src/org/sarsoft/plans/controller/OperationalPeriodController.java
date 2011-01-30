@@ -44,16 +44,28 @@ public class OperationalPeriodController extends JSONBaseController {
 
 	// APP PERIOD
 	@RequestMapping(value="/app/operationalperiod", method = RequestMethod.GET)
-	public String getOperationalPeriodList(Model model) {
+	public String getOperationalPeriodList(Model model, HttpServletRequest request) {
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
-		return app(model, "OperationalPeriod.List");
+		switch (format) {
+		case CSV :
+			return app(model, "OperationalPeriod.List.csv");
+		default :
+			return app(model, "OperationalPeriod.List");
+		}
 	}
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}", method = RequestMethod.GET)
-	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id) {
+	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
-		return app(model, "OperationalPeriod.Detail");
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
+		switch (format) {
+		case CSV :
+			return app(model, "OperationalPeriod.Detail.csv");
+		default :
+			return app(model, "OperationalPeriod.Detail");
+		}
 	}
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}/map", method = RequestMethod.GET)
