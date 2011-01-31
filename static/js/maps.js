@@ -105,7 +105,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 
 	this.opacityInput = document.createElement("input");
 	this.opacityInput.size=2;
-	this.opacityInput.value=50;
+	this.opacityInput.value=0;
 
 	var div = document.createElement("div");
 	div.appendChild(document.createTextNode("background: "));

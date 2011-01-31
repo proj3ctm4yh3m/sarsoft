@@ -821,7 +821,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 	for(var i = 0; i < ways.length; i++) {
 		var way = ways[i];
 		way.waypoints = way.zoomAdjustedWaypoints;
-		way.displayMessage = assignment.id + ": " + assignment.name + "<br/>" + assignment.resourceType + ", " + assignment.status + ", " + assignment.responsivePOD;
+		way.displayMessage = assignment.id + ": " + assignment.resourceType + ", " + assignment.status;
 		var label = null;
 		if(this._mapsetup.map.labeltw) label = way.name;
 		if(way.type == "ROUTE") label = assignment.id
