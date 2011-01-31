@@ -16,6 +16,7 @@ import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.FileUploadForm;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
@@ -57,9 +58,26 @@ public class OperationalPeriodController extends JSONBaseController {
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}", method = RequestMethod.GET)
 	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request) {
-		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
+		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
+		model.addAttribute("period", period);
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		switch(action) {
+		case DELETE:
+				if(period.getAssignments() == null || period.getAssignments().size() == 0) {
+					dao.delete(period);
+					return getOperationalPeriodList(model, request);
+				}
+				break;
+		case UPDATE:
+			String name = request.getParameter("name");
+			if(name != null && name.length() > 0) {
+				period.setDescription(name);
+				dao.save(period);
+			}
+			return app(model, "OperationalPeriod.Detail");
+		}
 		switch (format) {
 		case CSV :
 			return app(model, "OperationalPeriod.Detail.csv");
@@ -110,6 +128,15 @@ public class OperationalPeriodController extends JSONBaseController {
 	@RequestMapping(value="/rest/operationalperiod", method = RequestMethod.POST)
 	public String createOperationalPeriod(JSONForm params, Model model) {
 		OperationalPeriod period = OperationalPeriod.createFromJSON(parseObject(params));
+		if(period.getId() == null) {
+			List<OperationalPeriod> periods = dao.loadAll(OperationalPeriod.class);
+			Long id = 0L;
+			for(OperationalPeriod p : periods) {
+				id = Math.max(id, p.getId());
+			}
+			id = id + 1;
+			period.setId(id);
+		}
 		dao.save(period);
 		return json(model, period);
 	}

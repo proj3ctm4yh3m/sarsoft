@@ -15,7 +15,7 @@ gpxdlg = new org.sarsoft.view.BulkGPXDlg();
 You are working on ${searchName}.  <a href="/app/setsearch">Select a different search</a>.
 <h4>Administration</h4>
 <ul>
- <li><a href="/app/admin">Administration Console</a></li>
+ <li><a href="/app/admin">Site Admin</a>&nbsp;|&nbsp;<a href="/app/search">Search Admin</a></li>
  <li>Location Tracking: <c:choose><c:when test="${locationenabled}">ENABLED   (<a href="/app/location/stop">disable</a>)</c:when><c:otherwise>DISABLED   (<a href="/app/location/start">enable</a>)</c:otherwise></c:choose></li>
 </ul>
 <h4>Plans</h4>

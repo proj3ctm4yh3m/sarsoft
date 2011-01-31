@@ -33,6 +33,10 @@
 		<put-attribute name="app" value="ops"/>
 	</definition>
 
+	<definition name="Pages.Search" extends="App.Base">
+		<put-attribute name="content" value="/admin/search.jsp"/>
+		<put-attribute name="app" value="admin"/>
+	</definition>
 	<definition name="Pages.Home" extends="App.Base">
 		<put-attribute name="content" value="/global/home.jsp"/>
 	</definition>

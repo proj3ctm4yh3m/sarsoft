@@ -28,6 +28,7 @@ import org.sarsoft.common.view.Breadcrumb;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Probability;
+import org.sarsoft.plans.model.Search;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.sarsoft.plans.model.SearchAssignment.ResourceType;
 
@@ -57,6 +58,8 @@ public class SearchAssignmentController extends JSONBaseController {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		switch(format) {
 		case PRINT:
+			model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
+
 			String print104 = request.getParameter("print104");
 			model.addAttribute("print104", print104.length() > 0 ? Boolean.parseBoolean(print104) : false);
 
@@ -107,6 +110,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		model.addAttribute("assignment", assignment);
 		switch(format) {
 		case PRINT :
+			model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
 			if("maps".equalsIgnoreCase(request.getParameter("content"))) {
 				return app(model, "Assignment.PrintMaps");
 			} else {

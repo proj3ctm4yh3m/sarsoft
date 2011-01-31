@@ -4,6 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
@@ -17,6 +18,8 @@ public class Search {
 	private String name;
 	private String mapConfig;
 	private Waypoint plk;
+	private String password;
+	private String description;
 
 	public void setName(String name) {
 		this.name = name;
@@ -44,5 +47,24 @@ public class Search {
 
 	public void setPlk(Waypoint plk) {
 		this.plk = plk;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public String getDescription() {
+		return description;
+	}
+	@Transient
+	public String getPublicName() {
+		if(description != null) return description;
+		return name;
 	}
 }
