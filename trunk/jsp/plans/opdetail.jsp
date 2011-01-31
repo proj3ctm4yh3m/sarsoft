@@ -9,8 +9,8 @@ This period has ${fn:length(period.assignments)} assignments, covering ${period.
 
 <ul>
  <li><a href="/app/operationalperiod/${period.id}/map">View assignments in a map</a> (new assignments can be created on this page)</li>
- <li>Export as:&nbsp;<a href="/rest/operationalperiod/${period.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=kml">KML</a></li>
- <li>Bulk Operations:&nbsp;<a href="javascript:showbulkupdate()">Update</a>&nbsp;|&nbsp;<a href="javascript:showbulkprint()">Print</a></li>
+ <li>Export as:&nbsp;<a href="/rest/operationalperiod/${period.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=kml">KML</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=csv">CSV</a></li>
+ <li>Bulk:&nbsp;<a href="javascript:showbulkupdate()">Update</a>&nbsp;|&nbsp;<a href="javascript:showbulkprint()">Print</a></li>
 <c:choose>
  <c:when test="${fn:length(period.assignments) eq 0}">
  <li><a href="/app/operationalperiod/${period.id}?action=DELETE">Delete Operational Period</a> (must not contain any assignments).</li>

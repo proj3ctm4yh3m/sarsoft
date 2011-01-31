@@ -46,22 +46,15 @@ public class OperationalPeriodController extends JSONBaseController {
 	// APP PERIOD
 	@RequestMapping(value="/app/operationalperiod", method = RequestMethod.GET)
 	public String getOperationalPeriodList(Model model, HttpServletRequest request) {
-		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
-		switch (format) {
-		case CSV :
-			return app(model, "OperationalPeriod.List.csv");
-		default :
-			return app(model, "OperationalPeriod.List");
-		}
+		return app(model, "OperationalPeriod.List");
 	}
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}", method = RequestMethod.GET)
-	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request) {
+	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request, HttpServletResponse response) {
 		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
 		model.addAttribute("period", period);
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
-		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		switch(action) {
 		case DELETE:
@@ -78,12 +71,7 @@ public class OperationalPeriodController extends JSONBaseController {
 			}
 			return app(model, "OperationalPeriod.Detail");
 		}
-		switch (format) {
-		case CSV :
-			return app(model, "OperationalPeriod.Detail.csv");
-		default :
-			return app(model, "OperationalPeriod.Detail");
-		}
+		return app(model, "OperationalPeriod.Detail");
 	}
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}/map", method = RequestMethod.GET)
@@ -120,6 +108,10 @@ public class OperationalPeriodController extends JSONBaseController {
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=operationalperiod" + period.getId() + ".kml");
 			return kml(model, period.getAssignments(), "SearchAssignments");
+		case CSV:
+			response.setHeader("Content-Disposition", "attachment; filename=operationalperiod" + period.getId() + ".csv");
+			model.addAttribute("assignments", period.getAssignments());
+			return "/plans/opdetail-csv";
 		default :
 			return json(model, period);
 		}
