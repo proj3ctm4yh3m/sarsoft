@@ -9,11 +9,26 @@ This period has ${fn:length(period.assignments)} assignments, covering ${period.
 
 <ul>
  <li><a href="/app/operationalperiod/${period.id}/map">View assignments in a map</a> (new assignments can be created on this page)</li>
- <li><a href="/rest/operationalperiod/${period.id}?format=gpx">Export as GPX</a></li>
- <li><a href="/rest/operationalperiod/${period.id}?format=kml">Export as KML</a></li>
- <li><a href="javascript:showbulkupdate()">Bulk Update</a></li>
- <li><a href="javascript:showbulkprint()">Bulk Print</a></li>
+ <li>Export as:&nbsp;<a href="/rest/operationalperiod/${period.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=kml">KML</a></li>
+ <li>Bulk Operations:&nbsp;<a href="javascript:showbulkupdate()">Update</a>&nbsp;|&nbsp;<a href="javascript:showbulkprint()">Print</a></li>
+<c:choose>
+ <c:when test="${fn:length(period.assignments) eq 0}">
+ <li><a href="/app/operationalperiod/${period.id}?action=DELETE">Delete Operational Period</a> (must not contain any assignments).</li>
+ </c:when>
+ <c:otherwise>
+ <li><a href="javascript:showrename()">Rename</a></li>
+ </c:otherwise>
+</c:choose>
 </ul>
+
+<div id="rename" style="display: none">
+<p>Rename this operational period.</p>
+Name: <input type="text" size="15" value="${period.description}" id="renamestr"/>
+<br/><br/>
+ <a style="left: 20px" href="javascript:submitrename()">Rename</a>
+ &nbsp;&nbsp;
+ <a style="left: 20px" href="javascript:hiderename()">Cancel</a>
+</div>
 
 <div id="bulkupdate" style="display: none">
 <h3>Bulk Update Assignments</h3>
@@ -181,4 +196,17 @@ if(data.length == 0) {
 }
 }
 
+function showrename() {
+	hidebulkupdate();
+	hidebulkprint();
+	document.getElementById('rename').style.display="block";
+}
+
+function hiderename() {
+	document.getElementById('rename').style.display="none";
+}
+
+function submitrename() {
+	window.location="/app/operationalperiod/${period.id}?action=UPDATE&name=" + document.getElementById("renamestr").value;
+}
 </script>

@@ -1,5 +1,6 @@
 package org.sarsoft.plans.controller;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,6 +58,23 @@ public class SearchController extends JSONBaseController {
 		search.setPlk((Waypoint) m.get("value"));
 		dao.save(search);
 		return json(model, search);
+	}
+
+	@RequestMapping(value="/app/search", method = RequestMethod.GET)
+	public String admin(Model model, HttpServletRequest request) {
+		model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
+		return app(model, "Pages.Search");
+	}
+
+	@RequestMapping(value="/app/search", method = RequestMethod.POST)
+	public String update(Model model, HttpServletRequest request) {
+		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		if(request.getParameter("description") != null) {
+			search.setDescription(request.getParameter("description"));
+			dao.save(search);
+		}
+		model.addAttribute("search", search);
+		return app(model, "Pages.Search");
 	}
 
 }

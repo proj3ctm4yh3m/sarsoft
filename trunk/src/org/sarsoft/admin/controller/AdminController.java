@@ -1,6 +1,8 @@
 package org.sarsoft.admin.controller;
 
 import java.io.File;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -76,15 +78,70 @@ public class AdminController extends JSONBaseController {
 		return app(model, "Pages.Welcome");
 	}
 
+	private String hash(String password) {
+		if(password == null) return null;
+		try {
+		MessageDigest d = MessageDigest.getInstance("SHA-1");
+		d.reset();
+		d.update(password.getBytes());
+		byte[] bytes = d.digest();
+		StringBuffer sb = new StringBuffer();
+		for(byte b : bytes) {
+			int i = b & 0xFF;
+			if(i < 16) sb.append("0");
+			sb.append(Integer.toHexString(i));
+		}
+		return sb.toString().toUpperCase();
+		} catch (NoSuchAlgorithmException e) {
+			return password;
+		}
+	}
+
 	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
 	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request) {
+		Search search = (Search) dao.getByAttr(Search.class, "name", name);
+		if(search == null) {
+			model.addAttribute("searches", dao.getAllSearchNames());
+			model.addAttribute("message", "Search does not exist.");
+			return app(model, "Pages.Welcome");
+		}
+
+		if(search.getPassword() != null) {
+			String password = hash(request.getParameter("password"));
+			model.addAttribute("searches", dao.getAllSearchNames());
+			model.addAttribute("message", "Wrong Password.");
+			if(!search.getPassword().equals(password)) return app(model, "Pages.Welcome");
+		}
+
 		request.getSession().setAttribute("search", name);
 		RuntimeProperties.setSearch(name);
-		if(dao.getByAttr(Search.class, "name", name) == null) {
-			Search search = new Search();
-			search.setName(name);
-			dao.save(search);
+		return homePage(model, request);
+	}
+
+	@RequestMapping(value="/app/setsearch", method = RequestMethod.POST)
+	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
+		String name = request.getParameter("name");
+		String op1name = request.getParameter("op1name");
+		String password = request.getParameter("password");
+		password = hash(password);
+		if(dao.getByAttr(Search.class, "name", name) != null) {
+			return setAppDataSchema(model, name, request);
 		}
+		Search search = new Search();
+		search.setName(name);
+		if(password != null && password.length() > 0) {
+			search.setPassword(password);
+		}
+		dao.save(search);
+		request.getSession().setAttribute("search", name);
+		RuntimeProperties.setSearch(name);
+		if(op1name != null && op1name.length() > 0) {
+			OperationalPeriod period = new OperationalPeriod();
+			period.setDescription(op1name);
+			period.setId(1L);
+			dao.save(period);
+		}
+
 		return homePage(model, request);
 	}
 

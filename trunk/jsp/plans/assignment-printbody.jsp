@@ -15,7 +15,7 @@
 
 <div style="width: 100%; height: 24pt; border-bottom: 1px solid black">
 	<div class="lbox" style="width: 25%;"><b>TEAM ASSIGNMENT</b></div>
-	<div class="box" style="width: 25%"><div class="label">1. INCIDENT NAME</div>${assignment.search}</div>
+	<div class="box" style="width: 25%"><div class="label">1. INCIDENT NAME</div>${search.publicName}</div>
 	<div class="box" style="width: 25%"><div class="label">2. OPERATIONAL PERIOD</div>${assignment.operationalPeriod.id}</div>
 	<div class="box" style="width: 24%"><div class="label">3. ASSIGNMENT NUMBER</div>${assignment.id}</div>
 </div>

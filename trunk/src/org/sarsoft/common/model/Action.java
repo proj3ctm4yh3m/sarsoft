@@ -1,5 +1,5 @@
 package org.sarsoft.common.model;
 
 public enum Action {
-	CREATE,FINALIZE,START,STOP,DELETE
+	CREATE,UPDATE,FINALIZE,START,STOP,DELETE
 }
