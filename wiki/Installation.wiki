@@ -11,46 +11,6 @@
  * Point your browser at <a href="http://localhost:8080">http://localhost:8080</a>.  You will see a landing page with a list of existing searches; enter a new search name and click *create*.
 <img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-landing.png"/>
 
-= Creating a First Assignment =
-
- * The next page you'll see is the sarsoft home page.  Click *View a list of operational periods*, the first link under "Plans".
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-home.png"/>
-
- * Click *New operational period*.  Enter 1 for the id and a description.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-newop.png"/>
-
- * Your new operational period will show up in the table.  Click it.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-oplist.png"/>
-
- * Click *View assignments in a map* to create a new assignment.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-opdetail.png"/>
-
- * You'll see a map of the entire US, in Google's Terrain background.  Zoom in on the search area, and select the most appropriate background from the controls in the upper right.  Right-click on the map and choose *Make this map background default for search*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-makedefault.png"/>
-
- * Right-click on the map and choose *New Search Assignment*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-newassignment.png"/>
-
- * Fill out the dialog with some sample data and click *Create*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-newassignment2.png"/>
-
- * You'll see a colored square on the map representing the assignment.  Right-click on this square and select *Edit Assignment Bounds*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-editbounds.png"/>
-
- * The corners of the square will become draggable.  Drag it to form an outline for the assignment.  Right-click on the polygon and select *Save Changes*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-editbounds2.png"/>
-
- * Select a different map background using the controls in the upper right.  Right-click on the colored polygon representing your new assignment and select *Attach this map to assignment*.  Each backround you attach will be automatically printed with the assignment.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-attachmap.png"/>
-
- * Right-click on the polygon again, and select *View Assignment Details*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-viewdetails.png"/>
-
- * The assignment details page will open in either a new tab or new window.  Mark the assignment as prepared (this will prevent anyone from editing its boundaries like you just did above) by clicking *Prepare Assignment*, entering your name, and clicking *Prepare*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-prepare.png"/>
-
- * The Prepare Assignment link will be replaced with a *Print Assignment* link.  Click this to print the assignment.  Printing will open another window/tab; when all the map backgrounds have been downloaded, your browser's print dialog should automatically appear.  Several copies of a form designed to mirror <a href="http://www.basarc.org">BASARC's</a> SAR 104 form will be printed, along with the attached map backgrounds.
-
 = Shutting Down =
 
  * Unless you start the application from a command line, it will run windowless - there's no obvious way to kill it without looking at a process list.  You can shutdown the sarsoft app by going to the homepage (click the big SARSOFT in the upper left hand corner) and clicking *Administration Console*.  Under the Server Control tab, click *Shut Down*.
