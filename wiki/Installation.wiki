@@ -1,15 +1,22 @@
-#Installation guide
+#summary Installing and running Sarsoft.
 
 = Installation =
 
- * Download the zip file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.1.zip">http://sarsoft.googlecode.com/files/sarsoft-0.1.zip</a>.  You may need to unzip the file once it's downloaded.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-unzip.png"/>
+Starting with version 0.3, sarsoft is packaged as a simple .jar file.
 
- *  The unzipped folder will be named "sarsoft".  Opening this in a file browser, you should see a folder named config and a file named sar.jar.  On Windows and Mac systems with Java installed, you should be able to double-click on the sar.jar file to run it.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-dir.png"/><img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-dir2.png"/>
+ * Download the zip file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.3.jar">http://sarsoft.googlecode.com/files/sarsoft-0.3.jar</a>.
+
+ * On Windows and Mac systems with Java installed, you should be able to double-click on the sarsoft-0.3.jar file to start the application.  Sarsoft will create two folders in the directory from which it's started: config and hsqldb.
 
  * Point your browser at <a href="http://localhost:8080">http://localhost:8080</a>.  You will see a landing page with a list of existing searches; enter a new search name and click *create*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-landing.png"/>
+
+ * Click on "Site Admin".
+
+ * Select the "Map Configuration" tab and click on the "clicking here" link at the bottom of the table to populate the default map configurations.
+
+ * If you plan on accessing Sarsoft from a machine other than the one it's running on, select the "API Keys" tab and enter your hostname and Google Maps and Garmin API keys.
+
+You can password protect this page by starting Sarsoft on the command line and specifying a password as follows: java -Dsarsoft.admin.password=mypassword -jar sarsoft-0.3.jar
 
 = Shutting Down =
 
