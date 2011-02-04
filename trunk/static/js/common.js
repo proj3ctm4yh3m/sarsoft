@@ -4,6 +4,7 @@ if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
 
 org.sarsoft.BaseDAO = function() {
+//	this._timestamp = 0;
 }
 
 org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
@@ -13,6 +14,7 @@ org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 	YAHOO.util.Connect.asyncRequest('POST', this.baseURL + url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
+			alert("AJAX ERROR " + that.baseURL + url + " " + response.responseText);
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
 }
@@ -22,6 +24,7 @@ org.sarsoft.BaseDAO.prototype._doGet = function(url, handler) {
 	YAHOO.util.Connect.asyncRequest('GET', this.baseURL + url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
+			alert("AJAX ERROR " + that.baseURL + url + " " + response.responseText);
 			throw("AJAX ERROR getting from " + that.baseURL + url + ": " + response.responseText);
 		}});
 }
@@ -301,12 +304,14 @@ org.sarsoft.view.EntityForm.prototype._read = function(fields, obj) {
 }
 
 org.sarsoft.view.EntityForm.prototype._getValue = function(node) {
+	if(node == null) return null;
 	if(node.nodeName == "INPUT" && node.type == "checkbox") return node.checked;
 	if(node.nodeName == "SELECT") return node.options[node.selectedIndex].value;
 	return node.value;
 }
 
 org.sarsoft.view.EntityForm.prototype._setValue = function(node, value) {
+	if(node == null) return;
 	if(node.nodeName == "INPUT" && node.type == "checkbox") {
 		node.checked = (value == true);
 	} else if(node.nodeName == "SELECT") {
@@ -343,7 +348,7 @@ org.sarsoft.view.EntityCreateDialog = function(title, entityform, handler) {
 	bd.className = "bd";
 	dlg.appendChild(bd);
 	this.entityform.create(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200", width: "400px"});
 	var buttons = [ { text : "Create", handler: function() {
 		that.dialog.hide();
 		var obj = that.entityform.read();

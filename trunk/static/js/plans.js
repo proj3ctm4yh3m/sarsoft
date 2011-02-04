@@ -144,7 +144,7 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	bd.className = "bd";
 	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/rest/assignment/" + id + "/way'><input type='file' name='file'/><input type='hidden' name='format' value='gpx'/></form>";
 	dlg.appendChild(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200", width: "420px"});
 	var buttons = [ { text : "Import", handler: function() {
 		that.dialog.hide(); document.forms['gpxupload'].submit();
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
@@ -342,7 +342,7 @@ org.sarsoft.view.OperationalPeriodMapSizeDlg = function(map) {
 	bd.className = "bd";
 	dlg.appendChild(bd);
 	bd.innerHTML="Width: <input type='text' size='8' name='opmsdwidth' id='opmsdwidth'/>&nbsp;&nbsp;&nbsp;Height: <input type='text' size='8' name='opmsdheight' id='opmsdheight'/>";
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200", width: "350px"});
 	var buttons = [ { text : "Update", handler: function() {
 		that.dialog.hide();
 		var width = document.getElementById('opmsdwidth').value;
@@ -401,7 +401,7 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
 	this.pastEntityForm.create(past);
 	this.presentEntityForm.create(present);
 	this.mapForm.create(map);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200", width: "350px"});
 	var buttons = [ { text : "Update", handler: function() {
 		that.dialog.hide();
 		var obj = new Object();
@@ -854,7 +854,7 @@ org.sarsoft.view.BulkGPXDlg = function(id) {
 	bd.className = "bd";
 	dlg.appendChild(bd);
 	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/rest/search'><input type='hidden' name'format' value='GPX'/><input type='file' name='file'/></form>";
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200", width: "420px"});
 	var buttons = [ { text : "Import", handler: function() {
 		that.dialog.hide(); document.forms['gpxupload'].submit();
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];

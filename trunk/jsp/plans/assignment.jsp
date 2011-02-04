@@ -6,8 +6,8 @@
 <% pageContext.setAttribute("inprogress", SearchAssignment.Status.INPROGRESS); %>
 <% pageContext.setAttribute("completed", SearchAssignment.Status.COMPLETED); %>
 
-<script>
-function export() {
+<script type="text/javascript">
+function exportassignment() {
   var select = document.getElementById('export');
   var format = select.options[select.selectedIndex].value;
   if(format == "gpx") window.location="/rest/assignment/${assignment.id}?format=gpx";
@@ -15,7 +15,7 @@ function export() {
   if(format == "garmin") document.forms['togarmin'].submit();
 }
 
-function import() {
+function importassignment() {
   var select = document.getElementById('import');
   var format = select.options[select.selectedIndex].value;
   if(format == "gpx") gpxdlg.dialog.show();
@@ -63,8 +63,8 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <c:if test="${assignment.status ==  inprogress}">
 	<li><a href="javascript:transition('stop')">Finish Assignment</a></li>
 </c:if>
-<li>Export to: <select id="export"><option value="gpx">GPX File</option><option value="kml">KML File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:export()">GO</button></li>
-<li>Import tracks from: <select id="import"><option value="gpx">GPX File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:import()">GO</button></li>
+<li>Export to: <select id="export"><option value="gpx">GPX File</option><option value="kml">KML File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:exportassignment()">GO</button></li>
+<li>Import tracks from: <select id="import"><option value="gpx">GPX File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:importassignment()">GO</button></li>
 </ul>
 
 <div id="tabs" class="yui-navset">
@@ -183,14 +183,14 @@ you can see how it relates to neighboring assignments.</i></div>
 </div>
 
 <div id="finalize" style="top: 150px; left: 150px; position: absolute; z-index: 200; width: 300px;">
-	<div class="hd">Finalize Assignment</div>
+	<div class="hd">Prepare Assignment</div>
 	<div class="bd">
 		<label for="dlgpreparedby">Your Name:</label>
 		<input id="dlgpreparedby" length="20" type="text"/>
 	</div>
 </div>
 
-<script>
+<script type="text/javascript">
 function attachExistingResource() {
 	var select = document.getElementById("rehabresources");
 	var id = select.options[select.selectedIndex].value
@@ -211,11 +211,11 @@ org.sarsoft.Loader.queue(function() {
     tracktable = new org.sarsoft.view.WayTable(function(way) { avtc.highlight(way);}, function(record) {
     	var way = record.getData();
     	var idx = 100;
-    	for(var i = 0; i < assignment.ways.length; i++) {
-    		if(assignment.ways[i].id == way.id) idx = i;
+    	for(var i = 0; i < _assignment.ways.length; i++) {
+    		if(_assignment.ways[i].id == way.id) idx = i;
     	}
-    	assignmentDAO.deleteWay(assignment, idx, way);
-    	assignment.ways.splice(idx, 1);
+    	assignmentDAO.deleteWay(_assignment, idx, way);
+    	_assignment.ways.splice(idx, 1);
     	tracktable.table.deleteRow(record);
 	});
     tracktable.create(document.getElementById("attachedtrackscontainer"));
@@ -223,10 +223,10 @@ org.sarsoft.Loader.queue(function() {
     wpttable = new org.sarsoft.view.WaypointTable(function(waypoint) { avtc.highlightWaypoint(waypoint);}, function(record) {
     	var waypoint = record.getData();
     	var idx = 100;
-    	for(var i = 0; i < assignment.waypoints.length; i++) {
-    		if(assignment.waypoints[i].id == waypoint.id) idx = i;
+    	for(var i = 0; i < _assignment.waypoints.length; i++) {
+    		if(_assignment.waypoints[i].id == waypoint.id) idx = i;
     	}
-    	assignmentDAO.deleteWaypoint(assignment, idx, waypoint);
+    	assignmentDAO.deleteWaypoint(_assignment, idx, waypoint);
     	assignment.waypoints.splice(idx, 1);
     	wpttable.table.deleteRow(record);
 	});
@@ -235,10 +235,10 @@ org.sarsoft.Loader.queue(function() {
     resourcetable = new org.sarsoft.view.ResourceTable(null, function(record) {
     	var resource = record.getData();
     	var idx = 100;
-    	for(var i = 0; i < assignment.resources.length; i++) {
-    		if(assignment.resources[i].id == resource.id) idx = i;
+    	for(var i = 0; i < _assignment.resources.length; i++) {
+    		if(_assignment.resources[i].id == resource.id) idx = i;
     	}
-    	assignment.resources.splice(idx, 1);
+    	_assignment.resources.splice(idx, 1);
     	resourceDAO.detachResource(resource, '${assignment.id}');
     	resourcetable.table.deleteRow(record);
 	});
@@ -247,22 +247,23 @@ org.sarsoft.Loader.queue(function() {
 
 	assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
 	assignmentDAO.load(function(obj) {
-		assignment = obj;
-		if(assignment.waypoints.length == 0) wpttable.table.showTableMessage("<i>No Waypoints Found</i>");
-		for(var i = 0; i < assignment.waypoints.length; i++) {
-			wpttable.table.addRow(assignment.waypoints[i]);
+		assg = obj;
+		_assignment = obj;
+		if(_assignment.waypoints.length == 0) wpttable.table.showTableMessage("<i>No Waypoints Found</i>");
+		for(var i = 0; i < _assignment.waypoints.length; i++) {
+			wpttable.table.addRow(_assignment.waypoints[i]);
 		}
-		for(var i = 0; i < assignment.resources.length; i++) {
-			resourcetable.table.addRow(assignment.resources[i]);
+		for(var i = 0; i < _assignment.resources.length; i++) {
+			resourcetable.table.addRow(_assignment.resources[i]);
 		}
 		assignmentDAO.getWays(function(ways) {
-			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), assignment, ways, { color: "#FF0000" });
-			avtc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('trackmapview'), assignment, ways);
+			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), _assignment, ways, { color: "#FF0000" });
+			avtc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('trackmapview'), _assignment, ways);
 			tracktable.table.showTableMessage("<i>No Tracks Found</i>");
 			for(var i = 0; i < ways.length; i++) {
 				if(ways[i].type == "TRACK") tracktable.table.addRow(ways[i]);
 			}
-		}, assignment, 10);
+		}, _assignment, 10);
 	}, ${assignment.id});
 
 	resourceDAO = new org.sarsoft.ResourceDAO();
@@ -274,7 +275,7 @@ org.sarsoft.Loader.queue(function() {
 
  	gpxdlg = new org.sarsoft.view.SearchAssignmentGPXDlg(${assignment.id});
 
-	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200"});
+	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200", width: "300px"});
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
 	finalizeDlg.render(document.body);
 	finalizeDlg.hide();
