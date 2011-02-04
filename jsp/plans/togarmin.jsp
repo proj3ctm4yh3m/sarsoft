@@ -127,7 +127,7 @@ This page requires the Garmin Communicator plugin.  For more information, please
 </div>
 </div>
 <script>
-var errorDlg = new YAHOO.widget.Dialog("errorDlg");
+var errorDlg = new YAHOO.widget.Dialog("errorDlg", {width: "300px"});
 errorDlg.cfg.queueProperty("buttons", [{ text : "Try Again", handler : function() {window.location.reload(true);}}, { text : "OK", handler : function() {errorDlg.hide();}}]);
 errorDlg.render();
 errorDlg.hide();

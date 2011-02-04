@@ -340,14 +340,14 @@ org.sarsoft.FixedGMap.prototype._createPolygon = function(vertices, config) {
 	var color = config.color;
 	if(config.opacity == null) config.opacity = 100;
 	if(config.fill == null) config.fill = 35
-	var poly = new GPolygon(vertices, color, 2, config.opacity/100, color, config.fill/100);
+	var poly = new GPolygon(vertices, color, 2, Math.max(Math.min(config.opacity/100, 1), 0), color, config.fill/100);
 	this.map.addOverlay(poly);
 	return poly;
 }
 
 org.sarsoft.FixedGMap.prototype._createPolyline = function(vertices, config) {
 	if(config.opacity == null) config.opacity = 100;
-	var poly = new GPolyline(vertices, config.color, 3, config.opacity/100);
+	var poly = new GPolyline(vertices, config.color, 3, Math.max(Math.min(config.opacity/100, 1), 0));
 	this.map.addOverlay(poly);
 	return poly;
 }
@@ -416,7 +416,7 @@ org.sarsoft.FixedGMap.prototype.addRangeRing = function(center, radius, vertices
 		var vertexUTM = new UTM(centerUTM.e + radius*Math.sin(i*2*Math.PI/vertices), centerUTM.n + radius*Math.cos(i*2*Math.PI/vertices), centerUTM.zone);
 		glls.push(GeoUtil.UTMToGLatLng(vertexUTM));
 	}
-	var poly = new GPolyline(glls, "000000", 1, 100);
+	var poly = new GPolyline(glls, "000000", 1, 1);
 	this.map.addOverlay(poly);
 	this.rangerings.push(poly);
 }

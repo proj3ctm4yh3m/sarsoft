@@ -3,7 +3,8 @@
 
 <script language="javascript">
 function gotoAssignment() {
-	window.location = "/app/assignment/" + document.getElementById("assignmentid").value;
+    var select = document.getElementById('assignmentid');
+	window.location = "/app/assignment/" + select.options[select.selectedIndex].value;
 }
 org.sarsoft.Loader.queue(function() {
 gpxdlg = new org.sarsoft.view.BulkGPXDlg();
@@ -22,7 +23,7 @@ You are working on ${searchName}.  <a href="/app/setsearch">Select a different s
  <li>Current Operations: &nbsp;<a href="/app/operationalperiod/${lastperiod.id}/map">Map</a>&nbsp;|&nbsp;<a href="/app/operationalperiod/${lastperiod.id}">List</a></li>
  <li>Jump to assignment&nbsp;&nbsp;&nbsp;<select id="assignmentid">
  <c:forEach var="assignment" items="${assignments}">
- <option>${assignment.id}</option>
+ <option value="${assignment.id}">${assignment.id}</option>
  </c:forEach>
  </select>
  <a href="javascript:gotoAssignment()">GO</a></li>

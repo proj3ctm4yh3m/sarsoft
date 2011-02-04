@@ -18,8 +18,8 @@ public class RequestPropertyFilter implements Filter {
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest servletRequest = (HttpServletRequest) request;
-		String search = (String) servletRequest.getSession().getAttribute("search");
-		if(search != null) RuntimeProperties.setSearch(search);
+		String search = (String) servletRequest.getSession(true).getAttribute("search");
+		RuntimeProperties.setSearch(search);
 		chain.doFilter(request, response);
 	}
 
