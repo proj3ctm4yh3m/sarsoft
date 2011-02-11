@@ -408,7 +408,9 @@ public class SearchAssignmentController extends JSONBaseController {
 	public String setRouteWaypoints(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("wayId") int wayId, Model model) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
 		Way way = assignment.getWays().get(wayId);
-		way.setWaypoints((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
+		List<Waypoint> waypoints = way.getWaypoints();
+		waypoints.removeAll(waypoints);
+		waypoints.addAll((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
 		assignment.setUpdated(new Date());
 		dao.save(way);
 		return json(model, way);

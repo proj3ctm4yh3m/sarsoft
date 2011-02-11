@@ -76,7 +76,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	}
 
 	@OneToMany
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	@JSONSerializable
 	public List<Way> getWays() {
@@ -88,7 +88,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	}
 
 	@OneToMany
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	@JSONSerializable
 	public List<Waypoint> getWaypoints() {
@@ -285,7 +285,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 
 	@OneToMany
 	@JSONSerializable
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public Set<Resource> getResources() {
 		return resources;

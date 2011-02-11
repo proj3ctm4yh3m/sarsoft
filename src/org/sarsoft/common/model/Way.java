@@ -95,7 +95,7 @@ public class Way extends SarModelObject implements IPreSave {
 
 	@ManyToMany
 	@IndexColumn(name="wpt_idx")
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public List<Waypoint> getWaypoints() {
 		return waypoints;

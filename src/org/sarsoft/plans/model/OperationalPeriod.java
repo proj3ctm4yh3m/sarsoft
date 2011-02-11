@@ -54,7 +54,7 @@ public class OperationalPeriod extends SarModelObject {
 	}
 
 	@OneToMany(mappedBy="operationalPeriod")
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public Set<SearchAssignment> getAssignments() {
 		return assignments;
