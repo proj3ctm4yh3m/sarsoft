@@ -20,6 +20,7 @@ import org.sarsoft.ops.model.LatitudeDevice;
 import org.sarsoft.ops.model.SpotDevice;
 import org.sarsoft.ops.service.location.LocationEngine;
 import org.sarsoft.plans.controller.SearchAssignmentController;
+import org.sarsoft.plans.model.Search;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -91,8 +92,8 @@ public class OpsController extends JSONBaseController {
 	@RequestMapping(value="/{mode}/resource", method = RequestMethod.GET)
 	public String getResources(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
 		if(APP.equals(mode)) {
-			List<String> searches = dao.getAllSearchNames();
-			searches.remove(RuntimeProperties.getSearch());
+			List<Search> searches = dao.getAllSearches();
+//			searches.remove(RuntimeProperties.getSearch());
 			model.addAttribute("resources", Boolean.TRUE);
 			model.addAttribute("searches", searches);
 			return app(model, "Resource.List");

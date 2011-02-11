@@ -9,6 +9,7 @@ import java.util.Map;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.plans.model.Search;
 
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
@@ -155,12 +156,13 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<String> getAllSearchNames() {
+	public List<Search> getAllSearches() {
 		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
-				return session.createSQLQuery("select distinct name from search").addScalar("name", Hibernate.STRING).list();
+				Criteria c = session.createCriteria(Search.class).add(Restrictions.isNull("account"));
+				return c.list();
 			}
 		});
-		return (List<String>) list;
+		return (List<Search>) list;
 	}
 }

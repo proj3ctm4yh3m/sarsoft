@@ -15,6 +15,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.sarsoft.admin.model.Config;
 import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.util.RuntimeProperties;
@@ -55,6 +56,17 @@ public abstract class JSONBaseController {
 		return null;
 	}
 
+	public void addInitialDataToModel(Model model, HttpServletRequest request) {
+		String user = (String) request.getSession(true).getAttribute("user");
+		UserAccount account = null;
+		if(user != null) account = (UserAccount) dao.getByPk(UserAccount.class, user);
+		if(account != null) {
+			model.addAttribute("searches", account.getSearches());
+		} else {
+			model.addAttribute("searches", dao.getAllSearches());
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	protected String json(Model model, Object obj) {
 		if(obj == null) return "/json";
@@ -71,9 +83,17 @@ public abstract class JSONBaseController {
 	}
 
 	protected String app(Model model, String view) {
+		return app(model, view, null);
+	}
+
+	protected String app(Model model, String view, HttpServletRequest request) {
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
 		if(RuntimeProperties.getSearch() == null) {
-			model.addAttribute("searches", dao.getAllSearchNames());
+			if(request != null) {
+				addInitialDataToModel(model, request);
+			} else {
+				model.addAttribute("searches", dao.getAllSearches());
+			}
 			model.addAttribute("mapkey", getConfigValue("maps.key"));
 			return "Pages.Welcome";
 		}

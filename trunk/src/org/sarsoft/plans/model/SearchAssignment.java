@@ -285,7 +285,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 
 	@OneToMany
 	@JSONSerializable
-	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	@Cascade({org.hibernate.annotations.CascadeType.ALL})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public Set<Resource> getResources() {
 		return resources;
