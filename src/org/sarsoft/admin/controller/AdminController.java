@@ -8,6 +8,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
@@ -24,6 +25,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
@@ -46,6 +48,12 @@ public class AdminController extends JSONBaseController {
 	@Qualifier("configSessionFactory")
 	LocalSessionFactoryBean configSessionFactory;
 
+	private boolean hosted = false;
+
+	public AdminController() {
+		super();
+		hosted = "true".equalsIgnoreCase(System.getProperty("sarsoft.hosted"));
+	}
 
 	@RequestMapping(value="/app/shutdown", method = RequestMethod.GET)
 	public String shutdown(Model model, HttpServletRequest request) {
@@ -73,9 +81,9 @@ public class AdminController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/app/setsearch", method = RequestMethod.GET)
-	public String chooseNewSearch(Model model) {
-		model.addAttribute("searches", dao.getAllSearchNames());
-		return app(model, "Pages.Welcome");
+	public String chooseNewSearch(Model model, HttpServletRequest request) {
+		addInitialDataToModel(model, request);
+		return app(model, "Pages.Welcome", request);
 	}
 
 	private String hash(String password) {
@@ -101,16 +109,16 @@ public class AdminController extends JSONBaseController {
 	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", name);
 		if(search == null) {
-			model.addAttribute("searches", dao.getAllSearchNames());
+			super.addInitialDataToModel(model, request);
 			model.addAttribute("message", "Search does not exist.");
-			return app(model, "Pages.Welcome");
+			return app(model, "Pages.Welcome", request);
 		}
 
 		if(search.getPassword() != null) {
 			String password = hash(request.getParameter("password"));
-			model.addAttribute("searches", dao.getAllSearchNames());
+			addInitialDataToModel(model, request);
 			model.addAttribute("message", "Wrong Password.");
-			if(!search.getPassword().equals(password)) return app(model, "Pages.Welcome");
+			if(!search.getPassword().equals(password)) return app(model, "Pages.Welcome", request);
 		}
 
 		request.getSession().setAttribute("search", name);
@@ -120,6 +128,9 @@ public class AdminController extends JSONBaseController {
 
 	@RequestMapping(value="/app/setsearch", method = RequestMethod.POST)
 	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
+		String user = (String) request.getSession().getAttribute("user");
+		UserAccount account = null;
+		if(user != null) account = (UserAccount) dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
 		String op1name = request.getParameter("op1name");
 		String password = request.getParameter("password");
@@ -132,6 +143,11 @@ public class AdminController extends JSONBaseController {
 		if(password != null && password.length() > 0) {
 			search.setPassword(password);
 		}
+		if(account != null) {
+			search.setAccount(account);
+			search.setDescription(name);
+			search.setName(hash(user + name));
+		}
 		dao.save(search);
 		request.getSession().setAttribute("search", name);
 		RuntimeProperties.setSearch(name);
@@ -142,6 +158,29 @@ public class AdminController extends JSONBaseController {
 			dao.save(period);
 		}
 
+		return homePage(model, request);
+	}
+
+	@RequestMapping(value="/app/createaccount", method = RequestMethod.POST)
+	public String createNewAccount(Model model, HttpServletRequest request, @RequestParam("username") String username, @RequestParam("password") String password) {
+		UserAccount account = new UserAccount();
+		account.setName(username);
+		account.setPassword(hash(password));
+		dao.save(account);
+		return homePage(model, request);
+	}
+
+	@RequestMapping(value="/app/login", method = RequestMethod.GET)
+	public String login(Model model, HttpServletRequest request, @RequestParam("username") String username, @RequestParam("password") String password) {
+		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", username);
+		if(account == null) {
+			model.addAttribute("message", "account not found");
+			return app(model, "Pages.Login");
+		} else if(!account.getPassword().equals(hash(password))){
+			model.addAttribute("message", "invalid password");
+			return app(model, "Pages.Login");
+		}
+		request.getSession(true).setAttribute("user", account.getName());
 		return homePage(model, request);
 	}
 
@@ -174,7 +213,7 @@ public class AdminController extends JSONBaseController {
 			}
 		}
 		model.addAttribute("search", RuntimeProperties.getSearch());
-		model.addAttribute("searches", dao.getAllSearchNames());
+		addInitialDataToModel(model, request);
 
 		String url = configDataSource.getJdbcUrl();
 		url = url.substring(url.indexOf('/')+1);
