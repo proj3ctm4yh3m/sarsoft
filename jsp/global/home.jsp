@@ -13,7 +13,10 @@ gpxdlg = new org.sarsoft.view.BulkGPXDlg();
 
 <h1>Welcome to Sarsoft!</h1>
 
-You are working on ${search.description}.  <a href="/app/setsearch">Select a different search</a>.
+<c:if test="${account ne null}">
+Logged in as ${account.email}.  <a href="/app/logout">Logout</a><br/>
+</c:if>
+Working on ${search.description}.  <a href="/app/setsearch">Change</a>
 <c:choose>
 <c:when test="${hosted eq false}">
 <h4>Administration</h4>

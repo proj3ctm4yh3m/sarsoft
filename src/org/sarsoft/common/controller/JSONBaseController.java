@@ -114,7 +114,10 @@ public abstract class JSONBaseController {
 	protected String app(Model model, String view) {
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
 		model.addAttribute("hosted", RuntimeProperties.isHosted());
-		model.addAttribute("username", RuntimeProperties.getUsername());
+		String username = RuntimeProperties.getUsername();
+		model.addAttribute("username", username);
+		if(username != null)
+			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
 		model.addAttribute("mapkey", getConfigValue("maps.key"));
 		if(RuntimeProperties.getSearch() == null) {
 			return bounce(model);

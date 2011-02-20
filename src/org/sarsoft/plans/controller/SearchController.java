@@ -3,6 +3,7 @@ package org.sarsoft.plans.controller;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Search;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -60,6 +62,32 @@ public class SearchController extends JSONBaseController {
 		dao.save(search);
 		return json(model, search);
 	}
+	
+	@RequestMapping(value="/app/search/delete", method = RequestMethod.GET)
+	public String delete(Model model, HttpServletRequest request) {
+		boolean isOwner = false;
+		String name = RuntimeProperties.getSearch();
+		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(account != null) {
+			for(Search srch : account.getSearches()) {
+				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
+			}
+		}
+		if(RuntimeProperties.isHosted() && isOwner == false) {
+			model.addAttribute("message", "You can only admin this search if you own it.");
+			return admin(model, request);
+		}
+		List l = dao.loadAll(OperationalPeriod.class);
+		if(l == null || l.size() == 0) {
+			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+			search.getAccount().getSearches().remove(search);
+			dao.save(account);
+			RuntimeProperties.setSearch(null);
+			request.getSession(true).removeAttribute("search");
+			return bounce(model);
+		}
+		else return admin(model, request);
+	}
 
 	@RequestMapping(value="/app/search", method = RequestMethod.GET)
 	public String admin(Model model, HttpServletRequest request) {
@@ -77,6 +105,9 @@ public class SearchController extends JSONBaseController {
 		}
 		model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
 		model.addAttribute("hosted", RuntimeProperties.isHosted());
+		model.addAttribute("server", getConfigValue("server.name"));
+		List l = dao.loadAll(OperationalPeriod.class);
+		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
 		return app(model, "Pages.Search");
 	}
 
@@ -104,7 +135,10 @@ public class SearchController extends JSONBaseController {
 			search.setPassword(hash(request.getParameter("password")));
 		}
 		dao.save(search);
+		List l = dao.loadAll(OperationalPeriod.class);
+		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
 		model.addAttribute("search", search);
+		model.addAttribute("server", getConfigValue("server.name"));
 		return app(model, "Pages.Search");
 	}
 
