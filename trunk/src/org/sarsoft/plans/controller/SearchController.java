@@ -56,7 +56,6 @@ public class SearchController extends JSONBaseController {
 		Map<String, Class> classHints = new HashMap<String, Class>();
 		classHints.put("value", Waypoint.class);
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class, classHints);
-		System.out.println("Value: " + m.get("value"));
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		search.setPlk((Waypoint) m.get("value"));
 		dao.save(search);

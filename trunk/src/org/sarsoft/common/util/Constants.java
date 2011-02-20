@@ -9,7 +9,7 @@ import org.sarsoft.plans.model.SearchAssignment.ResourceType;
 
 public class Constants {
 
-	public static String[] colorsById = {"#FF0000", "#00FF00", "#0000FF", "#FF8200", "#9200FF", "#FFD000", "#DF00D2", "#00C0FF", "#FF7A7A", "#FFBF00", "#462F95"};
+	public static String[] colorsById = {"#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"};
 
 	public static Map<ResourceType, String> colorsByResourceType = new HashMap<ResourceType, String>();
 	public static Map<Probability, String> colorsByProbability = new HashMap<Probability, String>();
@@ -19,17 +19,16 @@ public class Constants {
 
 	static {
 		colorsByResourceType.put(ResourceType.GROUND, "#FF0000");
-		colorsByResourceType.put(ResourceType.DOG, "#0000DD");
-		colorsByResourceType.put(ResourceType.MOUNTED, "#FF8800");
-		colorsByResourceType.put(ResourceType.OHV, "#00FF00");
+		colorsByResourceType.put(ResourceType.DOG, "#FF8800");
+		colorsByResourceType.put(ResourceType.MOUNTED, "#FFFF00");
+		colorsByResourceType.put(ResourceType.OHV, "#8800FF");
 
-		colorsByProbability.put(Probability.LOW, "#8800FF");
-		colorsByProbability.put(Probability.MEDIUM, "#00AA00");
-		colorsByProbability.put(Probability.HIGH, "#FF8800");
-		colorsByProbability.put(Probability.VERY_HIGH, "#FF0000");
+		colorsByProbability.put(Probability.LOW, "#FFFF00");
+		colorsByProbability.put(Probability.MEDIUM, "#FF8800");
+		colorsByProbability.put(Probability.HIGH, "#FF0000");
 
-		colorsByStatus.put(SearchAssignment.Status.DRAFT, "#8800FF");
-		colorsByStatus.put(SearchAssignment.Status.PREPARED, "#00AA00");
+		colorsByStatus.put(SearchAssignment.Status.DRAFT, "#0088FF");
+		colorsByStatus.put(SearchAssignment.Status.PREPARED, "#FFFF00");
 		colorsByStatus.put(SearchAssignment.Status.INPROGRESS, "#FF8800");
 		colorsByStatus.put(SearchAssignment.Status.COMPLETED, "#FF0000");
 
