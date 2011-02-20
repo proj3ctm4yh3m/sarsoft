@@ -67,18 +67,18 @@
 	</bean>
 
 	<bean id="searchDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass" value="${hibernate.connection.driver_class}"/>
-		<property name="jdbcUrl" value="jdbc:hsqldb:hsqldb/searches"/>
-		<property name="user" value="${hibernate.connection.username}"/>
-		<property name="password" value="${hibernate.connection.password}"/>
+		<property name="driverClass" value="${hibernate.search.driverClass}"/>
+		<property name="jdbcUrl" value="${hibernate.search.jdbcUrl}"/>
+		<property name="user" value="${hibernate.search.username}"/>
+		<property name="password" value="${hibernate.search.password}"/>
 		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
 	</bean>
 
 	<bean id="configDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass" value="${hibernate.connection.driver_class}"/>
-		<property name="jdbcUrl" value="jdbc:hsqldb:config/${config}/sarsoft"/>
-		<property name="user" value="${hibernate.connection.username}"/>
-		<property name="password" value="${hibernate.connection.password}"/>
+		<property name="driverClass" value="${hibernate.config.driverClass}"/>
+		<property name="jdbcUrl" value="${hibernate.config.jdbcUrl}"/>
+		<property name="user" value="${hibernate.config.username}"/>
+		<property name="password" value="${hibernate.config.password}"/>
 		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
 	</bean>
 
@@ -94,7 +94,7 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.hbm2ddl.auto">update</prop>
-				<prop key="hibernate.dialect">${hibernate.connection.dialect}</prop>
+				<prop key="hibernate.dialect">${hibernate.search.dialect}</prop>
 			</props>
 		</property>
 
@@ -112,7 +112,7 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.hbm2ddl.auto">update</prop>
-				<prop key="hibernate.dialect">${hibernate.connection.dialect}</prop>
+				<prop key="hibernate.dialect">${hibernate.config.dialect}</prop>
 			</props>
 		</property>
 
