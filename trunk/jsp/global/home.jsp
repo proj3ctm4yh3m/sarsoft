@@ -13,11 +13,21 @@ gpxdlg = new org.sarsoft.view.BulkGPXDlg();
 
 <h1>Welcome to Sarsoft!</h1>
 
-You are working on ${searchName}.  <a href="/app/setsearch">Select a different search</a>.
+You are working on ${search.description}.  <a href="/app/setsearch">Select a different search</a>.
+<c:choose>
+<c:when test="${hosted eq false}">
 <h4>Administration</h4>
 <ul>
  <li><a href="/app/admin">Site Admin</a>&nbsp;|&nbsp;<a href="/app/search">Search Admin</a></li>
 </ul>
+</c:when>
+<c:when test="${search.account.name eq username}">
+<h4>Administration</h4>
+<ul>
+ <li><a href="/app/search">Search Admin</a></li>
+</ul>
+</c:when>
+</c:choose>
 <h4>Plans</h4>
 <ul>
  <li>Current Operations: &nbsp;<a href="/app/operationalperiod/${lastperiod.id}/map">Map</a>&nbsp;|&nbsp;<a href="/app/operationalperiod/${lastperiod.id}">List</a></li>

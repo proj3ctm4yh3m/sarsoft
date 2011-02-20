@@ -18,6 +18,7 @@ public class Search {
 	private String name;
 	private String mapConfig;
 	private Waypoint plk;
+	private boolean visible = false;
 	private String password;
 	private String description;
 	private UserAccount account;
@@ -76,5 +77,13 @@ public class Search {
 
 	public void setAccount(UserAccount account) {
 		this.account = account;
+	}
+
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
 	}
 }

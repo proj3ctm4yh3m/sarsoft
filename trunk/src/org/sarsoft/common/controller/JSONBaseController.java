@@ -3,6 +3,8 @@ package org.sarsoft.common.controller;
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +21,7 @@ import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.plans.model.Search;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
@@ -56,16 +59,25 @@ public abstract class JSONBaseController {
 		return null;
 	}
 
-	public void addInitialDataToModel(Model model, HttpServletRequest request) {
-		String user = (String) request.getSession(true).getAttribute("user");
-		UserAccount account = null;
-		if(user != null) account = (UserAccount) dao.getByPk(UserAccount.class, user);
-		if(account != null) {
-			model.addAttribute("searches", account.getSearches());
-		} else {
-			model.addAttribute("searches", dao.getAllSearches());
+	protected String hash(String password) {
+		if(password == null) return null;
+		try {
+		MessageDigest d = MessageDigest.getInstance("SHA-1");
+		d.reset();
+		d.update(password.getBytes());
+		byte[] bytes = d.digest();
+		StringBuffer sb = new StringBuffer();
+		for(byte b : bytes) {
+			int i = b & 0xFF;
+			if(i < 16) sb.append("0");
+			sb.append(Integer.toHexString(i));
+		}
+		return sb.toString().toUpperCase();
+		} catch (NoSuchAlgorithmException e) {
+			return password;
 		}
 	}
+
 
 	@SuppressWarnings("unchecked")
 	protected String json(Model model, Object obj) {
@@ -82,23 +94,32 @@ public abstract class JSONBaseController {
 		return "/json";
 	}
 
-	protected String app(Model model, String view) {
-		return app(model, view, null);
+	protected String bounce(Model model) {
+		model.addAttribute("hosted", RuntimeProperties.isHosted());
+		String user = RuntimeProperties.getUsername();
+		UserAccount account = null;
+		if(RuntimeProperties.getSearch() != null) model.addAttribute("search", dao.getByPk(Search.class, RuntimeProperties.getSearch()));
+		if(user != null) account = (UserAccount) dao.getByPk(UserAccount.class, user);
+		if(RuntimeProperties.isHosted()) {
+			if(account != null) {
+				model.addAttribute("account", account);
+				model.addAttribute("searches", account.getSearches());
+			}
+		} else {
+			model.addAttribute("searches", dao.getAllSearches());
+		}
+		return "Pages.Welcome";
 	}
 
-	protected String app(Model model, String view, HttpServletRequest request) {
+	protected String app(Model model, String view) {
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
-		if(RuntimeProperties.getSearch() == null) {
-			if(request != null) {
-				addInitialDataToModel(model, request);
-			} else {
-				model.addAttribute("searches", dao.getAllSearches());
-			}
-			model.addAttribute("mapkey", getConfigValue("maps.key"));
-			return "Pages.Welcome";
-		}
-		model.addAttribute("searchName", RuntimeProperties.getSearch());
+		model.addAttribute("hosted", RuntimeProperties.isHosted());
+		model.addAttribute("username", RuntimeProperties.getUsername());
 		model.addAttribute("mapkey", getConfigValue("maps.key"));
+		if(RuntimeProperties.getSearch() == null) {
+			return bounce(model);
+		}
+		if(RuntimeProperties.getSearch() != null) model.addAttribute("search", dao.getByPk(Search.class, RuntimeProperties.getSearch()));
 		return view;
 	}
 
