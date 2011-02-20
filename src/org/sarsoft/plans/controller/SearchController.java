@@ -12,6 +12,7 @@ import net.sf.json.JSONObject;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.plans.model.Search;
@@ -62,17 +63,47 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value="/app/search", method = RequestMethod.GET)
 	public String admin(Model model, HttpServletRequest request) {
+		boolean isOwner = false;
+		String name = RuntimeProperties.getSearch();
+		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(account != null) {
+			for(Search srch : account.getSearches()) {
+				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
+			}
+		}
+		if(RuntimeProperties.isHosted() && isOwner == false) {
+			model.addAttribute("message", "You can only admin this search if you own it.");
+			return "error";
+		}
 		model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
+		model.addAttribute("hosted", RuntimeProperties.isHosted());
 		return app(model, "Pages.Search");
 	}
 
 	@RequestMapping(value="/app/search", method = RequestMethod.POST)
 	public String update(Model model, HttpServletRequest request) {
+		boolean isOwner = false;
+		String name = RuntimeProperties.getSearch();
+		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(account != null) {
+			for(Search srch : account.getSearches()) {
+				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
+			}
+		}
+		if(RuntimeProperties.isHosted() && isOwner == false) {
+			model.addAttribute("message", "You can only admin this search if you own it.");
+			return "error";
+		}
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
-		if(request.getParameter("description") != null) {
+		if(request.getParameter("description") != null && request.getParameter("description").length() > 0) {
 			search.setDescription(request.getParameter("description"));
 			dao.save(search);
 		}
+		search.setVisible("public".equalsIgnoreCase(request.getParameter("public")));
+		if(request.getParameter("pasword") != null && request.getParameter("password").length() > 0) {
+			search.setPassword(hash(request.getParameter("password")));
+		}
+		dao.save(search);
 		model.addAttribute("search", search);
 		return app(model, "Pages.Search");
 	}

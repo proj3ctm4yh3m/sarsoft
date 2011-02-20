@@ -5,11 +5,17 @@
 
 <b>Update Public Name</b><br/>
 <p>
-Once you've picked a name for your search, you can't change it.  However, you can control what shows up on printed maps and SAR 104 forms
-by updating the public name below.
+You can update the following search attributes.
 <br/>
 <form action="/app/search" method="POST">
-<input type="text" size="15" value="${search.publicName}" name="description"/>
+<table border="0">
+<tr><td>Name</td><td><input type="text" size="15" value="${search.publicName}" name="description"/></td></tr>
+<c:if test="${hosted eq true}">
+<tr><td>Public?</td><td><input type="checkbox" name="public" value="public" <c:if test="${search.visible}">checked="checked"</c:if>/></td></tr>
+<tr><td>Password</td><td><input type="password" size="15" name="password"/></td></tr>
+</c:if>
+</table>
+
 <input type="submit" value="Update"/>
 </form>
 </p>

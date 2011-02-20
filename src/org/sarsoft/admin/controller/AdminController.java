@@ -1,13 +1,14 @@
 package org.sarsoft.admin.controller;
 
 import java.io.File;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.openid4java.discovery.Identifier;
 import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.admin.util.OIDConsumer;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
@@ -48,12 +49,7 @@ public class AdminController extends JSONBaseController {
 	@Qualifier("configSessionFactory")
 	LocalSessionFactoryBean configSessionFactory;
 
-	private boolean hosted = false;
-
-	public AdminController() {
-		super();
-		hosted = "true".equalsIgnoreCase(System.getProperty("sarsoft.hosted"));
-	}
+	private OIDConsumer consumer = null;
 
 	@RequestMapping(value="/app/shutdown", method = RequestMethod.GET)
 	public String shutdown(Model model, HttpServletRequest request) {
@@ -67,7 +63,7 @@ public class AdminController extends JSONBaseController {
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
-	public String homePage(Model model, HttpServletRequest request) {
+	public String homePage(Model model) {
 		OperationalPeriod lastPeriod = null;
 		List<OperationalPeriod> periods = (List<OperationalPeriod>) dao.loadAll(OperationalPeriod.class);
 		for(OperationalPeriod period : periods) {
@@ -82,75 +78,84 @@ public class AdminController extends JSONBaseController {
 
 	@RequestMapping(value="/app/setsearch", method = RequestMethod.GET)
 	public String chooseNewSearch(Model model, HttpServletRequest request) {
-		addInitialDataToModel(model, request);
-		return app(model, "Pages.Welcome", request);
-	}
-
-	private String hash(String password) {
-		if(password == null) return null;
-		try {
-		MessageDigest d = MessageDigest.getInstance("SHA-1");
-		d.reset();
-		d.update(password.getBytes());
-		byte[] bytes = d.digest();
-		StringBuffer sb = new StringBuffer();
-		for(byte b : bytes) {
-			int i = b & 0xFF;
-			if(i < 16) sb.append("0");
-			sb.append(Integer.toHexString(i));
-		}
-		return sb.toString().toUpperCase();
-		} catch (NoSuchAlgorithmException e) {
-			return password;
-		}
+		return bounce(model);
 	}
 
 	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
 	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", name);
 		if(search == null) {
-			super.addInitialDataToModel(model, request);
-			model.addAttribute("message", "Search does not exist.");
-			return app(model, "Pages.Welcome", request);
+			model.addAttribute("message", "This search does not exist.");
+			return bounce(model);
 		}
-
-		if(search.getPassword() != null) {
+		boolean isOwner = false;
+		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(account != null) {
+			for(Search srch : account.getSearches()) {
+				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
+			}
+		}
+		if(RuntimeProperties.isHosted() && !search.isVisible() && isOwner == false ){
+			model.addAttribute("message", "This search is not publicly visible");
+			return bounce(model);
+		}
+		if(RuntimeProperties.isHosted() && search.getPassword() != null && isOwner == false) {
+			if(request.getParameter("password") == null || request.getParameter("password").length() == 0) {
+				bounce(model);
+				model.addAttribute("searchname", name);
+				return "Pages.Password";
+			}
 			String password = hash(request.getParameter("password"));
-			addInitialDataToModel(model, request);
-			model.addAttribute("message", "Wrong Password.");
-			if(!search.getPassword().equals(password)) return app(model, "Pages.Welcome", request);
+			if(!search.getPassword().equals(password)) {
+				model.addAttribute("message", "Wrong Password.");
+				return bounce(model);
+			}
 		}
 
 		request.getSession().setAttribute("search", name);
 		RuntimeProperties.setSearch(name);
-		return homePage(model, request);
+		return homePage(model);
 	}
 
 	@RequestMapping(value="/app/setsearch", method = RequestMethod.POST)
 	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
-		String user = (String) request.getSession().getAttribute("user");
+		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
 		if(user != null) account = (UserAccount) dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
 		String op1name = request.getParameter("op1name");
 		String password = request.getParameter("password");
-		password = hash(password);
-		if(dao.getByAttr(Search.class, "name", name) != null) {
+		boolean visible = "public".equalsIgnoreCase(request.getParameter("public"));
+		if(password != null && password.length() > 0) {
+			password = hash(password);
+		} else {
+			password = null;
+		}
+		if(!RuntimeProperties.isHosted() && dao.getByAttr(Search.class, "name", name) != null) {
 			return setAppDataSchema(model, name, request);
 		}
 		Search search = new Search();
 		search.setName(name);
+		search.setDescription(name);
 		if(password != null && password.length() > 0) {
 			search.setPassword(password);
 		}
 		if(account != null) {
 			search.setAccount(account);
-			search.setDescription(name);
-			search.setName(hash(user + name));
+			Object obj = new Object();
+			String searchname = null;
+			int i = 0;
+			while(obj != null) {
+				i++;
+				searchname = hash(user + name + System.nanoTime() + i).substring(0,8);
+				obj = dao.getByPk(Search.class, searchname);
+			}
+			search.setName(searchname);
+			search.setVisible(visible);
 		}
 		dao.save(search);
-		request.getSession().setAttribute("search", name);
-		RuntimeProperties.setSearch(name);
+		request.getSession().setAttribute("search", search.getName());
+		RuntimeProperties.setSearch(search.getName());
 		if(op1name != null && op1name.length() > 0) {
 			OperationalPeriod period = new OperationalPeriod();
 			period.setDescription(op1name);
@@ -158,30 +163,47 @@ public class AdminController extends JSONBaseController {
 			dao.save(period);
 		}
 
-		return homePage(model, request);
+		return homePage(model);
 	}
 
-	@RequestMapping(value="/app/createaccount", method = RequestMethod.POST)
-	public String createNewAccount(Model model, HttpServletRequest request, @RequestParam("username") String username, @RequestParam("password") String password) {
-		UserAccount account = new UserAccount();
-		account.setName(username);
-		account.setPassword(hash(password));
-		dao.save(account);
-		return homePage(model, request);
-	}
-
-	@RequestMapping(value="/app/login", method = RequestMethod.GET)
-	public String login(Model model, HttpServletRequest request, @RequestParam("username") String username, @RequestParam("password") String password) {
-		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", username);
-		if(account == null) {
-			model.addAttribute("message", "account not found");
-			return app(model, "Pages.Login");
-		} else if(!account.getPassword().equals(hash(password))){
-			model.addAttribute("message", "invalid password");
-			return app(model, "Pages.Login");
+	@RequestMapping(value="/app/openidrequest", method = RequestMethod.GET)
+	public void login(@RequestParam("domain") String domain, HttpServletRequest request, HttpServletResponse response) {
+		try {
+			String server = getConfigValue("server.name");
+			if(server == null || server.length() == 0) server = "http://localhost:8080/";
+			if(consumer == null) consumer = new OIDConsumer(server);
+			if("google".equalsIgnoreCase(domain)) consumer.authRequest("https://www.google.com/accounts/o8/id", request, response);
+			if("yahoo".equalsIgnoreCase(domain)) consumer.authRequest("https://me.yahoo.com", request, response);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		request.getSession(true).setAttribute("user", account.getName());
-		return homePage(model, request);
+	}
+
+	@RequestMapping(value="/app/openidresponse", method = RequestMethod.GET)
+	public String ologin(Model model, HttpServletRequest request) {
+		try {
+			Identifier id = consumer.verifyResponse(request);
+			String username = id.getIdentifier();
+			UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", username);
+			String email = null;
+			if(request.getParameter("openid.ax.value.email") != null) email  = request.getParameter("openid.ax.value.email");
+			if(request.getParameter("openid.ext1.value.email") != null) email = request.getParameter("openid.ext1.value.email");
+			if(account == null) {
+				account = new UserAccount();
+				account.setName(username);
+				account.setEmail(email);
+				dao.save(account);
+			} else if(account.getEmail() == null) {
+				account.setEmail(email);
+				dao.save(account);
+			}
+			request.getSession(true).setAttribute("username", account.getName());
+			RuntimeProperties.setUsername(account.getName());
+			return bounce(model);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error";
+		}
 	}
 
 	@RequestMapping(value="/rest/configschema/{ds}", method = RequestMethod.GET)
@@ -197,7 +219,7 @@ public class AdminController extends JSONBaseController {
 	@RequestMapping(value="/app/configschema/{ds}", method = RequestMethod.GET)
 	public String setAppConfigDataSchema(Model model, @PathVariable("ds") String schema, HttpServletRequest request) {
 		setConfigDataSchema(model, schema, request);
-		return homePage(model, request);
+		return homePage(model);
 	}
 
 
@@ -213,7 +235,6 @@ public class AdminController extends JSONBaseController {
 			}
 		}
 		model.addAttribute("search", RuntimeProperties.getSearch());
-		addInitialDataToModel(model, request);
 
 		String url = configDataSource.getJdbcUrl();
 		url = url.substring(url.indexOf('/')+1);

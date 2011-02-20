@@ -50,7 +50,7 @@
  </c:when>
 </c:choose>
 </div>
-<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>${searchName}</div>
+<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>${search.description}</div>
 </div>
 <div class="headerbottom"></div>
 </div>

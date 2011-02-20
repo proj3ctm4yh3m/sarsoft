@@ -58,7 +58,7 @@ public class OpsController extends JSONBaseController {
 			engine.start();
 		}
 		if(REST.equals(mode)) return "/json";
-		return adminController.homePage(model, request);
+		return adminController.homePage(model);
 
 	}
 
@@ -71,7 +71,7 @@ public class OpsController extends JSONBaseController {
 			engine.quit();
 		}
 		if(REST.equals(mode)) return "/json";
-		return adminController.homePage(model, request);
+		return adminController.homePage(model);
 	}
 
 	@RequestMapping(value="/{mode}/resource/new", method = RequestMethod.GET)
@@ -259,7 +259,7 @@ public class OpsController extends JSONBaseController {
 		if (resourceId != null && resourceId.length() > 0) return getResource(model, mode, Long.parseLong(resourceId));
 		String assignmentId = request.getParameter("assignmentId");
 		if (assignmentId != null && assignmentId.length() > 0) return searchAssignmentController.getAssignment(model, Long.parseLong(assignmentId), request);
-		return adminController.homePage(model, request);
+		return adminController.homePage(model);
 	}
 
 
