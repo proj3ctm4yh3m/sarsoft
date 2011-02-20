@@ -1,7 +1,16 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
+<c:choose>
+<c:when test="${account ne null}">
+<h2>Welcome to Sarsoft, ${account.email}.</h2>
+<a href="/app/logout">Logout</a>
+<br/>
+</c:when>
+<c:otherwise>
 <h2>Welcome to Sarsoft!</h2>
+</c:otherwise>
+</c:choose>
 <c:if test="${message ne null}">
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>

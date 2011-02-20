@@ -3,6 +3,10 @@
 
 <h2>Search Admin</h2>
 
+<c:if test="${message ne null}">
+<p style="font-weight: bold; color: red">${message}</p>
+<br/>
+</c:if>
 <b>Update Public Name</b><br/>
 <p>
 You can update the following search attributes.
@@ -19,6 +23,18 @@ You can update the following search attributes.
 <input type="submit" value="Update"/>
 </form>
 </p>
+
+<c:if test="${search.visible eq true}">
+<br/>
+<b>Sharing</b><br/>
+<p>
+This search is publicly visible.  You can share it with others by giving them the following URL: <a href="${server}app/setsearch/${search.name}">${server}app/setsearch/${search.name}</a>
+</p>
+</c:if>
+
+<c:if test="${deleteable}">
+<a href="/app/search/delete">Delete this search</a>&nbsp;(Must not have any operational periods).
+</c:if>
 <br/>
 <p>Yes, that's really all you can do on this page right now.
 <br/><br/>

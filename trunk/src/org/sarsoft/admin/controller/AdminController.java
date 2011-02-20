@@ -156,12 +156,11 @@ public class AdminController extends JSONBaseController {
 		dao.save(search);
 		request.getSession().setAttribute("search", search.getName());
 		RuntimeProperties.setSearch(search.getName());
-		if(op1name != null && op1name.length() > 0) {
-			OperationalPeriod period = new OperationalPeriod();
-			period.setDescription(op1name);
-			period.setId(1L);
-			dao.save(period);
-		}
+
+		OperationalPeriod period = new OperationalPeriod();
+		period.setDescription((op1name != null && op1name.length() > 0) ? op1name : "first operational period");
+		period.setId(1L);
+		dao.save(period);
 
 		return homePage(model);
 	}
@@ -204,6 +203,15 @@ public class AdminController extends JSONBaseController {
 			e.printStackTrace();
 			return "error";
 		}
+	}
+	
+	@RequestMapping(value="/app/logout")
+	public String logout(Model model, HttpServletRequest request) {
+		RuntimeProperties.setUsername(null);
+		RuntimeProperties.setSearch(null);
+		request.getSession(true).removeAttribute("search");
+		request.getSession(true).removeAttribute("username");
+		return bounce(model);
 	}
 
 	@RequestMapping(value="/rest/configschema/{ds}", method = RequestMethod.GET)
