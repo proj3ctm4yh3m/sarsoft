@@ -108,6 +108,7 @@ public abstract class JSONBaseController {
 		} else {
 			model.addAttribute("searches", dao.getAllSearches());
 		}
+		model.addAttribute("mapkey", getConfigValue("maps.key"));
 		return "Pages.Welcome";
 	}
 
