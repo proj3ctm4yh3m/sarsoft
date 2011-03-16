@@ -35,6 +35,7 @@ public class OpsController extends JSONBaseController {
 	@Autowired
 	AdminController adminController;
 	private static Map<String, LocationEngine> locationEngines = new HashMap<String, LocationEngine>();
+	private static LocationEngineMonitor monitor = new LocationEngineMonitor();
 
 	@Autowired
 	SearchAssignmentController searchAssignmentController;
@@ -43,8 +44,13 @@ public class OpsController extends JSONBaseController {
 		return locationEngines.containsKey(search);
 	}
 
+	static {
+		monitor.setEngineMap(locationEngines);
+	}
+
 	@RequestMapping(value = "/{mode}/location/start", method = RequestMethod.GET)
 	public String startLocationEngine(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
+		if(!monitor.isAlive()) monitor.start();
 		String search = RuntimeProperties.getSearch();
 		if(!locationEngines.containsKey(search)) {
 			LocationEngine engine = new LocationEngine();
@@ -59,7 +65,6 @@ public class OpsController extends JSONBaseController {
 		}
 		if(REST.equals(mode)) return "/json";
 		return adminController.homePage(model);
-
 	}
 
 	@RequestMapping(value = "/{mode}/location/stop", method = RequestMethod.GET)

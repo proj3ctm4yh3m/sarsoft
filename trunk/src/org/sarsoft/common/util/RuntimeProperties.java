@@ -23,11 +23,4 @@ public class RuntimeProperties {
 		return tUsername.get();
 	}
 
-	public static boolean isHosted() {
-		if(hosted == null) {
-			hosted = "true".equalsIgnoreCase(System.getProperty("sarsoft.hosted"));
-		}
-		return hosted.booleanValue();
-	}
-
 }

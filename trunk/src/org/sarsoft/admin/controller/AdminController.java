@@ -1,6 +1,7 @@
 package org.sarsoft.admin.controller;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -95,11 +97,11 @@ public class AdminController extends JSONBaseController {
 				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
 			}
 		}
-		if(RuntimeProperties.isHosted() && !search.isVisible() && isOwner == false ){
+		if(isHosted() && !search.isVisible() && isOwner == false ){
 			model.addAttribute("message", "This search is not publicly visible");
 			return bounce(model);
 		}
-		if(RuntimeProperties.isHosted() && search.getPassword() != null && isOwner == false) {
+		if(isHosted() && search.getPassword() != null && isOwner == false) {
 			if(request.getParameter("password") == null || request.getParameter("password").length() == 0) {
 				bounce(model);
 				model.addAttribute("searchname", name);
@@ -131,7 +133,7 @@ public class AdminController extends JSONBaseController {
 		} else {
 			password = null;
 		}
-		if(!RuntimeProperties.isHosted() && dao.getByAttr(Search.class, "name", name) != null) {
+		if(!isHosted() && dao.getByAttr(Search.class, "name", name) != null) {
 			return setAppDataSchema(model, name, request);
 		}
 		Search search = new Search();
@@ -204,7 +206,7 @@ public class AdminController extends JSONBaseController {
 			return "error";
 		}
 	}
-	
+
 	@RequestMapping(value="/app/logout")
 	public String logout(Model model, HttpServletRequest request) {
 		RuntimeProperties.setUsername(null);
@@ -245,11 +247,15 @@ public class AdminController extends JSONBaseController {
 		model.addAttribute("search", RuntimeProperties.getSearch());
 
 		String url = configDataSource.getJdbcUrl();
-		url = url.substring(url.indexOf('/')+1);
-		String config = url.substring(0, url.indexOf('/'));
+		String config = url.substring(url.indexOf('/')+1);
 		model.addAttribute("config", config);
 		File dir = new File("config");
-		model.addAttribute("configs", dir.list());
+		List<String> configs = new ArrayList<String>();
+		String[] files = dir.list();
+		for(String file : files) {
+			if(file != null && file.endsWith(".script")) configs.add(file.substring(0, file.indexOf(".script")));
+		}
+		model.addAttribute("configs", configs);
 
 		model.addAttribute("mapkey", getConfigValue("maps.key"));
 		model.addAttribute("hostName", getConfigValue("server.name"));
