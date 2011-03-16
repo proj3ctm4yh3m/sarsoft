@@ -30,6 +30,7 @@ import net.sf.json.xml.XMLSerializer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
 
 public abstract class JSONBaseController {
@@ -45,12 +46,23 @@ public abstract class JSONBaseController {
 	@Qualifier("genericConfigDAO")
 	protected GenericHibernateDAO configDao;
 
+	@Value("${sarsoft.hosted}")
+	String hosted;
+	private Boolean inHostedMode = null;
+
 	public void setDao(GenericHibernateDAO dao) {
 		this.dao = dao;
 	}
 
 	public void setConfigDao(GenericHibernateDAO dao) {
 		this.configDao = dao;
+	}
+
+	protected boolean isHosted() {
+		if(inHostedMode == null) {
+			inHostedMode = "true".equalsIgnoreCase(hosted);
+		}
+		return inHostedMode;
 	}
 
 	protected String getConfigValue(String name) {
@@ -95,12 +107,12 @@ public abstract class JSONBaseController {
 	}
 
 	protected String bounce(Model model) {
-		model.addAttribute("hosted", RuntimeProperties.isHosted());
+		model.addAttribute("hosted", isHosted());
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
 		if(RuntimeProperties.getSearch() != null) model.addAttribute("search", dao.getByPk(Search.class, RuntimeProperties.getSearch()));
 		if(user != null) account = (UserAccount) dao.getByPk(UserAccount.class, user);
-		if(RuntimeProperties.isHosted()) {
+		if(isHosted()) {
 			if(account != null) {
 				model.addAttribute("account", account);
 				model.addAttribute("searches", account.getSearches());
@@ -114,7 +126,7 @@ public abstract class JSONBaseController {
 
 	protected String app(Model model, String view) {
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
-		model.addAttribute("hosted", RuntimeProperties.isHosted());
+		model.addAttribute("hosted", isHosted());
 		String username = RuntimeProperties.getUsername();
 		model.addAttribute("username", username);
 		if(username != null)

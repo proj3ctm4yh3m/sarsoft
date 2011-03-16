@@ -61,7 +61,7 @@ public class SearchController extends JSONBaseController {
 		dao.save(search);
 		return json(model, search);
 	}
-	
+
 	@RequestMapping(value="/app/search/delete", method = RequestMethod.GET)
 	public String delete(Model model, HttpServletRequest request) {
 		boolean isOwner = false;
@@ -72,7 +72,7 @@ public class SearchController extends JSONBaseController {
 				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
 			}
 		}
-		if(RuntimeProperties.isHosted() && isOwner == false) {
+		if(isHosted() && isOwner == false) {
 			model.addAttribute("message", "You can only admin this search if you own it.");
 			return admin(model, request);
 		}
@@ -98,12 +98,12 @@ public class SearchController extends JSONBaseController {
 				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
 			}
 		}
-		if(RuntimeProperties.isHosted() && isOwner == false) {
+		if(isHosted() && isOwner == false) {
 			model.addAttribute("message", "You can only admin this search if you own it.");
 			return "error";
 		}
 		model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
-		model.addAttribute("hosted", RuntimeProperties.isHosted());
+		model.addAttribute("hosted", isHosted());
 		model.addAttribute("server", getConfigValue("server.name"));
 		List l = dao.loadAll(OperationalPeriod.class);
 		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
@@ -120,7 +120,7 @@ public class SearchController extends JSONBaseController {
 				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
 			}
 		}
-		if(RuntimeProperties.isHosted() && isOwner == false) {
+		if(isHosted() && isOwner == false) {
 			model.addAttribute("message", "You can only admin this search if you own it.");
 			return "error";
 		}
