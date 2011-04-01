@@ -1,7 +1,3 @@
-/*
- * Copyright 2006-2007 Sxip Identity Corporation
- */
-
 package org.sarsoft.admin.util;
 
 import org.openid4java.consumer.ConsumerException;
