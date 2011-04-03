@@ -214,11 +214,14 @@ GMap2.prototype.addControl = function(control) {
 }
 
 GMap2.prototype.addOverlay = function(overlay) {
+	if(overlay.ol == null) return;
 	overlay.ol.map = this;
-	if(overlay.ol.vector != null)
+	if(overlay.ol.vector != null) {
 		this.ol.vectorLayer.addFeatures([overlay.ol.vector]);
-	if(overlay.ol.marker != null)
+	}
+	if(overlay.ol.marker != null) {
 		this.ol.markerLayer.addMarker(overlay.ol.marker);
+	}
 	if(overlay.ol.layer != null) {
 		overlay.ol.layer.ol.layer.setOpacity(overlay.ol.layer.getOpacity());
 		this.ol.map.addLayer(overlay.ol.layer.ol.layer);
@@ -227,9 +230,12 @@ GMap2.prototype.addOverlay = function(overlay) {
 }
 
 GMap2.prototype.removeOverlay = function(overlay) {
-	if(overlay.ol.vector != null)
+	if(overlay.ol == null) return;
+	if(overlay.ol.vector != null) {
+		this.ol.modifyControl.unselectFeature(overlay.ol.vector);
 		this.ol.vectorLayer.removeFeatures([overlay.ol.vector]);
-	if(overlay.ol.marker != null) {
+	}
+	if(overlay.ol.marker != null) {	
 		this.ol.markerLayer.removeMarker(overlay.ol.marker);
 	}
 	if(overlay.ol.layer != null) {
@@ -292,11 +298,15 @@ GLatLng.prototype.distanceFrom = function(gll) {
 	return R * c;
 }
 
-GLatLng.fromLonLat = function(ll) {
-	ll = ll.transform(GMap2.ol.mercator, GMap2.ol.geographic);
-	return new GLatLng(ll.lat, ll.lon);
+GLatLng.fromPoint = function(point) {
+	point = point.clone().transform(GMap2.ol.mercator, GMap2.ol.geographic);
+	return new GLatLng(point.y, point.x);
 }
 
+GLatLng.fromLonLat = function(ll) {
+	ll = ll.clone().transform(GMap2.ol.mercator, GMap2.ol.geographic);
+	return new GLatLng(ll.lat, ll.lon);
+}
 GLatLng.toLonLat = function(gll) {
 	return new OpenLayers.LonLat(gll.lng(), gll.lat()).transform(GMap2.ol.geographic, GMap2.ol.mercator);
 }
@@ -314,9 +324,34 @@ GLatLngBounds.prototype.getNorthEast = function() {
 	return this.ne;
 }
 
+function GOverlay() {
+}
+
+function GPoly() {	
+}
+
+GPoly.prototype = new GOverlay();
+GPoly.prototype.getVertexCount = function() {
+	if(this._closed) return this.ol.vector.geometry.getVertices().length+1;
+	return this.ol.vector.geometry.getVertices().length;
+}
+GPoly.prototype.getVertex = function(idx) {
+	if(this._closed && idx == this.ol.vector.geometry.getVertices().length)
+		idx = 0;
+	return GLatLng.fromPoint(this.ol.vector.geometry.getVertices()[idx]);
+}
+GPoly.prototype.enableEditing = function(opts) {
+	this.ol.map.ol.modifyControl.selectFeature(this.ol.vector);
+}
+
+GPoly.prototype.disableEditing = function() {
+	this.ol.map.ol.modifyControl.unselectFeature(this.ol.vector);
+}
+
 function GPolygon(latlngs, strokeColor, strokeWeight, strokeOpacity, fillColor, fillOpacity, opts) {
+	this._closed=true;
 	var vertices = new Array();
-	for(var i = 0; i < latlngs.length; i++) {
+	for(var i = 0; i < latlngs.length - 1; i++) {
 		var ll = GLatLng.toLonLat(latlngs[i]);
 		vertices.push(new OpenLayers.Geometry.Point(ll.lon, ll.lat));
 	}
@@ -325,14 +360,7 @@ function GPolygon(latlngs, strokeColor, strokeWeight, strokeOpacity, fillColor, 
 	this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Polygon([linearRing]), null, {strokeColor: strokeColor, strokeWidth: strokeWeight, strokeOpacity: strokeOpacity, fillColor: fillColor, fillOpacity: fillOpacity});
 	this.ol.vector.goverlay = this;
 }
-
-GPolygon.prototype.enableEditing = function(opts) {
-	this.ol.map.ol.modifyControl.selectFeature(this.ol.vector);
-}
-
-GPolygon.prototype.disableEditing = function() {
-	this.ol.map.ol.modifyControl.unselectFeature(this.ol.vector);	
-}
+GPolygon.prototype = new GPoly();
 
 function GPolyline(latlngs, strokeColor, strokeWeight, strokeOpacity) {
 	var vertices = new Array();
@@ -344,17 +372,7 @@ function GPolyline(latlngs, strokeColor, strokeWeight, strokeOpacity) {
 	this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(vertices), null, {strokeColor: strokeColor, strokeWidth: strokeWeight, strokeOpacity: strokeOpacity});
 	this.ol.vector.goverlay = this;
 }
-
-GPolyline.prototype.enableEditing = function(opts) {
-	this.ol.map.ol.modifyControl.selectFeature(this.ol.vector);
-}
-
-GPolyline.prototype.disableEditing = function() {
-	this.ol.map.ol.modifyControl.unselectFeature(this.ol.vector);	
-}
-
-function GOverlay() {
-}
+GPolyline.prototype = new GPoly();
 
 function GMarker(latlng, opts) {
 	var size = new OpenLayers.Size(21,25);
@@ -366,6 +384,8 @@ function GMarker(latlng, opts) {
 	this.ol.marker = new OpenLayers.Marker(GLatLng.toLonLat(latlng),icon);
 	this.ol.marker.gmarker = this;
 }
+
+GMarker.prototype = new GOverlay();
 
 GMarker.prototype.getTitle = function() {
 	return this._title;
