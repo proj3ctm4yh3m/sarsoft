@@ -26,6 +26,7 @@ GEvent.addDomListener = function(obj, event, handler) {
 G_SATELLITE_MAP = new Object();
 G_SATELLITE_MAP.getProjection = function() {};
 G_ANCHOR_TOP_RIGHT = 5;
+G_MAP_FLOAT_SHADOW_PANE = 6;
 
 function GCopyrightCollection() {}
 GCopyrightCollection.prototype.addCopyright = function() {};
@@ -80,6 +81,13 @@ GMapType.prototype.getTileLayers = function() {
 	return this.ol.layers;
 }
 
+GMapType.prototype.getMaximumResolution = function() {
+	return this.ol.layers[0].maxResolution();
+}
+GMapType.prototype.getMinimumResolution = function() {
+	return this.ol.layers[0].minResolution();
+}
+
 function GControl() {
 }
 GControl.prototype.initialize = function(map) {}
@@ -104,6 +112,7 @@ function GSize(width, height) {
 function GMap2(node) {
 	var that = this;
 	this.ol = new Object();
+	this._overlays = new Array();
 	var options = {
             maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
             maxResolution: 156543.0339,
@@ -150,14 +159,15 @@ function GMap2(node) {
 			GEvent.trigger(this, "singlerightclick", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e));  return false;
 		}, 
 		click: function(e) { 
-			GEvent.trigger(this, "click", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e)); return false;}
+			GEvent.trigger(this, "singlerightclick", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e)); return false;}
 		}, {});
 	this.ol.clickHandler.control = new Object();
 	this.ol.clickHandler.control.handleRightClicks = true;
 	this.ol.clickHandler.setMap(this.ol.map);
 	this.ol.clickHandler.activate();
-
+	
 	this.ol.map.events.register("mousemove", this, function(e) {GEvent.trigger(this, "mousemove", GLatLng.fromLonLat(that.ol.map.getLonLatFromPixel(that.ol.map.events.getMousePosition(e))))});
+	this.ol.map.events.register("zoomend", this, function(e) { that.redrawOverlays();});
 	
 	node.oncontextmenu = function(e) {return false;}
 
@@ -169,6 +179,14 @@ GMap2.ol.mercator = new OpenLayers.Projection("EPSG:900913");
 
 GMap2.prototype.fromContainerPixelToLatLng = function(px) {
 	return GLatLng.fromLonLat(this.ol.map.getLonLatFromPixel(px));
+}
+
+GMap2.prototype.fromLatLngToDivPixel = function(gll) {
+	return this.ol.map.getViewPortPxFromLonLat(GLatLng.toLonLat(gll));
+}
+
+GMap2.prototype.getPane = function(pane) {
+	if(pane == G_MAP_FLOAT_SHADOW_PANE) return this.ol.markerLayer.div;
 }
 
 GMap2.prototype.addMapType = function(type) {
@@ -214,31 +232,45 @@ GMap2.prototype.addControl = function(control) {
 }
 
 GMap2.prototype.addOverlay = function(overlay) {
+	if(overlay._olcapable) {
+		this._overlays.push(overlay);
+		overlay.initialize(this);
+		overlay.redraw(true);
+	}
 	if(overlay.ol == null) return;
 	overlay.ol.map = this;
 	if(overlay.ol.vector != null) {
 		this.ol.vectorLayer.addFeatures([overlay.ol.vector]);
-	}
-	if(overlay.ol.marker != null) {
+	} else if(overlay.ol.marker != null) {
 		this.ol.markerLayer.addMarker(overlay.ol.marker);
-	}
-	if(overlay.ol.layer != null) {
+	} else if(overlay.ol.layer != null) {
 		overlay.ol.layer.ol.layer.setOpacity(overlay.ol.layer.getOpacity());
 		this.ol.map.addLayer(overlay.ol.layer.ol.layer);
 		this.ol.map.raiseLayer(overlay.ol.layer.ol.layer, -100);
 	}
 }
 
+GMap2.prototype.redrawOverlays = function() {
+	for(var i = 0; i < this._overlays.length; i++) {
+		if(this._overlays[i] != null) this._overlays[i].redraw();
+	}
+}
+
 GMap2.prototype.removeOverlay = function(overlay) {
+	if(overlay._olcapable) {
+		overlay.remove();
+		for(var i = 0; i < this._overlays.length; i++) {
+			if(this._overlays[i] == overlay) delete this._overlays[i];
+		}
+		return;
+	}
 	if(overlay.ol == null) return;
 	if(overlay.ol.vector != null) {
 		this.ol.modifyControl.unselectFeature(overlay.ol.vector);
 		this.ol.vectorLayer.removeFeatures([overlay.ol.vector]);
-	}
-	if(overlay.ol.marker != null) {	
+	} else if(overlay.ol.marker != null) {	
 		this.ol.markerLayer.removeMarker(overlay.ol.marker);
-	}
-	if(overlay.ol.layer != null) {
+	} else if(overlay.ol.layer != null) {
 		this.ol.map.removeLayer(overlay.ol.layer.ol.layer);
 	}
 }
@@ -324,7 +356,15 @@ GLatLngBounds.prototype.getNorthEast = function() {
 	return this.ne;
 }
 
+G_DEFAULT_ICON = 1;
+function GIcon() {	
+}
+
 function GOverlay() {
+}
+
+GOverlay.prototype.getZIndex = function(lat) {
+	return 1000;
 }
 
 function GPoly() {	
@@ -375,10 +415,18 @@ function GPolyline(latlngs, strokeColor, strokeWeight, strokeOpacity) {
 GPolyline.prototype = new GPoly();
 
 function GMarker(latlng, opts) {
-	var size = new OpenLayers.Size(21,25);
+	var size = new OpenLayers.Size(12,12);
 	var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
-	var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png', size, offset);
-	if(opts != null) this._title = opts.title;
+	var icon = new OpenLayers.Icon('/resources/images/circle/000000.png', size, offset);
+	if(opts != null) {
+		this._title = opts.title;
+		// handle cusotm google icons
+		if(opts.icon != null) {
+			size = new OpenLayers.Size(opts.icon.iconSize.width,opts.icon.iconSize.height);
+			offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+			icon = new OpenLayers.Icon(opts.icon.image, size, offset);
+		}
+	}
 	this._latlng = latlng;
 	this.ol = new Object();
 	this.ol.marker = new OpenLayers.Marker(GLatLng.toLonLat(latlng),icon);

@@ -1,10 +1,25 @@
 package org.sarsoft.common.controller;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -17,6 +32,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class CommonController extends JSONBaseController {
@@ -77,4 +93,49 @@ public class CommonController extends JSONBaseController {
 		return json(model, config);
 	}
 
+	@RequestMapping(value="/resource/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getFile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		File file = new File("tiles/" + layer + "/" + z + "/" + x + "/" + y + ".png");
+		response.setContentType("image/png");
+		InputStream in = null;
+		OutputStream out = null;
+		byte[] bytes = new byte[512];
+		int bytesRead;
+
+		try {
+			in = new FileInputStream(file);
+			out = response.getOutputStream();
+			while ((bytesRead = in.read(bytes)) != -1) {
+			    out.write(bytes, 0, bytesRead);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try { in.close(); } catch(Exception e) { e.printStackTrace(); }
+		}
+	}
+	
+	@RequestMapping(value="/resource/images/circle/{rgb}.png", method = RequestMethod.GET)
+	public void getCircle(HttpServletResponse response, @PathVariable("rgb") String rgb) {
+		response.setContentType("image/png");
+
+		if(rgb == null || rgb.length() < 6) rgb = "000000";
+		int r = Integer.parseInt(rgb.substring(0, 2), 16);
+		int g = Integer.parseInt(rgb.substring(2, 4), 16);
+		int b = Integer.parseInt(rgb.substring(4, 6), 16);
+		
+		BufferedImage image = new BufferedImage(12, 12, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = (Graphics2D) image.getGraphics();
+		graphics.setBackground(new Color(255, 255, 255, 0));
+		graphics.setColor(new Color(r, g, b));
+		graphics.clearRect(0, 0, 12, 12);
+		graphics.fillOval(2, 2, 10, 10);
+		graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		try {
+			ImageIO.write(image, "png", response.getOutputStream());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
