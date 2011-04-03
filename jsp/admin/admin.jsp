@@ -47,7 +47,7 @@ SPOT Refresh Interval: <input type="text" size="40" name="spotRefreshInterval" i
 
 <div id="mapTypes">
 </div>
-<div style="text-align: right"><a href="javascript:mapSourceDlg.show()">New Map Source</a></div>
+<div style="text-align: right"><a href="javascript:mapSourceDlg.dialog.show()">New Map Source</a></div>
 <br/>
 <br/>
 You can populate this table with a set of default map sources by <a href="javascript:loadDefaults()">clicking here</a>.
@@ -75,6 +75,10 @@ org.sarsoft.Loader.queue(function() {
   mapDAO.loadAll(function(data) {
   	dataTable.addRows(data);
   });
+  
+  mapSourceDlg = new org.sarsoft.view.EntityCreateDialog("New Map Source", new org.sarsoft.view.MapSourceForm(), function(obj) {
+		mapDAO.create(function(source) { dataTable.addRow(source); }, obj);
+	});
 
 });
 
@@ -121,10 +125,6 @@ var configDAO = new org.sarsoft.ConfigDAO();
 configDAO.save("location.refreshInterval.spot", { name: "location.refreshInterval.spot", value: YAHOO.lang.JSON.stringify(document.getElementById('spotRefreshInterval').value)});
 }
 
-
-mapSourceDlg = new org.sarsoft.view.EntityCreateDialog("New Map Source", new org.sarsoft.view.MapSourceForm(), function(obj) {
-	mapDAO.create(function(source) { dataTable.addRow(source); }, obj);
-});
 function deleteMapSource(record) {
  	var source = record.getData();
  	mapDAO.delete(source.name);

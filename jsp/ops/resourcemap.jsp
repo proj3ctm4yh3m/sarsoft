@@ -18,7 +18,6 @@ org.sarsoft.Loader.queue(function() {
 });
 }
 </script>
-<script src="/static/js/uilib.js"></script>
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css">
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/menu/assets/skins/sam/menu.css">
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>

@@ -275,7 +275,7 @@ org.sarsoft.Loader.queue(function() {
 
  	gpxdlg = new org.sarsoft.view.SearchAssignmentGPXDlg(${assignment.id});
 
-	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "200", width: "300px"});
+	finalizeDlg = new YAHOO.widget.Dialog("finalize", {zIndex: "1000", width: "300px"});
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
 	finalizeDlg.render(document.body);
 	finalizeDlg.hide();
