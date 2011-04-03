@@ -95,6 +95,7 @@ public class CommonController extends JSONBaseController {
 
 	@RequestMapping(value="/resource/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getFile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		if(this.isHosted()) return;
 		File file = new File("tiles/" + layer + "/" + z + "/" + x + "/" + y + ".png");
 		response.setContentType("image/png");
 		InputStream in = null;

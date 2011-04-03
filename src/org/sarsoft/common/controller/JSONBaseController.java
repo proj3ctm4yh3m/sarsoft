@@ -49,6 +49,9 @@ public abstract class JSONBaseController {
 	@Value("${sarsoft.hosted}")
 	String hosted;
 	private Boolean inHostedMode = null;
+	
+	@Value("${sarsoft.map.viewer}")
+	String mapViewer = "google";
 
 	public void setDao(GenericHibernateDAO dao) {
 		this.dao = dao;
@@ -90,6 +93,15 @@ public abstract class JSONBaseController {
 		}
 	}
 
+	protected String getMapJS() {
+		if("google".equals(this.mapViewer)) {
+			return "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
+			getConfigValue("maps.key") + "\" type=\"text/javascript\"></script>";			
+		} else {
+			return "<script src=\"http://openlayers.org/dev/OpenLayers.js\"></script>\n" +
+			"<script src=\"/static/js/gmapolwrapper.js\"></script>";
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	protected String json(Model model, Object obj) {
@@ -120,7 +132,7 @@ public abstract class JSONBaseController {
 		} else {
 			model.addAttribute("searches", dao.getAllSearches());
 		}
-		model.addAttribute("mapkey", getConfigValue("maps.key"));
+		model.addAttribute("mapjs", getMapJS());
 		return "Pages.Welcome";
 	}
 
@@ -131,7 +143,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("username", username);
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
-		model.addAttribute("mapkey", getConfigValue("maps.key"));
+		model.addAttribute("mapjs", getMapJS());
 		if(RuntimeProperties.getSearch() == null) {
 			return bounce(model);
 		}
