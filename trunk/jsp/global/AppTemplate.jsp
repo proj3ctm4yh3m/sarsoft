@@ -11,7 +11,6 @@
 <script src="/static/js/maps.js"></script>
 <script src="/static/js/plans.js"></script>
 <script src="/static/js/admin.js"></script>
-<script src="/static/js/uilib.js"></script>
 <script src="/static/js/ops.js"></script>
 
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css">
