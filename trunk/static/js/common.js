@@ -99,9 +99,11 @@ org.sarsoft.Loader.execute = function() {
 	org.sarsoft.Loader._tasks = null;
 }
 
+org.sarsoft.Loader.queue(function() {YAHOO.util.Event.throwErrors = true;});
+
 org.sarsoft.view.ContextMenu = function() {
 	var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;
-	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 800});
+	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 800, zIndex: "1000"});
 	this.menu.render(document.body);
 }
 
@@ -336,7 +338,7 @@ org.sarsoft.view.EntityCreateDialog = function(title, entityform, handler) {
 	this.entityform = entityform;
 	var dlg = document.createElement("div");
 	dlg.style.position="absolute";
-	dlg.style.zIndex="200";
+	dlg.style.zIndex="1000";
 	dlg.style.top="200px";
 	dlg.style.left="200px";
 	dlg.style.width="400px";
@@ -348,7 +350,7 @@ org.sarsoft.view.EntityCreateDialog = function(title, entityform, handler) {
 	bd.className = "bd";
 	dlg.appendChild(bd);
 	this.entityform.create(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "200", width: "400px"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "400px"});
 	var buttons = [ { text : "Create", handler: function() {
 		that.dialog.hide();
 		var obj = that.entityform.read();
