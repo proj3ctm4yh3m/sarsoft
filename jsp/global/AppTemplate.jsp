@@ -5,7 +5,7 @@
 <head>
 <title>Search & Rescue Planning Software</title>
 ${mapjs}
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yuiloader/yuiloader-min.js" ></script>
+<script src="/static/js/yui.js"></script>
 <script src="/app/constants.js"></script>
 <script src="/static/js/common.js"></script>
 <script src="/static/js/maps.js"></script>
@@ -13,8 +13,6 @@ ${mapjs}
 <script src="/static/js/admin.js"></script>
 <script src="/static/js/ops.js"></script>
 
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css">
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/menu/assets/skins/sam/menu.css">
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
 <body class="yui-skin-sam">

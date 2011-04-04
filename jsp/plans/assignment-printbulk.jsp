@@ -8,7 +8,7 @@
 <head>
 <title>Sarsoft Map Printout</title>
 ${mapjs}
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yuiloader/yuiloader-min.js" ></script>
+<script src="/static/js/yui.js"></script>
 <script src="/app/constants.js"></script>
 <script src="/static/js/common.js"></script>
 <script src="/static/js/maps.js"></script>

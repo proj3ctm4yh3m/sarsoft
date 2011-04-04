@@ -1,7 +1,6 @@
 <html>
 <head>
-<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=${map.key}" type="text/javascript"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yuiloader/yuiloader-min.js" ></script>
+<script src="/static/js/yui.js"></script>
 <script src="/static/js/common.js"></script>
 <script>
 org.sarsoft.Loader.queue(function() {
@@ -40,8 +39,6 @@ function loadDefaults() {
 <script src="/static/js/admin.js"></script>
 <script src="/static/js/maps.js"></script>
 <script src="/static/js/plans.js"></script>
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css">
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/menu/assets/skins/sam/menu.css">
 </head>
 <body class="yui-skin-sam">
 

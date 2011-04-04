@@ -98,7 +98,7 @@ public abstract class JSONBaseController {
 			return "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
 			getConfigValue("maps.key") + "\" type=\"text/javascript\"></script>";			
 		} else {
-			return "<script src=\"http://openlayers.org/dev/OpenLayers.js\"></script>\n" +
+			return "<script src=\"/static/js/openlayers.js\"></script>\n" +
 			"<script src=\"/static/js/gmapolwrapper.js\"></script>";
 		}
 	}
