@@ -4,9 +4,10 @@
 <html>
 <head>
 <title>Search & Rescue Planning Software - Export to Garmin GPS</title>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yuiloader/yuiloader-min.js" ></script>
+<script src="/static/js/yui.js"></script>
 <script src="/static/js/common.js"></script>
 <script src="/static/js/plans.js"></script>
+<!-- 
 <script src="http://developer.garmin.com/web/communicator-api/prototype/prototype.js">&#160;</script>
 <script src="http://developer.garmin.com/web/communicator-api/garmin/util/Util-Broadcaster.js"></script>
 <script src="http://developer.garmin.com/web/communicator-api/garmin/util/Util-BrowserDetect.js"></script>
@@ -18,10 +19,9 @@
 <script src="http://developer.garmin.com/web/communicator-api/garmin/device/GarminDevice.js"></script>
 <script src="http://developer.garmin.com/web/communicator-api/garmin/device/GarminDevicePlugin.js"></script>
 <script src="http://developer.garmin.com/web/communicator-api/garmin/device/GarminDeviceControl.js"></script>
+-->
+<script src="/static/js/garmin.js"></script>
 
-
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css">
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/menu/assets/skins/sam/menu.css">
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 
 <script>

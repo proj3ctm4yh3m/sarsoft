@@ -1,7 +1,7 @@
 <html>
 <head>
 ${mapjs}
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yuiloader/yuiloader-min.js" ></script>
+<script src="/static/js/yui.js"></script>
 <script src="/app/constants.js"></script>
 <script src="/static/js/common.js"></script>
 <script src="/static/js/maps.js"></script>
@@ -18,8 +18,6 @@ org.sarsoft.Loader.queue(function() {
 });
 }
 </script>
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/fonts/fonts-min.css">
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/menu/assets/skins/sam/menu.css">
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
