@@ -109,6 +109,14 @@ function GSize(width, height) {
 	this.height = height;
 }
 
+function GLatLngBounds(sw, ne) {
+	this._sw = sw;
+	this._ne = ne;
+}
+
+GLatLngBounds.prototype.getSouthWest = function() { return this._sw;}
+GLatLngBounds.prototype.getNorthEast = function() { return this._ne;}
+
 function GMap2(node) {
 	var that = this;
 	this.ol = new Object();
@@ -168,14 +176,28 @@ function GMap2(node) {
 	
 	this.ol.map.events.register("mousemove", this, function(e) {GEvent.trigger(this, "mousemove", GLatLng.fromLonLat(that.ol.map.getLonLatFromPixel(that.ol.map.events.getMousePosition(e))))});
 	this.ol.map.events.register("zoomend", this, function(e) { that.redrawOverlays();});
+	this.ol.map.events.register("moveend", this, function(e) { GEvent.trigger(this, "moveend");});
 	
 	node.oncontextmenu = function(e) {return false;}
+	
+	window.setInterval(function() {GEvent.trigger(that, "tilesloaded", {})}, 1000);
 
 }
 
 GMap2.ol = new Object();
 GMap2.ol.geographic = new OpenLayers.Projection("EPSG:4326");
 GMap2.ol.mercator = new OpenLayers.Projection("EPSG:900913");
+
+GMap2.prototype.getBounds = function() {
+	var bb = this.ol.map.getExtent();
+	return new GLatLngBounds(
+			GLatLng.fromLonLat(new OpenLayers.LonLat(bb.left, bb.bottom)),
+			GLatLng.fromLonLat(new OpenLayers.LonLat(bb.right, bb.top)));
+}
+
+GMap2.prototype.fromLatLngToContainerPixel = function(gll) {
+	return this.ol.map.getPixelFromLonLat(GLatLng.toLonLat(gll));
+}
 
 GMap2.prototype.fromContainerPixelToLatLng = function(px) {
 	return GLatLng.fromLonLat(this.ol.map.getLonLatFromPixel(px));
@@ -327,7 +349,7 @@ GLatLng.prototype.distanceFrom = function(gll) {
 	        Math.cos(this._lat/180*pi) * Math.cos(gll.lat()/180*pi) * 
 	        Math.sin(dLon/2) * Math.sin(dLon/2); 
 	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-	return R * c;
+	return R * c * 1000;
 }
 
 GLatLng.fromPoint = function(point) {
