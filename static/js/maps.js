@@ -250,7 +250,7 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 	var spacing = 1000;
 	if(span > 30000) spacing = 10000;
 	if(span > 300000) spacing = 100000;
-
+	
 	var sw = GeoUtil.GLatLngToUTM(bounds.getSouthWest());
 	var ne = GeoUtil.GLatLngToUTM(bounds.getNorthEast());
 	if(ne.zone - sw.zone > 1) return;
@@ -297,6 +297,7 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 				element.style.bottom="2px";
 				element.style.left=offset+"px";
 				element.style.padding="0 0 0 .5em";
+				element.style.zIndex=1000;
 				this.map.getContainer().appendChild(element);
 				this.text.push(element);
 			}
@@ -326,6 +327,7 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 			}
 			element.style.top=offset+"px";
 			element.style.padding=".5em 0 0 0";
+			element.style.zIndex=1000;
 			this.map.getContainer().appendChild(element);
 			this.text.push(element);
 		}
