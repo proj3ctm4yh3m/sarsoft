@@ -18,6 +18,7 @@ org.sarsoft.Loader.queue(function() {
 });
 }
 </script>
+<link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">

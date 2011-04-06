@@ -6,6 +6,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -102,10 +103,12 @@ public class CommonController extends JSONBaseController {
 			while ((bytesRead = in.read(bytes)) != -1) {
 			    out.write(bytes, 0, bytesRead);
 			}
+		} catch (FileNotFoundException e) {
+			// ignore missing files
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			try { in.close(); } catch(Exception e) { e.printStackTrace(); }
+			try { if(in != null) in.close(); } catch(Exception e) { e.printStackTrace(); }
 		}
 	}
 	

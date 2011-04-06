@@ -13,6 +13,7 @@ ${mapjs}
 <script src="/static/js/admin.js"></script>
 <script src="/static/js/ops.js"></script>
 
+<link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
 <body class="yui-skin-sam">

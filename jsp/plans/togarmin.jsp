@@ -21,7 +21,7 @@
 -->
 <script src="/static/js/garmin.js"></script>
 
-
+<link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 
 <script>

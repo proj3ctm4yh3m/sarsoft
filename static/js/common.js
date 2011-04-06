@@ -93,8 +93,10 @@ org.sarsoft.Loader.queue = function(task) {
 }
 org.sarsoft.Loader.execute = function() {
 	var tasks = org.sarsoft.Loader._tasks;
-	for(var i = 0; i < tasks.length; i++) {
-		tasks[i]();
+	if(tasks != null) {
+		for(var i = 0; i < tasks.length; i++) {
+			tasks[i]();
+		}
 	}
 	org.sarsoft.Loader._tasks = null;
 }
@@ -368,30 +370,4 @@ org.sarsoft.view.EntityCreateDialog.prototype.show = function(obj) {
 	this.dialog.show();
 }
 
-// Instantiate and configure Loader:
-var loader = new YAHOO.util.YUILoader({
-
-    // Identify the components you want to load.  Loader will automatically identify
-    // any additional dependencies required for the specified components.
-    require: ["container", "connection", "json", "yahoo", "menu", "datatable", "tabview", "treeview"],
-
-    // Configure loader to pull in optional dependencies.  For example, animation
-    // is an optional dependency for slider.
-    loadOptional: true,
-
-    // The function to call when all script/css resources have been loaded
-    onSuccess: function() {
-    	org.sarsoft.Loader.execute();
-    },
-
-    // Configure the Get utility to timeout after 10 seconds for any given node insert
-    timeout: 10000,
-
-    // Combine YUI files into a single request (per file type) by using the Yahoo! CDN combo service.
-    combine: true
-});
-
-// Load the files using the insert() method. The insert method takes an optional
-// configuration object, and in this case we have configured everything in
-// the constructor, so we don't need to pass anything to insert().
-loader.insert();
+if(org.sarsoft.yuiloaded == true) org.sarsoft.Loader.execute();
