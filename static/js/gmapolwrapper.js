@@ -27,6 +27,8 @@ G_SATELLITE_MAP = new Object();
 G_SATELLITE_MAP.getProjection = function() {};
 G_ANCHOR_TOP_RIGHT = 5;
 G_MAP_FLOAT_SHADOW_PANE = 6;
+G_MAP_MAP_PANE=7;
+G_MAP_OVERLAY_LAYER_PANE=8;
 
 function GCopyrightCollection() {}
 GCopyrightCollection.prototype.addCopyright = function() {};
@@ -205,6 +207,10 @@ GMap2.prototype.fromContainerPixelToLatLng = function(px) {
 
 GMap2.prototype.fromLatLngToDivPixel = function(gll) {
 	return this.ol.map.getViewPortPxFromLonLat(GLatLng.toLonLat(gll));
+}
+
+GMap2.prototype.fromDivPixelToLatLng = function(px) {
+	return GLatLng.fromLonLat(this.ol.map.getLonLatFromViewPortPx(px));
 }
 
 GMap2.prototype.getPane = function(pane) {

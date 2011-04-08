@@ -55,6 +55,7 @@ org.sarsoft.EnhancedGMap.prototype.createMap = function(element) {
 		this.map = map;
 
 		this.mapTypes = this.setMapTypes(org.sarsoft.EnhancedGMap.defaultMapTypes);
+		this.geoRefImages = this.setGeoRefImages(org.sarsoft.EnhancedGMap.geoRefImages);
 
 		map.setCenter(new GLatLng(38.617, -97.207), 5);
 		map.addControl(new OverlayDropdownMapControl());
@@ -73,6 +74,15 @@ org.sarsoft.EnhancedGMap.prototype.setMapTypes = function(types) {
 		this.map.addMapType(type);
 	}
 	return mapTypes;
+}
+
+org.sarsoft.EnhancedGMap.prototype.setGeoRefImages = function(images) {
+	var geoRefImages = new Array();
+	for(var i = 0; i < images.length; i++) {
+		geoRefImages[i] = images[i];
+	}
+	this.map.geoRefImages = geoRefImages;
+	return geoRefImages;
 }
 
 OverlayDropdownMapControl = function() {
@@ -99,6 +109,14 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	this.types = map.getMapTypes();
 	this.typeSelect = this._createSelect(this.types);
 	this.overlaySelect = this._createSelect(this.types);
+	for(var i = 0; i < map.geoRefImages.length; i++) {
+		var option = document.createElement("option");
+		option.value=this.types.length;
+		option.appendChild(document.createTextNode(map.geoRefImages[i].filename));
+		this.overlaySelect.appendChild(option);
+		this.types.push(map.geoRefImages[i]);
+	}
+		
 	this.map = map;
 	this.map._overlaydropdownmapcontrol = this;
 
@@ -135,8 +153,9 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity)
 			if(this.types[i] == base) this.typeSelect.value = i;
 			if(this.types[i] == overlay) this.overlaySelect.value = i;
 		}
-		if(base.getMaximumResolution() > overlay.getMaximumResolution()) {
+		if(overlay.getMaximumResolution != null && base.getMaximumResolution() > overlay.getMaximumResolution()) {
 			// google maps doesn't seem to check the overlays' min and max resolutions
+			// null check overlay to handle georef'd imagery
 			var tmp = overlay;
 			overlay = base;
 			base = tmp;
@@ -149,12 +168,17 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity)
 			}
 		}
 		this._overlays = new Array();
-		var layers = overlay.getTileLayers();
-		for(var i = 0; i < layers.length; i++) {
-			this._overlays[i] = new GTileLayerOverlay(new org.sarsoft.GAlphaTileLayerWrapper(overlay.getTileLayers()[i], opacity));
-			this.map.addOverlay(this._overlays[i]);
-			this.map._sarsoft_overlay_type = overlay;
-			this.map._sarsoft_overlay_opacity = opacity;
+		if(overlay.angle != null) {
+			this._overlays[0] = new GeoRefImageOverlay(new GPoint(1*overlay.originx, 1*overlay.originy), new GLatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.filename, new GSize(1*overlay.width, 1*overlay.height), opacity);
+			this.map.addOverlay(this._overlays[0]);
+		} else {
+			var layers = overlay.getTileLayers();
+			for(var i = 0; i < layers.length; i++) {
+				this._overlays[i] = new GTileLayerOverlay(new org.sarsoft.GAlphaTileLayerWrapper(overlay.getTileLayers()[i], opacity));
+				this.map.addOverlay(this._overlays[i]);
+				this.map._sarsoft_overlay_type = overlay;
+				this.map._sarsoft_overlay_opacity = opacity;
+			}
 		}
 }
 
@@ -1077,7 +1101,7 @@ GeoUtil.getEastBorder = function(zone) {
 
 createFlatCircleIcon = function (size, color) {
   if(color.indexOf('#') == 0) color = color.substring(1);
-  var url = "/resource/images/circle/" + color + ".png";
+  var url = "/resource/imagery/icons/circle/" + color + ".png";
   var icon = new GIcon(G_DEFAULT_ICON);
   icon.image = url;
   icon.iconSize = new GSize(size, size);
@@ -1213,6 +1237,64 @@ ELabel.prototype.setOpacity = function(percentOpacity) {
 
 ELabel.prototype.getPoint = function() {
   return this.point;
+}
+
+
+function GeoRefImageOverlay(point, latlng, angle, scale, filename, size, opacity) {
+	this._olcapable = true;
+	this.point = point;
+	this.latlng = latlng;
+	this.angle=angle;
+	this.scale = scale;
+	this.filename = filename;
+	this.size = size;
+	this.opacity = opacity;
+}
+
+GeoRefImageOverlay.prototype = new GOverlay();
+
+GeoRefImageOverlay.prototype.initialize = function(map) {
+	var div = document.createElement("img");
+	div.style.position = "absolute";
+	div.src= '/resource/imagery/georef/' +  this.filename + '?originx=' + this.point.x + '&originy=' + this.point.y + '&angle=' + this.angle;
+	map.getPane(G_MAP_FLOAT_SHADOW_PANE).appendChild(div);
+	this._map = map;
+	this.div = div;
+    if(typeof(div.style.filter)=='string'){div.style.filter='alpha(opacity:'+this.opacity*100+')';}
+    if(typeof(div.style.KHTMLOpacity)=='string'){div.style.KHTMLOpacity=this.opacity;}
+    if(typeof(div.style.MozOpacity)=='string'){div.style.MozOpacity=this.opacity;}
+    if(typeof(div.style.opacity)=='string'){div.style.opacity=this.opacity;}
+}
+
+GeoRefImageOverlay.prototype.remove = function() {
+	this.div.parentNode.removeChild(this.div);
+}
+
+GeoRefImageOverlay.prototype.redraw = function(force) {
+  var pixel = this._map.fromLatLngToDivPixel(this.latlng);
+  var ne = this._map.fromDivPixelToLatLng(new GPoint(pixel.x-this.point.x, pixel.y-this.point.y));
+  var pxDistance = Math.sqrt(Math.pow(this.point.x, 2) + Math.pow(this.point.y, 2));
+  var scaling = this.scale / (ne.distanceFrom(this.latlng) / pxDistance);
+  
+  this.div.style.left = pixel.x-this.point.x*scaling + "px";
+  this.div.style.top = pixel.y-this.point.y*scaling + "px";
+  this.div.style.height = this.size.height*scaling;
+  this.div.style.width = this.size.width*scaling;
+}
+
+GeoRefImageOverlay.prototype.show = function() {
+  if (this.div) {
+    this.div.style.display="";
+    this.redraw();
+  }
+  this.hidden = false;
+}
+
+GeoRefImageOverlay.prototype.hide = function() {
+  if (this.div) {
+    this.div.style.display="none";
+  }
+  this.hidden = true;
 }
 
 

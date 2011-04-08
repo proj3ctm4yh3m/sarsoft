@@ -1,5 +1,6 @@
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
+if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
 org.sarsoft.MapSourceDAO = function(errorHandler, baseURL) {
@@ -24,3 +25,10 @@ org.sarsoft.view.MapSourceForm = function() {
 }
 
 org.sarsoft.view.MapSourceForm.prototype = new org.sarsoft.view.EntityForm();
+
+org.sarsoft.GeoRefImageDAO = function(errorHandler, baseURL) {
+	if(baseURL == undefined) baseURL = "/rest/georefimage";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+}
+org.sarsoft.GeoRefImageDAO.prototype = new org.sarsoft.BaseDAO();
