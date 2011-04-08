@@ -21,6 +21,7 @@ import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.imagery.model.GeoRefImage;
 import org.sarsoft.plans.model.Search;
 
 import net.sf.json.JSON;
@@ -138,6 +139,7 @@ public abstract class JSONBaseController {
 
 	protected String app(Model model, String view) {
 		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
+		model.addAttribute("geoRefImages", dao.loadAll(GeoRefImage.class));
 		model.addAttribute("hosted", isHosted());
 		String username = RuntimeProperties.getUsername();
 		model.addAttribute("username", username);

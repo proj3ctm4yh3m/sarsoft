@@ -9,8 +9,11 @@ org.sarsoft.BaseDAO = function() {
 
 org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 	var that = this;
-	var postdata = "json=" + encodeURIComponent(YAHOO.lang.JSON.stringify(obj));
+	postdata = "json=" + encodeURIComponent(YAHOO.lang.JSON.stringify(obj));
 	if(poststr != undefined) postdata += "&" + poststr;
+	YAHOO.util.Connect.resetDefaultHeaders();
+	YAHOO.util.Connect.setDefaultPostHeader(false);
+	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', this.baseURL + url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
