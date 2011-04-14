@@ -156,6 +156,16 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	}
 
 	@SuppressWarnings("unchecked")
+	public List getAllByAttr(final Class cls, final String key, final Object value) {
+		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
+			public Object doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(cls, session.createCriteria(cls).add(Restrictions.eq(key, value))).list();
+			}
+		});
+		return list;
+	}
+
+	@SuppressWarnings("unchecked")
 	public List<Search> getAllSearches() {
 		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {

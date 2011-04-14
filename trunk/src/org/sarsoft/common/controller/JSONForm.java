@@ -20,5 +20,5 @@ public class JSONForm {
 	public String getFile() {
 		return file;
 	}
-
+	
 }

@@ -13,7 +13,7 @@ import org.sarsoft.common.model.SarModelObject;
 @Entity
 public class GeoRefImage extends SarModelObject {
 	
-	String filename;
+	String name;
 	double angle;
 	double scale;
 	int originx;
@@ -22,17 +22,18 @@ public class GeoRefImage extends SarModelObject {
 	double originlng;
 	int width;
 	int height;
+	boolean referenced;
 	
 	public static GeoRefImage createFromJSON(JSONObject json) {
 		return (GeoRefImage) JSONObject.toBean(json, GeoRefImage.class);
 	}
 
 	@JSONSerializable
-	public String getFilename() {
-		return filename;
+	public String getName() {
+		return name;
 	}
-	public void setFilename(String filename) {
-		this.filename = filename;
+	public void setName(String name) {
+		this.name = name;
 	}
 	@JSONSerializable
 	public Double getAngle() {
@@ -89,6 +90,13 @@ public class GeoRefImage extends SarModelObject {
 	}
 	public void setHeight(Integer height) {
 		this.height = height;
+	}
+	@JSONSerializable
+	public Boolean isReferenced() {
+		return referenced;
+	}
+	public void setReferenced(Boolean referenced) {
+		this.referenced = referenced;
 	}
 	
 }

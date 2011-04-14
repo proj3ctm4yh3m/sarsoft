@@ -1,11 +1,17 @@
 package org.sarsoft.common.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -17,6 +23,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.sarsoft.admin.model.Config;
 import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.common.model.MapConfig;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
@@ -38,6 +45,12 @@ public abstract class JSONBaseController {
 
 	protected static String REST = "rest";
 	protected static String APP = "app";
+	
+	private List<MapSource> mapSources;
+	private Properties properties;
+	
+	@Autowired
+	protected ServletContext context;
 
 	@Autowired
 	@Qualifier("genericDAO")
@@ -67,6 +80,49 @@ public abstract class JSONBaseController {
 			inHostedMode = "true".equalsIgnoreCase(hosted);
 		}
 		return inHostedMode;
+	}
+	
+	protected String getProperty(String name) {
+		if(properties != null) return properties.getProperty(name);
+		synchronized(this) {
+			properties = new Properties();
+			try {
+				String prop = System.getProperty("config");
+				if(prop == null) prop ="local";
+				String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
+				InputStream inputStream = context.getResourceAsStream(propertiesFileName);
+				properties.load(inputStream);
+				if(new File("sarsoft.properties").exists()) {
+					FileInputStream fis = new FileInputStream("sarsoft.properties");
+					properties.load(fis);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return properties.getProperty(name);
+	}
+
+	
+	protected List<MapSource> getMapSources() {
+		if(mapSources != null) return mapSources;
+		synchronized(this) {
+			mapSources = new ArrayList<MapSource>();
+			String[] names = getProperty("sarsoft.map.backgrounds").split(",");
+			for(String name : names) {
+				MapSource source = new MapSource();
+				source.setName(getProperty("sarsoft.map.background." + name + ".name"));
+				source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
+				source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
+				source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
+				source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
+				source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
+				source.setType(MapSource.Type.TILE);
+				mapSources.add(source);
+			}
+		}
+		mapSources = Collections.unmodifiableList(mapSources);
+		return mapSources;
 	}
 
 	protected String getConfigValue(String name) {
@@ -138,8 +194,8 @@ public abstract class JSONBaseController {
 	}
 
 	protected String app(Model model, String view) {
-		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
-		model.addAttribute("geoRefImages", dao.loadAll(GeoRefImage.class));
+		model.addAttribute("mapSources", getMapSources());
+		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
 		model.addAttribute("hosted", isHosted());
 		String username = RuntimeProperties.getUsername();
 		model.addAttribute("username", username);

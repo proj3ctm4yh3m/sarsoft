@@ -112,7 +112,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	for(var i = 0; i < map.geoRefImages.length; i++) {
 		var option = document.createElement("option");
 		option.value=this.types.length;
-		option.appendChild(document.createTextNode(map.geoRefImages[i].filename));
+		option.appendChild(document.createTextNode(map.geoRefImages[i].name));
 		this.overlaySelect.appendChild(option);
 		this.types.push(map.geoRefImages[i]);
 	}
@@ -169,7 +169,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity)
 		}
 		this._overlays = new Array();
 		if(overlay.angle != null) {
-			this._overlays[0] = new GeoRefImageOverlay(new GPoint(1*overlay.originx, 1*overlay.originy), new GLatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.filename, new GSize(1*overlay.width, 1*overlay.height), opacity);
+			this._overlays[0] = new GeoRefImageOverlay(new GPoint(1*overlay.originx, 1*overlay.originy), new GLatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new GSize(1*overlay.width, 1*overlay.height), opacity);
 			this.map.addOverlay(this._overlays[0]);
 		} else {
 			var layers = overlay.getTileLayers();
@@ -218,7 +218,7 @@ org.sarsoft.FixedGMap = function(map) {
 				GEvent.addListener(map, "zoomend", function(foo, bar) { that._drawUTMGrid(); });
 				GEvent.addListener(map, "dragstart", function() {
 					for(var i = 0; i < that.text.length; i++) {
-						that.map.getContainer().removeChild(that.text[i]);
+						that.map.removeOverlay(that.text[i]);
 					}
 					that.text = new Array();
 				});
@@ -266,7 +266,8 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 	}
 	this.utmgridlines = new Array();
 	for(var i = 0; i < this.text.length; i++) {
-		this.map.getContainer().removeChild(this.text[i]);
+//		this.map.getContainer().removeChild(this.text[i]);
+		this.map.removeOverlay(this.text[i]);
 	}
 	this.text = new Array();
 	var bounds = this.map.getBounds();
@@ -296,15 +297,12 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 
 
 	function createText(meters) {
-		var element = document.createElement("div");
-		element.style.position="absolute";
-		element.style.color="#0000FF";
-		element.innerHTML="<b>" + Math.round(meters/1000) + "</b><span style=\"font-size: smaller\">000</span>";
-		return element;
+		return "<div style=\"color:#0000FF; background: #FFFFFF\"><b>" + Math.round(meters/1000) + "</b><span style=\"font-size: smaller\">000</span></div>";
 	}
 
 	var easting = Math.round(sw.e / spacing)  * spacing;
 	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getNorthEast()).x;
+	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	while(easting < ne.e) {
 		var vertices = new Array();
 		vertices.push(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
@@ -317,19 +315,15 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 
 			var offset = this.map.fromLatLngToContainerPixel(vertices[0]).x;
 			if(0 < offset && offset < pxmax) {
-				var element = createText(easting);
-				element.style.bottom="2px";
-				element.style.left=offset+"px";
-				element.style.padding="0 0 0 .5em";
-				element.style.zIndex=1000;
-				this.map.getContainer().appendChild(element);
-				this.text.push(element);
+				var point = new GPoint(offset, pymax-10);
+				var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting));
+				this.map.addOverlay(label);
+				this.text.push(label);
 			}
 		}
 		easting = easting + spacing;
 	}
 	var northing = Math.round(sw.n / spacing) * spacing;
-	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	while(northing < ne.n) {
 		var vertices = new Array();
 		var start = GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone});
@@ -342,18 +336,14 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		this.map.addOverlay(overlay);
 
 		var offset = this.map.fromLatLngToContainerPixel(vertices[0]).y;
-		if(0 < offset && offset < pxmax) {
-			var element = createText(northing);
+		if(0 < offset && offset < pymax) {
+			var point = new GPoint(0, offset);
 			if(right) {
-				element.style.right="2px";
-			} else {
-				element.style.left="2px";
+				point = new GPoint(this.map.getSize().width-50, this.map.fromLatLngToContainerPixel(vertices[1].y));
 			}
-			element.style.top=offset+"px";
-			element.style.padding=".5em 0 0 0";
-			element.style.zIndex=1000;
-			this.map.getContainer().appendChild(element);
-			this.text.push(element);
+			var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(northing));
+			this.map.addOverlay(label);
+			this.text.push(label);
 		}
 		northing = northing + spacing;
 	}
@@ -1240,13 +1230,13 @@ ELabel.prototype.getPoint = function() {
 }
 
 
-function GeoRefImageOverlay(point, latlng, angle, scale, filename, size, opacity) {
+function GeoRefImageOverlay(point, latlng, angle, scale, id, size, opacity) {
 	this._olcapable = true;
 	this.point = point;
 	this.latlng = latlng;
 	this.angle=angle;
 	this.scale = scale;
-	this.filename = filename;
+	this.id = id;
 	this.size = size;
 	this.opacity = opacity;
 }
@@ -1256,8 +1246,9 @@ GeoRefImageOverlay.prototype = new GOverlay();
 GeoRefImageOverlay.prototype.initialize = function(map) {
 	var div = document.createElement("img");
 	div.style.position = "absolute";
-	div.src= '/resource/imagery/georef/' +  this.filename + '?originx=' + this.point.x + '&originy=' + this.point.y + '&angle=' + this.angle;
-	map.getPane(G_MAP_FLOAT_SHADOW_PANE).appendChild(div);
+	div.src= '/resource/imagery/georef/' +  this.id + '?originx=' + this.point.x + '&originy=' + this.point.y + '&angle=' + this.angle;
+	div.style.zIndex=2;
+	map.getPane(G_MAP_MAP_PANE).appendChild(div);
 	this._map = map;
 	this.div = div;
     if(typeof(div.style.filter)=='string'){div.style.filter='alpha(opacity:'+this.opacity*100+')';}
