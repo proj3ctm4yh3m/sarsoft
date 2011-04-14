@@ -15,12 +15,20 @@ org.sarsoft.Loader.queue(function() {
   egm = new org.sarsoft.EnhancedGMap();
   map = egm.createMap(document.getElementById('map_canvas'));
   map.setCenter(new GLatLng(38, -122), 8);
+  
   egm2 = new org.sarsoft.EnhancedGMap();
   map2 = egm.createMap(document.getElementById('combined_canvas'));
 
-  document.getElementById("image").addEventListener("click", function(e) {imageContextMenu.show({x: e.offsetX?(e.offsetX):e.pageX-document.getElementById("image").offsetLeft, y: e.offsetY?(e.offsetY):e.pageY-document.getElementById("image").offsetTop});}, false);
+  YAHOO.util.Event.addListener("actualimage", "click", function(e) {
+		  imageContextMenu.show(
+			 {x: e.pageX, y: e.pageY},
+			 {x: e.offsetX?(e.offsetX):e.pageX-document.getElementById("actualimage").offsetLeft, y: e.offsetY?(e.offsetY):e.pageY-document.getElementById("actualimage").offsetTop});
+		  e.stopPropagation();
+	  });
 	GEvent.addListener(map, "singlerightclick", function(point, src, overlay) {
-		mapContextMenu.show(point);
+		mapContextMenu.show(
+				{x: point.x + YAHOO.util.Dom.getXY('map_canvas')[0], y: point.y + YAHOO.util.Dom.getXY('map_canvas')[1]},
+				point);
 	});
 
   GeoRefIMGForm = function() {
@@ -45,18 +53,16 @@ org.sarsoft.Loader.queue(function() {
 });
 }
 
-
 imageContextMenu = new org.sarsoft.view.ContextMenu();
 imageContextMenu.setItems([
-	{text : "Mark Image Point 1", applicable : function(obj) { return true}, handler : function(data) { setImageRef(0, data.point); }},
-	{text : "Mark Image Point 2", applicable : function(obj) { return true}, handler : function(data) { setImageRef(1, data.point); }}
+	{text : "Mark Image Point 1", applicable : function(obj) { return true}, handler : function(data) { setImageRef(0, data.subject); }},
+	{text : "Mark Image Point 2", applicable : function(obj) { return true}, handler : function(data) { setImageRef(1, data.subject); }}
 	]);
-
 
 mapContextMenu = new org.sarsoft.view.ContextMenu();
 mapContextMenu.setItems([
-	{text : "Mark Map Point 1", applicable : function(obj) { return true}, handler : function(data) { setMapRef(0, data.point); }},
-	{text : "Mark Map Point 2", applicable : function(obj) { return true}, handler : function(data) { setMapRef(1, data.point); }}
+	{text : "Mark Map Point 1", applicable : function(obj) { return true}, handler : function(data) { setMapRef(0, data.subject); }},
+	{text : "Mark Map Point 2", applicable : function(obj) { return true}, handler : function(data) { setMapRef(1, data.subject); }}
 	]);
 
 
@@ -106,7 +112,7 @@ overlay = null;
 function updateCombinedView() {
 	georef = parameterForm.read();
 	if(overlay != null) map2.removeOverlay(overlay);
-	overlay = new GeoRefImageOverlay(new GPoint(1*georef.originx, 1*georef.originy), new GLatLng(1*georef.originlat, 1*georef.originlng), georef.angle, georef.scale, "${image.filename}", new GSize(1*georef.width, 1*georef.height), georef.opacity);
+	overlay = new GeoRefImageOverlay(new GPoint(1*georef.originx, 1*georef.originy), new GLatLng(1*georef.originlat, 1*georef.originlng), georef.angle, georef.scale, "${image.id}", new GSize(1*georef.width, 1*georef.height), georef.opacity);
 	map2.addOverlay(overlay);
 	map2.setCenter(new GLatLng(1*georef.originlat, 1*georef.originlng), 12);
 	tabView.set('activeIndex', 2);
@@ -114,7 +120,7 @@ function updateCombinedView() {
 
 function save() {
   var dao = new org.sarsoft.GeoRefImageDAO();
-  dao.save('${image.filename}', georef);
+  dao.save('${image.id}', georef);
 }
 
 var tabView = new YAHOO.widget.TabView('tabs');
@@ -142,6 +148,9 @@ org.sarsoft.Loader.queue(function() {
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
 
+This page allows you to georeference an image, allowing Sarsoft to display it on top of a map.  Your image must be to scale, as Sarsoft will only
+rotate and scale it, not warp it.  Start by selecting two points on the image, then select the same two points on the map, double check the image,
+and then save it.
 <div id="tabs" class="yui-navset">
 <ul class="yui-nav">
 	<li class="selected"><a href="#image"><em>Image</em></a></li>
@@ -153,21 +162,28 @@ org.sarsoft.Loader.queue(function() {
 <div class="yui-content">
 
 <div id="image">
-<img src="/resource/imagery/georef/${image.filename}" id="image"/>
+<div>Please <b>click</b> on the image to select your two reference points, then select the <b>Map</b> tab.</div>
+<div id="imagecontainer">
+<img src="/resource/imagery/georef/${image.id}" id="actualimage"/>
+</div>
 </div>
 
 <div id="map">
-<div id="map_canvas" style="width: 100%; height: 100%;"></div>
+Please <b>right-click</b> on the map to identify the location of your two reference points.
+<div id="map_canvas" style="width: 500px; height: 350px;"></div>
 </div>
 
 <div id="combined">
-<div id="combined_canvas" style="width: 100%; height: 100%;"></div>
+Please confirm that the image is properly placed, and then click on the <b>Parameters</b> tab.  You can alter the image's opacity on that tab as well.<br/>
+<div id="combined_canvas" style="width: 500px; height: 350px;"></div>
 </div>
 
 <div id="parameters">
+You can manually update any parameters below.  When done, click <b>Save these parameters</b> to finish georeferencing the image.<br/>
+Opacity is only used on the result tab and is not saved.<br/>
 <div id="paramform"></div>
 <br/>
-<a href="javascript:updateCombinedView()">Update to match manually entered parameters.</a><br/>
+<a href="javascript:updateCombinedView()">Show map using these parameters.</a><br/>
 <a href="javascript:save()">Save these parameters.</a>
 </div>
 </div>

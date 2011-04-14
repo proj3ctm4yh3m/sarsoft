@@ -5,17 +5,21 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,15 +35,25 @@ import org.sarsoft.imagery.model.GeoRefImage;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
+import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
 public class ImageryController extends JSONBaseController {
 
-	@RequestMapping(value="/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	@InitBinder
+	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
+		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
+		binder.registerCustomEditor(byte[].class, new ByteArrayMultipartFileEditor());
+	}
+
+	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getFile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		if(this.isHosted()) return;
 		File file = new File("tiles/" + layer + "/" + z + "/" + x + "/" + y + ".png");
@@ -88,16 +102,17 @@ public class ImageryController extends JSONBaseController {
 		}
 	}
 
-	@RequestMapping(value="/resource/imagery/georef/{filename:.*}", method=RequestMethod.GET)
-	public void getImage(HttpServletResponse response, @PathVariable("filename") String filename, @RequestParam(value="angle", required=false) Double angle, 
+	@RequestMapping(value="/resource/imagery/georef/{id}", method=RequestMethod.GET)
+	public void getImage(HttpServletResponse response, @PathVariable("id") long id, @RequestParam(value="angle", required=false) Double angle, 
 			@RequestParam(value="originy", required=false) Integer originy, @RequestParam(value="originx", required=false) Integer originx) {
 		response.setContentType("image/png");
+		GeoRefImage georefimage = (GeoRefImage) dao.load(GeoRefImage.class, id);
 		try {
-			BufferedImage original = ImageIO.read(new File(filename));
+			BufferedImage original = ImageIO.read(new File("imagery/" + georefimage.getPk() + ".png"));
 			int height = original.getHeight();
 			int width = original.getWidth();
 			
-			BufferedImage rotated = new BufferedImage(width, height, original.getType());
+			BufferedImage rotated = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
 			Graphics2D g = rotated.createGraphics();
 			g.setBackground(new Color(255, 255, 255, 0));
 			g.clearRect(0, 0, width, height);
@@ -120,21 +135,53 @@ public class ImageryController extends JSONBaseController {
 		return app(model, "GeoRefImageList");
 	}
 	
-	@RequestMapping(value="/app/imagery/georef/{filename:.*}", method=RequestMethod.GET)
-	public String georefFile(Model model, HttpServletRequest request, @PathVariable("filename") String filename) {
+	@RequestMapping(value="/app/imagery/georef", method = RequestMethod.POST)
+	public String createGeoReferencedImage(Model model, HttpServletRequest request, ImageForm params) {
+		List<GeoRefImage> images = (List<GeoRefImage>) dao.loadAll(GeoRefImage.class);
+		long maxId = 0L;
+		for(GeoRefImage image : images) {
+			if(image.getId() != null) maxId = Math.max(maxId, image.getId());
+		}
+		GeoRefImage image = new GeoRefImage();
+		image.setId(maxId+1);
+		image.setName(params.getName());
+		image.setReferenced(false);
+		dao.save(image);
+		image = (GeoRefImage) dao.load(GeoRefImage.class, maxId+1);
+		try {
+			File file = new File("imagery");
+			file.mkdir();
+			FileOutputStream os = new FileOutputStream("imagery/" + image.getPk() + ".png");
+			
+			BufferedImage original = ImageIO.read(new ByteArrayInputStream(params.getBinaryData()));
+			int height = original.getHeight();
+			int width = original.getWidth();
+			BufferedImage resized = new BufferedImage(width*2, height*2, BufferedImage.TYPE_4BYTE_ABGR);
+			Graphics2D g = resized.createGraphics();
+			g.setBackground(new Color(255, 255, 255, 0));
+			g.clearRect(0, 0, width*2, height*2);
+			g.drawImage(original, width/2, height/2, width, height, null);
+			ImageIO.write(resized, "png", os);
+			os.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return referenceImage(model, request, image.getId());
+	}
+	
+	
+	@RequestMapping(value="/app/imagery/georef/{id}", method=RequestMethod.GET)
+	public String referenceImage(Model model, HttpServletRequest request, @PathVariable("id") long id) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.VIEW;
-		GeoRefImage image = (GeoRefImage) dao.getByAttr(GeoRefImage.class, "filename", filename);
+		GeoRefImage image = (GeoRefImage) dao.load(GeoRefImage.class, id);
 		if(action == Action.DELETE) {
 			dao.delete(image);
+			new File("imagery/" + image.getPk() + ".img").delete();
 			return georef(model);
-		}
-		if(image == null) {
-			image = new GeoRefImage();
-			image.setFilename(filename);
 		}
 		model.addAttribute("image", image);
 		try {
-			BufferedImage rawImage = ImageIO.read(new File(filename));
+			BufferedImage rawImage = ImageIO.read(new File("imagery/" + image.getPk() + ".png"));
 			model.addAttribute("width", rawImage.getWidth());
 			model.addAttribute("height", rawImage.getHeight());
 		} catch (Exception e) {
@@ -150,20 +197,16 @@ public class ImageryController extends JSONBaseController {
 		return json(model, dao.loadAll(GeoRefImage.class));
 	}
 
-	@RequestMapping(value="/rest/georefimage/{filename:.*}", method = RequestMethod.POST)
-	public String updateMapSource(@PathVariable("filename") String filename, Model model, JSONForm params, HttpServletRequest request) {
+	@RequestMapping(value="/rest/georefimage/{id}", method = RequestMethod.POST)
+	public String updateGeoRefImage(@PathVariable("id") long id, Model model, JSONForm params, HttpServletRequest request) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 
 		GeoRefImage imagePrime = GeoRefImage.createFromJSON(parseObject(params));
-		GeoRefImage image = (GeoRefImage) dao.getByAttr(GeoRefImage.class, "filename", filename);
+		GeoRefImage image = (GeoRefImage) dao.load(GeoRefImage.class, id);
 		switch(action) {
 		case DELETE :
 			dao.delete(image);
 			return json(model, image);
-		}
-		if(image == null) {
-			image = new GeoRefImage();
-			image.setFilename(filename);
 		}
 		image.setAngle(imagePrime.getAngle());
 		image.setHeight(imagePrime.getHeight());
@@ -173,6 +216,7 @@ public class ImageryController extends JSONBaseController {
 		image.setOriginy(imagePrime.getOriginy());
 		image.setScale(imagePrime.getScale());
 		image.setWidth(imagePrime.getWidth());
+		image.setReferenced(true);
 		dao.save(image);
 		return json(model, image);
 	}

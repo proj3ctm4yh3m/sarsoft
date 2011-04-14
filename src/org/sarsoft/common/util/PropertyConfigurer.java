@@ -1,5 +1,7 @@
 package org.sarsoft.common.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -34,6 +36,10 @@ public class PropertyConfigurer extends PropertyPlaceholderConfigurer {
 			String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
 			InputStream inputStream = context.getResourceAsStream(propertiesFileName);
 			springProperties.load(inputStream);
+			if(new File("sarsoft.properties").exists()) {
+				FileInputStream fis = new FileInputStream("sarsoft.properties");
+				springProperties.load(fis);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

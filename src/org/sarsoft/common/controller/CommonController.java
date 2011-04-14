@@ -54,8 +54,8 @@ public class CommonController extends JSONBaseController {
 	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
 	public String getConstants(Model model) {
 		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
-		model.addAttribute("mapSources", configDao.loadAll(MapSource.class));
-		model.addAttribute("geoRefImages", dao.loadAll(GeoRefImage.class));
+		model.addAttribute("mapSources", getMapSources());
+		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
 		return "/global/constants";
 	}
 

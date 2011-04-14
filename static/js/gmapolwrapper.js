@@ -197,24 +197,31 @@ GMap2.prototype.getBounds = function() {
 			GLatLng.fromLonLat(new OpenLayers.LonLat(bb.right, bb.top)));
 }
 
+GMap2.prototype.getSize = function() {
+	var size = this.ol.map.getSize();
+	return new GSize(size.w, size.h);
+}
+
 GMap2.prototype.fromLatLngToContainerPixel = function(gll) {
-	return this.ol.map.getPixelFromLonLat(GLatLng.toLonLat(gll));
-}
-
-GMap2.prototype.fromContainerPixelToLatLng = function(px) {
-	return GLatLng.fromLonLat(this.ol.map.getLonLatFromPixel(px));
-}
-
-GMap2.prototype.fromLatLngToDivPixel = function(gll) {
 	return this.ol.map.getViewPortPxFromLonLat(GLatLng.toLonLat(gll));
 }
 
-GMap2.prototype.fromDivPixelToLatLng = function(px) {
+GMap2.prototype.fromContainerPixelToLatLng = function(px) {
 	return GLatLng.fromLonLat(this.ol.map.getLonLatFromViewPortPx(px));
+}
+
+GMap2.prototype.fromLatLngToDivPixel = function(gll) {
+	return this.ol.map.getLayerPxFromLonLat(GLatLng.toLonLat(gll));
+}
+
+GMap2.prototype.fromDivPixelToLatLng = function(px) {
+	var viewportPx = this.ol.map.getViewPortPxFromLayerPx(px);
+	return GLatLng.fromLonLat(this.ol.map.getLonLatFromViewPortPx(viewportPx));
 }
 
 GMap2.prototype.getPane = function(pane) {
 	if(pane == G_MAP_FLOAT_SHADOW_PANE) return this.ol.markerLayer.div;
+	if(pane == G_MAP_MAP_PANE) return this.ol.map.baseLayer	.div;
 }
 
 GMap2.prototype.addMapType = function(type) {
