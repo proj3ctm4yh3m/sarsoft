@@ -5,8 +5,14 @@
 
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
+if(typeof org.sarsoft.map == "undefined") org.sarsoft.map = new Object();
 
 org.sarsoft.Constants = ${json}
+
+org.sarsoft.map._default = new Object();
+org.sarsoft.map._default.zoom = ${defaultZoom};
+org.sarsoft.map._default.lat = ${defaultLat};
+org.sarsoft.map._default.lng = ${defaultLng};
 
 if(org.sarsoft.EnhancedGMap == undefined) org.sarsoft.EnhancedGMap = function() {}
 org.sarsoft.EnhancedGMap.defaultMapTypes = [
