@@ -23,6 +23,7 @@ GEvent.addDomListener = function(obj, event, handler) {
 	obj.addEventListener(event, handler, false);
 }
 
+G_PHYSICAL_MAP = new Object();
 G_SATELLITE_MAP = new Object();
 G_SATELLITE_MAP.getProjection = function() {
 };
@@ -150,11 +151,11 @@ function GMap2(node) {
 	this.ol.currentMapType = null;
 	
 
-	G_PHYSICAL_MAP = new GMapType(
+	var dummy = new GMapType(
 			[new GTileLayer(null, 0, 20, { isPng: true, tileUrlTemplate: '/resource/imagery/tiles/dummy/{Z}/{X}/{Y}.png'})],
 			G_SATELLITE_MAP.getProjection(), "Physical", {tileSize: 256 } );	
 	
-	this.setMapType(G_PHYSICAL_MAP);
+	this.setMapType(dummy);
 	
 	this.ol.vectorLayer = new OpenLayers.Layer.Vector("overlays", {});
 	this.ol.map.addLayer(this.ol.vectorLayer);
@@ -239,6 +240,9 @@ GMap2.prototype.getPane = function(pane) {
 }
 
 GMap2.prototype.addMapType = function(type) {
+	if(this.ol.maptypes.length == 0) {
+		this.setMapType(type);
+	}
 	this.ol.maptypes.push(type);
 }
 
@@ -256,7 +260,7 @@ GMap2.prototype.setMapType = function(type) {
 	for(var i = 0; i < type.getTileLayers().length; i++) {
 		type.getTileLayers()[i].ol.layer.numZoomLevels = type.getTileLayers()[i].maxResolution();
 		this.ol.map.addLayer(type.getTileLayers()[i].ol.layer);
-	}	
+	}
 	this.ol.currentMapType = type;
 }
 
