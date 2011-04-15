@@ -1,35 +1,21 @@
 package org.sarsoft.common.controller;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.sarsoft.admin.model.Config;
-import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.util.Constants;
+import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.imagery.model.GeoRefImage;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class CommonController extends JSONBaseController {
@@ -38,16 +24,16 @@ public class CommonController extends JSONBaseController {
 	public String toGarmin(Model model, HttpServletRequest request) {
 		model.addAttribute("file", request.getParameter("file"));
 		model.addAttribute("name", request.getParameter("name"));
-		model.addAttribute("hostName", getConfigValue("server.name"));
-		model.addAttribute("garminKey", getConfigValue("garmin.key"));
+		model.addAttribute("hostName", "http://" + RuntimeProperties.getServerName());
+		model.addAttribute("garminKey", getProperty("garmin.key." + RuntimeProperties.getServerName()));
 		return "/plans/togarmin";
 	}
 
 	@RequestMapping(value="/app/fromgarmin", method = RequestMethod.GET)
 	public String fromGarmin(Model model, HttpServletRequest request) {
 		model.addAttribute("id", request.getParameter("id"));
-		model.addAttribute("hostName", getConfigValue("server.name"));
-		model.addAttribute("garminKey", getConfigValue("garmin.key"));
+		model.addAttribute("hostName", "http://" + RuntimeProperties.getServerName());
+		model.addAttribute("garminKey", getProperty("garmin.key." + RuntimeProperties.getServerName()));
 		return "/plans/fromgarmin";
 	}
 
@@ -55,6 +41,7 @@ public class CommonController extends JSONBaseController {
 	public String getConstants(Model model) {
 		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
 		model.addAttribute("mapSources", getMapSources());
+		model.addAttribute("tileCacheEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled")));
 		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
 		return "/global/constants";
 	}
@@ -65,30 +52,6 @@ public class CommonController extends JSONBaseController {
 		Map m = new HashMap();
 		m.put("timestamp", Long.toString(new Date().getTime()));
 		return json(model, m);
-	}
-
-	@RequestMapping(value="/rest/config", method = RequestMethod.GET)
-	public String getAllConfigs(Model model) {
-		return json(model, configDao.loadAll(Config.class));
-	}
-
-	@RequestMapping(value="/rest/config/{name}", method = RequestMethod.GET)
-	public String getConfig(Model model, @PathVariable("name") String name) {
-		return json(model, configDao.getByAttr(Config.class, "name", name));
-	}
-
-	@RequestMapping(value="/rest/config/{name}", method = RequestMethod.POST)
-	public String setConfig(Model model, @PathVariable("name") String name, JSONForm json) {
-		Config config = Config.createFromJSON(parseObject(json));
-		Config realConfig = (Config) configDao.getByAttr(Config.class, "name", name);
-		if(realConfig == null) {
-			config.setName(name);
-			realConfig = config;
-		} else {
-			realConfig.setValue(config.getValue());
-		}
-		configDao.save(realConfig);
-		return json(model, config);
 	}
 
 }

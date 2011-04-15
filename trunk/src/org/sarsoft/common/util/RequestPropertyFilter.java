@@ -20,6 +20,8 @@ public class RequestPropertyFilter implements Filter {
 		HttpServletRequest servletRequest = (HttpServletRequest) request;
 		RuntimeProperties.setSearch((String) servletRequest.getSession(true).getAttribute("search"));
 		RuntimeProperties.setUsername((String) servletRequest.getSession(true).getAttribute("username"));
+		RuntimeProperties.setServerName(servletRequest.getServerName());
+		RuntimeProperties.setServerPort(servletRequest.getServerPort());
 		chain.doFilter(request, response);
 	}
 

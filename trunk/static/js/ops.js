@@ -79,7 +79,6 @@ org.sarsoft.controller.ResourceViewMapController.prototype._loadResourceCallback
 org.sarsoft.controller.ResourceMapController = function(emap) {
 	var that = this;
 	this.emap = emap;
-	this.configDAO = new org.sarsoft.ConfigDAO(function() { that._handleServerError(); });
 	this.searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
 	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that._handleServerError(); });
 	this.resources = new Object();

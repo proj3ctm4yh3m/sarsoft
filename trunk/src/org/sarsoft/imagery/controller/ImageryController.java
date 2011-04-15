@@ -1,11 +1,11 @@
 package org.sarsoft.imagery.controller;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,26 +13,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Date;
-import java.util.HashMap;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
-import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sarsoft.admin.model.Config;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
 import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
-import org.sarsoft.common.model.Way;
-import org.sarsoft.common.util.Constants;
 import org.sarsoft.imagery.model.GeoRefImage;
-import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -46,7 +44,12 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
 public class ImageryController extends JSONBaseController {
-
+	
+	static {
+		CacheManager.create();
+		CacheManager.getInstance().addCache("tileCache");
+	}
+	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
@@ -54,8 +57,7 @@ public class ImageryController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getFile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		if(this.isHosted()) return;
+	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		File file = new File("tiles/" + layer + "/" + z + "/" + x + "/" + y + ".png");
 		response.setContentType("image/png");
 		InputStream in = null;
@@ -75,6 +77,50 @@ public class ImageryController extends JSONBaseController {
 			e.printStackTrace();
 		} finally {
 			try { if(in != null) in.close(); } catch(Exception e) { e.printStackTrace(); }
+		}
+	}
+	
+	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}", method = RequestMethod.GET)
+	public void getCachedTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		for(MapSource source : getMapSources()) {
+			if(source.getName().equals(layer)) {
+				String url = source.getTemplate();
+				url = url.replaceAll("\\{Z\\}", Integer.toString(z));
+				url = url.replaceAll("\\{X\\}", Integer.toString(x));
+				url = url.replaceAll("\\{Y\\}", Integer.toString(y));
+				Cache cache = CacheManager.getInstance().getCache("tileCache");
+
+				byte[] array = null;
+				Element element = cache.get(url);
+				if(element != null) {
+					array = (byte[]) element.getValue(); 
+				} else {
+					try {
+						URLConnection connection = new URL(url).openConnection();
+						InputStream in = connection.getInputStream();
+						ByteArrayOutputStream out = new ByteArrayOutputStream(connection.getContentLength() == -1 ? 40000 : connection.getContentLength());
+						byte[] bytes = new byte[512];
+						while(true) {
+							int len = in.read(bytes);
+							if(len == -1) break;
+							out.write(bytes, 0, len);
+						}
+						in.close();
+						array = out.toByteArray();
+						element = new Element(url, array);
+						cache.put(element);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				response.setContentType("image/png");
+				try {
+					response.getOutputStream().write(array);
+				} catch(IOException e) {
+					e.printStackTrace();
+				}
+				return;
+			}
 		}
 	}
 	

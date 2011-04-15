@@ -69,14 +69,6 @@ org.sarsoft.BaseDAO.prototype.loadAll = function(handler) {
 if(typeof net == "undefined") net = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 
-org.sarsoft.ConfigDAO = function(errorHandler, baseURL) {
-	if(baseURL == undefined) baseURL = "/rest/config";
-	this.baseURL = baseURL;
-	this.errorHandler = errorHandler;
-}
-
-org.sarsoft.ConfigDAO.prototype = new org.sarsoft.BaseDAO();
-
 org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
 	if(baseURL == undefined) baseURL = "/rest/search";
 	this.baseURL = baseURL;

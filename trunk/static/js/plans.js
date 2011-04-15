@@ -467,7 +467,6 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	var that = this;
 	this.emap = emap;
 	this.period = operationalperiod;
-	this.configDAO = new org.sarsoft.ConfigDAO(function() { that._handleServerError(); });
 	this.searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
 	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that._handleServerError(); });

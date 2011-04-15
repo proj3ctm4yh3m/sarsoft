@@ -104,7 +104,7 @@ public class SearchController extends JSONBaseController {
 		}
 		model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
 		model.addAttribute("hosted", isHosted());
-		model.addAttribute("server", getConfigValue("server.name"));
+		model.addAttribute("server", RuntimeProperties.getServerUrl());
 		List l = dao.loadAll(OperationalPeriod.class);
 		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
 		return app(model, "Pages.Search");
@@ -137,7 +137,7 @@ public class SearchController extends JSONBaseController {
 		List l = dao.loadAll(OperationalPeriod.class);
 		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
 		model.addAttribute("search", search);
-		model.addAttribute("server", getConfigValue("server.name"));
+		model.addAttribute("server", RuntimeProperties.getServerUrl());
 		return app(model, "Pages.Search");
 	}
 
