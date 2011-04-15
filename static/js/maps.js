@@ -59,8 +59,10 @@ org.sarsoft.EnhancedGMap.prototype.createMap = function(element) {
 		this.geoRefImages = this.setGeoRefImages(org.sarsoft.EnhancedGMap.geoRefImages);
 
 		map.setCenter(new GLatLng(38.617, -97.207), 5);
-		map.addMapType(G_PHYSICAL_MAP);
-		map.setMapType(G_PHYSICAL_MAP);
+		if(G_PHYSICAL_MAP.getName != null) {
+			emap.addMapType(G_PHYSICAL_MAP);
+			map.setMapType(G_PHYSICAL_MAP);
+		}
 		map.addControl(new OverlayDropdownMapControl());
 		map.addControl(new GLargeMapControl3D());
 		map.addControl(new GScaleControl());
