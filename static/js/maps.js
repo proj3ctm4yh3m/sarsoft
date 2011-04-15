@@ -58,7 +58,7 @@ org.sarsoft.EnhancedGMap.prototype.createMap = function(element) {
 		this.mapTypes = this.setMapTypes(org.sarsoft.EnhancedGMap.defaultMapTypes);
 		this.geoRefImages = this.setGeoRefImages(org.sarsoft.EnhancedGMap.geoRefImages);
 
-		map.setCenter(new GLatLng(38.617, -97.207), 5);
+		map.setCenter(new GLatLng(org.sarsoft.map._default.lat, org.sarsoft.map._default.lng), org.sarsoft.map._default.zoom);
 		if(G_PHYSICAL_MAP.getName != null) {
 			emap.addMapType(G_PHYSICAL_MAP);
 			map.setMapType(G_PHYSICAL_MAP);
@@ -235,8 +235,6 @@ org.sarsoft.FixedGMap = function(map) {
 
 org.sarsoft.FixedGMap.prototype.getConfig = function() {
 	var config = new Object();
-//	config.center = { lat: this.map.getCenter().lat(), lng: this.map.getCenter().lng() };
-//	config.zoom = this.map.getZoom();
 	config.base = this.map.getCurrentMapType().getName();
 	config.overlay = this.map._sarsoft_overlay_type ? this.map._sarsoft_overlay_type.getName() : null;
 	config.opacity = this.map._sarsoft_overlay_opacity;
@@ -244,7 +242,6 @@ org.sarsoft.FixedGMap.prototype.getConfig = function() {
 }
 
 org.sarsoft.FixedGMap.prototype.setConfig = function(config) {
-//	this.map.setCenter(new GLatLng(config.center.lat, config.center.lng), config.zoom);
 	this.setMapLayers(config.base, config.overlay, config.opacity);
 }
 

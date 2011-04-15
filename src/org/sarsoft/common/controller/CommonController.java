@@ -43,6 +43,9 @@ public class CommonController extends JSONBaseController {
 		model.addAttribute("mapSources", getMapSources());
 		model.addAttribute("tileCacheEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled")));
 		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
+		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
+		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
+		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
 		return "/global/constants";
 	}
 
