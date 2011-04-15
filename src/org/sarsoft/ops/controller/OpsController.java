@@ -57,10 +57,10 @@ public class OpsController extends JSONBaseController {
 			locationEngines.put(search, engine);
 			engine.dao = this.dao;
 			engine.setSearch(search);
-			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
-			engine.setLatitudeRefreshInterval(getConfigValue("location.refreshInterval.latitude"));
-			engine.setAPRSRefreshInterval(getConfigValue("location.refreshInterval.aprs"));
-			engine.setSpotRefreshInterval(getConfigValue("location.refreshInterval.spot"));
+			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getProperty("google.latitude.clientSharedSecret");
+			engine.setLatitudeRefreshInterval(getProperty("google.latitude.refreshInterval"));
+			engine.setAPRSRefreshInterval(getProperty("sarsoft.location.aprs.refreshInterval"));
+			engine.setSpotRefreshInterval(getProperty("sarsoft.location.spot.refreshInterval"));
 			engine.start();
 		}
 		if(REST.equals(mode)) return "/json";
@@ -169,10 +169,10 @@ public class OpsController extends JSONBaseController {
 		resource.setName(request.getParameter("name"));
 		resource.setSection(Resource.Section.FIELD);
 		assignment.addResource(resource);
-		if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
+		if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getProperty("google.latitude.clientSharedSecret");
 		LatitudeDevice device = new LatitudeDevice();
 		resource.getLocators().add(device);
-		String domain = getConfigValue("latitude.domain");
+		String domain = getProperty("google.latitude.domain");
 		dao.save(assignment);
 		try {
 			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/" + mode + "/latitude/" + device.getPk() + "/callback?assignmentId=" + assignment.getId() + "#operations", domain, "SARSOFT Search and Rescue Software"));
@@ -214,11 +214,11 @@ public class OpsController extends JSONBaseController {
 	public String createLatitudeDevice(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, HttpServletRequest request, HttpServletResponse response) {
 		try {
 			Resource resource = (Resource) dao.load(Resource.class, resourceid);
-			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getConfigValue("latitude.clientSharedSecret");
+			if(LatitudeDevice.clientSharedSecret == null) LatitudeDevice.clientSharedSecret = getProperty("google.latitude.clientSharedSecret");
 			LatitudeDevice device = new LatitudeDevice();
 			resource.getLocators().add(device);
 			dao.save(resource);
-			String domain = getConfigValue("latitude.domain");
+			String domain = getProperty("google.latitude.domain");
 			response.sendRedirect(device.createAuthUrl("http://" + request.getServerName() + ":" + request.getServerPort() + "/" + mode + "/latitude/" + device.getPk() + "/callback?resourceId=" + resource.getId(), domain, "SARSOFT Search and Rescue Software"));
 			dao.save(device);
 		} catch (Exception e) {

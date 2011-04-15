@@ -74,14 +74,6 @@
 		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
 	</bean>
 
-	<bean id="configDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass" value="${hibernate.config.driverClass}"/>
-		<property name="jdbcUrl" value="${hibernate.config.jdbcUrl}"/>
-		<property name="user" value="${hibernate.config.username}"/>
-		<property name="password" value="${hibernate.config.password}"/>
-		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
-	</bean>
-
 	<bean id="searchSessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
 		<property name="packagesToScan">
 			<list>
@@ -103,24 +95,6 @@
 		<property name="configLocation" value="/WEB-INF/hibernate.cfg.xml"/>
 	</bean>
 
-	<bean id="configSessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
-		<property name="packagesToScan">
-			<list>
-				<value>org.sarsoft.admin.model</value>
-			</list>
-		</property>
-
-		<property name="hibernateProperties">
-			<props>
-				<prop key="hibernate.hbm2ddl.auto">update</prop>
-				<prop key="hibernate.dialect">${hibernate.config.dialect}</prop>
-			</props>
-		</property>
-
-		<property name="dataSource" ref="configDataSource"/>
-		<property name="configLocation" value="/WEB-INF/hibernate.cfg.xml"/>
-	</bean>
-
 	<context:annotation-config/>
 	<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
 	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
@@ -133,10 +107,6 @@
 
 	<bean name="genericDAO" class="org.sarsoft.common.dao.GenericHibernateDAO">
 		<property name="sessionFactory" ref="searchSessionFactory"/>
-	</bean>
-
-	<bean name="genericConfigDAO" class="org.sarsoft.common.dao.GenericHibernateDAO">
-		<property name="sessionFactory" ref="configSessionFactory"/>
 	</bean>
 
 </beans>

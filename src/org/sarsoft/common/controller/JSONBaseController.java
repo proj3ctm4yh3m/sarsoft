@@ -56,10 +56,6 @@ public abstract class JSONBaseController {
 	@Qualifier("genericDAO")
 	protected GenericHibernateDAO dao;
 
-	@Autowired
-	@Qualifier("genericConfigDAO")
-	protected GenericHibernateDAO configDao;
-
 	@Value("${sarsoft.hosted}")
 	String hosted;
 	private Boolean inHostedMode = null;
@@ -69,10 +65,6 @@ public abstract class JSONBaseController {
 
 	public void setDao(GenericHibernateDAO dao) {
 		this.dao = dao;
-	}
-
-	public void setConfigDao(GenericHibernateDAO dao) {
-		this.configDao = dao;
 	}
 
 	protected boolean isHosted() {
@@ -117,18 +109,12 @@ public abstract class JSONBaseController {
 				source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
 				source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
 				source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
-				source.setType(MapSource.Type.TILE);
+				source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
 				mapSources.add(source);
 			}
 		}
 		mapSources = Collections.unmodifiableList(mapSources);
 		return mapSources;
-	}
-
-	protected String getConfigValue(String name) {
-		Config config = (Config) configDao.getByAttr(Config.class, "name", name);
-		if(config != null) return config.getValue();
-		return null;
 	}
 
 	protected String hash(String password) {
@@ -153,7 +139,7 @@ public abstract class JSONBaseController {
 	protected String getMapJS() {
 		if("google".equals(this.mapViewer)) {
 			return "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
-			getConfigValue("maps.key") + "\" type=\"text/javascript\"></script>";			
+			getProperty("google.maps.apikey." + RuntimeProperties.getServerName()) + "\" type=\"text/javascript\"></script>";			
 		} else {
 			return "<script src=\"/static/js/openlayers.js\"></script>\n" +
 			"<script src=\"/static/js/gmapolwrapper.js\"></script>";

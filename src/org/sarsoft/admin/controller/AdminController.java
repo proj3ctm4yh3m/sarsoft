@@ -43,25 +43,7 @@ public class AdminController extends JSONBaseController {
 	@Qualifier("searchSessionFactory")
 	LocalSessionFactoryBean sessionFactory;
 
-	@Autowired
-	@Qualifier("configDataSource")
-	ComboPooledDataSource configDataSource;
-
-	@Autowired
-	@Qualifier("configSessionFactory")
-	LocalSessionFactoryBean configSessionFactory;
-
 	private OIDConsumer consumer = null;
-
-	@RequestMapping(value="/app/shutdown", method = RequestMethod.GET)
-	public String shutdown(Model model, HttpServletRequest request) {
-		String password = System.getProperty("sarsoft.admin.password");
-		if(request.getSession().getAttribute("loggedin") != Boolean.TRUE) {
-			if(password != null) return app(model, "Pages.Login");
-		}
-		System.exit(0);
-		return "ain't gonna happen";
-	}
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
@@ -170,8 +152,7 @@ public class AdminController extends JSONBaseController {
 	@RequestMapping(value="/app/openidrequest", method = RequestMethod.GET)
 	public void login(@RequestParam("domain") String domain, HttpServletRequest request, HttpServletResponse response) {
 		try {
-			String server = getConfigValue("server.name");
-			if(server == null || server.length() == 0) server = "http://localhost:8080/";
+			String server = RuntimeProperties.getServerUrl();
 			if(consumer == null) consumer = new OIDConsumer(server);
 			if("google".equalsIgnoreCase(domain)) consumer.authRequest("https://www.google.com/accounts/o8/id", request, response);
 			if("yahoo".equalsIgnoreCase(domain)) consumer.authRequest("https://me.yahoo.com", request, response);
@@ -216,79 +197,4 @@ public class AdminController extends JSONBaseController {
 		return bounce(model);
 	}
 
-	@RequestMapping(value="/rest/configschema/{ds}", method = RequestMethod.GET)
-	public String setConfigDataSchema(Model model, @PathVariable("ds") String schema, HttpServletRequest request) {
-		String jdbcUrl = "jdbc:hsqldb:config/" + schema + "/sarsoft";
-		if(!jdbcUrl.equalsIgnoreCase(configDataSource.getJdbcUrl())) {
-			configDataSource.setJdbcUrl("jdbc:hsqldb:config/" + schema + "/sarsoft");
-			configSessionFactory.updateDatabaseSchema();
-		}
-		return "/blank";
-	}
-
-	@RequestMapping(value="/app/configschema/{ds}", method = RequestMethod.GET)
-	public String setAppConfigDataSchema(Model model, @PathVariable("ds") String schema, HttpServletRequest request) {
-		setConfigDataSchema(model, schema, request);
-		return homePage(model);
-	}
-
-
-	@RequestMapping(value="/app/admin", method = RequestMethod.GET)
-	public String admin(Model model, HttpServletRequest request) {
-		String password = System.getProperty("sarsoft.admin.password");
-		if(request.getSession().getAttribute("loggedin") != Boolean.TRUE) {
-			if(password != null) {
-				if(!password.equals(request.getParameter("password"))) {
-					return app(model, "Pages.Login");
-				}
-				request.getSession().setAttribute("loggedin", true);
-			}
-		}
-		model.addAttribute("search", RuntimeProperties.getSearch());
-
-		String url = configDataSource.getJdbcUrl();
-		String config = url.substring(url.indexOf('/')+1);
-		model.addAttribute("config", config);
-		File dir = new File("config");
-		List<String> configs = new ArrayList<String>();
-		String[] files = dir.list();
-		for(String file : files) {
-			if(file != null && file.endsWith(".script")) configs.add(file.substring(0, file.indexOf(".script")));
-		}
-		model.addAttribute("configs", configs);
-
-		model.addAttribute("mapkey", getConfigValue("maps.key"));
-		model.addAttribute("hostName", getConfigValue("server.name"));
-		model.addAttribute("garminKey", getConfigValue("garmin.key"));
-		model.addAttribute("latitudedomain", getConfigValue("latitude.domain"));
-		model.addAttribute("latitudesharedsecret", getConfigValue("latitude.clientSharedSecret"));
-		model.addAttribute("latitudeRefreshInterval", getConfigValue("location.refreshInterval.latitude"));
-		model.addAttribute("aprsRefreshInterval", getConfigValue("location.refreshInterval.aprs"));
-		return app(model, "Pages.Admin");
-	}
-
-	@SuppressWarnings("unchecked")
-	@RequestMapping(value="/rest/mapsource", method = RequestMethod.GET)
-	public String MapSources(Model model) {
-		return json(model, configDao.loadAll(MapSource.class));
-	}
-
-	@RequestMapping(value="/rest/mapsource", method = RequestMethod.POST)
-	public String createMapSource(Model model, JSONForm params) {
-		MapSource source = MapSource.createFromJSON(parseObject(params));
-		configDao.save(source);
-		return json(model, source);
-	}
-
-	@RequestMapping(value="/rest/mapsource/{name}", method = RequestMethod.POST)
-	public String updateMapSource(@PathVariable("name") String name, Model model, JSONForm params, HttpServletRequest request) {
-		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
-		MapSource source = (MapSource) configDao.getByAttr(MapSource.class, "name", name);
-		switch(action) {
-		case DELETE :
-			configDao.delete(source);
-		}
-		return json(model, source);
-	}
-	
 }

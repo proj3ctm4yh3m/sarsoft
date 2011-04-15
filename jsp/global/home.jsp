@@ -21,7 +21,7 @@ Working on ${search.description}.  <a href="/app/setsearch">Change</a>
 <c:when test="${hosted eq false}">
 <h4>Administration</h4>
 <ul>
- <li><a href="/app/admin">Site Admin</a>&nbsp;|&nbsp;<a href="/app/search">Search Admin</a></li>
+ <li><a href="/app/search">Search Admin</a></li>
 </ul>
 </c:when>
 <c:when test="${search.account.name eq username}">

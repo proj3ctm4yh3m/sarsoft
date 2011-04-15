@@ -24,7 +24,8 @@ GEvent.addDomListener = function(obj, event, handler) {
 }
 
 G_SATELLITE_MAP = new Object();
-G_SATELLITE_MAP.getProjection = function() {};
+G_SATELLITE_MAP.getProjection = function() {
+};
 G_ANCHOR_TOP_RIGHT = 5;
 G_MAP_FLOAT_SHADOW_PANE = 6;
 G_MAP_MAP_PANE=7;
@@ -39,14 +40,26 @@ function GTileLayer(copyright, minResolution, maxResolution, options) {
 	this._maxResolution = maxResolution;
 }
 GTileLayer.prototype._init = function(name, baseLayer) {
+	var that = this;
 	this.ol = new Object();
-	if(this._options.tileUrlTemplate != null) {
-		var xyz = this._options.tileUrlTemplate;
-		xyz = xyz.replace(/{/g, "${");
-		xyz = xyz.replace(/{X}/, "{x}");
-		xyz = xyz.replace(/{Y}/, "{y}");
-		xyz = xyz.replace(/{Z}/, "{z}");
-		this.ol.layer = new OpenLayers.Layer.XYZ(name, xyz, {sphericalMercator: true, isBaseLayer: baseLayer == null ? true : baseLayer});	
+	var xyz = this._options.tileUrlTemplate;
+	if(xyz == null) xyz = "";
+	xyz = xyz.replace(/{/g, "${");
+	xyz = xyz.replace(/{X}/, "{x}");
+	xyz = xyz.replace(/{Y}/, "{y}");
+	xyz = xyz.replace(/{Z}/, "{z}");
+	this.ol.layer = new OpenLayers.Layer.XYZ(name, xyz, {sphericalMercator: true, isBaseLayer: baseLayer == null ? true : baseLayer});	
+	if(this._options.tileUrlTemplate == null) {
+		this.ol.layer.getURL = function(bounds) {
+			var url = that.wmstemplate;
+			bounds.transform(GMap2.ol.mercator, GMap2.ol.geographic);
+			url = url.replace(/\{left\}/g, bounds.left);
+		    url = url.replace(/\{bottom\}/g, bounds.bottom);
+		    url = url.replace(/\{right\}/g, bounds.right);
+		    url = url.replace(/\{top\}/g, bounds.top);
+		    url = url.replace(/\{tilesize\}/g, 256);
+		    return url;
+		}
 	}
 }
 GTileLayer.prototype.minResolution = function() {return this._minResolution;};
@@ -132,16 +145,17 @@ function GMap2(node) {
             displayProjection: new OpenLayers.Projection("EPSG:4326")
 		};
 	
-	G_PHYSICAL_MAP = new GMapType(
-			[new GTileLayer(null, 0, 20, { isPng: true, tileUrlTemplate: 'http://tile.openstreetmap.org/{Z}/{X}/{Y}.png'})],
-			G_SATELLITE_MAP.getProjection(), "Phsyical", {tileSize: 256 } );	
-
 	this.ol.map = new OpenLayers.Map(node, options);
 	this.ol.maptypes = new Array();
 	this.ol.currentMapType = null;
 	
-	this.setMapType(G_PHYSICAL_MAP);
 
+	G_PHYSICAL_MAP = new GMapType(
+			[new GTileLayer(null, 0, 20, { isPng: true, tileUrlTemplate: '/resource/imagery/tiles/dummy/{Z}/{X}/{Y}.png'})],
+			G_SATELLITE_MAP.getProjection(), "Physical", {tileSize: 256 } );	
+	
+	this.setMapType(G_PHYSICAL_MAP);
+	
 	this.ol.vectorLayer = new OpenLayers.Layer.Vector("overlays", {});
 	this.ol.map.addLayer(this.ol.vectorLayer);
 	this.ol.markerLayer = new OpenLayers.Layer.Markers("marker", {});

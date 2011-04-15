@@ -18,6 +18,7 @@ org.sarsoft.EnhancedGMap.prototype.createTileLayers = function(config) {
 	} else if(config.type == "WMS") {
 		layer = new GTileLayer(new GCopyrightCollection(config.copyright), config.minresolution, config.maxresolution, { isPng: config.png });
 		layer.getTileUrl = function(tile, zoom) { return that._getWMSTileUrl(tile, zoom, config) };
+		layer.wmstemplate = config.template;
 		return [layer];
 	} else if(config.type == "NATIVE") {
 		return eval(config.template+'.getTileLayers()');
@@ -58,10 +59,11 @@ org.sarsoft.EnhancedGMap.prototype.createMap = function(element) {
 		this.geoRefImages = this.setGeoRefImages(org.sarsoft.EnhancedGMap.geoRefImages);
 
 		map.setCenter(new GLatLng(38.617, -97.207), 5);
+		map.addMapType(G_PHYSICAL_MAP);
+		map.setMapType(G_PHYSICAL_MAP);
 		map.addControl(new OverlayDropdownMapControl());
 		map.addControl(new GLargeMapControl3D());
 		map.addControl(new GScaleControl());
-		map.setMapType(G_PHYSICAL_MAP);
 		return map;
 	}
 }
@@ -186,6 +188,7 @@ org.sarsoft.GAlphaTileLayerWrapper = function(tileLayer, opacity) {
 	this.tileLayer = tileLayer;
 	this.opacity = opacity;
 	GTileLayer.call(this, new GCopyrightCollection("NA"), tileLayer.minResolution(), tileLayer.maxResolution(), {});
+	if(tileLayer.wmstemplate != null) this.wmstemplate = tileLayer.wmstemplate;
 }
 
 function TMP() {
@@ -245,14 +248,14 @@ org.sarsoft.FixedGMap.prototype.setConfig = function(config) {
 
 org.sarsoft.FixedGMap.prototype.setMapLayers = function(baseName, overlayName, opacity) {
 	var types = this.map.getMapTypes();
-	var base = G_PHYSICAL_MAP;
-	var overlay = G_PHYSICAL_MAP;
+	var base = null;
+	var overlay = null;
 	opacity = opacity ? opacity : 0;
 	for(var i = 0; i < types.length; i++) {
 		if(types[i].getName() == baseName) base = types[i];
 		if(types[i].getName() == overlayName) overlay = types[i];
 	}
-	this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity);
+	if(base != null && overlay != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity);
 }
 
 org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
@@ -339,7 +342,7 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		if(0 < offset && offset < pymax) {
 			var point = new GPoint(0, offset);
 			if(right) {
-				point = new GPoint(this.map.getSize().width-50, this.map.fromLatLngToContainerPixel(vertices[1].y));
+				point = new GPoint(this.map.getSize().width-50, this.map.fromLatLngToContainerPixel(vertices[1]).y);
 			}
 			var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(northing));
 			this.map.addOverlay(label);
