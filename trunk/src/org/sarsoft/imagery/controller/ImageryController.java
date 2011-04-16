@@ -50,6 +50,9 @@ public class ImageryController extends JSONBaseController {
 		CacheManager.getInstance().addCache("tileCache");
 	}
 	
+	private static String EXTERNAL_TILE_DIR = "tiles/";
+	private static String GEOREF_IMAGE_DIR = ".sarsoft/imagery/georef/";
+	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
@@ -58,7 +61,7 @@ public class ImageryController extends JSONBaseController {
 
 	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		File file = new File("tiles/" + layer + "/" + z + "/" + x + "/" + y + ".png");
+		File file = new File(EXTERNAL_TILE_DIR + layer + "/" + z + "/" + x + "/" + y + ".png");
 		response.setContentType("image/png");
 		InputStream in = null;
 		OutputStream out = null;
@@ -80,8 +83,9 @@ public class ImageryController extends JSONBaseController {
 		}
 	}
 	
-	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}", method = RequestMethod.GET)
+	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getCachedTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
 		for(MapSource source : getMapSources()) {
 			if(source.getName().equals(layer)) {
 				String url = source.getTemplate();
@@ -148,13 +152,13 @@ public class ImageryController extends JSONBaseController {
 		}
 	}
 
-	@RequestMapping(value="/resource/imagery/georef/{id}", method=RequestMethod.GET)
+	@RequestMapping(value="/resource/imagery/georef/{id}.png", method=RequestMethod.GET)
 	public void getImage(HttpServletResponse response, @PathVariable("id") long id, @RequestParam(value="angle", required=false) Double angle, 
 			@RequestParam(value="originy", required=false) Integer originy, @RequestParam(value="originx", required=false) Integer originx) {
 		response.setContentType("image/png");
 		GeoRefImage georefimage = (GeoRefImage) dao.load(GeoRefImage.class, id);
 		try {
-			BufferedImage original = ImageIO.read(new File("imagery/" + georefimage.getPk() + ".png"));
+			BufferedImage original = ImageIO.read(new File(GEOREF_IMAGE_DIR + georefimage.getPk() + ".png"));
 			int height = original.getHeight();
 			int width = original.getWidth();
 			
@@ -164,7 +168,6 @@ public class ImageryController extends JSONBaseController {
 			g.clearRect(0, 0, width, height);
 			if(angle != null) {
 				double radians = (angle * Math.PI / 180);
-				System.out.println("rotating " + angle + "degrees around (" + originx + "," + originy + ")");
 				g.rotate(radians, originx, originy);
 			}
 			g.drawImage(original, 0, 0, width, height, null);
@@ -195,9 +198,9 @@ public class ImageryController extends JSONBaseController {
 		dao.save(image);
 		image = (GeoRefImage) dao.load(GeoRefImage.class, maxId+1);
 		try {
-			File file = new File("imagery");
+			File file = new File(GEOREF_IMAGE_DIR);
 			file.mkdir();
-			FileOutputStream os = new FileOutputStream("imagery/" + image.getPk() + ".png");
+			FileOutputStream os = new FileOutputStream(GEOREF_IMAGE_DIR + image.getPk() + ".png");
 			
 			BufferedImage original = ImageIO.read(new ByteArrayInputStream(params.getBinaryData()));
 			int height = original.getHeight();
@@ -212,22 +215,22 @@ public class ImageryController extends JSONBaseController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return referenceImage(model, request, image.getId());
+		return editGeoRefImage(model, request, image.getId());
 	}
 	
 	
 	@RequestMapping(value="/app/imagery/georef/{id}", method=RequestMethod.GET)
-	public String referenceImage(Model model, HttpServletRequest request, @PathVariable("id") long id) {
+	public String editGeoRefImage(Model model, HttpServletRequest request, @PathVariable("id") long id) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.VIEW;
 		GeoRefImage image = (GeoRefImage) dao.load(GeoRefImage.class, id);
 		if(action == Action.DELETE) {
 			dao.delete(image);
-			new File("imagery/" + image.getPk() + ".img").delete();
+			new File(GEOREF_IMAGE_DIR + image.getPk() + ".png").delete();
 			return georef(model);
 		}
 		model.addAttribute("image", image);
 		try {
-			BufferedImage rawImage = ImageIO.read(new File("imagery/" + image.getPk() + ".png"));
+			BufferedImage rawImage = ImageIO.read(new File(GEOREF_IMAGE_DIR + image.getPk() + ".png"));
 			model.addAttribute("width", rawImage.getWidth());
 			model.addAttribute("height", rawImage.getHeight());
 		} catch (Exception e) {
@@ -237,9 +240,8 @@ public class ImageryController extends JSONBaseController {
 		return app(model, "/imagery/georef");
 	}
 	
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/georefimage", method = RequestMethod.GET)
-	public String MapSources(Model model) {
+	public String getAllGeorefImages(Model model) {
 		return json(model, dao.loadAll(GeoRefImage.class));
 	}
 
@@ -252,6 +254,7 @@ public class ImageryController extends JSONBaseController {
 		switch(action) {
 		case DELETE :
 			dao.delete(image);
+			new File(GEOREF_IMAGE_DIR + image.getPk() + ".png").delete();
 			return json(model, image);
 		}
 		image.setAngle(imagePrime.getAngle());

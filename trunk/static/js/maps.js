@@ -1248,7 +1248,7 @@ GeoRefImageOverlay.prototype = new GOverlay();
 GeoRefImageOverlay.prototype.initialize = function(map) {
 	var div = document.createElement("img");
 	div.style.position = "absolute";
-	div.src= '/resource/imagery/georef/' +  this.id + '?originx=' + this.point.x + '&originy=' + this.point.y + '&angle=' + this.angle;
+	div.src= '/resource/imagery/georef/' +  this.id + '.png?originx=' + this.point.x + '&originy=' + this.point.y + '&angle=' + this.angle;
 	div.style.zIndex=2;
 	map.getPane(G_MAP_MAP_PANE).appendChild(div);
 	this._map = map;

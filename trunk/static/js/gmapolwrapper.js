@@ -230,7 +230,7 @@ GMap2.prototype.fromLatLngToDivPixel = function(gll) {
 }
 
 GMap2.prototype.fromDivPixelToLatLng = function(px) {
-	var viewportPx = this.ol.map.getViewPortPxFromLayerPx(px);
+	var viewportPx = this.ol.map.getViewPortPxFromLayerPx(new OpenLayers.Pixel(px.x, px.y));
 	return GLatLng.fromLonLat(this.ol.map.getLonLatFromViewPortPx(viewportPx));
 }
 

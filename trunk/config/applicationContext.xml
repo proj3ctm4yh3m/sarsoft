@@ -67,10 +67,10 @@
 	</bean>
 
 	<bean id="searchDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass" value="${hibernate.search.driverClass}"/>
-		<property name="jdbcUrl" value="${hibernate.search.jdbcUrl}"/>
-		<property name="user" value="${hibernate.search.username}"/>
-		<property name="password" value="${hibernate.search.password}"/>
+		<property name="driverClass" value="${hibernate.driverClass}"/>
+		<property name="jdbcUrl" value="${hibernate.jdbcUrl}"/>
+		<property name="user" value="${hibernate.username}"/>
+		<property name="password" value="${hibernate.password}"/>
 		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
 	</bean>
 
@@ -87,7 +87,7 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.hbm2ddl.auto">update</prop>
-				<prop key="hibernate.dialect">${hibernate.search.dialect}</prop>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
 			</props>
 		</property>
 

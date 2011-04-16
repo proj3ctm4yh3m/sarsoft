@@ -164,7 +164,7 @@ and then save it.
 <div id="image">
 <div>Please <b>click</b> on the image to select your two reference points, then select the <b>Map</b> tab.</div>
 <div id="imagecontainer">
-<img src="/resource/imagery/georef/${image.id}" id="actualimage"/>
+<img src="/resource/imagery/georef/${image.id}.png" id="actualimage"/>
 </div>
 </div>
 
