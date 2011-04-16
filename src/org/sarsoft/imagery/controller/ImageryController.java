@@ -50,7 +50,7 @@ public class ImageryController extends JSONBaseController {
 		CacheManager.getInstance().addCache("tileCache");
 	}
 	
-	private static String EXTERNAL_TILE_DIR = "tiles/";
+	private static String EXTERNAL_TILE_DIR = "sardata/tiles/";
 	private static String GEOREF_IMAGE_DIR = ".sarsoft/imagery/georef/";
 	
 	@InitBinder

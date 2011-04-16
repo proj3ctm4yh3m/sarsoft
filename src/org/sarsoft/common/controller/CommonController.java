@@ -20,6 +20,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class CommonController extends JSONBaseController {
 
+	@RequestMapping(value="/app/map.html", method = RequestMethod.GET)
+	public String showMap(Model model, HttpServletRequest request) {
+		return app(model, "/map");
+	}
+	
 	@RequestMapping(value="/app/togarmin", method = RequestMethod.GET)
 	public String toGarmin(Model model, HttpServletRequest request) {
 		model.addAttribute("file", request.getParameter("file"));
