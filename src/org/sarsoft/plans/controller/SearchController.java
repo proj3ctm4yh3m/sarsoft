@@ -43,21 +43,21 @@ public class SearchController extends JSONBaseController {
 		return json(model, search);
 	}
 
-	@RequestMapping(value = "/rest/search/plk", method = RequestMethod.GET)
-	public String getPlk(Model model, HttpServletRequest request, HttpServletResponse response) {
+	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.GET)
+	public String getLkp(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("value", search.getPlk());
+		map.put("value", search.getLkp());
 		return json(model, map);
 	}
 
-	@RequestMapping(value = "/rest/search/plk", method = RequestMethod.POST)
-	public String setPlk(Model model, JSONForm params) {
+	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.POST)
+	public String setLkp(Model model, JSONForm params) {
 		Map<String, Class> classHints = new HashMap<String, Class>();
 		classHints.put("value", Waypoint.class);
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class, classHints);
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
-		search.setPlk((Waypoint) m.get("value"));
+		search.setLkp((Waypoint) m.get("value"));
 		dao.save(search);
 		return json(model, search);
 	}

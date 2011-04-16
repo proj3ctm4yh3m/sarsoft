@@ -17,7 +17,7 @@ public class Search {
 
 	private String name;
 	private String mapConfig;
-	private Waypoint plk;
+	private Waypoint lkp;
 	private boolean visible = false;
 	private String password;
 	private String description;
@@ -43,12 +43,12 @@ public class Search {
 
 	@ManyToOne
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-	public Waypoint getPlk() {
-		return plk;
+	public Waypoint getLkp() {
+		return lkp;
 	}
 
-	public void setPlk(Waypoint plk) {
-		this.plk = plk;
+	public void setLkp(Waypoint lkp) {
+		this.lkp = lkp;
 	}
 
 	public void setPassword(String password) {
