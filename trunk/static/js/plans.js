@@ -491,7 +491,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "Show Locations", applicable : function(obj) { return obj == null && !that.showLocations; }, handler : function(data) { that.showLocations = true; that._handleSetupChange(); }},
 		{text : "Return to Operational Period " + operationalperiod.id, applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/operationalperiod/" + operationalperiod.id; }},
 		{text : "Map Setup", applicable : function(obj) { return obj == null }, handler : function(data) { that.setupDlg.show(that._mapsetup); }},
-		{text : "Set PLK here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setPlk(data.point); }},
+		{text : "Set LKP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setLkp(data.point); }},
 		{text : "Adjust page size for printing", applicable: function(obj) { return obj == null}, handler : function(data) { that.pageSizeDlg.show(); }},
 		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); config.rangerings = that._mapsetup.map.rangerings; that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)})}},
 		{text : "Edit Assignment Bounds", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.edit(data.subject) }},
@@ -518,7 +518,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 					that._mapsetup.map.rangerings = mapConfig.rangerings;
 					that.emap.setConfig(mapConfig);
 				} catch (e) {}
-				if(that.plk != null) that.placePlk(that.plk);
+				if(that.lkp != null) that.placeLkp(that.lkp);
 				var bb = period.boundingBox;
 				if(bb.length == 0) {
 					that.periodDAO.loadAll(function(periods) {
@@ -539,13 +539,13 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		}, "mapConfig");
 		that.searchDAO.load(function(config) {
 			if(config.value != null) {
-				that.plk = config.value;
-				that.placePlk(config.value);
+				that.lkp = config.value;
+				that.placeLkp(config.value);
 				if(that.isCenterSet==false) {
-					that.emap.map.setCenter(new GLatLng(that.plk.lat, that.plk.lng), 14);
+					that.emap.map.setCenter(new GLatLng(that.lkp.lat, that.lkp.lng), 14);
 				}
 				}
-		}, "plk");
+		}, "lkp");
 	}, that.period.id);
 
 	var handler = function(assignment) {
@@ -619,7 +619,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._handleSetupChan
 		}
 		this.addAssignment(assignment);
 	}
-	this.placePlk(this.plk);
+	this.placeLkp(this.lkp);
 	this.reprocessResourceData();
 }
 
@@ -667,22 +667,22 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.edit = function(
 	this.setAssignmentAttr(assignment, "inedit", true);
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.setPlk = function(plk) {
-	plk = this.emap.map.fromContainerPixelToLatLng(new GPoint(plk.x, plk.y));
-	plk = {lat: plk.lat(), lng: plk.lng()};
-	this.searchDAO.save("plk", { value: plk});
-	this.placePlk(plk);
+org.sarsoft.controller.OperationalPeriodMapController.prototype.setLkp = function(lkp) {
+	lkp = this.emap.map.fromContainerPixelToLatLng(new GPoint(lkp.x, lkp.y));
+	lkp = {lat: lkp.lat(), lng: lkp.lng()};
+	this.searchDAO.save("lkp", { value: lkp});
+	this.placeLkp(lkp);
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.placePlk = function(plk) {
-	if(this.plk != null) this.emap.removeWaypoint(this.plk);
-	this.plk = plk;
-	this.emap.addWaypoint(plk, {color: "#FF0000"}, "PLK", "PLK");
+org.sarsoft.controller.OperationalPeriodMapController.prototype.placeLkp = function(lkp) {
+	if(this.lkp != null) this.emap.removeWaypoint(this.lkp);
+	this.lkp = lkp;
+	this.emap.addWaypoint(lkp, {color: "#FF0000"}, "LKP", "LKP");
 	this.emap.removeRangeRings();
 	if(this._mapsetup.map.rangerings != null) {
 		var radii = this._mapsetup.map.rangerings.split(",");
 		for(var i = 0; i < radii.length; i++) {
-			this.emap.addRangeRing(new GLatLng(plk.lat, plk.lng), radii[i], 36);
+			this.emap.addRangeRing(new GLatLng(lkp.lat, lkp.lng), radii[i], 36);
 		}
 	}
 }

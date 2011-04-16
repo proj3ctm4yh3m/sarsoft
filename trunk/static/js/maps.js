@@ -251,8 +251,9 @@ org.sarsoft.FixedGMap.prototype.setMapLayers = function(baseName, overlayName, o
 	var overlay = null;
 	opacity = opacity ? opacity : 0;
 	for(var i = 0; i < types.length; i++) {
-		if(types[i].getName() == baseName) base = types[i];
-		if(types[i].getName() == overlayName) overlay = types[i];
+		if(types[i].getName != null && types[i].getName() == baseName) base = types[i];
+		if(types[i].getName != null && types[i].getName() == overlayName) overlay = types[i];
+		if(types[i].name == overlayName) overlay = types[i];
 	}
 	if(base != null && overlay != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity);
 }
