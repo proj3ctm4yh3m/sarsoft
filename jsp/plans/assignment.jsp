@@ -24,6 +24,9 @@ function importassignment() {
 
 function finalize() {
 	var postdata = "action=finalize&preparedby=" + encodeURIComponent(document.getElementById('dlgpreparedby').value);
+	YAHOO.util.Connect.resetDefaultHeaders();
+	YAHOO.util.Connect.setDefaultPostHeader(false);
+	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
 			window.location.href = window.location.href;
 		}, failure : function(response) {
@@ -33,6 +36,9 @@ function finalize() {
 
 function transition(state) {
 	var postdata = "action=" + state;
+	YAHOO.util.Connect.resetDefaultHeaders();
+	YAHOO.util.Connect.setDefaultPostHeader(false);
+	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
 			window.location.href = '/app/assignment/${assignment.id}';
 		}, failure : function(response) {
