@@ -21,6 +21,7 @@ import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;
 import net.sf.json.JSONArray;
@@ -83,6 +84,7 @@ public class OperationalPeriodController extends JSONBaseController {
 
 
 	// REST PERIOD
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/operationalperiod", method = RequestMethod.GET)
 	public String getOperationalPeriods(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
@@ -90,7 +92,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=search.gpx");
 			List<SearchAssignment> assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
-			return gpx(model, assignments, "SearchAssignments");
+			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignmentList(assignments), "SearchAssignments");
 		default :
 			return json(model, dao.loadAll(OperationalPeriod.class));
 		}
@@ -104,7 +106,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=operationalperiod" + period.getId() + ".gpx");
-			return gpx(model, period.getAssignments(), "SearchAssignments");
+			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignmentList(period.getAssignments()), "SearchAssignments");
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=operationalperiod" + period.getId() + ".kml");
 			return kml(model, period.getAssignments(), "SearchAssignments");

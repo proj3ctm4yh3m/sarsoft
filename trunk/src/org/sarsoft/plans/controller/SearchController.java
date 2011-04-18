@@ -1,31 +1,46 @@
 package org.sarsoft.plans.controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.dao.GenericHibernateDAO;
+import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Search;
+import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
 public class SearchController extends JSONBaseController {
 
+	@InitBinder
+	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
+		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
+	}	
+	
 	@RequestMapping(value ="/rest/search/mapConfig", method = RequestMethod.GET)
 	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
@@ -141,4 +156,46 @@ public class SearchController extends JSONBaseController {
 		return app(model, "Pages.Search");
 	}
 
+	@RequestMapping(value = "/rest/search", method= RequestMethod.POST)
+	public void bulkGPXUpload(JSONForm params, Model model, HttpServletRequest request, HttpServletResponse response) {
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.GPX;
+
+		Object obj;
+		switch(format) {
+		case GPX :
+			if(params.getFile() != null) {
+				obj = parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2search.xsl");
+			} else {
+				obj = parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2search.xsl");
+			}
+			break;
+		default :
+			obj = parseObject(params);
+		}
+
+		SearchAssignmentGPXHelper.updateSearch((JSONObject) obj, dao);
+
+		try {
+			response.sendRedirect("/app/index.html");
+		} catch (IOException e) {}
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value ="/rest/search", method = RequestMethod.GET)
+	public String bulkGPXDownload(Model model, HttpServletRequest request, HttpServletResponse response) {
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
+		List<SearchAssignment >assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
+
+		switch (format) {
+		case GPX :
+			response.setHeader("Content-Disposition", "attachment; filename=" + RuntimeProperties.getSearch() + ".gpx");
+			return gpx(model, SearchAssignmentGPXHelper.gpxifySearch((Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()), dao), "Search");
+		case KML :
+			response.setHeader("Content-Disposition", "attachment; filename=" + RuntimeProperties.getSearch() + ".kml");
+			return kml(model, assignments, "SearchAssignments");
+		default :
+			return json(model, assignments);
+		}
+	}
+		
 }

@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:json="json" xmlns="http://www.topografix.com/GPX/1/1" exclude-result-prefixes="json">
 <xsl:param name="template"/>
-<xsl:output method="xml"/>
+<xsl:output method="xml" cdata-section-elements="cmt desc"/>
 <xsl:template match="/json:o">
 <gpx version="1.1" creator="SARSOFT">
 	<xsl:choose>
 		<xsl:when test="$template='SearchAssignment'">
 			<xsl:call-template name="SearchAssignmentToGpx"/>
+		</xsl:when>
+		<xsl:when test="$template='Search'">
+			<xsl:call-template name="SearchToGpx"/>
 		</xsl:when>
 	</xsl:choose>
 </gpx>
@@ -20,6 +23,19 @@
 	</xsl:choose>
 </gpx>
 </xsl:template>
+<xsl:template name="SearchToGpx">
+	<metadata>
+		<desc><xsl:value-of select="json:desc"/></desc>
+	</metadata>
+	<xsl:for-each select="json:assignments">
+		<xsl:call-template name="SearchAssignmentsToGpx"/>
+	</xsl:for-each>
+	<xsl:for-each select="json:lkp">
+		<xsl:call-template name="WaypointToWpt">
+			<xsl:with-param name="name" select="'lkp'"/>
+		</xsl:call-template>
+	</xsl:for-each>
+</xsl:template>
 <xsl:template name="SearchAssignmentsToGpx">
 	<xsl:for-each select="json:e">
 		<xsl:call-template name="SearchAssignmentToGpx"/>
@@ -28,13 +44,14 @@
 <xsl:template name="SearchAssignmentToGpx">
 	<xsl:variable name="operationalperiod" select="format-number(json:operationalPeriodId, '00')"/>
 	<xsl:variable name="assignmentid" select="format-number(json:id, '000')"/>
+	<xsl:variable name="desc" select="json:desc"/>
 	<xsl:variable name="assignment" select="."/>
 	<xsl:for-each select="json:ways/json:e[json:type='ROUTE']">
 		<xsl:choose>
 				<xsl:when test="position() = 1">
 					<xsl:call-template name="WayToGpx">
 						<xsl:with-param name="name" select="concat($operationalperiod, $assignmentid)"/>
-						<xsl:with-param name="cmt" select="concat('resourceType:',$assignment/json:resourceType,',status:',$assignment/json:status,',timeAllocated:',$assignment/json:timeAllocated,',responsivePOD:',$assignment/json:responsivePOD,',unresponsivePOD:',$assignment/json:unresponsivePOD,',preparedOn:',$assignment/json:preparedOn,',peparedBy:',$assignment/json:preparedBy)"/>
+						<xsl:with-param name="desc" select="$desc"/>
 					</xsl:call-template>
 				</xsl:when>
 				<xsl:otherwise>
@@ -52,12 +69,12 @@
 </xsl:template>
 <xsl:template name="WayToGpx">
 	<xsl:param name="name"/>
-	<xsl:param name="cmt" select=""/>
+	<xsl:param name="desc"/>
 	<xsl:choose>
 	<xsl:when test="json:type='ROUTE'">
 	<rte>
 		<name><xsl:value-of select="$name"/></name>
-		<cmt><xsl:value-of select="$cmt"/></cmt>
+		<desc><xsl:value-of select="$desc"/></desc>
 		<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
 			<xsl:call-template name="WaypointToRtept"/>
 		</xsl:for-each>
@@ -80,5 +97,11 @@
 </xsl:template>
 <xsl:template name="WaypointToTrkpt">
 	<trkpt lat="{json:lat}" lon="{json:lng}"/>
+</xsl:template>
+<xsl:template name="WaypointToWpt">
+	<xsl:param name="name"/>
+	<wpt lat="{json:lat}" lon="{json:lng}">
+		<name><xsl:value-of select="$name"/></name>
+	</wpt>
 </xsl:template>
 </xsl:stylesheet>

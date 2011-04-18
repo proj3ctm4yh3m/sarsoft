@@ -2,7 +2,9 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:gpx="http://www.topografix.com/GPX/1/1" exclude-result-prefixes="gpx">
 <xsl:param name="template"/>
 <xsl:template match="/gpx:gpx">
-<a class="array">
+<o>
+<desc type="string"><xsl:value-of select="gpx:metadata/gpx:desc"/></desc>
+<assignments class="array">
 	<xsl:for-each select="gpx:trk">
 		<e class="object">
 		<xsl:call-template name="GpxToTrack"/>
@@ -13,7 +15,13 @@
 		<xsl:call-template name="GpxToRoute"/>
 		</e>
 	</xsl:for-each>
-</a>
+</assignments>
+<xsl:for-each select="gpx:wpt[string(gpx:name)='lkp']">
+<lkp class="object">
+	<xsl:call-template name="GpxToWaypoint"/>
+</lkp>
+</xsl:for-each>
+</o>
 </xsl:template>
 
 <xsl:template name="GpxToTrack">

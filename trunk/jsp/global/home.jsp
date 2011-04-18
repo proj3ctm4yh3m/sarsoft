@@ -50,7 +50,7 @@ Working on ${search.description}.  <a href="/app/setsearch">Change</a>
 <h4>Bulk Transfer</h4>
 <ul>
  <li>Import <a href="javascript:gpxdlg.dialog.show()">from GPX</a></li>
- <li>Export <a href="/rest/operationalperiod?format=GPX">to GPX</a></li>
+ <li>Export <a href="/rest/search?format=GPX">to GPX</a></li>
 </ul>
 </ul>
 
