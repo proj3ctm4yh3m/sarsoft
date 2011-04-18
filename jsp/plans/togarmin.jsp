@@ -107,7 +107,7 @@ function showDetails() {
 <h2 id="done">All Done</h2>
 </div>
 <div style="margin-top: 2em; margin-left: 4em">
-<a href="javascript:window.back()">Return to Assigment</a><br/><br/>
+<a href="javascript:history.back()">Return to Assigment</a><br/><br/>
 <a href="javascript:showDetails()">Show Details &gt;&gt;</a><br/><br/>
 This page requires the Garmin Communicator plugin.  For more information, please see <a href="http://www8.garmin.com/products/communicator/">http://www8.garmin.com/products/communicator/</a>.
 </div>
