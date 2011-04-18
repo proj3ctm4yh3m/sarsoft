@@ -254,7 +254,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("xml", new StringReader(xml));
 		model.addAttribute("template", template);
 	}
-
+	
 	protected String gpx(Model model, Object obj, String template) {
 		processModelForXML(model, obj, template);
 		return "/xsl/gpx/togpx";
