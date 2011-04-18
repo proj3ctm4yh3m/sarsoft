@@ -1,7 +1,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page contentType="text/javascript" %>
 <%@page import="org.sarsoft.admin.model.MapSource"%>
 <% pageContext.setAttribute("tile", MapSource.Type.TILE); %>
+
 
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
