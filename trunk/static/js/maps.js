@@ -298,7 +298,6 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 	var east = GeoUtil.getEastBorder(zone);
 	var west = GeoUtil.getWestBorder(zone);
 
-
 	function createText(meters) {
 		return "<div style=\"color:#0000FF; background: #FFFFFF\"><b>" + Math.round(meters/1000) + "</b><span style=\"font-size: smaller\">000</span></div>";
 	}
@@ -330,9 +329,15 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 	while(northing < ne.n) {
 		var vertices = new Array();
 		var start = GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone});
-		vertices.push(new GLatLng(start.lat(), Math.max(start.lng(), west)));
+		if(start.lng() < west) {
+			start = GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(start.lat(), west), zone).e, n: northing, zone: zone});
+		}
+		vertices.push(start);
 		var end = GeoUtil.UTMToGLatLng({e: ne.e, n: northing, zone: zone});
-		vertices.push(new GLatLng(end.lat(), Math.min(end.lng(), east)));
+		if(end.lng() > east) {
+			end = GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(end.lat(), east), zone).e, n: northing, zone: zone});
+		}
+		vertices.push(end);
 
 		var overlay = new GPolyline(vertices, "#0000FF", 1, 1);
 		this.utmgridlines.push(overlay);
