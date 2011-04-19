@@ -4,7 +4,7 @@ if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Object();
 
 org.sarsoft.SearchAssignmentDAO = function(errorHandler, baseURL) {
-	if(baseURL == undefined) baseURL = "/rest/assignment";
+	if(typeof baseURL == "undefined") baseURL = "/rest/assignment";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
 }
@@ -48,7 +48,7 @@ org.sarsoft.SearchAssignmentDAO.prototype.deleteMapConfig = function(id, config,
 }
 
 org.sarsoft.OperationalPeriodDAO = function(errorHandler, baseURL) {
-	if(baseURL == undefined) baseURL = "/rest/operationalperiod";
+	if(typeof baseURL == "undefined") baseURL = "/rest/operationalperiod";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
 }
@@ -628,7 +628,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function
 	this.assignmentDAO.loadSince(function(assignments) {
 		for(var i = 0; i < assignments.length; i++) {
 			var attr = that.getAssignmentAttr(assignments[i], "inedit");
-			if(attr == null || attr == undefined || attr != true) {
+			if(attr == null || typeof attr == "undefined" || attr != true) {
 				that.removeAssignment(assignments[i]);
 				that.addAssignment(assignments[i]);
 			} else {
@@ -689,7 +689,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.placeLkp = funct
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setAssignmentAttr = function(assignment, key, value) {
 	if(assignment == null) return null;
-	if(this._assignmentAttrs[assignment.id] == undefined) {
+	if(typeof this._assignmentAttrs[assignment.id] == "undefined") {
 		this._assignmentAttrs[assignment.id] = new Object();
 	}
 	this._assignmentAttrs[assignment.id][key] = value;
@@ -697,7 +697,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.setAssignmentAtt
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.getAssignmentAttr = function(assignment, key) {
 	if(assignment == null) return null;
-	if(this._assignmentAttrs[assignment.id] == undefined) return undefined;
+	if(typeof this._assignmentAttrs[assignment.id] == "undefined") return null;
 	return this._assignmentAttrs[assignment.id][key];
 }
 

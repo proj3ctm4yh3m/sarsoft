@@ -1,7 +1,7 @@
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 
-if(org.sarsoft.EnhancedGMap == undefined) org.sarsoft.EnhancedGMap = function() {}
+if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = function() {}
 
 org.sarsoft.EnhancedGMap.prototype.createMapType = function(config) {
 	if(config.type == "NATIVE") return eval(config.template);
@@ -166,7 +166,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity)
 			opacity = 1-opacity;
 		}
 		this.map.setMapType(base);
-		if(this._overlays != undefined) {
+		if(typeof this._overlays != "undefined") {
 			for(var i = 0; i < this._overlays.length; i++) {
 				this.map.removeOverlay(this._overlays[i]);
 			}
@@ -215,7 +215,7 @@ org.sarsoft.FixedGMap = function(map) {
 	this.markers = new Array();
 	this.utmgridlines = new Array();
 	this.utminitialized = false;
-	if(map != undefined) {
+	if(typeof map != "undefined") {
 		GEvent.addListener(map, "tilesloaded", function() {
 			if(that.utminitialized == false) {
 				that._drawUTMGrid();
@@ -259,7 +259,7 @@ org.sarsoft.FixedGMap.prototype.setMapLayers = function(baseName, overlayName, o
 }
 
 org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
-	if(this.utmgridcoverage != undefined && this.utmgridcoverage.getSouthWest().distanceFrom(this.map.getBounds().getSouthWest()) == 0 &&
+	if(typeof this.utmgridcoverage != "undefined" && this.utmgridcoverage.getSouthWest().distanceFrom(this.map.getBounds().getSouthWest()) == 0 &&
 		this.utmgridcoverage.getNorthEast().distanceFrom(this.map.getBounds().getNorthEast()) == 0) return;
 
 	this.utmgridcoverage = this.map.getBounds();
@@ -387,7 +387,7 @@ org.sarsoft.FixedGMap.prototype._addOverlay = function(way, config, label) {
 	var vertices = new Array();
 	var labelOverlay = null;
 	if(config == null) config = new Object();
-	if(way.waypoints != undefined && way.waypoints != null) {
+	if(typeof way.waypoints != "undefined" && way.waypoints != null) {
 		// all this sw/labelwpt/distance junk is simply to place the label on the bottom-right waypoint
 		var sw = new GLatLng(way.boundingBox[0].lat, way.boundingBox[0].lng);
 		var labelwpt = way.waypoints[0];
@@ -420,9 +420,9 @@ org.sarsoft.FixedGMap.prototype._addOverlay = function(way, config, label) {
 
 org.sarsoft.FixedGMap.prototype.removeWay = function(way) {
 	var id = way.id;
-	if(this.polys[id] != undefined) {
+	if(typeof this.polys[id] != "undefined") {
 		this._removeOverlay(way);
-		this.polys[id] = undefined;
+		delete this.polys[id];
 	}
 }
 
@@ -462,7 +462,7 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 	var id = waypoint.id;
 	var gll = new GLatLng(waypoint.lat, waypoint.lng);
 	var icon = createFlatCircleIcon(12, config.color);
-	if(tooltip == undefined) tooltip = waypoint.name;
+	if(typeof tooltip == "undefined") tooltip = waypoint.name;
 	tooltip = tooltip +  "  (" + GeoUtil.GLatLngToUTM(gll).toString() + ")";
 	var marker = new GMarker(gll, { title : tooltip, icon : icon});
 	this.map.addOverlay(marker);
@@ -477,9 +477,9 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 
 org.sarsoft.FixedGMap.prototype.removeWaypoint = function(waypoint) {
 	var id = waypoint.id;
-	if(this.markers[id] != undefined) {
+	if(typeof this.markers[id] != "undefined") {
 		this._removeMarker(waypoint);
-		this.markers[id] = undefined;
+		delete this.markers[id];
 	}
 }
 
@@ -496,12 +496,12 @@ org.sarsoft.EditableGMap = function(map, infodiv) {
 	this._infodiv = infodiv;
 
 	GEvent.addListener(map, "singlerightclick", function(point, src, overlay) {
-		var obj = undefined;
+		var obj = null;
 		if(overlay != null) {
 			if(that.polys[overlay.id] != null) obj = that.polys[overlay.id].way;
 			if(that.markers[overlay.id] != null) obj = that.markers[overlay.id].waypoint;
 		}
-		if(that._handlers["singlerightclick"] != undefined) {
+		if(typeof that._handlers["singlerightclick"] != "undefined") {
 			for(var i = 0; i < that._handlers["singlerightclick"].length; i++) {
 				that._handlers["singlerightclick"][i](point, obj);
 				}
@@ -550,7 +550,7 @@ org.sarsoft.EditableGMap.prototype.getNewWaypoints = function(point, polygon) {
 	} else {
 		vertices = [
 			that.map.fromContainerPixelToLatLng(new GPoint(point.x - 40, point.y)),
-			that.map.fromContainerPixelToLatLng(new GPoint(point.x + 40, point.y)),
+			that.map.fromContainerPixelToLatLng(new GPoint(point.x + 40, point.y))
 		];
 	}
 	return this._GLatLngListToWpt(vertices);
@@ -592,7 +592,7 @@ org.sarsoft.EditableGMap.prototype.discard = function(id) {
 }
 
 org.sarsoft.EditableGMap.prototype.addListener = function(event, handler) {
-	if(this._handlers[event] == undefined) this._handlers[event] = new Array();
+	if(typeof this._handlers[event] == "undefined") this._handlers[event] = new Array();
 	this._handlers[event].push(handler);
 }
 
@@ -622,7 +622,7 @@ GeoUtil.UTMToGLatLng = function(utm) {
 
 GeoUtil.GLatLngToUTM = function(gll, zone) {
 	var xy = new Object();
-	if(zone == undefined) zone = Math.floor ((gll.lng() + 180.0) / 6) + 1;
+	if(typeof zone == "undefined") zone = Math.floor ((gll.lng() + 180.0) / 6) + 1;
 	var zone = LatLonToUTMXY (DegToRad(gll.lat()), DegToRad(gll.lng()), zone, xy);
 	return new UTM(xy[0], xy[1], zone);
 }

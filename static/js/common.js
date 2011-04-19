@@ -10,7 +10,7 @@ org.sarsoft.BaseDAO = function() {
 org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 	var that = this;
 	postdata = "json=" + encodeURIComponent(YAHOO.lang.JSON.stringify(obj));
-	if(poststr != undefined) postdata += "&" + poststr;
+	if(typeof poststr != "undefined") postdata += "&" + poststr;
 	YAHOO.util.Connect.resetDefaultHeaders();
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
@@ -70,7 +70,7 @@ if(typeof net == "undefined") net = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 
 org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
-	if(baseURL == undefined) baseURL = "/rest/search";
+	if(typeof baseURL == "undefined") baseURL = "/rest/search";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
 }
@@ -188,6 +188,7 @@ org.sarsoft.view.EntityTable.prototype.create = function(container) {
 
 org.sarsoft.view.EntityForm = function(fields) {
 	this.fields = fields;
+	this.elements = new Object();
 }
 
 org.sarsoft.view.EntityForm._idx = 0;
@@ -257,7 +258,7 @@ org.sarsoft.view.EntityForm.prototype._createField = function(field) {
 		}
 	}
 	else {
-		if(org.sarsoft.view.EntityForm._inputTypes[type] != undefined) {
+		if(typeof org.sarsoft.view.EntityForm._inputTypes[type] != "undefined") {
 			type = org.sarsoft.view.EntityForm._inputTypes[type];
 		}
 		elt = document.createElement(type.node);
@@ -266,6 +267,7 @@ org.sarsoft.view.EntityForm.prototype._createField = function(field) {
 			elt[key] = type.params[key];
 		}
 	}
+	this.elements[field.name] = elt;
 	div.appendChild(elt);
 	return div;
 }
@@ -280,7 +282,7 @@ org.sarsoft.view.EntityForm.prototype._write = function(fields, obj) {
 		if(field instanceof Array) {
 			this._write(field, obj);
 		} else {
-			this._setValue(this.form[field.name], obj[field.name]);
+			this._setValue(this.elements[field.name], obj[field.name]);
 		}
 	}
 }
@@ -297,7 +299,7 @@ org.sarsoft.view.EntityForm.prototype._read = function(fields, obj) {
 		if(field instanceof Array) {
 			this._read(field, obj);
 		} else {
-			obj[field.name] = this._getValue(this.form[field.name]);
+			obj[field.name] = this._getValue(this.elements[field.name]);
 		}
 	}
 }
