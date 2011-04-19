@@ -41,6 +41,8 @@ you can not clear fields through bulk update.</p>
 			 <input type="hidden" value="" name="bulkIds" id="bulkIds"/>
 			 <input type="hidden" value="" name="action" id="action"/>
 			 <table border="0">
+			 <tr><td>
+			 <table border="0">
 			 <tr><td>Resource Type</td><td>
 				 <select name="resourceType" value="">
 				  <option value="">--</option>
@@ -68,7 +70,7 @@ you can not clear fields through bulk update.</p>
 			<tr><td style="padding-right: 5px">Primary Freq</td><td><input name="primaryFrequency" type="text" size="10" value=""></td></tr>
 			<tr><td style="padding-right: 5px">Secondary Freq</td><td><input name="secondaryFrequency" type="text" size="10" value=""></td></tr>
 			  </table>
-
+</td><td style="padding-left: 3em">
 			<b>Previous Efforts in Search Area:</b><br/>
 			<textarea name="previousEfforts" style="width: 30em; height: 80px"></textarea>
 
@@ -76,7 +78,7 @@ you can not clear fields through bulk update.</p>
 			<b>Dropoff and Pickup Instructions:</b><br/>
 			<textarea name="transportation" style="width: 30em; height: 80px"></textarea>
 
-			<br/><br/>
+</td></tr></table>
 
 			If you'd like to prepare these assignments, please enter your name here:<br/>
 			<input type="text" size="20" name="preparedBy"/><br/><br/>
