@@ -24,7 +24,7 @@ org.sarsoft.Loader.queue(function() {
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
 <div id="map_canvas" style="width: 100%; height: 100%"></div>
 
-	<div id="infodiv" style="width: 15em; height: 2.5em; z-index: 200; position: absolute; top: 30; right: 0; color: #FF9933;" class="noprint">
+	<div id="infodiv" style="width: 15em; height: 2.5em; z-index: 2000; position: absolute; top: 30; right: 0; color: #FF9933;" class="noprint">
 		<div style="width: 100%; height: 100%; z-index: -100; background-color: black; filter: alpha(opacity=40); opacity: .4"></div>
 		<div id="infodiv_position" style="width: 100%; height: 1em; position: absolute; top: 0px; font-weight: bold"></div>
 		<div id="infodiv_message" style="width: 100%; height: 1em; position: absolute; top: 1.3em"></div>
