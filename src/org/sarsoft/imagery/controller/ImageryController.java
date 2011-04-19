@@ -67,6 +67,7 @@ public class ImageryController extends JSONBaseController {
 		OutputStream out = null;
 		byte[] bytes = new byte[512];
 		int bytesRead;
+		response.setHeader("Cache-Control", "max-age=3600, public");
 
 		try {
 			in = new FileInputStream(file);
@@ -74,17 +75,14 @@ public class ImageryController extends JSONBaseController {
 			while ((bytesRead = in.read(bytes)) != -1) {
 			    out.write(bytes, 0, bytesRead);
 			}
-		} catch (FileNotFoundException e) {
-			// ignore missing files
 		} catch (Exception e) {
-			e.printStackTrace();
 		} finally {
 			try { if(in != null) in.close(); } catch(Exception e) { e.printStackTrace(); }
 		}
 	}
 	
 	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getCachedTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
 		for(MapSource source : getMapSources()) {
 			if(source.getName().equals(layer)) {
@@ -118,11 +116,10 @@ public class ImageryController extends JSONBaseController {
 					}
 				}
 				response.setContentType("image/png");
+				response.setHeader("Cache-Control", "max-age=3600, public");
 				try {
 					response.getOutputStream().write(array);
-				} catch(IOException e) {
-					e.printStackTrace();
-				}
+				} catch(IOException e) {}
 				return;
 			}
 		}
@@ -131,6 +128,7 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/resource/imagery/icons/circle/{rgb}.png", method = RequestMethod.GET)
 	public void getCircle(HttpServletResponse response, @PathVariable("rgb") String rgb) {
 		response.setContentType("image/png");
+		response.setHeader("Cache-Control", "max-age=3600, public");
 
 		if(rgb == null || rgb.length() < 6) rgb = "000000";
 		int r = Integer.parseInt(rgb.substring(0, 2), 16);
@@ -155,6 +153,7 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/resource/imagery/georef/{id}.png", method=RequestMethod.GET)
 	public void getImage(HttpServletResponse response, @PathVariable("id") long id, @RequestParam(value="angle", required=false) Double angle, 
 			@RequestParam(value="originy", required=false) Integer originy, @RequestParam(value="originx", required=false) Integer originx) {
+		response.setHeader("Cache-Control", "max-age=3600, public");
 		response.setContentType("image/png");
 		GeoRefImage georefimage = (GeoRefImage) dao.load(GeoRefImage.class, id);
 		try {
