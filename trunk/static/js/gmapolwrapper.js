@@ -1,21 +1,19 @@
 function GBrowserIsCompatible() { return true;}
 
 GEvent = new Object();
-GEvent._handlers = new Object();
+GEvent._handlers = [[], [], []];
 
 GEvent.addListener = function(obj, event, handler) {
-	if(GEvent._handlers[obj] == null) GEvent._handlers[obj] = new Object();
-	if(GEvent._handlers[obj][event] == null) GEvent._handlers[obj][event] = new Array();
-	GEvent._handlers[obj][event].push(handler);
+	var idx = GEvent._handlers[0].length;
+	GEvent._handlers[0][idx] = obj;
+	GEvent._handlers[1][idx] = event;
+	GEvent._handlers[2][idx] = handler;
 }
 
 GEvent.trigger = function(obj, event, param1, param2, param3, param4, param5) {
-	if(GEvent._handlers[obj] != null) {
-		if(GEvent._handlers[obj][event] != null) {
-			for(var i = 0; i < GEvent._handlers[obj][event].length; i++) {
-				GEvent._handlers[obj][event][i](param1, param2, param3, param4, param5);
-			}
-		}
+	for(var i = 0; i < GEvent._handlers[0].length; i++) {
+		if(GEvent._handlers[0][i] == obj && GEvent._handlers[1][i] == event)
+			GEvent._handlers[2][i](param1, param2, param3, param4, param5);
 	}
 }
 
@@ -181,15 +179,24 @@ function GMap2(node) {
 	}
 	this.ol.clickHandler = new OpenLayers.Handler.Click(this, {
 		rightclick: function(e) { 
-			GEvent.trigger(this, "singlerightclick", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e));  return false;
+			GEvent.trigger(that, "singlerightclick", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e));  return false;
 		}, 
 		click: function(e) { 
-			GEvent.trigger(this, "singlerightclick", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e)); return false;}
+			if(e.ctrlKey || (Event.META_MASK || Event.CTRL_MASK)) {
+				GEvent.trigger(that, "singlerightclick", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e));  return false;
+			} else {
+				GEvent.trigger(that, "click", e.xy, OpenLayers.Event.element(e), that.ol.getFeatureFromEvent(e)); return false;}
+		}
 		}, {});
 	this.ol.clickHandler.control = new Object();
 	this.ol.clickHandler.control.handleRightClicks = true;
 	this.ol.clickHandler.setMap(this.ol.map);
 	this.ol.clickHandler.activate();
+	
+	this.ol.map.events.register("mouseover", this, function(e) {
+		overlay = that.ol.getFeatureFromEvent(e);
+		if(overlay != null) GEvent.trigger(overlay, "mouseover", e.xy, OpenLayers.Event.element(e), overlay);  return false;
+	});
 	
 	this.ol.map.events.register("mousemove", this, function(e) {GEvent.trigger(this, "mousemove", GLatLng.fromLonLat(that.ol.map.getLonLatFromPixel(that.ol.map.events.getMousePosition(e))))});
 	this.ol.map.events.register("zoomend", this, function(e) { that.redrawOverlays();});

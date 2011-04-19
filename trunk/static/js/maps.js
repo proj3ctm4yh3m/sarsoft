@@ -533,10 +533,6 @@ org.sarsoft.EditableGMap.prototype._addOverlay = function(way, config, label) {
 			that._infomessage("<b>" + way.displayMessage + "</b>");
 		}
 	});
-//	GEvent.addListener(poly, "mousemove", function(a, latlng) {
-//		var utm = GeoUtil.GLatLngToUTM(latlng);
-//		that._positionMessage(utm.toString());
-//	});
 	return poly;
 }
 
