@@ -22,7 +22,7 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete) {
 org.sarsoft.view.ResourceTable.prototype = new org.sarsoft.view.EntityTable();
 
 org.sarsoft.ResourceDAO = function(errorHandler, baseURL) {
-	if(baseURL == undefined) baseURL = "/rest/resource";
+	if(typeof baseURL == "undefined") baseURL = "/rest/resource";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
 }

@@ -1,4 +1,5 @@
 function GBrowserIsCompatible() { return true;}
+function GUnload() {}
 
 GEvent = new Object();
 GEvent._handlers = [[], [], []];
@@ -18,7 +19,11 @@ GEvent.trigger = function(obj, event, param1, param2, param3, param4, param5) {
 }
 
 GEvent.addDomListener = function(obj, event, handler) {
-	obj.addEventListener(event, handler, false);
+	if(obj.addEventListener) {
+		obj.addEventListener(event, handler, false);
+	} else if(obj.attachEevent) {
+		obj.attachEvent("on" + event, handler);
+	}
 }
 
 G_PHYSICAL_MAP = new Object();
@@ -203,6 +208,9 @@ function GMap2(node) {
 	this.ol.map.events.register("moveend", this, function(e) { GEvent.trigger(this, "moveend");});
 	
 	node.oncontextmenu = function(e) {return false;}
+	if(node.attachEvent) {
+		document.body.oncontextmenu = function(e) { return false; }
+	}
 	
 	window.setInterval(function() {GEvent.trigger(that, "tilesloaded", {})}, 1000);
 
