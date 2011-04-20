@@ -187,7 +187,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 			} catch (e) {}
 			var bb = that.assignment.boundingBox;
 			that.setSize("7in","8.8in");
-			that.fmap.map.setCenter(that.fmap.map.center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+			that.fmap.map.setCenter(that.fmap.map.getCenter(), that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 	}, "mapConfig");
 
 

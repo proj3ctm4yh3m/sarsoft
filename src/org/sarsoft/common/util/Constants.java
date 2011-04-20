@@ -23,13 +23,13 @@ public class Constants {
 		colorsByResourceType.put(ResourceType.MOUNTED, "#FFFF00");
 		colorsByResourceType.put(ResourceType.OHV, "#8800FF");
 
-		colorsByProbability.put(Probability.LOW, "#FFFF00");
-		colorsByProbability.put(Probability.MEDIUM, "#FF8800");
+		colorsByProbability.put(Probability.LOW, "#FFCC00");
+		colorsByProbability.put(Probability.MEDIUM, "#FF6600");
 		colorsByProbability.put(Probability.HIGH, "#FF0000");
 
 		colorsByStatus.put(SearchAssignment.Status.DRAFT, "#0088FF");
-		colorsByStatus.put(SearchAssignment.Status.PREPARED, "#FFFF00");
-		colorsByStatus.put(SearchAssignment.Status.INPROGRESS, "#FF8800");
+		colorsByStatus.put(SearchAssignment.Status.PREPARED, "#FFCC00");
+		colorsByStatus.put(SearchAssignment.Status.INPROGRESS, "#FF6600");
 		colorsByStatus.put(SearchAssignment.Status.COMPLETED, "#FF0000");
 
 		all.put("colorsById", colorsById);

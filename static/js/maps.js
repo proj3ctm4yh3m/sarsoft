@@ -40,16 +40,6 @@ org.sarsoft.EnhancedGMap.prototype._getWMSTileUrl = function(tile, zoom, config)
     return url;
 }
 
-org.sarsoft.EnhancedGMap.backupMapTypes = [
-	{name: "OpenStreetMap", type: "TILE", copyright: 'Map data from OpenStreetMap.org', minresolution: 0, maxresolution: 17, png: true, template: 'http://tile.openstreetmap.org/{Z}/{X}/{Y}.png'},
-	{name: "MyTopo", type: "TILE", copyright: "mytopo.com", minresolution: 7, maxresolution: 16, png: true, template : 'http://maps.mytopo.com/gpsvisualizer/tilecache.py/1.0.0/topoG/{Z}/{X}/{Y}.png'},
-	{name: "USGS Topo", type: "WMS", copyright: 'Topo maps by USGS via terraserver-usa.com', minresolution: 5, maxresolution: 17, png: false, template: 'http://terraservice.net/ogcmap6.ashx?version=1.1.1&request=GetMap&styles=&srs=EPSG:4326&format=image/jpeg&bgcolor=0xCCCCCC&exceptions=INIMAGE&layers=DRG&bbox={left},{bottom},{right},{top}&width={tilesize}&height={tilesize}'},
-	{name: 'Hybrid', type: 'NATIVE', template: 'G_HYBRID_MAP'},
-	{name: 'Satellite', type: 'NATIVE', template: 'G_SATELLITE_MAP'},
-	{name: 'Street', type: 'NATIVE', template: 'G_NORMAL_MAP'},
-	{name: 'Terrain', type: 'NATIVE', template: 'G_PHYSICAL_MAP'}
-	];
-
 org.sarsoft.EnhancedGMap.prototype.createMap = function(element) {
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
@@ -59,8 +49,8 @@ org.sarsoft.EnhancedGMap.prototype.createMap = function(element) {
 		this.geoRefImages = this.setGeoRefImages(org.sarsoft.EnhancedGMap.geoRefImages);
 
 		map.setCenter(new GLatLng(org.sarsoft.map._default.lat, org.sarsoft.map._default.lng), org.sarsoft.map._default.zoom);
-		if(G_PHYSICAL_MAP.getName != null) {
-			emap.addMapType(G_PHYSICAL_MAP);
+		if(typeof G_PHYSICAL_MAP != "undefined") {
+			map.addMapType(G_PHYSICAL_MAP);
 			map.setMapType(G_PHYSICAL_MAP);
 		}
 		map.addControl(new OverlayDropdownMapControl());

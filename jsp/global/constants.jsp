@@ -19,7 +19,7 @@ org.sarsoft.map._default.lng = ${defaultLng};
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = function() {}
 org.sarsoft.EnhancedGMap.defaultMapTypes = [
 <c:forEach var="mapSource" items="${mapSources}" varStatus="status">
-	<c:if test="${status.index gt 0}">,</c:if>{name : "${mapSource.name}", type: "${mapSource.type}", copyright: "${mapSource.copyright}", minresolution: ${mapSource.minresolution}, maxresolution: ${mapSource.maxresolution}, png: ${mapSource.png}, template: <c:choose><c:when test="${mapSource.type eq tile and tileCacheEnabled eq true}">"/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png"</c:when><c:otherwise>"${mapSource.template}"</c:otherwise></c:choose>}
+	<c:if test="${status.index gt 0}">,</c:if>{name : "${mapSource.name}", type: "${mapSource.type}", copyright: "${mapSource.copyright}", minresolution: ${mapSource.minresolution}, maxresolution: ${mapSource.maxresolution}, png: ${mapSource.png}, template: <c:choose><c:when test="${mapSource.type eq tile and tileCacheEnabled eq true and fn:startsWith(mapSource.template, 'http')}">"/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png"</c:when><c:otherwise>"${mapSource.template}"</c:otherwise></c:choose>}
 </c:forEach>
 ];
 

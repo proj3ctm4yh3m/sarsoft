@@ -17,20 +17,18 @@ gpxdlg = new org.sarsoft.view.BulkGPXDlg();
 Logged in as ${account.email}.  <a href="/app/logout">Logout</a><br/>
 </c:if>
 Working on ${search.description}.  <a href="/app/setsearch">Change</a>
+<h4>Administration</h4>
+<ul>
 <c:choose>
 <c:when test="${hosted eq false}">
-<h4>Administration</h4>
-<ul>
  <li><a href="/app/search">Search Admin</a></li>
-</ul>
 </c:when>
 <c:when test="${search.account.name eq username}">
-<h4>Administration</h4>
-<ul>
  <li><a href="/app/search">Search Admin</a></li>
-</ul>
 </c:when>
 </c:choose>
+  <li><a href="/app/imagery/georef">Map Imagery</a></li>
+</ul>
 <h4>Plans</h4>
 <ul>
  <li>Current Operations: &nbsp;<a href="/app/operationalperiod/${lastperiod.id}/map">Map</a>&nbsp;|&nbsp;<a href="/app/operationalperiod/${lastperiod.id}">List</a></li>

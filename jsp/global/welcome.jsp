@@ -9,7 +9,7 @@
 </c:when>
 <c:otherwise>
 <h2>Welcome to Sarsoft!</h2>
-<span style="font-weight: bold; color: red">This is a demo server running dev/test code.  Not for production use.  Data may be deleted without warning.</span>
+${welcomeMessage}
 <br/>
 </c:otherwise>
 </c:choose>

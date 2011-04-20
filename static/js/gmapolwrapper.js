@@ -26,7 +26,6 @@ GEvent.addDomListener = function(obj, event, handler) {
 	}
 }
 
-G_PHYSICAL_MAP = new Object();
 G_SATELLITE_MAP = new Object();
 G_SATELLITE_MAP.getProjection = function() {
 };
@@ -150,6 +149,7 @@ function GMap2(node) {
 		};
 	
 	this.ol.map = new OpenLayers.Map(node, options);
+	this.ol.map.div.style.position="relative";
 	this.ol.maptypes = new Array();
 	this.ol.currentMapType = null;
 	
@@ -207,7 +207,7 @@ function GMap2(node) {
 	this.ol.map.events.register("zoomend", this, function(e) { that.redrawOverlays();});
 	this.ol.map.events.register("moveend", this, function(e) { GEvent.trigger(this, "moveend");});
 	
-	node.oncontextmenu = function(e) {return false;}
+	document.oncontextmenu = function(e) {return false;}
 	if(node.attachEvent) {
 		document.body.oncontextmenu = function(e) { return false; }
 	}
@@ -219,6 +219,10 @@ function GMap2(node) {
 GMap2.ol = new Object();
 GMap2.ol.geographic = new OpenLayers.Projection("EPSG:4326");
 GMap2.ol.mercator = new OpenLayers.Projection("EPSG:900913");
+
+GMap2.prototype.checkResize = function() {
+	this.ol.map.updateSize();
+}
 
 GMap2.prototype.getBounds = function() {
 	var bb = this.ol.map.getExtent();

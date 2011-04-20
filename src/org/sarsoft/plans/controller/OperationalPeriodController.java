@@ -55,7 +55,6 @@ public class OperationalPeriodController extends JSONBaseController {
 	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request, HttpServletResponse response) {
 		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
 		model.addAttribute("period", period);
-		model.addAttribute("mapSources", getMapSources());
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		switch(action) {
 		case DELETE:

@@ -37,12 +37,20 @@
 	<url-pattern>/app/*</url-pattern>
 </filter-mapping>
 <filter-mapping>
+	<filter-name>hibernateFilter</filter-name>
+	<url-pattern>/resource/*</url-pattern>
+</filter-mapping>
+<filter-mapping>
 	<filter-name>requestPropertyFilter</filter-name>
 	<url-pattern>/rest/*</url-pattern>
 </filter-mapping>
 <filter-mapping>
 	<filter-name>requestPropertyFilter</filter-name>
 	<url-pattern>/app/*</url-pattern>
+</filter-mapping>
+<filter-mapping>
+	<filter-name>requestPropertyFilter</filter-name>
+	<url-pattern>/resource/*</url-pattern>
 </filter-mapping>
 <servlet>
 	<servlet-name>spring</servlet-name>

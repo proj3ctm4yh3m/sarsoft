@@ -62,6 +62,13 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		File file = new File(EXTERNAL_TILE_DIR + layer + "/" + z + "/" + x + "/" + y + ".png");
+		if(!file.exists()) {
+			try {
+				response.sendError(HttpServletResponse.SC_NOT_FOUND);
+				return;
+			} catch (IOException e) {
+			}
+		}
 		response.setContentType("image/png");
 		InputStream in = null;
 		OutputStream out = null;
@@ -81,6 +88,14 @@ public class ImageryController extends JSONBaseController {
 		}
 	}
 	
+	/**
+	 * @param response
+	 * @param request
+	 * @param layer
+	 * @param z
+	 * @param x
+	 * @param y
+	 */
 	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
@@ -112,6 +127,10 @@ public class ImageryController extends JSONBaseController {
 						element = new Element(url, array);
 						cache.put(element);
 					} catch (Exception e) {
+						try {
+						response.sendError(HttpServletResponse.SC_NOT_FOUND);
+						return;
+						} catch (Exception e2) {}
 						e.printStackTrace();
 					}
 				}
