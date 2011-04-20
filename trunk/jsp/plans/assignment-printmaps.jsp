@@ -17,9 +17,11 @@ ${mapjs}
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 <script>
 
+function doload() {
 org.sarsoft.Loader.queue(function() {
   controller = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps"), ${assignment.id});
 });
+}
 
 function setSize() {
   controller.setSize(document.getElementById("width").value, document.getElementById("height").value);
@@ -30,7 +32,7 @@ function setSize() {
 .noprint { display: none; }
 </style>
 </head>
-<body>
+<body onload="doload()">
 
 <div class="noprint">
 Width: <input type="text" size="2" id="width" value="8in"/><br/>

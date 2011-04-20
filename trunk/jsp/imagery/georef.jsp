@@ -162,7 +162,8 @@ and then save it.
 <div class="yui-content">
 
 <div id="image">
-<div>Please <b>click</b> on the image to select your two reference points, then select the <b>Map</b> tab.</div>
+<div>Please <b>click</b> on the image to select your two reference points, then select the <b>Map</b> tab.  Because SARSOFT surrounds your image with transparent pixels so that 
+you can rotate it without causing any cropping, you may need to scroll the browser window to see your image.</div>
 <div id="imagecontainer">
 <img src="/resource/imagery/georef/${image.id}.png" id="actualimage"/>
 </div>
@@ -185,6 +186,9 @@ Opacity is only used on the result tab and is not saved.<br/>
 <br/>
 <a href="javascript:updateCombinedView()">Show map using these parameters.</a><br/>
 <a href="javascript:save()">Save these parameters.</a>
+<br/><br/>
+All Done?<br/>
+<a href="/app/index.html">Take me home!</a>
 </div>
 </div>
 </div>

@@ -249,6 +249,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/assignment", method = RequestMethod.POST)
 	public String createAssignment(JSONForm params, Model model, HttpServletRequest request) {
+		System.out.println(params.getJson());
 		SearchAssignment assignment = SearchAssignment.createFromJSON(parseObject(params));
 		if(assignment.getId() != null) {
 			SearchAssignment existing = (SearchAssignment) dao.load(SearchAssignment.class, assignment.getId());

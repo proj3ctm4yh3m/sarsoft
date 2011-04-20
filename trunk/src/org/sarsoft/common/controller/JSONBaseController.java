@@ -175,6 +175,7 @@ public abstract class JSONBaseController {
 		} else {
 			model.addAttribute("searches", dao.getAllSearches());
 		}
+		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		model.addAttribute("mapjs", getMapJS());
 		return "Pages.Welcome";
 	}

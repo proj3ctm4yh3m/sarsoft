@@ -17,16 +17,17 @@ ${mapjs}
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 <script>
 
+function doload() {
 org.sarsoft.Loader.queue(function() {
   controllers = new Array();
   <c:forEach var="assignment" items="${assignments}" varStatus="status">
     controllers[${status.index}] = new Array();
     <c:forEach var="mapConfig" items="${mapConfigs}" varStatus="status2">
-      controllers[${status.index}][${status2.index}] = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps${status.index}_${status2.index}"), ${assignment.id}, {base: "${mapConfig.base}", overlay: "${mapConfig.overlay}", opacity: ${mapConfig.opacity}});
+      controllers[${status.index}][${status2.index}] = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps${status.index}_${status2.index}"), ${assignment.id}, {base: "${mapConfig.base}", overlay: "${mapConfig.overlay}", opacity: ${mapConfig.opacity/100}});
     </c:forEach>
   </c:forEach>
 });
-
+}
 </script>
 <style type="text/css" media="print">
 .noprint { display: none; }
@@ -82,7 +83,7 @@ TABLE.comms TD,TH {
 }
 </style>
 </head>
-<body>
+<body onload="doload()">
 
 <div class="noprint">
 <c:if test="${fn:length(rejected) gt 0}">

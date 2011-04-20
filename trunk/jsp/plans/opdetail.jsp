@@ -4,8 +4,10 @@
 
 <h2>Operational Period ${period.id}: ${period.description}</h2>
 
-This period has ${fn:length(period.assignments)} assignments, covering ${period.area} km&sup2; and ${period.timeAllocated} team-hours.
-<c:if test="${period.trackDistance gt 0}">${period.trackDistance} km of tracks have been downloaded.</c:if>  You can:<br/>
+<c:set var="area" value="${period.area*10}"/>
+This period has ${fn:length(period.assignments)} assignments, covering ${(area+((area%1 ge 0.5)?(1-(area%1))%1:-(area%1)))/10} km&sup2; and ${period.timeAllocated} team-hours.
+<c:set var="distance" value="${period.trackDistance*10}"/>
+<c:if test="${distance gt 0}">${(distance+((distance%1 ge 0.5)?(1-(distance%1))%1:-(distance%1)))/10} km of tracks have been downloaded.</c:if>  You can:<br/>
 
 <ul>
  <li><a href="/app/operationalperiod/${period.id}/map">View assignments in a map</a> (new assignments can be created on this page)</li>
@@ -101,15 +103,18 @@ you can not clear fields through bulk update.</p>
 
 <c:forEach var="num" items='<%= new Integer[] {1,2,3,4,5} %>' varStatus='status'>
 <input type="checkbox" name="printmap${num}" id="printmap${num}">Print this map:</input>
-Foreground&nbsp;<select name="map${num}f" id="map${num}f">
+Base&nbsp;<select name="map${num}f" id="map${num}f">
   <c:forEach var="source" items="${mapSources}">
   <option value="${source.name}">${source.name}</option>
   </c:forEach>
 </select>
-,&nbsp;&nbsp;Background&nbsp;
+,&nbsp;&nbsp;Overlay&nbsp;
 <select name="map${num}b" id="map${num}b">
   <c:forEach var="source" items="${mapSources}">
   <option value="${source.name}">${source.name}</option>
+  </c:forEach>
+  <c:forEach var="image" items="${geoRefImages}">
+  <option value="${image.name}">${image.name}</option>
   </c:forEach>
 </select>
 ,&nbsp;&nbsp;Opacity&nbsp;
