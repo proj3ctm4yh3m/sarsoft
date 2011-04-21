@@ -15,6 +15,7 @@
 	<lat type="number"><xsl:value-of select="@lat"/></lat>
 	<lng type="number"><xsl:value-of select="@lon"/></lng>
 	<name type="string"><xsl:value-of select="gpx:name"/></name>
+	<desc type="string"><xsl:value-of select="gpx:desc"/></desc>
 </xsl:template>
 
 </xsl:stylesheet>

@@ -63,7 +63,14 @@
 	</xsl:for-each>
 	<xsl:for-each select="json:ways/json:e[json:type='TRACK']">
 		<xsl:call-template name="WayToGpx">
-			<xsl:with-param name="name" select="concat($operationalperiod, $assignment, translate(position(), '123456789', 'ABCDEFGHI'))"/>
+			<xsl:with-param name="name" select="concat($operationalperiod, $assignmentid, translate(position(), '123456789', 'ABCDEFGHI'))"/>
+			<xsl:with-param name="desc" select="json:name"/>
+		</xsl:call-template>
+	</xsl:for-each>
+	<xsl:for-each select="json:waypoints/json:e">
+		<xsl:call-template name="WaypointToWpt">
+			<xsl:with-param name="name" select="concat($operationalperiod, $assignmentid, 'W', position()-1)"/>
+			<xsl:with-param name="desc" select="json:name"/>
 		</xsl:call-template>
 	</xsl:for-each>
 </xsl:template>
@@ -83,6 +90,7 @@
 	<xsl:otherwise>
 	<trk>
 		<name><xsl:value-of select="$name"/></name>
+		<xsl:if test="string-length($desc) &gt; 0"><desc><xsl:value-of select="$desc"/></desc></xsl:if>
 		<trkseg>
 		<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
 			<xsl:call-template name="WaypointToTrkpt"/>
@@ -100,8 +108,10 @@
 </xsl:template>
 <xsl:template name="WaypointToWpt">
 	<xsl:param name="name"/>
+	<xsl:param name="desc"/>
 	<wpt lat="{json:lat}" lon="{json:lng}">
 		<name><xsl:value-of select="$name"/></name>
+		<xsl:if test="string-length($desc) &gt; 0"><desc><xsl:value-of select="$desc"/></desc></xsl:if>
 	</wpt>
 </xsl:template>
 </xsl:stylesheet>
