@@ -474,7 +474,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.assignments = new Object();
 	this.resources = new Object();
 	this._assignmentAttrs = new Object();
-	this.showOtherPeriods = false;
+	this.showOtherPeriods = true;
 	this.showLocations = true;
 	this._mapsetup = {
 		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50, showtracks : true },

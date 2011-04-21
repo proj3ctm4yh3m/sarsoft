@@ -107,13 +107,13 @@ function checkCombined() {
 	updateCombinedView();
 }
 
-overlay = null;
+geooverlay = null;
 
 function updateCombinedView() {
 	georef = parameterForm.read();
-	if(overlay != null) map2.removeOverlay(overlay);
-	overlay = new GeoRefImageOverlay(new GPoint(1*georef.originx, 1*georef.originy), new GLatLng(1*georef.originlat, 1*georef.originlng), georef.angle, georef.scale, "${image.id}", new GSize(1*georef.width, 1*georef.height), georef.opacity);
-	map2.addOverlay(overlay);
+	if(geooverlay != null) map2.removeOverlay(geooverlay);
+	geooverlay = new GeoRefImageOverlay(new GPoint(1*georef.originx, 1*georef.originy), new GLatLng(1*georef.originlat, 1*georef.originlng), georef.angle, georef.scale, "${image.id}", new GSize(1*georef.width, 1*georef.height), georef.opacity);
+	map2.addOverlay(geooverlay);
 	map2.setCenter(new GLatLng(1*georef.originlat, 1*georef.originlng), 12);
 	tabView.set('activeIndex', 2);
 }

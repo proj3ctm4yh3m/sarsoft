@@ -15,6 +15,11 @@
 		<xsl:call-template name="GpxToRoute"/>
 		</e>
 	</xsl:for-each>
+	<xsl:for-each select="gpx:wpt[string(gpx:name)!='lkp']">
+		<e class="object">
+		<xsl:call-template name="GpxToWaypoint"/>
+		</e>
+	</xsl:for-each>
 </assignments>
 <xsl:for-each select="gpx:wpt[string(gpx:name)='lkp']">
 <lkp class="object">
@@ -25,7 +30,8 @@
 </xsl:template>
 
 <xsl:template name="GpxToTrack">
-	<name type="string"><xsl:value-of select="gpx:name"/><xsl:if test="string-length(normalize-space(gpx:desc))&gt;0">:<xsl:value-of select="gpx:desc"/></xsl:if></name>
+	<name type="string"><xsl:value-of select="gpx:name"/></name>
+	<xsl:if test="string-length(normalize-space(gpx:desc))&gt;0"><desc><xsl:value-of select="gpx:desc"/></desc></xsl:if>
 	<polygon type="boolean">false</polygon>
 	<type type="string">TRACK</type>
 	<waypoints class="array">
@@ -54,6 +60,8 @@
 <xsl:template name="GpxToWaypoint">
 	<lat type="number"><xsl:value-of select="@lat"/></lat>
 	<lng type="number"><xsl:value-of select="@lon"/></lng>
+	<xsl:if test="string-length(gpx:name) &gt; 0"><name type="string"><xsl:value-of select="gpx:name"/></name></xsl:if>
+	<xsl:if test="string-length(gpx:desc) &gt; 0"><desc type="string"><xsl:value-of select="gpx:desc"/></desc></xsl:if>
 </xsl:template>
 
 </xsl:stylesheet>

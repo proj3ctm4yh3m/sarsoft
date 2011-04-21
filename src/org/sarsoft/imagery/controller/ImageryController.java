@@ -167,6 +167,8 @@ public class ImageryController extends JSONBaseController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		graphics.dispose();
+		image.flush();
 	}
 
 	@RequestMapping(value="/resource/imagery/georef/{id}.png", method=RequestMethod.GET)
@@ -191,6 +193,8 @@ public class ImageryController extends JSONBaseController {
 			g.drawImage(original, 0, 0, width, height, null);
 			
 			ImageIO.write(rotated, "png", response.getOutputStream());
+			g.dispose();
+			rotated.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -230,6 +234,9 @@ public class ImageryController extends JSONBaseController {
 			g.drawImage(original, width/2, height/2, width, height, null);
 			ImageIO.write(resized, "png", os);
 			os.close();
+			g.dispose();
+			original.flush();
+			resized.flush();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -251,6 +258,7 @@ public class ImageryController extends JSONBaseController {
 			BufferedImage rawImage = ImageIO.read(new File(GEOREF_IMAGE_DIR + image.getPk() + ".png"));
 			model.addAttribute("width", rawImage.getWidth());
 			model.addAttribute("height", rawImage.getHeight());
+			rawImage.flush();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return georef(model);
