@@ -139,13 +139,15 @@ function GMap2(node) {
 	var that = this;
 	this.ol = new Object();
 	this._overlays = new Array();
+	
 	var options = {
             maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
             maxResolution: 156543.0339,
             numZoomLevels: 19,
             units: 'm',
             projection: new OpenLayers.Projection("EPSG:900913"),
-            displayProjection: new OpenLayers.Projection("EPSG:4326")
+            displayProjection: new OpenLayers.Projection("EPSG:4326"),
+            controls: [new OpenLayers.Control.PanZoomBar({displayClass: "noprint"}), new OpenLayers.Control.Navigation()]
 		};
 	
 	this.ol.map = new OpenLayers.Map(node, options);
@@ -293,6 +295,7 @@ GMap2.prototype.getContainer = function() {
 
 GMap2.prototype.addControl = function(control) {
 	var ref = control.initialize(this);
+    if(ref != null) ref.className += " noprint";
 	var position = control.getDefaultPosition();
 	if(position != null) {
 		if(position.anchor == G_ANCHOR_TOP_RIGHT) {

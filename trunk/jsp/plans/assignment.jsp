@@ -146,7 +146,7 @@ you can see how it relates to neighboring assignments.</i></div>
 		</div>
 
 		<div id="tracks">
-			<div style="float: left">
+			<div style="float: left; width: 35em">
 				<div id="attachedtrackscontainer">
 				</div>
 				<div id="attachedwptcontainer">

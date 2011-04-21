@@ -6,8 +6,10 @@
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 
 <c:forEach var="copy" items='<%= new String[][] {{"White Copy - Team", "#DDDDDD"}, {"Yellow Copy - Comms","yellow"}, {"Pink Copy - Ops","pink"}, {"Gold Copy - Plans","#DDAA22"}} %>' varStatus='status'>
-<div style="height: 9in; font-size: 12pt; font-family: Times" <c:if test="${status.index ne 0 or printPageBreak eq true}">class="page"</c:if>>
 
+ <c:if test="${status.index ne 0 or printPageBreak eq true}"><div class="page"></div></c:if>
+ 
+<div style="height: 9in; font-size: 12pt; font-family: Times">
 <div style="width: 100%; height: 16pt; border-top: 2px solid ${copy[1]}; padding: 0px;">
 	<div style="width: 30%; float: left">${copy[0]}</div>
 	<div style="width: 69%; float: left; border-top: 12px solid ${copy[1]}"></div>
