@@ -60,16 +60,16 @@
 <xsl:template name="WayToKml">
     <xsl:param name="color"/>
 	<xsl:choose>
-	<xsl:when test="json:type='ROUTE'">
-		<xsl:call-template name="RouteToKml"/>
+	<xsl:when test="json:polygon=true">
+		<xsl:call-template name="PolygonToKml"/>
 	</xsl:when>
-	<xsl:when test="json:type='TRACK'">
-		<xsl:call-template name="TrackToKml"/>
-	</xsl:when>
+	<xsl:otherwise>
+		<xsl:call-template name="LineToKml"/>
+	</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
 
-<xsl:template name="TrackToKml">
+<xsl:template name="LineToKml">
     <LineString>
       <altitudeMode>clampToGround</altitudeMode>
       <tesselate>1</tesselate>
@@ -84,7 +84,7 @@
   <xsl:value-of select="json:lng"/>,<xsl:value-of select="json:lat"/>,0<xsl:text>&#x0A;</xsl:text>
 </xsl:template>
 
-<xsl:template name="RouteToKml">
+<xsl:template name="PolygonToKml">
     <Polygon>
    		<tesselate>1</tesselate>
     	<altitudeMode>clampToGround</altitudeMode>
