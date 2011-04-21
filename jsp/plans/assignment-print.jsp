@@ -56,7 +56,7 @@ TABLE.comms TD,TH {
 <style type="text/css" media="print">
 @page {
 	size: 8.5in 11in;
-	margin: 0pt;
+	margin: 0.5in;
 	border: 0pt;
 	padding: 0pt;
 }
