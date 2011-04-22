@@ -99,6 +99,7 @@ public abstract class JSONBaseController {
 	protected List<MapSource> getMapSources() {
 		if(mapSources != null) return mapSources;
 		synchronized(this) {
+			if(mapSources != null) return mapSources;
 			mapSources = new ArrayList<MapSource>();
 			String[] names = getProperty("sarsoft.map.backgrounds").split(",");
 			for(String name : names) {
@@ -112,8 +113,8 @@ public abstract class JSONBaseController {
 				source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
 				mapSources.add(source);
 			}
+			mapSources = Collections.unmodifiableList(mapSources);
 		}
-		mapSources = Collections.unmodifiableList(mapSources);
 		return mapSources;
 	}
 
