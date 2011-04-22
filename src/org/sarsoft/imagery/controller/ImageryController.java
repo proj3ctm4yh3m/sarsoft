@@ -50,7 +50,7 @@ public class ImageryController extends JSONBaseController {
 		CacheManager.getInstance().addCache("tileCache");
 	}
 	
-	private static String EXTERNAL_TILE_DIR = "sardata/tiles/";
+	private static String EXTERNAL_TILE_DIR = null;
 	private static String GEOREF_IMAGE_DIR = ".sarsoft/imagery/georef/";
 	
 	@InitBinder
@@ -61,7 +61,9 @@ public class ImageryController extends JSONBaseController {
 
 	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		File file = new File(EXTERNAL_TILE_DIR + layer + "/" + z + "/" + x + "/" + y + ".png");
+		if(EXTERNAL_TILE_DIR == null) EXTERNAL_TILE_DIR = getProperty("sarsoft.map.localTileStore");
+		File file = new File(EXTERNAL_TILE_DIR + "/" + layer + "/" + z + "/" + x + "/" + y + ".png");
+		System.out.println(file.getAbsolutePath());
 		if(!file.exists()) {
 			try {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
