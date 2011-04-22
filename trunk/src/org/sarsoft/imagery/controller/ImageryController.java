@@ -63,7 +63,6 @@ public class ImageryController extends JSONBaseController {
 	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		if(EXTERNAL_TILE_DIR == null) EXTERNAL_TILE_DIR = getProperty("sarsoft.map.localTileStore");
 		File file = new File(EXTERNAL_TILE_DIR + "/" + layer + "/" + z + "/" + x + "/" + y + ".png");
-		System.out.println(file.getAbsolutePath());
 		if(!file.exists()) {
 			try {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
