@@ -145,6 +145,19 @@ org.sarsoft.Loader.queue(function() {
   }, ${period.id});
 });
 
+function assignmentListTimer() {
+	if(document.getElementById('bulkupdate').style.display == "block" || document.getElementById('bulkprint').style.display == "block") return;
+	dao.loadAssignments(function(assignments) {
+		var sortedBy = datatable.table.get("sortedBy");
+		datatable.table.set("sortedBy", null);
+		datatable.table.deleteRows(0, datatable.table.getRecordSet().getLength());
+		datatable.table.addRows(assignments);
+		datatable.table.sortColumn(sortedBy.column, sortedBy.dir);
+	}, ${period.id});
+}
+
+setInterval("assignmentListTimer()", 20000);
+
 function showbulkupdate() {
 hidebulkprint();
 datatable.setClickOverride(false);
