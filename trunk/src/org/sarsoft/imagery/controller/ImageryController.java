@@ -209,6 +209,7 @@ public class ImageryController extends JSONBaseController {
 	
 	@RequestMapping(value="/app/imagery/georef", method = RequestMethod.POST)
 	public String createGeoReferencedImage(Model model, HttpServletRequest request, ImageForm params) {
+		if(!Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled"))) return "redirect:/app/index.html";
 		List<GeoRefImage> images = (List<GeoRefImage>) dao.loadAll(GeoRefImage.class);
 		long maxId = 0L;
 		for(GeoRefImage image : images) {

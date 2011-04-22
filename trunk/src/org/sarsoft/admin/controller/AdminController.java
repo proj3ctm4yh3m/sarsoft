@@ -57,6 +57,7 @@ public class AdminController extends JSONBaseController {
 		model.addAttribute("periods", periods);
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
 		model.addAttribute("locationenabled", OpsController.isLocationEnabled(RuntimeProperties.getSearch()));
+		model.addAttribute("imageUploadEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled")));
 		return app(model, "Pages.Home");
 	}
 
