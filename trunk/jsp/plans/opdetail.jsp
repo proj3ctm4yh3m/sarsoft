@@ -135,7 +135,7 @@ Base&nbsp;<select name="map${num}f" id="map${num}f">
 org.sarsoft.Loader.queue(function() {
   datatable = new org.sarsoft.view.SearchAssignmentTable();
   datatable.create(document.getElementById("listcontainer"));
-  dao = new org.sarsoft.OperationalPeriodDAO();
+  var dao = new org.sarsoft.OperationalPeriodDAO();
   dao.loadAssignments(function(rows) {
     if(rows == null || rows.length == 0) {
     	datatable.table.showTableMessage("<i>No Assignments Found</i>");
@@ -143,20 +143,33 @@ org.sarsoft.Loader.queue(function() {
 	  	datatable.table.addRows(rows);
 	}
   }, ${period.id});
+  
+  assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
+  assignmentDAO.mark();
 });
 
 function assignmentListTimer() {
 	if(document.getElementById('bulkupdate').style.display == "block" || document.getElementById('bulkprint').style.display == "block") return;
-	dao.loadAssignments(function(assignments) {
+	assignmentDAO.loadSince(function(assignments) {
 		var sortedBy = datatable.table.get("sortedBy");
 		datatable.table.set("sortedBy", null);
-		datatable.table.deleteRows(0, datatable.table.getRecordSet().getLength());
-		datatable.table.addRows(assignments);
+		var rs = datatable.table.getRecordSet();
+		for(var i = 0; i < assignments.length; i++) {
+			if(assignments[i].operationalPeriodId==${period.id}) {
+				for(var j = 0; j < rs.getLength(); j++) {
+					if(rs.getRecord(j).getData().id == assignments[i].id) {
+						datatable.table.deleteRow(j);
+					}
+				}
+				datatable.table.addRow(assignments[i]);
+			}
+		}
 		datatable.table.sortColumn(sortedBy.column, sortedBy.dir);
-	}, ${period.id});
+	});
+	assignmentDAO.mark();
 }
 
-setInterval("assignmentListTimer()", 20000);
+setInterval("assignmentListTimer()", 15000);
 
 function showbulkupdate() {
 hidebulkprint();
