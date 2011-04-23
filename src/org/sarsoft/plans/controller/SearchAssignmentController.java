@@ -126,7 +126,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/app/assignment", method = RequestMethod.POST)
 	public String setBulkAssignmentDetail(Model model, SearchAssignmentForm form, HttpServletRequest request, HttpServletResponse response) {
-		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		OperationalPeriod period = null;
 		String[] ids = form.getBulkIds().split(",");
 		for(String id : ids) {

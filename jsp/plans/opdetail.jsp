@@ -41,7 +41,7 @@ you can not clear fields through bulk update.</p>
 
 			<form name="assignment" action="/app/assignment" method="post">
 			 <input type="hidden" value="" name="bulkIds" id="bulkIds"/>
-			 <input type="hidden" value="" name="action" id="action"/>
+			 <input type="hidden" value="UPDATE" name="action" id="action"/>
 			 <table border="0">
 			 <tr><td>
 			 <table border="0">
