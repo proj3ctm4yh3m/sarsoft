@@ -2,23 +2,58 @@
 
 = Installation =
 
-Starting with version 0.3, sarsoft is packaged as a simple .jar file.
+Sarsoft is packaged as a JAR file; all you need to run it is Java 6.
 
- * Download the zip file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.3.jar">http://sarsoft.googlecode.com/files/sarsoft-0.3.jar</a>.
+ * Download the jar file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.4.jar">http://sarsoft.googlecode.com/files/sarsoft-0.4.jar</a>.
 
- * On Windows and Mac systems with Java installed, you should be able to double-click on the sarsoft-0.3.jar file to start the application.  Sarsoft will create two folders in the directory from which it's started: config and hsqldb.
+ * Start the jar file by typing `java -jar sarsoft-0.4.jar` at the command line or double-clicking the file in the windows file explorer.
 
- * Point your browser at <a href="http://localhost:8080">http://localhost:8080</a>.  You will see a landing page with a list of existing searches; enter a new search name and click *create*.
+ * Point your browser at http://localhost:8080 to access Sarsoft.
 
- * Click on "Site Admin".
+ * Working data will be placed in a folder named `.sarsoft`, in the directory you start the .jar file from.
 
- * Select the "Map Configuration" tab and click on the "clicking here" link at the bottom of the table to populate the default map configurations.
+ * If you want to use user-supplied georeferenced imagery, it is recommended that you increase the memory available to the JVM, e.g. by using `java -Xmx256M -jar sarsoft-0.4.jar` with the Sun JVM.
 
- * If you plan on accessing Sarsoft from a machine other than the one it's running on, select the "API Keys" tab and enter your hostname and Google Maps and Garmin API keys.
+= Configuration =
 
-You can password protect this page by starting Sarsoft on the command line and specifying a password as follows: java -Dsarsoft.admin.password=mypassword -jar sarsoft-0.3.jar
+Sarsoft is ready to use out of the box, with no external dependencies or configuration required.  You can customize it by passing arguments via a `sarsoft.properties` file in the directory you start the application from.  This is a standard Java key=value properties file.
 
-= Shutting Down =
+=== Database ===
 
- * Unless you start the application from a command line, it will run windowless - there's no obvious way to kill it without looking at a process list.  You can shutdown the sarsoft app by going to the homepage (click the big SARSOFT in the upper left hand corner) and clicking *Administration Console*.  Under the Server Control tab, click *Shut Down*.
-<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/install-shutdown.png"/>
+Sarsoft's default database is HSQL, which is an in-memory/filesystem database embedded within the application.  You can use a different database (MySQL is the only one which has been tested) using the following parameters:
+
+{{{
+hibernate.driverClass=[org.hsqldb.jdbcDriver | com.mysql.jdbc.Driver | etc ]
+hibernate.jdbcUrl=jdbc:mysql:://hostname/dbname
+hibernate.username=your username
+hibernate.password=your password
+hibernate.dialect=[org.hibernate.dialect.HSQLDialect | org.hibernate.dialect.MySQLDialect | etc ]
+}}}
+
+=== Map Viewer ===
+
+Sarsoft comes with an embedded copy of the OpenLayers map viewer, which can be used offline when no internet connection is available.  It also supports Google Maps, which allows you to use Google's map background tiles.  OpenLayers is the default; you can switch to Google using
+
+{{{
+sarsoft.map.viewer=google
+}}}
+
+By default, Sarsoft will cache most map background tiles and serve them to other web clients.  This reduces network load in a bandwidth-constrained environment, but can be slower when a full internet connection is available.  You can disable this using
+
+{{{
+sarsoft.map.tileCacheEnabled=false
+}}}
+
+Sarsoft also allows users to upload images, align them, and then use them as map backgrounds (georeferenced imagery).  Manipulating the image in Java uses a lot of memory; in memory-constrained environments you can disable this feature using
+
+{{{
+sarsoft.map.imageUploadEnabled=false
+}}}
+
+The default map for new searches covers the US.  You can customize Sarsoft to your location by specifying a latitude, longitude and zoom level.
+
+{{{
+sarsoft.map.default.zoom=5
+sarsoft.map.default.lat=38
+sarsoft.map.default.lng=-97
+}}}
