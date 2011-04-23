@@ -1,27 +1,23 @@
 #summary Introduction to sarsoft.
 
-= Origins =
+Sarsoft is a web-based plans writing and track logging tool for volunteer Search and Rescue teams.  Despite being a web app, Sarsoft does *not require an internet connection*; as long as you supply map background tiles, you can hook it up to a wireless router and host your own network in the middle of nowhere.  If you do have an internet connection, Sarsoft will automatically cache map data in order to reduce bandwidth needs.
 
-Sarsoft grew out of frustration with the existing tools available for search management.  If you've ever tried matching up a park trails map with a USGS topo in unfamiliar terrain at 2AM, struggled to read someone's chicken scratch on the 3rd carbon copy of a form or walked in circles trying to figure out where your assignment boundary is, you'll understand some of the shortcomings that sarsoft was designed to address.
+Sarsoft is created with these design goals as overriding concerns:
+ * Simple deployment, with minimal setup/configuration required
+ * Able to function in offline or bandwidth-constrained environments
+ * Intuitive to users with search overhead training
+ * Translates to paper
 
-The sarsoft "mission statement" is to *provide increased efficiency and situational awareness on search operations*.
+= Why You Should Use Sarsoft =
 
-= Philosophy =
+*Better Maps*.  You're on an assignment in unfamiliar terrain, USGS topo in one hand and park trails map in the other.  The topo doesn't have any of the park trails, the park map doesn't have topo lines, they both have your assignment drawn on them but the segments don't line up.  Sound familiar?  Sarsoft allows you to print exact assignment segments onto multiple map backgrounds and then download the coordinates to a GPS device before teams leave the CP, leaving teams better informed about where they are and where they should be.
 
-The main design goals of sarsoft are as follows:
- * Deploy and run locally, with minimal configuration.
- * Work within (rather than replace) paper-based systems.
- * Intuitive to new users with search overhead experience.
+*Distributed*.  You can do all of the above with the right mapping software, but the laptop it sits on becomes a choke point that makes it difficult to get plans written and teams in the field in a timely manner.  Sarsoft gives anyone with a web browser the ability to create plans, print maps and download tracks.
 
-= Deployment =
+*Remote Planning*.  If your on-site overhead team is thin, Sarsoft allows you to shift work to other team members who are free but unable to physically make it to the CP.  As an atypical example, a remote overhead team successfully used it to prepare maps and assignment forms for an urban search 2000 miles away when trained local resources were unavailable.
 
-You can run the sarsoft jar file as a local application without any further steps.  On an actual search, you'll probably want to set your network up so that multiple machines can access the application at the same time - an overhead projector for the room, plan writers, a station for uploading and downloading GPS data, etc.  In order to do this, you'll need to set your local network up so that the machine running sarsoft is identified by a unique machine name, and obtain an google maps API key for that name.  You can update the google maps key through the sarsoft admin console.
-
-You should back your work up frequently.  You can do this in 3 ways:
- * Copy the hsqldb folder.
- * Export operational periods to GPX or KML files and save them on a local machine.
- * Backup to hard copy!  Print your assignments out as soon as they're ready.
+*Translates to Paper*.  Search and Rescue teams like paper.  It doesn't crash, you can read it in sunlight, it doesn't require instructions, and short of the CP burning down it's fail-safe.  Sarsoft likes paper too.  Using it won't save you a single sheet.  It makes your maps and forms easier to prepare and more accurate, but once you've dumped an assignment to paper, it steps back and lets you run things your way.
 
 = Status =
 
-Sarsoft is currently in active development and not production ready.  You are encouraged to use it in trainings and mock searches and submit feedback and bug reports, but should not count on it for live searches. 
+Sarsoft provides all the features you need to write plans and manage tracks on a search.  However, it has not seen extensive field testing.  You are encouraged to use it in trainings and mock searches and submit feedback and bug reports, but should not rely on it being production-caliber.  *If you experience crashes, data loss or inaccurate results on a live search, do not blame me.*
