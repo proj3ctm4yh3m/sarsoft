@@ -18,6 +18,8 @@ On the operational period map view page ("Current Operations: Map" from the home
 
 Except for the pan/zoom/layer controls, everything you see on the map will print with it.  This is a good time to get acquainted with the Map Setup dialog you can access by right-clicking on them map, so that you can control how the map looks when it prints.
 
+<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/largeimages-mapsetup.png"/> 
+
 For both the current and previous operational periods, the map setup dialog allows you to control the following:
 
  * _Show_.  You can print all assignments, or print separate maps showing just ground, dog or OHV assignments.
