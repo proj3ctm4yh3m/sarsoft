@@ -17,7 +17,6 @@ org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 	YAHOO.util.Connect.asyncRequest('POST', this.baseURL + url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
-			alert("AJAX ERROR " + that.baseURL + url + " " + response.responseText);
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
 }
@@ -27,7 +26,6 @@ org.sarsoft.BaseDAO.prototype._doGet = function(url, handler) {
 	YAHOO.util.Connect.asyncRequest('GET', this.baseURL + url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
-			alert("AJAX ERROR " + that.baseURL + url + " " + response.responseText);
 			throw("AJAX ERROR getting from " + that.baseURL + url + ": " + response.responseText);
 		}});
 }
