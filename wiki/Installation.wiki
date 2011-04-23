@@ -44,7 +44,7 @@ By default, Sarsoft will cache most map background tiles and serve them to other
 sarsoft.map.tileCacheEnabled=false
 }}}
 
-Sarsoft also allows users to upload images, align them, and then use them as map backgrounds (georeferenced imagery).  Manipulating the image in Java uses a lot of memory; in memory-constrained environments you can disable this feature using
+Sarsoft also allows users to upload images, align them, and then use them as map backgrounds (`Map Imagery` on the homepage).  Manipulating the image in Java uses a lot of memory; in memory-constrained environments you can disable this feature using
 
 {{{
 sarsoft.map.imageUploadEnabled=false
@@ -90,7 +90,23 @@ Note that Sarsoft does not know how to directly speak WMS and requires you to su
 
 === Serving Map Imagery Locally ===
 
-Sarsoft allows you to 
+Sarsoft allows you to store map background tiles locally and serve them up when no internet connection is available.  To do so, the tiles *must* be named using the zoom/x/y.png convention.  First, create a new map background as described above, using
+
+{{{
+sarsoft.map.background.mylayername.template=/resource/imagery/tiles/mylayername/{Z}/{X}/{Y}.png
+}}}
+
+as the template.  Second, you have to decide where your various map backgrounds will live.  The default is sardata/tiles, but you can customize this to be an absolute filesystem path or a relative path from the location you start the JAR in by setting
+
+{{{
+sarsoft.map.localTileStore=/path/to/files
+}}}
+
+To work with the default settings, create the sardata/tiles directory, a subdirectory matching your background layer name, and place the files in there.  If your layer is named "mylayername", You should wind up with tile 3,4 of zoom level 5 living at
+
+{{{
+sardata/tiles/mylayername/5/3/4.png
+}}} 
 
 === API Keys ===
 
