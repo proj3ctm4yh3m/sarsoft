@@ -19,9 +19,9 @@ The next page you'll land on is the home page, which although it has links to al
 
 = Initializing the Map =
 
-The map view starts out with a picture of the entire US.  Using the pan and zoom controls or by double-clicking, zoom in on the missing person's point last known (PLK).  You can adjust the map background using controls in the upper right, either by adjusting the background only, or by blending a background and an overlay layer with an opacity from 0-100.
+The map view starts out with a picture of the entire US.  Using the pan and zoom controls or by double-clicking, zoom in on the missing person's last known point (LKP).  You can adjust the map background using controls in the upper right, either by adjusting the background only, or by blending a background and an overlay layer with an opacity from 0-100.
 
-When you've zoomed in, right-click on the map and select "Set PLK here".
+When you've zoomed in, right-click on the map and select "Set LKP here".
 
 <img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/plans-3.png"/>
 
