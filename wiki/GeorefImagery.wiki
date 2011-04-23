@@ -1,0 +1,24 @@
+#summary Georeferencing Images
+
+= Georeferencing Images =
+
+Sarsoft allows you to import images like park trails maps, align them with real-world coordinates, and use them as map backgrounds.  This only works for maps that are drawn to scale, as Sarsoft will not warp the image, only rotate and resize it.  The UI is functional but needs further development.
+
+ # Select Map Imagery under "Administration".
+
+ # Enter a name for your map background and the file to upload.
+
+ # *Click* on the map to select two reference points.  Sarsoft surrounds the map with a buffer of blank pixels to prevent cropping if the map gets rotated, so you may need to scroll to find the map.
+
+ # Click the "Map" tab and *right-click* on the map to select the same two reference points.
+
+ # You will automatically be taken to the Result tab, which shows  your image overlaid on the map.  If you don't like the results, you have two options:
+
+  * Revisit the previous tabs and re-enter a reference point.
+  * Click the "Parameters" tab and adjust the parameters manually.  When done, click "Show map using these parameters".  You can also adjust the opacity at which the map is shown on the Result tab here.
+
+ # When done, click on the 'Parameters' tab and click 'Save these parameters'.  There will not be any confirmation that the image has saved; you can open a map in a new tab to verify.
+
+ # Click "Take me home".
+
+You can now select the image as an overlay (but not as a background) on the operational period map page, and when printing assignments.
