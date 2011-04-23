@@ -57,3 +57,56 @@ sarsoft.map.default.zoom=5
 sarsoft.map.default.lat=38
 sarsoft.map.default.lng=-97
 }}}
+
+=== Map Backgrounds ===
+
+Sarsoft comes with the following background layers preconfigured: OpenStreetMap Mapnik (mapnik), OpenStreetMap Osmarender (osm), MyTopo (mytopo), OpenCycleMap (ocm), USGS via Terraserver (usgs).  Google map layers are also available when using the Google Maps viewer.  You can control which layers are available using
+
+{{{
+sarsoft.map.backgrounds=osm.mapnik,mytopo,ocm,usgs
+}}}
+
+To add a new layer, it must either use the Web Map Service (WMS) api, or follow the standard zoom/x/y tile structure used in Google Maps.  In either case, you need to specify the name, type (WMS | TILE), copyright, min & max resolutions, whether the resulting image is a PNG file, and a URL template.  You also need to add your layer to the list of available backgrounds (see above).  The Mapnik and USGS layers are provided as examples of Tile and WMS layers, respectively:
+
+{{{
+sarsoft.map.background.mapnik.name=Mapnik
+sarsoft.map.background.mapnik.type=TILE
+sarsoft.map.background.mapnik.copyright=OSM
+sarsoft.map.background.mapnik.maxresolution=17
+sarsoft.map.background.mapnik.minresolution=0
+sarsoft.map.background.mapnik.png=true
+sarsoft.map.background.mapnik.template=http://tile.openstreetmap.org/{Z}/{X}/{Y}.png
+
+sarsoft.map.background.usgs.name=USGS
+sarsoft.map.background.usgs.type=WMS
+sarsoft.map.background.usgs.copyright=USGS
+sarsoft.map.background.usgs.minresolution=5
+sarsoft.map.background.usgs.maxresolution=17
+sarsoft.map.background.usgs.png=false
+sarsoft.map.background.usgs.template=http://terraservice.net/ogcmap6.ashx?version=1.1.1&request=GetMap&styles=&srs=EPSG:4326&format=image/jpeg&bgcolor=0xCCCCCC&exceptions=INIMAGE&layers=DRG&bbox={left},{bottom},{right},{top}&width={tilesize}&height={tilesize}
+}}}
+
+Note that Sarsoft does not know how to directly speak WMS and requires you to supply a template with most of the information filled in except for the left, bottom, right and top coordinates and a tilesize parameter.
+
+=== Serving Map Imagery Locally ===
+
+Sarsoft allows you to 
+
+=== API Keys ===
+
+Both Google Maps and the Garmin Communicator plug-in (used to move data in/out of GPS devices) require API keys based on your host name.  This isn't relevant if you only use Sarsoft on one machine, but if you're hosting it on an internal network at the CP, you'll need to get API keys for your server's IP address or DNS name.  Sarsoft comes preconfigured to work with the following common internal IP ranges:
+
+{{{
+192.168.1.1 - 192.168.1.10
+192.168.1.100 - 192.168.1.110
+}}} 
+
+You can add new API keys for specific hostnames or IP addresses using the following templates for 192.168.1.1 and sarsoft.org:
+
+{{{
+google.maps.apikey.192.168.1.1=api key
+google.maps.apikey.sarsoft.org=api key
+
+garmin.key.192.168.1.1=api key
+garmin.key.sarsoft.org=api key
+}}}
