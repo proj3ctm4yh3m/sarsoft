@@ -21,3 +21,11 @@ Sarsoft is created with these design goals as overriding concerns:
 = Status =
 
 Sarsoft provides all the features you need to write plans and manage tracks on a search.  However, it has not seen extensive field testing.  You are encouraged to use it in trainings and mock searches and submit feedback and bug reports, but should not rely on it being production-caliber.  *If you experience crashes, data loss or inaccurate results on a live search, do not blame me.*
+
+= Further Reading =
+
+ * [Installation Intalling] and configuring Sarsoft.
+ * [WritingPlans Creating] and printing individual search assignments.
+ * [GeorefImagery Uploading and aligning] images, such as a park trails map.
+ * [PrintingLargeMaps Printing large maps] for posting at the CP.
+ * [BulkOperations Bulk Updating and Printing] assignments.
