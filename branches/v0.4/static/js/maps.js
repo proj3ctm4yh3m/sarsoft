@@ -165,12 +165,14 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity)
 		if(overlay.angle != null) {
 			this._overlays[0] = new GeoRefImageOverlay(new GPoint(1*overlay.originx, 1*overlay.originy), new GLatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new GSize(1*overlay.width, 1*overlay.height), opacity);
 			this.map.addOverlay(this._overlays[0]);
+			this.map._sarsoft_overlay_name = overlay.name;
+			this.map._sarsoft_overlay_opacity = opacity;
 		} else {
 			var layers = overlay.getTileLayers();
 			for(var i = 0; i < layers.length; i++) {
 				this._overlays[i] = new GTileLayerOverlay(new org.sarsoft.GAlphaTileLayerWrapper(overlay.getTileLayers()[i], opacity));
 				this.map.addOverlay(this._overlays[i]);
-				this.map._sarsoft_overlay_type = overlay;
+				this.map._sarsoft_overlay_name = overlay.getName();
 				this.map._sarsoft_overlay_opacity = opacity;
 			}
 		}
@@ -226,7 +228,7 @@ org.sarsoft.FixedGMap = function(map) {
 org.sarsoft.FixedGMap.prototype.getConfig = function() {
 	var config = new Object();
 	config.base = this.map.getCurrentMapType().getName();
-	config.overlay = this.map._sarsoft_overlay_type ? this.map._sarsoft_overlay_type.getName() : null;
+	config.overlay = this.map._sarsoft_overlay_name;
 	config.opacity = this.map._sarsoft_overlay_opacity;
 	return config;
 }
