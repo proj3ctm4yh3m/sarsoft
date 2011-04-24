@@ -1,5 +1,6 @@
 package org.sarsoft.ops.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -10,9 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.sarsoft.admin.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
-import org.sarsoft.ops.service.location.LocationEngine;
+import org.sarsoft.ops.service.location.APRSTier2Engine;
+import org.sarsoft.ops.service.location.SpotLocationEngine;
 import org.sarsoft.plans.controller.SearchAssignmentController;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +31,11 @@ public class OpsController extends JSONBaseController {
 
 	@Autowired
 	AdminController adminController;
-	private static Map<String, LocationEngine> locationEngines = new HashMap<String, LocationEngine>();
-	private static LocationEngineMonitor monitor = new LocationEngineMonitor();
+	private class EngineList {
+		public APRSTier2Engine aprst2;
+		public SpotLocationEngine spot;
+	}
+	private static Map<String, EngineList> locationEngines = new HashMap<String, EngineList>();
 
 	@Autowired
 	SearchAssignmentController searchAssignmentController;
@@ -38,23 +44,28 @@ public class OpsController extends JSONBaseController {
 		return locationEngines.containsKey(search);
 	}
 
-	static {
-		monitor.setEngineMap(locationEngines);
-	}
-
 	@RequestMapping(value = "/{mode}/location/start", method = RequestMethod.GET)
 	public String startLocationEngine(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
-		if(!monitor.isAlive()) monitor.start();
 		String search = RuntimeProperties.getSearch();
-		if(!locationEngines.containsKey(search)) {
-			LocationEngine engine = new LocationEngine();
-			locationEngines.put(search, engine);
-			engine.dao = this.dao;
-			engine.setSearch(search);
-			engine.setAPRSRefreshInterval(getProperty("sarsoft.location.aprs.refreshInterval"));
-			engine.setSpotRefreshInterval(getProperty("sarsoft.location.spot.refreshInterval"));
-			engine.start();
+		EngineList engines = locationEngines.get(search);
+		if(engines == null) {
+			engines = new EngineList();
+			locationEngines.put(search, engines);
 		}
+		
+		if(engines.spot != null && engines.spot.isAlive()) engines.spot.quit();
+		engines.spot = new SpotLocationEngine();
+		engines.spot.setDao(this.dao);
+		engines.spot.setSearch(search);
+		engines.spot.setRefreshInterval(getProperty("sarsoft.location.spot.refreshInterval"));
+		engines.spot.start();
+		
+		if(engines.aprst2 != null && engines.aprst2.isAlive()) engines.aprst2.quit();
+		engines.aprst2 = new APRSTier2Engine();
+		engines.aprst2.setDao(this.dao);
+		engines.aprst2.setSearch(search);
+		engines.aprst2.start();
+		
 		if(REST.equals(mode)) return "/json";
 		return adminController.homePage(model);
 	}
@@ -62,10 +73,11 @@ public class OpsController extends JSONBaseController {
 	@RequestMapping(value = "/{mode}/location/stop", method = RequestMethod.GET)
 	public String stopLocationEngine(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
 		String search = RuntimeProperties.getSearch();
-		if(locationEngines.containsKey(search)) {
-			LocationEngine engine = locationEngines.get(search);
+		EngineList engines = locationEngines.get(search);
+		if(engines != null) {
 			locationEngines.remove(search);
-			engine.quit();
+			if(engines.spot != null && engines.spot.isAlive()) engines.spot.quit();
+			if(engines.aprst2 != null && engines.aprst2.isAlive()) engines.aprst2.quit();
 		}
 		if(REST.equals(mode)) return "/json";
 		return adminController.homePage(model);
@@ -120,6 +132,35 @@ public class OpsController extends JSONBaseController {
 		List resources = dao.loadAll(Resource.class);
 		return json(model, resources);
 	}
+	
+	@RequestMapping(value="/rest/callsign", method = RequestMethod.GET)
+	public String getCallsigns(Model model) {
+		return getCallsignsSince(model, 1);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@RequestMapping(value="/rest/callsign/since/{date}", method = RequestMethod.GET)
+	public String getCallsignsSince(Model model, @PathVariable("date") long date) {
+		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());
+		if(engines != null && engines.aprst2 != null) {
+			Map<String, Waypoint> csmap = engines.aprst2.getCallsigns();
+			List cslist = new ArrayList();
+			for(String callsign : csmap.keySet()) {
+				Waypoint wpt = csmap.get(callsign);
+				if(wpt != null && wpt.getTime().getTime() > date) {
+					Map m = new HashMap();
+					m.put("callsign", callsign);
+					m.put("name", callsign);
+					m.put("position", csmap.get(callsign));
+					cslist.add(m);
+				}
+			}
+			return json(model, cslist);
+		}
+		return json(model, new Object());
+	}
+	
+	
 
 	@RequestMapping(value="/{mode}/resource/{resourceid}", method = RequestMethod.GET)
 	public String getResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid) {

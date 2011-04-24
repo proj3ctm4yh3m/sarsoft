@@ -77,15 +77,16 @@ org.sarsoft.controller.ResourceMapController = function(emap) {
 	this.emap = emap;
 	this.searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
 	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that._handleServerError(); });
+	this.callsignDAO = new org.sarsoft.ResourceDAO(function() { that._handleServerError(); }, "/rest/callsign");
+	this.showCallsigns = true;
 	this.resources = new Object();
-	this.showROW = false;
-	this.showEnRoute = true;
-	this.showAtSearch = true;
+	this.callsigns = new Object();
+	this._callsignId = -1;
 
 	this.contextMenu = new org.sarsoft.view.ContextMenu();
 	this.contextMenu.setItems([
-		{text : "Hide At Search", applicable : function(obj) { return obj == null && that.showAtSearch; }, handler : function(data) { that.showAtSearch = false; that._handleSetupChange(); }},
-		{text : "Show At Search", applicable : function(obj) { return obj == null && !that.showAtSearch; }, handler : function(data) { that.showAtSearch = true; that._handleSetupChange(); }},
+		{text : "Hide Callsigns", applicable : function(obj) { return obj == null && that.showCallsigns; }, handler : function(data) { that.showCallsigns = false; that._handleSetupChange(); }},
+		{text : "Show Callsigns", applicable : function(obj) { return obj == null && !that.showCallsigns; }, handler : function(data) { that.showCallsigns = true; that._handleSetupChange(); }},
 		{text : "View Resource Details", applicable : function(obj) { return obj != null }, handler : function(data) { window.open('/app/resource/' + data.subject.id); }},
 		{text : "Return to Resources List", applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/resource/"}},
 		{text : "Adjust page size for printing", applicable: function(obj) { return obj == null}, handler : function(data) { that.pageSizeDlg.show(); }},
@@ -122,6 +123,14 @@ org.sarsoft.controller.ResourceMapController = function(emap) {
 				that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))));
 		}, "mapConfig");
 	});
+	
+	this.callsignDAO.mark();
+	this.callsignDAO.loadAll(function(callsigns) {
+		for(var i = 0; i < callsigns.length; i++) {
+			var callsign = callsigns[i];
+			that.addCallsign(callsign);
+		}
+	});
 
 	this.pageSizeDlg = new org.sarsoft.view.OperationalPeriodMapSizeDlg(this.emap.map);
 
@@ -146,6 +155,10 @@ org.sarsoft.controller.ResourceMapController.prototype._handleSetupChange = func
 		var resource = this.resources[id];
 		this.addResource(resource);
 	}
+	for(var cs in this.callsigns) {
+		var callsign = this.callsigns[cs];
+		this.addCallsign(callsign);
+	}
 }
 
 org.sarsoft.controller.ResourceMapController.prototype.timer = function() {
@@ -157,14 +170,31 @@ org.sarsoft.controller.ResourceMapController.prototype.timer = function() {
 		that.expireResources();
 		that.resourceDAO.mark();
 	});
+	this.callsignDAO.loadSince(function(callsigns) {
+		for(var i = 0; i < callsigns.length; i++) {
+			that.addCallsign(callsigns[i]);
+		}
+		that.expireCallsigns();
+		that.callsignDAO.mark();
+	});
 }
 
 org.sarsoft.controller.ResourceMapController.prototype.expireResources = function() {
 	var timestamp = this.resourceDAO._timestamp;
 	for(var key in this.resources) {
 		var resource = this.resources[key];
-		if(resource.position != null && timestamp - (1*resource.position.time) > 300000) {
+		if(resource.position != null && timestamp - (1*resource.position.time) > 400000) {
 			this.addResource(resource, true);
+		}
+	}
+}
+
+org.sarsoft.controller.ResourceMapController.prototype.expireCallsigns = function() {
+	var timestamp = this.callsignDAO._timestamp;
+	for(var key in this.callsigns) {
+		var callsign = this.callsigns[key];
+		if(callsign.position != null && timestamp - (1*callsign.position.time) > 400000) {
+			this.addCallsign(resource, true);
 		}
 	}
 }
@@ -176,19 +206,33 @@ org.sarsoft.controller.ResourceMapController.prototype.addResource = function(re
 	}
 	if(resource.position == null) return;
 	var config = new Object();
-	if(resource.section == null) {
-		if(!this.showROW) return;
-	} else if(resource.section == "ENROUTE") {
-		if(!this.showEnRoute) return;
-	} else {
-		if(!this.showAtSearch) return;
-	}
 
 	var timestamp = this.resourceDAO._timestamp;
-	config.color = "#00FF00";
-	if(timestamp - (1*resource.position.time) > 300000) config.color = "#FF0000";
+	config.color = "#FF0000";
+	if(timestamp - (1*resource.position.time) > 400000) config.color = "#000000";
 
 	var date = new Date(1*resource.position.time);
 	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-	this.emap.addWaypoint(resource.position, config, resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()));
+	this.emap.addWaypoint(resource.position, config, resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), resource.name);
+}
+
+
+org.sarsoft.controller.ResourceMapController.prototype.addCallsign = function(callsign, expireCheck) {
+	if(this.callsigns[callsign.name] != null) this.emap.removeWaypoint(this.callsigns[callsign.name].position);
+	if(callsign.position == null) return;
+	if(expireCheck != true) {
+		this.callsigns[callsign.name] = callsign;
+		callsign.position.id = this._callsignId;
+		this._callsignId--;
+	}
+	var config = new Object();
+	if(!this.showCallsigns) return;
+
+	var timestamp = this.callsignDAO._timestamp;
+	config.color = "#FFCC00";
+	if(timestamp - (1*callsign.position.time) > 400000) config.color = "#000000";
+
+	var date = new Date(1*callsign.position.time);
+	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
+	this.emap.addWaypoint(callsign.position, config, callsign.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), callsign.name);
 }
