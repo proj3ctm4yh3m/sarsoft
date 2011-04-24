@@ -223,7 +223,7 @@ public class ImageryController extends JSONBaseController {
 		image = (GeoRefImage) dao.load(GeoRefImage.class, maxId+1);
 		try {
 			File file = new File(GEOREF_IMAGE_DIR);
-			file.mkdir();
+			file.mkdirs();
 			FileOutputStream os = new FileOutputStream(GEOREF_IMAGE_DIR + image.getPk() + ".png");
 			
 			BufferedImage original = ImageIO.read(new ByteArrayInputStream(params.getBinaryData()));
