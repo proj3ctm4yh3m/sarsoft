@@ -13,6 +13,12 @@ This page shows you all available resources.
 <div id="resources">
 </div>
 
+<h2>Nearby Callsigns</h2>
+The following callsigns have been picked up within a 120km radius of the LKP.  You can use them to identify resources you'd like to add to the search.
+
+<div id="callsigns">
+</div>
+
 <script>
 
 org.sarsoft.Loader.queue(function() {
@@ -25,6 +31,14 @@ org.sarsoft.Loader.queue(function() {
   	rtable.table.showTableMessage("<i>No Resources Found</i>");
 
   	rtable.table.addRows(rows);
+  });
+  
+  ctable = new org.sarsoft.view.ResourceTable(function() {});
+  ctable.create(document.getElementById("callsigns"));
+  cdao = new org.sarsoft.ResourceDAO(function() {}, "/rest/callsign");
+  cdao.loadAll(function(rows) {
+	 ctable.table.showTableMessage("<i>No Callsigns Found</i>");
+	 ctable.table.addRows(rows);
   });
 });
 
