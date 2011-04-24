@@ -5,13 +5,17 @@ if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Ob
 
 org.sarsoft.view.ResourceTable = function(handler, onDelete) {
 	var coldefs = [
-		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function(evt) {evt.cancelBubble = true; onDelete(record);} }},
+	    { key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function(evt) {evt.cancelBubble = true; onDelete(record);} }},
 		{ key : "name", label : "Name", sortable : true},
-		{ key : "section", label : "Section", sortable : true},
-		{ key : "locatorDesc", label : "Locators"},
-		{ key : "plk", label : "PLK", formatter : function(cell, record, column, data) { if(data == null) data = new Object(); var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(gll).toString();}},
-		{ key : "plk", label : "Last Update", formatter : function(cell, record, column, data) { if (data == null) data = new Object(); cell.innerHTML = new Date(1*data.time).toUTCString(); }, sortable : true}
+		{ key : "assignmentId", label : "Assignment", sortable : true},
+		{ key : "callsign", label : "Callsign"},
+		{ key : "spotId", label: "SPOT ID"},
+		{ key : "position", label : "Position", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(gll).toString();}},
+		{ key : "position", label : "Last Update", formatter : function(cell, record, column, data) { if (data == null) return; cell.innerHTML = new Date(1*data.time).toUTCString(); }, sortable : true}
 	];
+	if(onDelete == null) {
+		coldefs.splice(0,1);
+	}
 	if(handler == null) {
 		handler = function(resource) {
 			window.location="/app/resource/" + resource.id;
@@ -29,16 +33,8 @@ org.sarsoft.ResourceDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.ResourceDAO.prototype = new org.sarsoft.BaseDAO();
 
-org.sarsoft.ResourceDAO.prototype.loadAllBySection = function(handler, section) {
-	this._doGet("?section=" + section, handler);
-}
-
 org.sarsoft.ResourceDAO.prototype.detachResource = function(resource, assignmentid) {
 	this._doGet("/" + resource.id + "/detach/" + assignmentid, function() {});
-}
-
-org.sarsoft.ResourceDAO.prototype.deleteResource = function(resource) {
-	this._doPost("/" + resource.id, function() {}, new Object(), "action=delete");
 }
 
 org.sarsoft.controller.ResourceViewMapController = function(container, id) {
@@ -70,9 +66,9 @@ org.sarsoft.controller.ResourceViewMapController.prototype._loadResourceCallback
 			that.fmap.map.setCenter(that.fmap.map.center, 13);
 	}, "mapConfig");
 
-	var center = new GLatLng(resource.plk.lat, resource.plk.lng);
+	var center = new GLatLng(resource.position.lat, resource.position.lng);
 	that.fmap.map.setCenter(center, 13);
-	that.fmap.addWaypoint(resource.plk, config, resource.name);
+	that.fmap.addWaypoint(resource.position, config, resource.name);
 }
 
 
@@ -88,10 +84,6 @@ org.sarsoft.controller.ResourceMapController = function(emap) {
 
 	this.contextMenu = new org.sarsoft.view.ContextMenu();
 	this.contextMenu.setItems([
-		{text : "Hide Rest of World", applicable : function(obj) { return obj == null && that.showROW; }, handler : function(data) { that.showROW = false; that._handleSetupChange(); }},
-		{text : "Show Rest of World", applicable : function(obj) { return obj == null && !that.showROW; }, handler : function(data) { that.showROW = true; that._handleSetupChange(); }},
-		{text : "Hide En Route", applicable : function(obj) { return obj == null && that.showEnRoute; }, handler : function(data) { that.showEnRoute = false; that._handleSetupChange(); }},
-		{text : "Show En Route", applicable : function(obj) { return obj == null && !that.showEnRoute; }, handler : function(data) { that.showEnRoute = true; that._handleSetupChange(); }},
 		{text : "Hide At Search", applicable : function(obj) { return obj == null && that.showAtSearch; }, handler : function(data) { that.showAtSearch = false; that._handleSetupChange(); }},
 		{text : "Show At Search", applicable : function(obj) { return obj == null && !that.showAtSearch; }, handler : function(data) { that.showAtSearch = true; that._handleSetupChange(); }},
 		{text : "View Resource Details", applicable : function(obj) { return obj != null }, handler : function(data) { window.open('/app/resource/' + data.subject.id); }},
@@ -112,12 +104,12 @@ org.sarsoft.controller.ResourceMapController = function(emap) {
 		var w = 180;
 		for(var i = 0; i < resources.length; i++) {
 			var resource = resources[i];
-			if(resource.plk != null) {
+			if(resource.position != null) {
 				that.addResource(resource);
-				n = Math.max(n, resource.plk.lat);
-				s = Math.min(s, resource.plk.lat);
-				e = Math.max(e, resource.plk.lng);
-				w = Math.min(w, resource.plk.lng);
+				n = Math.max(n, resource.position.lat);
+				s = Math.min(s, resource.position.lat);
+				e = Math.max(e, resource.position.lng);
+				w = Math.min(w, resource.position.lng);
 			}
 		}
 
@@ -144,7 +136,7 @@ org.sarsoft.controller.ResourceMapController.prototype._handleServerError = func
 org.sarsoft.controller.ResourceMapController.prototype._getResourceFromWpt = function(wpt) {
 	if(wpt == null) return null;
 	for(var key1 in this.resources) {
-		if(this.resources[key1].plk.id == wpt.id) return this.resources[key1];
+		if(this.resources[key1].position.id == wpt.id) return this.resources[key1];
 	}
 	return null;
 }
@@ -171,18 +163,18 @@ org.sarsoft.controller.ResourceMapController.prototype.expireResources = functio
 	var timestamp = this.resourceDAO._timestamp;
 	for(var key in this.resources) {
 		var resource = this.resources[key];
-		if(resource.plk != null && timestamp - (1*resource.plk.time) > 300000) {
+		if(resource.position != null && timestamp - (1*resource.position.time) > 300000) {
 			this.addResource(resource, true);
 		}
 	}
 }
 
 org.sarsoft.controller.ResourceMapController.prototype.addResource = function(resource, expireCheck) {
-	if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].plk);
+	if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].position);
 	if(expireCheck != true) {
 		this.resources[resource.id] = resource;
 	}
-	if(resource.plk == null) return;
+	if(resource.position == null) return;
 	var config = new Object();
 	if(resource.section == null) {
 		if(!this.showROW) return;
@@ -194,9 +186,9 @@ org.sarsoft.controller.ResourceMapController.prototype.addResource = function(re
 
 	var timestamp = this.resourceDAO._timestamp;
 	config.color = "#00FF00";
-	if(timestamp - (1*resource.plk.time) > 300000) config.color = "#FF0000";
+	if(timestamp - (1*resource.position.time) > 300000) config.color = "#FF0000";
 
-	var date = new Date(1*resource.plk.time);
+	var date = new Date(1*resource.position.time);
 	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-	this.emap.addWaypoint(resource.plk, config, resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()));
+	this.emap.addWaypoint(resource.position, config, resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()));
 }

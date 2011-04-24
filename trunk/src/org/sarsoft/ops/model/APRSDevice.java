@@ -18,21 +18,18 @@ import com.google.api.client.googleapis.json.JsonCParser;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpTransport;
 
-@Entity
-public class APRSDevice extends LocationEnabledDevice {
+public class APRSDevice {
 
-	private String apikey = "17392.5iMw1tOX90mZj747";
-	public HttpTransport transport = GoogleTransport.create();
-
-	public APRSDevice() {
-		super();
+	private static String apikey = "17392.5iMw1tOX90mZj747";
+	public static HttpTransport transport = GoogleTransport.create();
+	static {
 		transport.addParser(new JsonCParser());
 	}
 
-	@Override
-	public Waypoint checkLocation() {
+	public static Waypoint checkLocation(String callsign) {
+		System.out.println("checking location for " + callsign);
 		HttpRequest request = transport.buildGetRequest();
-		request.setUrl("http://api.aprs.fi/api/get?what=loc&apikey=" + apikey + "&format=json&name=" + getDeviceId());
+		request.setUrl("http://api.aprs.fi/api/get?what=loc&apikey=" + apikey + "&format=json&name=" + callsign);
 		String json;
 		try {
 			json = request.execute().parseAsString();
@@ -43,18 +40,15 @@ public class APRSDevice extends LocationEnabledDevice {
 
 		MorphDynaBean bean = (MorphDynaBean) JSONObject.toBean((JSONObject) JSONSerializer.toJSON(json));
 		List entries = (List) bean.get("entries");
-		bean = (MorphDynaBean) entries.get(0);
-
-		Waypoint wpt = new Waypoint();
-		wpt.setLat(Double.parseDouble((String) bean.get("lat")));
-		wpt.setLng(Double.parseDouble((String) bean.get("lng")));
-		wpt.setTime(new Date(Long.parseLong((String) bean.get("lasttime"))*1000));
-		return wpt;
-	}
-
-	@Transient
-	public String getDescription() {
-		return "APRS: " + getDeviceId();
+		if(entries.size() > 0) {
+			bean = (MorphDynaBean) entries.get(0);
+	
+			Waypoint wpt = new Waypoint();
+			wpt.setLat(Double.parseDouble((String) bean.get("lat")));
+			wpt.setLng(Double.parseDouble((String) bean.get("lng")));
+			wpt.setTime(new Date(Long.parseLong((String) bean.get("lasttime"))*1000));
+			return wpt;
+		} return null;
 	}
 
 }

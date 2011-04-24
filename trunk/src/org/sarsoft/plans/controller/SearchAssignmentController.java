@@ -118,8 +118,7 @@ public class SearchAssignmentController extends JSONBaseController {
 				return app(model, "Assignment.PrintForms");
 			}
 		default :
-			// for new resources - need to find a better way to do this
-			model.addAttribute("rehabresources", dao.getAllByAttr(Resource.class, "section", Resource.Section.REHAB));
+			model.addAttribute("resources", dao.loadAll(Resource.class));
 			return app(model, "Assignment.Details");
 		}
 	}
@@ -293,7 +292,6 @@ public class SearchAssignmentController extends JSONBaseController {
 			while(it.hasNext()) {
 				Resource resource = it.next();
 				it.remove();
-				resource.setSection(Resource.Section.REHAB);
 				dao.save(resource);
 			}
 			break;
@@ -301,7 +299,6 @@ public class SearchAssignmentController extends JSONBaseController {
 			assignment.getOperationalPeriod().removeAssignment(assignment);
 			for(Resource resource : assignment.getResources()) {
 				assignment.removeResource(resource);
-				resource.setSection(Resource.Section.REHAB);
 				dao.save(resource);
 			}
 			dao.delete(assignment);

@@ -6,80 +6,63 @@
 
 <c:choose>
 <c:when test="${resource.assignment ne null}">
-This resource is attached to <a href="/app/assignment/${resource.assignment.id}">assignment ${resource.assignment.id}</a>.  Please visit the assignment page to change its section.
+Attached to <a href="/app/assignment/${resource.assignment.id}">assignment ${resource.assignment.id}</a>.  Please visit the assignment page to change its section.
 </c:when>
 <c:otherwise>
- <c:choose>
- <c:when test="${resource.section ne null}">
- This resource is in the ${resource.section} section.  It is not attached to an assignment.
- </c:when>
- <c:otherwise>
- This resource is not currently part of the search.
- </c:otherwise>
- </c:choose>
- <ul>
-<li>Change Section:
-	 <select name="resourceSection" id="resourceSection" value="${resource.section}">
-	  <c:forEach var="type" items="<%= Resource.Section.values() %>">
-	   <option value="${type}"<c:if test="${resource.section == type}"> selected="selected"</c:if>>${type}</option>
-	  </c:forEach>
-	 </select>
-<button onclick="window.location='/app/resource/${resource.id}/move?section=' + document.getElementById('resourceSection').options[document.getElementById('resourceSection').selectedIndex].value">GO</button>
-</li>
-<li>
-Or, <a href="/app/resource/${resource.id}/move?section=">Remove this resource from the search</a>.
-</li>
-</ul>
+Not currently on assignment.
 </c:otherwise>
 </c:choose>
 
 <br/><br/>
 
-<div id="tabs" class="yui-navset">
-	<ul class="yui-nav">
-		<li class="selected"><a href="#map"><em>Current Position</em></a></li>
-		<li><a href="#locators"><em>Locators</em></a></li>
-	</ul>
+<div style="width: 30em; float: left">
 
-<div class="yui-content">
+<c:choose>
+<c:when test="${resource.position ne null}">
+Lastest position: ${resource.position.formattedUTM} at ${resource.position.time}
+</c:when>
+<c:otherwise>
+${resource.name}'s location is unknown.
+</c:otherwise>
+</c:choose>
+
+<br/>
+
+<form method="POST" action="/app/resource/${resource.id}">
+<table border="0">
+<tr><td>Name:</td><td><input type="text" name="name" size="10" value="${resource.name}"/></td></tr>
+<tr><td>Callsign:</td><td><input type="text" name="callsign" value="${resource.callsign}" size="10"/></td></tr>
+<tr><td>SPOT Id:</td><td><input type="text" name="spotId" size="10" value="${resource.spotId}"/></td></tr>
+<tr><td>SPOT Password:</td><td><input type="text" name="spotPassword" size="10" value="${resource.spotPassword}"></td></tr>
+</table>
+<input type="submit" value="Update"/>
+</form>
+
+<br/>
+<br/>
+You can delete ${resource.name}, but this action cannot be undone.
+<form method="POST" action="/app/resource/${resource.id}">
+<input type="hidden" name="action" value="DELETE"/>
+<input type="hidden" name="name" value="whatever"/>
+<input type="submit" value="Delete"/>
+</form>
+
+<br/>
+<br/>
+<br/>
+<a href="/app/resource/">Return to List of All Resources</a><br/>
+
+</div>
+
 
 <div id="map">
- <div style="position: relative">
   <div id="mapview" style="width: 500px; height: 450px; float: left;">
   </div>
-  <div id="mapdetails" style="width: 400px; margin-left: 20px; float: left">
-   Last updated at ${resource.plk.time} GMT:<br/>
-<pre>
-${resource.plk.formattedUTM}
-</pre>
-  </div>
- </div>
 </div>
 
-<div id="locators">
-<c:if test="${fn:length(resource.locators) gt 0}">
-<h4>Existing Locators</h4>
-<c:forEach var="locator" items="${resource.locators}">
-${locator.description} &nbsp;&nbsp; <a href="/app/resource/${resource.id}/locator/${locator.pk}/detach#locators">Remove</a><br/>
-</c:forEach>
-<br/>
-</c:if>
-
-<h4>Add a Locator</h4>
-<a href="javascript:window.location='/app/latitude/${resource.id}/new'">Add a Google Latitude Device</a><br/>
-Callsign: <input type="text" name="aprs_callsign" id="aprs_callsign" size="10"/>
-<a href="javascript:window.location='/app/aprs/${resource.id}/new?callsign=' + document.getElementById('aprs_callsign').value + '#locators'">Add an APRS Device from aprs.fi</a><br/>
-Shared Feed Id: <input type="text" id="spot_id" size="20"/>&nbsp;Passsword: <input type="text" id="spot_password" size="10"/>
-<a href="javascript:window.location='/app/spot/${resource.id}/new?id=' + document.getElementById('spot_id').value + '&password=' + document.getElementById('spot_password').value + '#locators'">Add a SPOT beacon.</a><br/>
-<br/><br/>
-</div>
-</div>
 
 <script>
 org.sarsoft.Loader.queue(function() {
-  var tabView = new YAHOO.widget.TabView('tabs');
-  var url = location.href.split('#');
-  if(url[1] == "locators") tabView.set('activeIndex', 1);
   rvmc = new org.sarsoft.controller.ResourceViewMapController(document.getElementById('mapview'), ${resource.id});
 });
 </script>

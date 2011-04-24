@@ -1,19 +1,8 @@
 package org.sarsoft.ops.model;
 
-
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-
-import javax.persistence.Entity;
-import javax.persistence.Transient;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
-
 
 import net.sf.ezmorph.bean.MorphDynaBean;
 import net.sf.json.JSONObject;
@@ -26,21 +15,18 @@ import com.google.api.client.googleapis.json.JsonCParser;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpTransport;
 
-@Entity
-public class SpotDevice extends LocationEnabledDevice {
+public class SpotDevice {
 
-	public HttpTransport transport = GoogleTransport.create();
+	public static HttpTransport transport = GoogleTransport.create();
 
-	public SpotDevice() {
-		super();
+	static {
 		transport.addParser(new JsonCParser());
 	}
 
-	@Override
-	public Waypoint checkLocation() {
+	public static Waypoint checkLocation(String id, String password) {
 		HttpRequest request = transport.buildGetRequest();
-		String url = "http://share.findmespot.com/spot-adventures/rest-api/1.0/public/feed/" + getDeviceId() + "/message?&sort=timeInMili&dir=DESC";
-		if(getDeviceKey() != null) url += "&feedPassword=" + getDeviceKey();
+		String url = "http://share.findmespot.com/spot-adventures/rest-api/1.0/public/feed/" + id + "/message?&sort=timeInMili&dir=DESC";
+		if(id != null) url += "&feedPassword=" + password;
 		request.setUrl(url);
 		String json;
 		try {
@@ -60,11 +46,6 @@ public class SpotDevice extends LocationEnabledDevice {
 			e.printStackTrace();
 			return null;
 		}
-	}
-
-	@Transient
-	public String getDescription() {
-		return "SPOT: " + getDeviceId();
 	}
 
 }
