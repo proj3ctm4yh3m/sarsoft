@@ -1,18 +1,13 @@
 package org.sarsoft.ops.model;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
@@ -23,27 +18,18 @@ import org.sarsoft.plans.model.SearchAssignment;
 @JSONAnnotatedEntity
 public class Resource extends SarModelObject {
 
-	public enum Section {
-		ENROUTE, CP, REHAB, FIELD
+	public enum Type {
+		PERSON, EQUIPMENT
 	}
 
 	protected String name;
-	protected List<LocationEnabledDevice> locators;
-	protected Waypoint plk;
+	protected String callsign;
+	protected String spotId;
+	protected String spotPassword;
+	protected Waypoint position;
 	protected SearchAssignment assignment;
 	protected Date updated;
-	protected Section section;
 
-	@OneToMany
-	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE, org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-	@LazyCollection(LazyCollectionOption.FALSE)
-	public List<LocationEnabledDevice> getLocators() {
-		if(locators == null) locators = new ArrayList<LocationEnabledDevice>();
-		return locators;
-	}
-	public void setLocators(List<LocationEnabledDevice> locators) {
-		this.locators = locators;
-	}
 	@JSONSerializable
 	public String getName() {
 		return name;
@@ -53,28 +39,21 @@ public class Resource extends SarModelObject {
 	}
 
 	@JSONSerializable
-	public Section getSection() {
-		return section;
-	}
-	public void setSection(Section section) {
-		this.section = section;
-	}
-
-	@JSONSerializable
 	@OneToOne
 	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE, org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-	public Waypoint getPlk() {
-		return plk;
+	public Waypoint getPosition() {
+		return position;
 	}
 
-	public void setPlk(Waypoint plk) {
-		this.plk = plk;
+	public void setPosition(Waypoint position) {
+		if(position != null) updated = position.getTime();
+		this.position = position;
 	}
 
 	@Transient
 	@JSONSerializable
-	public Long getAssignmentId() {
-		return (assignment == null) ? null : assignment.getId();
+	public String getAssignmentId() {
+		return (assignment == null) ? null : Long.toString(assignment.getId());
 	}
 
 	@ManyToOne
@@ -86,28 +65,36 @@ public class Resource extends SarModelObject {
 		this.assignment = assignment;
 	}
 
+	public void setUpdated(Date updated) {
+		this.updated = updated;
+	}
+		
 	@JSONSerializable
 	public Date getUpdated() {
 		return updated;
 	}
-	public void setUpdated(Date updated) {
-		this.updated = updated;
+	
+	@JSONSerializable
+	public String getCallsign() {
+		return callsign;
+	}
+	public void setCallsign(String callsign) {
+		this.callsign = callsign;
 	}
 
 	@JSONSerializable
-	@Transient
-	public String getLocatorDesc() {
-		String desc = "";
-		boolean first = true;
-		for(LocationEnabledDevice locator : locators) {
-			if(first) {
-				first = false;
-			} else {
-				desc += ", ";
-			}
-			desc += locator.getDescription();
-		}
-		return desc;
+	public String getSpotId() {
+		return spotId;
+	}
+	public void setSpotId(String spotId) {
+		this.spotId = spotId;
 	}
 
+	public String getSpotPassword() {
+		return spotPassword;
+	}
+	public void setSpotPassword(String spotPassword) {
+		this.spotPassword = spotPassword;
+	}
+	
 }

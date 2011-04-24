@@ -586,9 +586,9 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		}
 	});
 
-	this.resourceDAO.loadAllBySection(function(resources) {
+	this.resourceDAO.loadAll(function(resources) {
 		that.refreshResourceData(resources);
-	}, "FIELD");
+	});
 
 	this.assignmentDAO.mark();
 	this.resourceDAO.mark();
@@ -712,7 +712,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = f
 	if(resource.assignmentId == null) return;
 	var assignment = this.assignments[resource.assignmentId];
 	if(assignment != null && assignment.operationalPeriodId == this.period.id) {
-		if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].plk);
+		if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].position);
 		this.resources[resource.id] = resource;
 		if(!this.showLocations) return; // need lines above this in case the user re-enables resources
 		var setup = this._mapsetup.present;
@@ -728,9 +728,9 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = f
 		} else if(setup.colorby == "Assignment Status") {
 			config.color = org.sarsoft.Constants.colorsByStatus[assignment.status];
 		}
-		var date = new Date(1*resource.plk.time);
+		var date = new Date(1*resource.position.time);
 		var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-		this.emap.addWaypoint(resource.plk, config, resource.assignmentId + "-" + resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), (this._mapsetup.map.labeltw == true) ? assignmentId + "-" + resource.name : null);
+		this.emap.addWaypoint(resource.position, config, resource.assignmentId + "-" + resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), (this._mapsetup.map.labeltw == true) ? resource.assignmentId + "-" + resource.name : null);
 	}
 }
 
@@ -744,8 +744,8 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.refreshResourceD
 
 	for(var key in this.resources) {
 		var resource = this.resources[key];
-		if(timestamp - (1*resource.plk.time) > 360000) {
-			this.emap.removeWaypoint(resource.plk);
+		if(timestamp - (1*resource.position.time) > 1800000) {
+			this.emap.removeWaypoint(resource.position);
 			delete this.resources[key];
 		}
 	}
@@ -754,7 +754,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.refreshResourceD
 org.sarsoft.controller.OperationalPeriodMapController.prototype.reprocessResourceData = function() {
 	if(!this.showLocations) {
 		for(var key in this.resources) {
-			this.emap.removeWaypoint(this.resources[key].plk);
+			this.emap.removeWaypoint(this.resources[key].position);
 		}
 	} else {
 		for(var key in this.resources) {

@@ -162,15 +162,13 @@ you can see how it relates to neighboring assignments.</i></div>
 		</div>
 
 		<div id="operations">
-		<h4>Create and attach a new resource</h4>
-			Name: <input type="text" id="new_resource_name" size="20"/>&nbsp;&nbsp;<button onclick="createNewResource()">Create</button><br/>
-			<input type="radio" id="newblankresource" name="new_resource_locator" checked="checked">No Locator</input>&nbsp;&nbsp;
-			<input type="radio" id="newlatituderesource" name="new_resource_locator">Google Latitude Device</input>&nbsp;&nbsp;
-			<input type="radio" id="newaprsresource" name="new_resource_locator">APRS callsign</input>&nbsp; <input type="text" id="aprs_callsign" size="10"/> (from APRS.fi)
-		<h4>Attach an existing resource from REHAB</h4>
-		<select id="rehabresources">
-		<c:forEach var="resource" items="${rehabresources}">
-			<option value="${resource.id}">${resource.name}</option>
+		<h4>Attach a resource</h4>
+		Resources which are currently attached to another assignment are not visible.<br/>
+		<select id="resources">
+		<c:forEach var="resource" items="${resources}">
+		<c:if test="${resource.assignment eq null}">
+			<option value="${resource.id}">${resource.name} -- ${resource.callsign}</option>
+		</c:if>
 		</c:forEach>
 		</select>
 		<button onclick="attachExistingResource()">GO</button>
@@ -198,19 +196,9 @@ you can see how it relates to neighboring assignments.</i></div>
 
 <script type="text/javascript">
 function attachExistingResource() {
-	var select = document.getElementById("rehabresources");
+	var select = document.getElementById("resources");
 	var id = select.options[select.selectedIndex].value
 	window.location="/app/resource/" + id + "/attach/${assignment.id}#operations";
-}
-function createNewResource() {
-	var name = document.getElementById("new_resource_name").value;
-	if(document.getElementById('newblankresource').checked) {
-		// do nothing
-	} else if(document.getElementById('newlatituderesource').checked) {
-		window.location='/app/assignment/${assignment.id}/newlatituderesource?name=' + name;
-	} else if(document.getElementById('newaprsresource').checked) {
-		window.location='/app/assignment/${assignment.id}/newaprsresource?name=' + name + '&callsign=' + document.getElementById('aprs_callsign').value + "#operations";
-	}
 }
 
 org.sarsoft.Loader.queue(function() {
@@ -240,13 +228,7 @@ org.sarsoft.Loader.queue(function() {
 
     resourcetable = new org.sarsoft.view.ResourceTable(null, function(record) {
     	var resource = record.getData();
-    	var idx = 100;
-    	for(var i = 0; i < _assignment.resources.length; i++) {
-    		if(_assignment.resources[i].id == resource.id) idx = i;
-    	}
-    	_assignment.resources.splice(idx, 1);
-    	resourceDAO.detachResource(resource, '${assignment.id}');
-    	resourcetable.table.deleteRow(record);
+    	window.location="/app/resource/" + resource.id + "/detach/" + resource.assignmentId + "#operations";
 	});
 
     resourcetable.create(document.getElementById("attachedresourcecontainer"));
