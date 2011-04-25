@@ -194,7 +194,7 @@ org.sarsoft.controller.ResourceMapController.prototype.expireCallsigns = functio
 	for(var key in this.callsigns) {
 		var callsign = this.callsigns[key];
 		if(callsign.position != null && timestamp - (1*callsign.position.time) > 400000) {
-			this.addCallsign(resource, true);
+			this.addCallsign(callsign, true);
 		}
 	}
 }

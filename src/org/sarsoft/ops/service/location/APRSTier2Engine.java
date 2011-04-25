@@ -27,11 +27,27 @@ import com.google.api.client.http.HttpTransport;
 
 public class APRSTier2Engine extends AsyncTransactionalEngine {
 	
-	private String t2server = "oregon.aprs2.net";
+	private String t2server = "noam.aprs2.net";
 	private int t2port = 14580;
-	private String user = "KJ6LZA";
-	private static String aprsFiKey = "17392.5iMw1tOX90mZj747";
+	private String user = null;
+	private String aprsFiKey = null;
 	private Map<String, Waypoint> callsigns = new HashMap<String, Waypoint>();
+	
+	public void setServer(String server) {
+		t2server = server;
+	}
+	
+	public void setPort(int port) {
+		t2port = port;
+	}
+	
+	public void setUser(String user) {
+		this.user = user;
+	}
+	
+	public void setAprsFiKey(String key) {
+		aprsFiKey = key;
+	}
 
 	public Map<String, Waypoint> getCallsigns() {
 		return Collections.unmodifiableMap(callsigns);

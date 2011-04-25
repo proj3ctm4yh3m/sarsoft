@@ -43,6 +43,25 @@ public class OpsController extends JSONBaseController {
 	public static boolean isLocationEnabled(String search) {
 		return locationEngines.containsKey(search);
 	}
+	
+	private APRSTier2Engine createAprst2() {
+		APRSTier2Engine aprst2 = new APRSTier2Engine();
+		aprst2.setDao(this.dao);
+		aprst2.setSearch(RuntimeProperties.getSearch());
+		aprst2.setAprsFiKey(getProperty("sarsoft.location.aprs.fi.key"));
+		aprst2.setUser(getProperty("sarsoft.location.aprs.is.user"));
+		aprst2.setServer(getProperty("sarsoft.location.aprs.is.serverName"));
+		aprst2.setPort(Integer.parseInt(getProperty("sarsoft.location.aprs.is.serverPort")));
+		return aprst2;
+	}
+	
+	private SpotLocationEngine createSpot() {
+		SpotLocationEngine spot = new SpotLocationEngine();
+		spot.setDao(this.dao);
+		spot.setSearch(RuntimeProperties.getSearch());
+		spot.setRefreshInterval(getProperty("sarsoft.location.spot.refreshInterval"));
+		return spot;
+	}
 
 	@RequestMapping(value = "/{mode}/location/start", method = RequestMethod.GET)
 	public String startLocationEngine(Model model, @PathVariable("mode") String mode, HttpServletRequest request) {
@@ -54,20 +73,32 @@ public class OpsController extends JSONBaseController {
 		}
 		
 		if(engines.spot != null && engines.spot.isAlive()) engines.spot.quit();
-		engines.spot = new SpotLocationEngine();
-		engines.spot.setDao(this.dao);
-		engines.spot.setSearch(search);
-		engines.spot.setRefreshInterval(getProperty("sarsoft.location.spot.refreshInterval"));
+		engines.spot = createSpot();
 		engines.spot.start();
+
 		
 		if(engines.aprst2 != null && engines.aprst2.isAlive()) engines.aprst2.quit();
-		engines.aprst2 = new APRSTier2Engine();
-		engines.aprst2.setDao(this.dao);
-		engines.aprst2.setSearch(search);
-		engines.aprst2.start();
+		if(Boolean.parseBoolean("sarsoft.location.aprs.is.enabled")) {
+			engines.aprst2 = createAprst2();
+			engines.aprst2.start();
+		}
 		
 		if(REST.equals(mode)) return "/json";
 		return adminController.homePage(model);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/app/location/check", method = RequestMethod.GET)
+	public String checkLocations(Model model) {
+		if(!isLocationEnabled(RuntimeProperties.getSearch())) {
+			APRSTier2Engine aprs = createAprst2();
+			SpotLocationEngine spot = createSpot();
+			for(Resource resource : (List<Resource>) dao.loadAll(Resource.class)) {
+				aprs.checkAprsFi(resource);
+				spot.checkSpot(resource);
+			}			
+		}
+		return "redirect:/app/resource";
 	}
 
 	@RequestMapping(value = "/{mode}/location/stop", method = RequestMethod.GET)
@@ -123,7 +154,8 @@ public class OpsController extends JSONBaseController {
 	
 	@RequestMapping(value="/app/resource", method = RequestMethod.GET)
 	public String getAppResources(Model model) {
-			return app(model, "Resource.List");
+		model.addAttribute("locationenabled", isLocationEnabled(RuntimeProperties.getSearch()));
+		return app(model, "Resource.List");
 	}
 	
 	@RequestMapping(value="/rest/resource", method = RequestMethod.GET)
