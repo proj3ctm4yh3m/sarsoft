@@ -4,7 +4,7 @@
 
 Sarsoft is packaged as a JAR file; all you need to run it is Java 6.
 
- * Download the jar file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.4.jar">http://sarsoft.googlecode.com/files/sarsoft-0.4.jar</a>.
+ * Download the jar file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.4.jar">http://sarsoft.googlecode.com/files/sarsoft-0.4.1.jar</a>.
 
  * Start the jar file by typing `java -jar sarsoft-0.4.jar` at the command line or double-clicking the file in the windows file explorer.
 
