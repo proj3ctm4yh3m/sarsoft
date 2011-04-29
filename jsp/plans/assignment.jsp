@@ -28,7 +28,7 @@ function finalize() {
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
-			window.location.href = window.location.href;
+			window.location.reload();
 		}, failure : function(response) {
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
@@ -163,12 +163,9 @@ you can see how it relates to neighboring assignments.</i></div>
 
 		<div id="operations">
 		<h4>Attach a resource</h4>
-		Resources which are currently attached to another assignment are not visible.<br/>
 		<select id="resources">
 		<c:forEach var="resource" items="${resources}">
-		<c:if test="${resource.assignment eq null}">
 			<option value="${resource.id}">${resource.name} -- ${resource.callsign}</option>
-		</c:if>
 		</c:forEach>
 		</select>
 		<button onclick="attachExistingResource()">GO</button>
@@ -194,8 +191,32 @@ you can see how it relates to neighboring assignments.</i></div>
 	</div>
 </div>
 
+<div id="steal" style="top: 250px; left: 250px; position: absolute; z-index: 2000; width: 200px;">
+	<div class="hd">Steal Resource</div>
+	<div class="bd">
+		The resource <span id="resourcetosteal"></span> is currently attached to assignment <span id="assignmenttostealfrom"></span>.  Steal it for this assignment?
+	</div>
+</div>
+
 <script type="text/javascript">
+var _resources = new Object();
+<c:forEach var="resource" items="${resources}">
+<c:if test="${resource.assignment ne null}">_resources[${resource.id}]=${resource.assignment.id};</c:if>
+</c:forEach>
+
 function attachExistingResource() {
+	var select = document.getElementById("resources");
+	var id = select.options[select.selectedIndex].value
+	if(_resources[id] != null) {
+		document.getElementById('resourcetosteal').innerHTML=select.options[select.selectedIndex].innerHTML;
+		document.getElementById('assignmenttostealfrom').innerHTML = _resources[id];
+		stealDlg.show();
+	} else {
+		window.location="/app/resource/" + id + "/attach/${assignment.id}#operations";
+	}
+}
+
+function stealResource() {
 	var select = document.getElementById("resources");
 	var id = select.options[select.selectedIndex].value
 	window.location="/app/resource/" + id + "/attach/${assignment.id}#operations";
@@ -267,6 +288,11 @@ org.sarsoft.Loader.queue(function() {
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
 	finalizeDlg.render(document.body);
 	finalizeDlg.hide();
+	
+	stealDlg = new YAHOO.widget.Dialog("steal", {zIndex: "1000", width: "300px"});
+	stealDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { stealDlg.hide(); }}, { text : "Steal", handler: function() { finalizeDlg.hide(); stealResource();}, isDefault: true }]);
+	stealDlg.render(document.body);
+	stealDlg.hide();
 });
 
 </script>

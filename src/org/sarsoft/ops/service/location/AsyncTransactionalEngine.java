@@ -11,11 +11,17 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 public abstract class AsyncTransactionalEngine extends Thread {
 
+	public enum Status {
+		RUNNING, ERROR, EXPIRED
+	}
 	protected GenericHibernateDAO dao;
-	private String search = null;
+	protected String search = null;
 	private SessionFactory sessionFactory = null;
 	private Session session = null;
 	protected boolean enabled = true;
+	protected String statusMessage = "";
+	protected long timeout = 60000;
+	protected long keepAlive;
 
 	@SuppressWarnings("deprecation")
 	protected void beginTransaction() {
@@ -41,6 +47,7 @@ public abstract class AsyncTransactionalEngine extends Thread {
 	protected abstract void doRun();
 
 	public void run() {
+		keepAlive();
 		RuntimeProperties.setSearch(search);
 		doRun();
 	}
@@ -49,4 +56,19 @@ public abstract class AsyncTransactionalEngine extends Thread {
 		enabled = false;
 	}
 	
+	public String getStatusMessage() {
+		return statusMessage;
+	}
+	
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
+	}
+	
+	public void keepAlive() {
+		keepAlive = System.currentTimeMillis();
+	}
+	
+	protected boolean timedout() {
+		return System.currentTimeMillis() - keepAlive > timeout;
+	}
 }
