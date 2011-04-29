@@ -171,6 +171,15 @@ public class OpsController extends JSONBaseController {
 		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());		
 		if(engines.aprst2 != null) engines.aprst2.updateFilter();
 		
+		String assignmentId = request.getParameter("assignmentId");
+		if(assignmentId != null && assignmentId.length() > 0) {
+			long id = Long.parseLong(assignmentId);
+			SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, id);
+			assignment.addResource(resource);
+			dao.save(assignment);
+		}
+		String redirect = request.getParameter("redirect");
+		if(redirect != null && redirect.length() > 0) return "redirect:" + redirect;
 		return "redirect:/app/resource/" + resource.getId();
 	}
 
@@ -180,6 +189,11 @@ public class OpsController extends JSONBaseController {
 			@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
 		Resource resource = (Resource) dao.load(Resource.class, id);
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action")) == Action.DELETE) {			
+			if(resource.getAssignment() != null) {
+				SearchAssignment assignment = resource.getAssignment();
+				assignment.removeResource(resource);
+				dao.save(assignment);
+			}
 			dao.delete(resource);
 			return getAppResources(model);
 		}

@@ -162,16 +162,31 @@ you can see how it relates to neighboring assignments.</i></div>
 		</div>
 
 		<div id="operations">
-		<h4>Attach a resource</h4>
-		<select id="resources">
-		<c:forEach var="resource" items="${resources}">
-			<option value="${resource.id}">${resource.name} -- ${resource.callsign}</option>
-		</c:forEach>
-		</select>
-		<button onclick="attachExistingResource()">GO</button>
-			<br/>
+		<div style="float: left; width: 25em">
+			<h4>Attach a resource</h4>
+			<select id="resources">
+			<c:forEach var="resource" items="${resources}">
+				<option value="${resource.id}">${resource.name} -- ${resource.callsign}</option>
+			</c:forEach>
+			</select>
+			<button onclick="attachExistingResource()">GO</button>
+		</div>
+		<div style="float: left; width: 30em">
+			<h4>Create a new resource</h4>
+<form method="POST" action="/app/resource/new#operations">
+Name:&nbsp;<input type="text" name="name" size="10" value=""/>&nbsp;&nbsp;
+Callsign:&nbsp;<input type="text" name="callsign" value="" size="10"/><br/>
+SPOT Id:&nbsp;<input type="text" name="spotId" size="10" value=""/>&nbsp;&nbsp;
+SPOT Password:&nbsp;<input type="text" name="spotPassword" size="10" value="${resource.spotPassword}">
+<input type="hidden" name="redirect" value="/app/assignment/${assignment.id}"/>
+<input type="hidden" name="assignmentId" value="${assignment.id}"/>
+<input type="submit" value="Create"/>
+</form>
+		</div>
+		<div style="width: 100%; clear: both">
 			<div id="attachedresourcecontainer">
 			</div>
+		</div>
 		</div>
 	</div>
 </div>
