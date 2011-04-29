@@ -23,6 +23,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 	private Map<Long, Long> lastRefreshed = new HashMap<Long, Long>();
 	private long refreshInterval = 120000;	
 	protected static HttpTransport transport = GoogleTransport.create();
+	private int counter = 0;
 
 	static {
 		transport.addParser(new JsonCParser());
@@ -53,6 +54,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			counter++;
 
 			Waypoint stale = resource.getPosition();
 			if(fresh != null && (stale == null || stale.getTime() == null || fresh.getTime().after(stale.getTime()))) {
@@ -66,15 +68,18 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 	
 	public void doRun() {
 		
-		long start = System.currentTimeMillis();
+		statusMessage = "Checking SPOT server every " + Math.round(refreshInterval/1000) + " seconds";
 
-		while(enabled && System.currentTimeMillis() - start < 28800000) {
+		while(enabled && !timedout()) {
 			try {
 				beginTransaction();
 				List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
 				for(Resource resource : resources) {
 					checkSpot(resource);
 				}
+				statusMessage = "Checking SPOT server every " + Math.round(refreshInterval/1000) + " seconds.\n";
+				statusMessage += "Last check: " + counter + " beacons at " + new Date();
+				counter = 0;
 			} finally {
 				closeTransaction();
 			}
@@ -89,5 +94,5 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 		if(refreshInterval == null || "".equals(refreshInterval)) return;
 		this.refreshInterval = Long.parseLong(refreshInterval);
 	}
-
+	
 }

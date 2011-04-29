@@ -49,7 +49,7 @@ Working on ${search.description}.  <a href="/app/setsearch">Change</a>
 <h4>Operations (beta)</h4>
 <ul>
  <li><a href="/app/resource/">Resources</a></li>
- <li>Location Tracking: <c:choose><c:when test="${locationenabled}">ENABLED   (<a href="/app/location/stop">disable</a>)</c:when><c:otherwise>DISABLED   (<a href="/app/location/start">enable</a>)</c:otherwise></c:choose></li>
+ <li><a href="/app/location/status">Location Tracking</a></li>
 </ul>
 <h4>Bulk Transfer</h4>
 <ul>

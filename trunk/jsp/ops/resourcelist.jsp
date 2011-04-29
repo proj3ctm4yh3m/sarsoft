@@ -6,7 +6,6 @@
 <ul>
   <li><a href="/app/resource/map">Map View</a> of all resources.</li>
   <li>Create a new resource named <form action="/app/resource/new" method="POST"><input type="text" name="name" size="20"/> <input type="submit" value="GO"/></li>
-<c:if test="${locationenabled eq false}"><li>Location tracking is not enabled.  <a href="/app/location/check">Perform a one-time location check for all resources</a>.</li></c:if>
 </ul>
 <br/>
 This page shows you all available resources.
@@ -15,7 +14,7 @@ This page shows you all available resources.
 </div>
 
 <h2>Nearby Callsigns</h2>
-The following callsigns have been picked up within a 120km radius of the LKP.  You can use them to identify resources you'd like to add to the search.
+The following callsigns have been picked up near the LKP.  You can use them to identify resources you'd like to add to the search.
 
 <div id="callsigns">
 </div>

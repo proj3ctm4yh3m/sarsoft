@@ -1,27 +1,21 @@
 package org.sarsoft.admin.controller;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.openid4java.discovery.Identifier;
-import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.admin.util.OIDConsumer;
-import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.controller.JSONBaseController;
-import org.sarsoft.common.controller.JSONForm;
-import org.sarsoft.common.model.Action;
-import org.sarsoft.ops.controller.OpsController;
-import org.sarsoft.plans.model.Search;
+import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.ops.controller.OpsController;
 import org.sarsoft.plans.model.OperationalPeriod;
+import org.sarsoft.plans.model.Search;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,6 +37,9 @@ public class AdminController extends JSONBaseController {
 	@Qualifier("searchSessionFactory")
 	LocalSessionFactoryBean sessionFactory;
 
+	@Autowired
+	OpsController opsController;
+	
 	private OIDConsumer consumer = null;
 
 	@SuppressWarnings("unchecked")
@@ -56,8 +53,8 @@ public class AdminController extends JSONBaseController {
 		model.addAttribute("lastperiod", lastPeriod);
 		model.addAttribute("periods", periods);
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
-		model.addAttribute("locationenabled", OpsController.isLocationEnabled(RuntimeProperties.getSearch()));
 		model.addAttribute("imageUploadEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled")));
+		opsController.checkLocators();
 		return app(model, "Pages.Home");
 	}
 
@@ -99,6 +96,7 @@ public class AdminController extends JSONBaseController {
 
 		request.getSession().setAttribute("search", name);
 		RuntimeProperties.setSearch(name);
+		opsController.checkLocators();
 		return homePage(model);
 	}
 
