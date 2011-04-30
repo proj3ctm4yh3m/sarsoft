@@ -137,10 +137,10 @@ public class SearchAssignmentController extends JSONBaseController {
 			if(form.getTimeAllocated() != null) assignment.setTimeAllocated(form.getTimeAllocated());
 			if(form.getResponsivePOD() != null) assignment.setResponsivePOD(form.getResponsivePOD());
 			if(form.getUnresponsivePOD() != null) assignment.setUnresponsivePOD(form.getUnresponsivePOD());
-			if(form.getPrimaryFrequency() != null) assignment.setPrimaryFrequency(form.getPrimaryFrequency());
-			if(form.getSecondaryFrequency() != null) assignment.setSecondaryFrequency(form.getSecondaryFrequency());
-			if(form.getPreviousEfforts() != null) assignment.setPreviousEfforts(form.getPreviousEfforts());
-			if(form.getTransportation() != null) assignment.setTransportation(form.getTransportation());
+			if(form.getPrimaryFrequency() != null && form.getPrimaryFrequency().length() > 0) assignment.setPrimaryFrequency(form.getPrimaryFrequency());
+			if(form.getSecondaryFrequency() != null && form.getSecondaryFrequency().length() > 0) assignment.setSecondaryFrequency(form.getSecondaryFrequency());
+			if(form.getPreviousEfforts() != null && form.getPreviousEfforts().length() > 0) assignment.setPreviousEfforts(form.getPreviousEfforts());
+			if(form.getTransportation() != null && form.getTransportation().length() > 0) assignment.setTransportation(form.getTransportation());
 			assignment.setStatus(SearchAssignment.Status.DRAFT);
 			switch(action) {
 			case FINALIZE :

@@ -24,7 +24,7 @@
 	</target>
 
 	<target name="classes" depends="prepare,classpath">
-			<javac debug="on" source="1.5" deprecation="on" destdir="build/classes">
+			<javac debug="on" source="1.5" target="1.5" deprecation="on" destdir="build/classes">
 				<classpath><path refid="local.class.path"/></classpath>
 				<src path="src"/>
 			</javac>
