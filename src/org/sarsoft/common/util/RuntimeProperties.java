@@ -43,7 +43,7 @@ public class RuntimeProperties {
 	
 	public static String getServerUrl() {
 		String url = "http://" + getServerName();
-		if(getServerPort() != 80) url = url + ":8080";
+		if(getServerPort() != 80) url = url + getServerPort();
 		url = url + "/";
 		return url;
 	}
