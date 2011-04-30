@@ -66,13 +66,50 @@ public class SearchController extends JSONBaseController {
 		return json(model, map);
 	}
 
-	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.POST)
-	public String setLkp(Model model, JSONForm params) {
+	@RequestMapping(value = "/rest/search/pls", method = RequestMethod.GET)
+	public String getPls(Model model, HttpServletRequest request, HttpServletResponse response) {
+		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("value", search.getPls());
+		return json(model, map);
+	}
+
+	@RequestMapping(value = "/rest/search/cp", method = RequestMethod.GET)
+	public String getCP(Model model, HttpServletRequest request, HttpServletResponse response) {
+		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("value", search.getCP());
+		return json(model, map);
+	}
+
+	@SuppressWarnings("rawtypes")
+	protected Waypoint getSearchWpt(JSONForm params) {
 		Map<String, Class> classHints = new HashMap<String, Class>();
 		classHints.put("value", Waypoint.class);
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class, classHints);
+		return (Waypoint) m.get("value");
+	}
+
+	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.POST)
+	public String setLkp(Model model, JSONForm params) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
-		search.setLkp((Waypoint) m.get("value"));
+		search.setLkp(getSearchWpt(params));
+		dao.save(search);
+		return json(model, search);
+	}
+
+	@RequestMapping(value = "/rest/search/pls", method = RequestMethod.POST)
+	public String setPls(Model model, JSONForm params) {
+		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		search.setPls(getSearchWpt(params));
+		dao.save(search);
+		return json(model, search);
+	}
+
+	@RequestMapping(value = "/rest/search/cp", method = RequestMethod.POST)
+	public String setCP(Model model, JSONForm params) {
+		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		search.setCP(getSearchWpt(params));
 		dao.save(search);
 		return json(model, search);
 	}

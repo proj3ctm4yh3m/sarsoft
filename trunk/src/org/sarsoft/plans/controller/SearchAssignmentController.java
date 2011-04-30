@@ -229,8 +229,9 @@ public class SearchAssignmentController extends JSONBaseController {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 		switch (format) {
 		case GPX :
+			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".gpx");
-			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignment(assignment), "SearchAssignment");
+			return gpx(model, assignment, "SearchAssignment");
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".kml");
 			return kml(model, assignment, "SearchAssignment");
@@ -366,8 +367,10 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 
 		for(Waypoint waypoint : waypoints) {
-			waypoint.setTime(new Date());
-			assignment.getWaypoints().add(waypoint);
+			if(!"CP".equalsIgnoreCase(waypoint.getName()) && !"PLS".equalsIgnoreCase(waypoint.getName()) && !"LKP".equalsIgnoreCase(waypoint.getName())) {
+				waypoint.setTime(new Date());
+				assignment.getWaypoints().add(waypoint);
+			}
 		}
 
 		dao.save(assignment);

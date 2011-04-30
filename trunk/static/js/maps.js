@@ -119,6 +119,8 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	this.opacityInput.value=0;
 
 	var div = document.createElement("div");
+	div.style.color="red";
+	div.style.fontWeight="bold";
 	div.appendChild(document.createTextNode("background: "));
 	div.appendChild(this.typeSelect);
 	div.appendChild(document.createTextNode("overlay: "));
@@ -222,6 +224,14 @@ org.sarsoft.FixedGMap = function(map) {
 				that.utminitialized=true;
 			}
 		});
+		var datum = document.createElement("div");
+		datum.style.zIndex=2000;
+		datum.style.position="absolute";
+		datum.style.bottom="0px";
+		datum.style.left="0px";
+		datum.style.backgroundColor="white";
+		datum.innerHTML = "WGS84";
+		map.getContainer().appendChild(datum);
 	}
 }
 
@@ -267,7 +277,8 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 	this.text = new Array();
 	var bounds = this.map.getBounds();
 	var span = bounds.getSouthWest().distanceFrom(bounds.getNorthEast());
-	var spacing = 1000;
+	var spacing = 100;
+	if(span > 3000) spacing = 1000;
 	if(span > 30000) spacing = 10000;
 	if(span > 300000) spacing = 100000;
 	
@@ -303,12 +314,12 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		vertices.push(GeoUtil.UTMToGLatLng({e: easting, n: ne.n, zone: zone}));
 
 		if(west < vertices[0].lng() && vertices[0].lng() < east) {
-			var overlay = new GPolyline(vertices, "#0000FF", 1, 1);
+			var overlay = new GPolyline(vertices, "#0000FF", 1, (easting % 1000 == 0) ? 1 : 0.4);
 			this.utmgridlines.push(overlay);
 			this.map.addOverlay(overlay);
 
 			var offset = this.map.fromLatLngToContainerPixel(vertices[0]).x;
-			if(0 < offset && offset < pxmax) {
+			if(0 < offset && offset < pxmax && easting % 1000 == 0) {
 				var point = new GPoint(offset, pymax-10);
 				var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting));
 				this.map.addOverlay(label);
@@ -331,12 +342,12 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		}
 		vertices.push(end);
 
-		var overlay = new GPolyline(vertices, "#0000FF", 1, 1);
+		var overlay = new GPolyline(vertices, "#0000FF", 1, (northing % 1000 == 0) ? 1 : 0.4);
 		this.utmgridlines.push(overlay);
 		this.map.addOverlay(overlay);
 
 		var offset = this.map.fromLatLngToContainerPixel(vertices[0]).y;
-		if(0 < offset && offset < pymax) {
+		if(0 < offset && offset < pymax && northing % 1000 == 0) {
 			var point = new GPoint(0, offset);
 			if(right) {
 				point = new GPoint(this.map.getSize().width-50, this.map.fromLatLngToContainerPixel(vertices[1]).y);
@@ -460,7 +471,7 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
 	if(label != null) {
-		labelOverlay = new ELabel(gll, label);
+		labelOverlay = new ELabel(gll, label, null, new GSize(6, -6));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
 	}
@@ -480,12 +491,28 @@ org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config, tooltip
 	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config, tooltip, label), config: config};
 }
 
-org.sarsoft.EditableGMap = function(map, infodiv) {
+org.sarsoft.EditableGMap = function(map) {
 	org.sarsoft.FixedGMap.call(this, map);
 	var that = this;
 	this._handlers = new Object();
 
-	this._infodiv = infodiv;
+	var id = document.createElement("div");
+	id.style.zIndex=2000;
+	id.style.position="absolute";
+	id.style.top="30px";
+	id.style.right="0px";
+	id.style.backgroundColor="white";
+	map.getContainer().appendChild(id);
+	
+	var pos = document.createElement("div");
+	pos.style.fontWeight="bold";
+	id.appendChild(pos);
+	var msg = document.createElement("div");
+	id.appendChild(msg);
+	
+	this._infodiv = id;
+	this._infopos = pos;
+	this._infomsg = msg;
 
 	GEvent.addListener(map, "singlerightclick", function(point, src, overlay) {
 		var obj = null;
@@ -502,17 +529,25 @@ org.sarsoft.EditableGMap = function(map, infodiv) {
 
 	GEvent.addListener(map, "mousemove", function(latlng) {
 		var utm = GeoUtil.GLatLngToUTM(latlng);
-		that._positionMessage(utm.toString());
+		var e = "" + Math.round(utm.e);
+		var n = "" + Math.round(utm.n);
+		var e1 = e.substring(0, e.length-3);
+		var e2 = e.substring(e.length-3, e.length);
+		var n1 = n.substring(0, n.length-3);
+		var n2 = n.substring(n.length-3, n.length);
+
+		var message = utm.zone + " " + e1 + "<span style=\"font-size: smaller\">" + e2 + "</span>E " + n1 + "<span style=\"font-size: smaller\">" + n2 + "</span>N";		
+		that._positionMessage(message);
 	});
 }
 
 org.sarsoft.EditableGMap.prototype = new org.sarsoft.FixedGMap();
 
 org.sarsoft.EditableGMap.prototype._positionMessage = function(message) {
-	document.getElementById(this._infodiv.id + "_position").innerHTML = message;
+	this._infopos.innerHTML = message;
 }
 org.sarsoft.EditableGMap.prototype._infomessage = function(message) {
-	document.getElementById(this._infodiv.id + "_message").innerHTML = message;
+	this._infomsg.innerHTML = message;
 }
 
 org.sarsoft.EditableGMap.prototype._addOverlay = function(way, config, label) {
@@ -520,9 +555,9 @@ org.sarsoft.EditableGMap.prototype._addOverlay = function(way, config, label) {
 	var poly = org.sarsoft.FixedGMap.prototype._addOverlay.call(this, way, config, label);
 	GEvent.addListener(poly, "mouseover", function() {
 		if(way.displayMessage == null) {
-			that._infomessage("<b>" + way.name + "</b>");
+			that._infomessage(way.name);
 		} else {
-			that._infomessage("<b>" + way.displayMessage + "</b>");
+			that._infomessage(way.displayMessage);
 		}
 	});
 	return poly;

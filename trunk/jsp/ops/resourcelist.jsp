@@ -5,18 +5,22 @@
 
 <ul>
   <li><a href="/app/resource/map">Map View</a> of all resources.</li>
+  <li>Export to <a href="/app/resource?format=CSV">CSV</a>.
+  <li>Import from <a href="javascript:uploadDlg.dialog.show()">CSV</a>.
   <li><a href="javascript:showNewResourceForm()">Create</a> a new resource.</li>
 </ul>
 
 <div id="newresource" style="display: none">
-<form method="POST" action="/app/resource/new">
+<form method="POST" action="/app/resource/new" name="newResource">
 <table border="0">
 <tr><td>Name:</td><td><input type="text" name="name" size="10" value="${resource.name}"/></td></tr>
+<tr><td>Type:</td><td><select name="type"><option value="PERSON">PERSON</option><option value="EQUIPMENT">EQUIPMENT</option></select></td></tr>
+<tr><td>Agency:</td><td><input type="text" name="agency" value="${resource.agency}" size="10"/></td></tr>
 <tr><td>Callsign:</td><td><input type="text" name="callsign" value="${resource.callsign}" size="10"/></td></tr>
 <tr><td>SPOT Id:</td><td><input type="text" name="spotId" size="10" value="${resource.spotId}"/></td></tr>
 <tr><td>SPOT Password:</td><td><input type="text" name="spotPassword" size="10" value="${resource.spotPassword}"></td></tr>
 </table>
-<button onclick="hideNewResourceForm()">Cancel</button>&nbsp;&nbsp;<input type="submit" value="Create"/>
+<a href="javascript:hideNewResourceForm()">Cancel</button>&nbsp;&nbsp;<a href="javascript:document.forms['newResource'].submit()">Create</a>
 </form>
 </div>
 
@@ -61,6 +65,8 @@ org.sarsoft.Loader.queue(function() {
 	 ctable.table.showTableMessage("<i>No Callsigns Found</i>");
 	 ctable.table.addRows(rows);
   });
+  
+  uploadDlg = new org.sarsoft.view.ResourceImportDlg();
 });
 
 </script>

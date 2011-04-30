@@ -29,13 +29,14 @@
 <div style="width: 100%; height: 135pt; border-bottom: 1px solid black">
 <div class="label">5. PERSONNEL ASSIGNED <span style="width: 144pt">&nbsp;</span> L -- TEAM LEADER &nbsp;&nbsp; M -- MEDICAL</div>
 
+<c:set var="people" value="${assignment.people}"/>
 <table cellspacing="0" class="personnel" style="width: 100%">
 <tr><th style="width: 2%">&nbsp;</th><th style="width: 33%">NAME</th><th style="width: 15%">AGENCY</th><th style="width: 2%">&nbsp;</th><th style="width: 33%">NAME</th><th style="width: 15%">AGENCY</th></tr>
-<tr><td>1</td><td>&nbsp;</td><td>&nbsp;</td><td>6</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td>2</td><td>&nbsp;</td><td>&nbsp;</td><td>7</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td>3</td><td>&nbsp;</td><td>&nbsp;</td><td>8</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td>4</td><td>&nbsp;</td><td>&nbsp;</td><td>9</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-<tr><td>5</td><td>&nbsp;</td><td>&nbsp;</td><td colspan="3">[&nbsp;&nbsp;] additional names attached</td></tr>
+<tr><td>1</td><td>${people[0].name}</td><td>${people[0].agency}</td><td>6</td><td>${people[5].name}</td><td>${people[5].agency}</td></tr>
+<tr><td>2</td><td>${people[1].name}</td><td>${people[1].agency}</td><td>7</td><td>${people[6].name}</td><td>${people[6].agency}</td></tr>
+<tr><td>3</td><td>${people[2].name}</td><td>${people[2].agency}</td><td>8</td><td>${people[7].name}</td><td>${people[7].agency}</td></tr>
+<tr><td>4</td><td>${people[3].name}</td><td>${people[3].agency}</td><td>9</td><td>${people[8].name}</td><td>${people[8].agency}</td></tr>
+<tr><td>5</td><td>${people[4].name}</td><td>${people[4].agency}</td><td colspan="3">[&nbsp;&nbsp;] additional names attached</td></tr>
 </table>
 </div>
 
@@ -80,7 +81,12 @@
 </div>
 
 <div style="width: 100%; height: 36pt; border-bottom: 1px solid black">
-	<div class="lbox" style="width: 100%"><div class="label">16. EQUIPMENT ISSUED</div>&nbsp;</div>
+	<div class="lbox" style="width: 100%; text-align: left"><div class="label">16. EQUIPMENT ISSUED</div>
+	
+<c:forEach var="equip" items="${assignment.equipment}" varStatus="estatus">
+<c:if test="${varStatus.index gt 0}">, </c:if>${equip.name} <c:if test="${equip.agency ne null}">(${equip.agency})</c:if>
+</c:forEach>
+</div>
 </div>
 
 <div style="width: 100%; height: 36pt; border-bottom: 1px solid black">

@@ -175,6 +175,8 @@ you can see how it relates to neighboring assignments.</i></div>
 			<h4>Create a new resource</h4>
 <form method="POST" action="/app/resource/new#operations">
 Name:&nbsp;<input type="text" name="name" size="10" value=""/>&nbsp;&nbsp;
+Type:&nbsp;<select name="type"><option value="PERSON">PERSON</option><option value="EQUIPMENT">EQUIPMENT</option></select><br/>
+Agency:&nbsp;<input type="text" name="agency" value="" size="10"/>&nbsp;&nbsp;
 Callsign:&nbsp;<input type="text" name="callsign" value="" size="10"/><br/>
 SPOT Id:&nbsp;<input type="text" name="spotId" size="10" value=""/>&nbsp;&nbsp;
 SPOT Password:&nbsp;<input type="text" name="spotPassword" size="10" value="${resource.spotPassword}">

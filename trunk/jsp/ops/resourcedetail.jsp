@@ -31,6 +31,12 @@ ${resource.name}'s location is unknown.
 <form method="POST" action="/app/resource/${resource.id}">
 <table border="0">
 <tr><td>Name:</td><td><input type="text" name="name" size="10" value="${resource.name}"/></td></tr>
+<tr><td>Type:</td><td><select name="type">
+   <c:forEach var="type" items="<%= org.sarsoft.ops.model.Resource.Type.values() %>">
+     <option value="${type}"<c:if test="${resource.type == type}"> selected="selected"</c:if>>${type}</option>
+   </c:forEach>
+</select></td></tr>
+<tr><td>Agency:</td><td><input type="text" name="agency" value="${resource.agency}" size="10"/></td></tr>
 <tr><td>Callsign:</td><td><input type="text" name="callsign" value="${resource.callsign}" size="10"/></td></tr>
 <tr><td>SPOT Id:</td><td><input type="text" name="spotId" size="10" value="${resource.spotId}"/></td></tr>
 <tr><td>SPOT Password:</td><td><input type="text" name="spotPassword" size="10" value="${resource.spotPassword}"></td></tr>

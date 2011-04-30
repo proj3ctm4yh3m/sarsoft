@@ -507,6 +507,7 @@ function GMarker(latlng, opts) {
 	this._latlng = latlng;
 	this.ol = new Object();
 	this.ol.marker = new OpenLayers.Marker(GLatLng.toLonLat(latlng),icon);
+	if(this._title != null) this.ol.marker.icon.imageDiv.title=this._title;
 	this.ol.marker.gmarker = this;
 }
 

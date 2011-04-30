@@ -6,27 +6,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.sarsoft.admin.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
+import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
+import org.sarsoft.ops.model.Resource.Type;
 import org.sarsoft.ops.service.location.APRSLocalEngine;
 import org.sarsoft.ops.service.location.APRSTier2Engine;
 import org.sarsoft.ops.service.location.SpotLocationEngine;
 import org.sarsoft.ops.service.location.AsyncTransactionalEngine.Status;
+import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.controller.SearchAssignmentController;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
 public class OpsController extends JSONBaseController {
@@ -46,6 +55,11 @@ public class OpsController extends JSONBaseController {
 
 	@Autowired
 	SearchAssignmentController searchAssignmentController;
+	
+	@InitBinder
+	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
+		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
+	}
 
 	public static boolean isLocationEnabled(String search) {
 		return locationEngines.containsKey(search);
@@ -153,7 +167,8 @@ public class OpsController extends JSONBaseController {
 
 	@RequestMapping(value="/app/resource/new", method = RequestMethod.POST)
 	public String createResource(Model model, HttpServletRequest request,
-		@RequestParam(value="name", required=true) String name, @RequestParam(value="callsign", required=false) String callsign, 
+		@RequestParam(value="name", required=true) String name, @RequestParam(value="type", required=true) String type, 
+		@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
 		@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
 		long maxId = 0L;
 		List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
@@ -163,6 +178,8 @@ public class OpsController extends JSONBaseController {
 		Resource resource = new Resource();
 		resource.setId(maxId+1);
 		resource.setName(name);
+		resource.setType(Type.valueOf(type));
+		resource.setAgency(agency);
 		resource.setCallsign(callsign);
 		resource.setSpotId(spotId);
 		resource.setSpotPassword(spotPassword);
@@ -182,10 +199,51 @@ public class OpsController extends JSONBaseController {
 		if(redirect != null && redirect.length() > 0) return "redirect:" + redirect;
 		return "redirect:/app/resource/" + resource.getId();
 	}
+	
+	@RequestMapping(value="/app/resource", method = RequestMethod.POST)
+	public String importResources(Model model, JSONForm params, HttpServletRequest request) {
+		String csv = params.getFile();
+		if(csv != null) {
+			long maxId = 0L;
+			List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
+			for(Resource resource : resources) {
+				maxId = Math.max(maxId, resource.getId());
+			}
+			String[] rows = csv.split("\n");
+			for(String row : rows) {
+				String[] cols = row.split(",");
+				String name = cols[0];
+				String callsign = cols[1];
+				if("callsign".equalsIgnoreCase(callsign) || "name".equalsIgnoreCase(name)) continue;
+				Resource resource = (Resource) dao.getByAttr(Resource.class, "callsign", callsign);
+				if(resource != null) {
+					if(cols.length > 4)
+						if(resource.getSpotId() == null) resource.setSpotId(cols[4]);
+					if(cols.length > 5)
+						if(resource.getSpotPassword() == null) resource.setSpotPassword(cols[5]);
+				} else {
+					resource = new Resource();
+					resource.setId(maxId);
+					maxId++;
+					resource.setType(Type.valueOf(cols[2]));
+					resource.setAgency(cols[3]);
+					resource.setName(name);
+					resource.setCallsign(callsign);
+					if(cols.length > 4)
+						resource.setSpotId(cols[4]);
+					if(cols.length > 5)
+						resource.setSpotPassword(cols[5]);
+				}
+				dao.save(resource);
+			}
+		}
+		return "redirect:/app/resource/";
+	}
 
 	@RequestMapping(value="/app/resource/{resourceid}", method = RequestMethod.POST)
-	public String updateResource(Model model, HttpServletRequest request, @PathVariable("resourceid") long id, 
-			@RequestParam(value="name", required=true) String name, @RequestParam(value="callsign", required=false) String callsign, 
+	public String updateResource(Model model, HttpServletRequest request, HttpServletResponse response, @PathVariable("resourceid") long id, 
+			@RequestParam(value="name", required=true) String name, @RequestParam(value="type", required=true) String type, 
+			@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
 			@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
 		Resource resource = (Resource) dao.load(Resource.class, id);
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action")) == Action.DELETE) {			
@@ -195,10 +253,12 @@ public class OpsController extends JSONBaseController {
 				dao.save(assignment);
 			}
 			dao.delete(resource);
-			return getAppResources(model);
+			return getAppResources(model, request, response);
 		}
 		resource.setName(name);
 		resource.setCallsign(callsign);
+		resource.setType(Type.valueOf(type));
+		resource.setAgency(agency);
 		resource.setSpotId(spotId);
 		resource.setSpotPassword(spotPassword);
 		dao.save(resource);
@@ -207,12 +267,21 @@ public class OpsController extends JSONBaseController {
 		if(engines.aprst2 != null) engines.aprst2.updateFilter();
 
 		model.addAttribute("resource", resource);
-		return app(model, "Resource.Detail");
+		return "redirect:/app/resource/" + id;
 	}
 	
 	@RequestMapping(value="/app/resource", method = RequestMethod.GET)
-	public String getAppResources(Model model) {
-		return app(model, "Resource.List");
+	public String getAppResources(Model model, HttpServletRequest request, HttpServletResponse response) {
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
+
+		switch (format) {
+		case CSV:
+			response.setHeader("Content-Disposition", "attachment; filename=resourcelist.csv");
+			model.addAttribute("resources", dao.loadAll(Resource.class));
+			return "/ops/resourcelist-csv";
+		default:
+			return app(model, "Resource.List");
+		}
 	}
 	
 	@RequestMapping(value="/rest/resource", method = RequestMethod.GET)
