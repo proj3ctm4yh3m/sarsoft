@@ -18,6 +18,8 @@ public class Search {
 	private String name;
 	private String mapConfig;
 	private Waypoint lkp;
+	private Waypoint pls;
+	private Waypoint cp;
 	private boolean visible = false;
 	private String password;
 	private String description;
@@ -49,6 +51,26 @@ public class Search {
 
 	public void setLkp(Waypoint lkp) {
 		this.lkp = lkp;
+	}
+
+	@ManyToOne
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	public Waypoint getPls() {
+		return pls;
+	}
+
+	public void setPls(Waypoint pls) {
+		this.pls = pls;
+	}
+
+	@ManyToOne
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	public Waypoint getCP() {
+		return cp;
+	}
+
+	public void setCP(Waypoint cp) {
+		this.cp = cp;
 	}
 
 	public void setPassword(String password) {

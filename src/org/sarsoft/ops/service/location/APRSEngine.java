@@ -104,7 +104,6 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 		HttpTransport transport = GoogleTransport.create();
 		transport.addParser(new JsonCParser());
 		if(resource.getCallsign() != null && resource.getCallsign().length() > 0) {
-			System.out.println("APRSFi request for " + resource.getCallsign());
 			HttpRequest request = transport.buildGetRequest();
 			request.setUrl("http://api.aprs.fi/api/get?what=loc&apikey=" + aprsFiKey + "&format=json&name=" + resource.getCallsign());
 			Waypoint fresh = null;

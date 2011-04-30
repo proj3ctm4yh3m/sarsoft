@@ -23,9 +23,11 @@ public class Resource extends SarModelObject {
 	}
 
 	protected String name;
+	protected String agency;
 	protected String callsign;
 	protected String spotId;
 	protected String spotPassword;
+	protected Type type;
 	protected Waypoint position;
 	protected SearchAssignment assignment;
 	protected Date updated;
@@ -37,6 +39,23 @@ public class Resource extends SarModelObject {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	@JSONSerializable
+	public String getAgency() {
+		return agency;
+	}
+	
+	public void setAgency(String agency) {
+		this.agency = agency;
+	}
+	
+	@JSONSerializable
+	public Type getType() {
+		return type;
+	}
+	public void setType(Type type) {
+		this.type = type;
+	}	
 
 	@JSONSerializable
 	@OneToOne

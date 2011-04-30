@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,7 @@ import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.ops.model.Resource;
+import org.sarsoft.ops.model.Resource.Type;
 
 import net.sf.json.JSONObject;
 
@@ -305,6 +307,24 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 			resources.remove(resource);
 			resource.setAssignment(null);
 		}
+	}
+	
+	@Transient
+	public List<Resource> getPeople() {
+		List<Resource> people = new ArrayList<Resource>();
+		for(Resource resource : resources) {
+			if(resource.getType() == Type.PERSON) people.add(resource);
+		}
+		return people;
+	}
+
+	@Transient
+	public List<Resource> getEquipment() {
+		List<Resource> equipment = new ArrayList<Resource>();
+		for(Resource resource : resources) {
+			if(resource.getType() == Type.EQUIPMENT) equipment.add(resource);
+		}
+		return equipment;
 	}
 
 	public String getPreparedBy() {

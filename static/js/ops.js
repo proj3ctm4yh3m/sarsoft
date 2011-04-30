@@ -7,6 +7,8 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete) {
 	var coldefs = [
 	    { key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function(evt) {evt.cancelBubble = true; onDelete(record);} }},
 		{ key : "name", label : "Name", sortable : true},
+		{ key : "agency", label : "Agency", sortable : true},
+		{ key : "type", label : "Type", sortable : true},
 		{ key : "assignmentId", label : "Assignment", sortable : true},
 		{ key : "callsign", label : "Callsign"},
 		{ key : "spotId", label: "SPOT ID"},
@@ -35,6 +37,31 @@ org.sarsoft.ResourceDAO.prototype = new org.sarsoft.BaseDAO();
 
 org.sarsoft.ResourceDAO.prototype.detachResource = function(resource, assignmentid) {
 	this._doGet("/" + resource.id + "/detach/" + assignmentid, function() {});
+}
+
+org.sarsoft.view.ResourceImportDlg = function(id) {
+	var that = this;
+	var dlg = document.createElement("div");
+	dlg.style.position="absolute";
+	dlg.style.zIndex="1000";
+	dlg.style.top="200px";
+	dlg.style.left="200px";
+	dlg.style.width="420px";
+	var hd = document.createElement("div");
+	hd.appendChild(document.createTextNode("Upload Resources as CSV"));
+	hd.className = "hd";
+	dlg.appendChild(hd);
+	var bd = document.createElement("div");
+	bd.className = "bd";
+	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='resourceupload' action='/app/resource/'><input type='file' name='file'/><input type='hidden' name='format' value='csv'/></form>";
+	dlg.appendChild(bd);
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "420px"});
+	var buttons = [ { text : "Import", handler: function() {
+		that.dialog.hide(); document.forms['resourceupload'].submit();
+	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
+	this.dialog.cfg.queueProperty("buttons", buttons);
+	this.dialog.render(document.body);
+	this.dialog.hide();
 }
 
 org.sarsoft.controller.ResourceViewMapController = function(container, id) {

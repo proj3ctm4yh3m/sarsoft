@@ -175,10 +175,16 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	this.container.appendChild(this.div);
 	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
 	this.fmap = new org.sarsoft.FixedGMap(map);
-//    GEvent.addListener(map, "tilesloaded", function() {
-//       	window.print();
-//	});
-
+	var info = document.createElement("div");
+	info.style.zIndex=2000;
+	info.className="printonly";
+	info.style.position="absolute";
+	info.style.top="0px";
+	info.style.left="0px";
+	info.style.backgroundColor="white";
+	info.innerHTML = "Assignment " + assignment.id;
+	map.getContainer().appendChild(info);
+	
 	var searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
 	searchDAO.load(function(config) {
 			try {
@@ -189,7 +195,22 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 			that.setSize("7in","8.8in");
 			that.fmap.map.setCenter(that.fmap.map.getCenter(), that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 	}, "mapConfig");
-
+	
+	searchDAO.load(function(lkp) {
+		if(lkp.value != null) {
+			that.fmap.addWaypoint(lkp.value, {color: "#FF0000"}, "LKP", "LKP");
+		}
+	}, "lkp");
+	searchDAO.load(function(pls) {
+		if(pls.value != null) {
+			that.fmap.addWaypoint(pls.value, {color: "#FF0000"}, "PLS", "PLS");
+		}
+	}, "pls");
+	searchDAO.load(function(cp) {
+		if(cp.value != null) {
+			that.fmap.addWaypoint(cp.value, {color: "#FF0000"}, "CP", "CP");
+		}
+	}, "cp");
 
 	this.assignmentDAO.getWays(function(ways) {
 		for(var i = 0; i < ways.length; i++) {
@@ -492,6 +513,8 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "Return to Operational Period " + operationalperiod.id, applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/operationalperiod/" + operationalperiod.id; }},
 		{text : "Map Setup", applicable : function(obj) { return obj == null }, handler : function(data) { that.setupDlg.show(that._mapsetup); }},
 		{text : "Set LKP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setLkp(data.point); }},
+		{text : "Set PLS here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setPls(data.point); }},
+		{text : "Set CP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setCP(data.point); }},
 		{text : "Adjust page size for printing", applicable: function(obj) { return obj == null}, handler : function(data) { that.pageSizeDlg.show(); }},
 		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); config.rangerings = that._mapsetup.map.rangerings; that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)})}},
 		{text : "Edit Assignment Bounds", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.edit(data.subject) }},
@@ -546,6 +569,18 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 				}
 				}
 		}, "lkp");
+		that.searchDAO.load(function(pls) {
+			if(pls.value != null) {
+				that.pls = pls.value;
+				that.placePls(pls.value);
+			}
+		}, "pls");
+		that.searchDAO.load(function(cp) {
+			if(cp.value != null) {
+				that.cp = cp.value;
+				that.placeCP(cp.value);
+			}
+		}, "cp");
 	}, that.period.id);
 
 	var handler = function(assignment) {
@@ -674,6 +709,20 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.setLkp = functio
 	this.placeLkp(lkp);
 }
 
+org.sarsoft.controller.OperationalPeriodMapController.prototype.setPls = function(pls) {
+	pls = this.emap.map.fromContainerPixelToLatLng(new GPoint(pls.x, pls.y));
+	pls = {lat: pls.lat(), lng: pls.lng()};
+	this.searchDAO.save("pls", { value: pls});
+	this.placePls(pls);
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.setCP = function(cp) {
+	cp = this.emap.map.fromContainerPixelToLatLng(new GPoint(cp.x, cp.y));
+	cp = {lat: cp.lat(), lng: cp.lng()};
+	this.searchDAO.save("cp", { value: cp});
+	this.placeCP(cp);
+}
+
 org.sarsoft.controller.OperationalPeriodMapController.prototype.placeLkp = function(lkp) {
 	if(this.lkp != null) this.emap.removeWaypoint(this.lkp);
 	this.lkp = lkp;
@@ -685,6 +734,18 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.placeLkp = funct
 			this.emap.addRangeRing(new GLatLng(lkp.lat, lkp.lng), radii[i], 36);
 		}
 	}
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.placePls = function(pls) {
+	if(this.pls != null) this.emap.removeWaypoint(this.pls);
+	this.pls = pls;
+	this.emap.addWaypoint(pls, {color: "#FF0000"}, "PLS", "PLS");
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.placeCP = function(cp) {
+	if(this.cp != null) this.emap.removeWaypoint(this.cp);
+	this.cp = cp;
+	this.emap.addWaypoint(cp, {color: "#FF0000"}, "CP", "CP");
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setAssignmentAttr = function(assignment, key, value) {
@@ -713,6 +774,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = f
 	var assignment = this.assignments[resource.assignmentId];
 	if(assignment != null && assignment.operationalPeriodId == this.period.id) {
 		if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].position);
+		if(resource.position == null) return;
 		this.resources[resource.id] = resource;
 		if(!this.showLocations) return; // need lines above this in case the user re-enables resources
 		var setup = this._mapsetup.present;

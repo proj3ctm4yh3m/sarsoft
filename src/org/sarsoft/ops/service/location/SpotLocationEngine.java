@@ -34,7 +34,6 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 		Long lastUpdate = lastRefreshed.get(resource.getPk());
 		Waypoint fresh = null;
 		if(resource.getSpotId() != null && resource.getSpotId().length() > 0 && (lastUpdate == null || lastUpdate < time - refreshInterval)) {
-			System.out.println("SPOT request for " + resource.getSpotId());
 			HttpRequest request = transport.buildGetRequest();
 			String url = "http://share.findmespot.com/spot-adventures/rest-api/1.0/public/feed/" + resource.getSpotId() + "/message?&sort=timeInMili&dir=DESC";
 			if(resource.getSpotPassword() != null) url += "&feedPassword=" + resource.getSpotPassword();
@@ -84,7 +83,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 				closeTransaction();
 			}
 			try {
-				sleep(15000);
+				sleep(60000);
 			} catch (InterruptedException e) {
 			}
 		}

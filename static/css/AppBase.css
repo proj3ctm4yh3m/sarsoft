@@ -62,8 +62,14 @@ textarea.entityform {
 	height: 150px
 }
 
+.printonly {
+	display: none;
+}
+
 @media print {
 	.noprint {
 		display: none;
 	}
+	.printonly {
+		display: block !important;
 }

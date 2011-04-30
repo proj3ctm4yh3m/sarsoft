@@ -115,7 +115,6 @@ ${assignment.id}: ${assignment.timeAllocated} hour, ${assignment.formattedSize} 
 </c:if>
 <c:forEach var="mapConfig" items="${mapConfigs}" varStatus="status2">
 <div id="maps${status.index}_${status2.index}" class="page">
-<span>Map for Assignment ${assignment.id}</span>
 </div>
 </c:forEach>
 </c:forEach>
