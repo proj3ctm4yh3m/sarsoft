@@ -329,8 +329,8 @@ public class SearchAssignmentController extends JSONBaseController {
 		return json(model, ways);
 	}
 
-	@RequestMapping(value = "/rest/assignment/{assignmentId}/way", method= RequestMethod.POST)
-	public String addWay(JSONForm params, @PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
+	@RequestMapping(value = "/{mode}/assignment/{assignmentId}/way", method= RequestMethod.POST)
+	public String addWay(JSONForm params, @PathVariable("mode") String mode, @PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 		WayType type = (request.getParameter("type") != null) ? WayType.valueOf(request.getParameter("type").toUpperCase()) : null;
@@ -374,7 +374,9 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 
 		dao.save(assignment);
-		return (ways.length == 1) ? json(model, ways[0]) : json(model, ways);
+		if("rest".equalsIgnoreCase(mode))
+			return (ways.length == 1) ? json(model, ways[0]) : json(model, ways);
+		return "redirect:/app/assignment/" + assignmentId;
 	}
 
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/way/{wayId}", method = RequestMethod.POST)
@@ -385,7 +387,6 @@ public class SearchAssignmentController extends JSONBaseController {
 			Way way = assignment.getWays().get(wayId);
 			assignment.getWays().remove(wayId);
 			dao.save(assignment);
-			dao.delete(way);
 		}
 		return json(model, assignment);
 	}
@@ -398,7 +399,6 @@ public class SearchAssignmentController extends JSONBaseController {
 			Waypoint waypoint = assignment.getWaypoints().get(waypointId);
 			assignment.getWaypoints().remove(waypointId);
 			dao.save(assignment);
-			dao.delete(waypoint);
 		}
 		return json(model, assignment);
 	}
