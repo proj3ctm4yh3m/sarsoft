@@ -45,7 +45,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private ResourceType resourceType;
 	private Status status = Status.DRAFT;
 	private Long operationalPeriodId;
-	private long timeAllocated = 0;
+	private Double timeAllocated;
 	private String previousEfforts;
 	private String transportation;
 	private Set<MapConfig> mapConfigs;
@@ -148,11 +148,11 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	}
 
 	@JSONSerializable
-	public long getTimeAllocated() {
+	public Double getTimeAllocated() {
 		return timeAllocated;
 	}
 
-	public void setTimeAllocated(long timeAllocated) {
+	public void setTimeAllocated(Double timeAllocated) {
 		this.timeAllocated = timeAllocated;
 	}
 
