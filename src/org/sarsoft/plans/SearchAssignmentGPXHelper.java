@@ -111,7 +111,7 @@ public class SearchAssignmentGPXHelper {
 		attrs.put("details", assignment.getDetails());
 		if(assignment.getResourceType() != null) attrs.put("resourceType", assignment.getResourceType().toString());
 		if(assignment.getStatus() != null) attrs.put("status", assignment.getStatus().toString());
-		attrs.put("timeAllocated", Double.toString(assignment.getTimeAllocated()));
+		if(assignment.getTimeAllocated() != null) attrs.put("timeAllocated", Double.toString(assignment.getTimeAllocated()));
 		attrs.put("previousEfforts", assignment.getPreviousEfforts());
 		attrs.put("transportation", assignment.getTransportation());
 		if(assignment.getResponsivePOD() != null) attrs.put("responsivePOD", assignment.getResponsivePOD().toString());
