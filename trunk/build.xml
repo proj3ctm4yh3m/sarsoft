@@ -39,7 +39,7 @@
 		<delete file="build/jar/embedded.war"/>
 		<war destfile="build/jar/embedded.war" webxml="config/web.xml">
 			<classes dir="build/classes"/>
-			<classes dir="config" includes="commons-logging.properties simplelog.properties">
+			<classes dir="config" includes="commons-logging.properties simplelog.properties log4j.properties ehcache.xml">
 			</classes>
 			<lib dir="lib"/>
 			<fileset dir="jsp"/>
