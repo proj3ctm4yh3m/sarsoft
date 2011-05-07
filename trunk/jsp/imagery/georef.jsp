@@ -14,10 +14,19 @@ function doload() {
 org.sarsoft.Loader.queue(function() {
   egm = new org.sarsoft.EnhancedGMap();
   map = egm.createMap(document.getElementById('map_canvas'));
-  map.setCenter(new GLatLng(38, -122), 8);
-  
+
   egm2 = new org.sarsoft.EnhancedGMap();
   map2 = egm.createMap(document.getElementById('combined_canvas'));
+
+  searchDAO = new org.sarsoft.SearchDAO();
+  searchDAO.load(function(config) {
+		if(config.value != null) {
+			var lkp = config.value;
+			map.setCenter(new GLatLng(lkp.lat, lkp.lng), 13);
+			map2.setCenter(new GLatLng(lkp.lat, lkp.lng), 13);
+		}
+	}, "lkp");
+  
 
   YAHOO.util.Event.addListener("actualimage", "click", function(e) {
 		  imageContextMenu.show(
@@ -40,8 +49,7 @@ org.sarsoft.Loader.queue(function() {
 	 		{ name : "originlat", label: "Origin lat", type : "number"},
 	 		{ name : "originlng", label: "Origin lng", type : "number"},
 	 		{ name : "width", label: "Width", type : "number"},
-	 		{ name : "height", label: "Height", type : "number"},
-	 		{ name : "opacity", label: "Opacity", type : "number"}
+	 		{ name : "height", label: "Height", type : "number"}
 	 	];
 	 	org.sarsoft.view.EntityForm.call(this, fields);
 	 }
@@ -102,7 +110,7 @@ function checkCombined() {
 	georef.originy = imageRef[0].y;
 	georef.originlat = mapRef[0].lat();
 	georef.originlng = mapRef[0].lng();
-	
+
 	parameterForm.write(georef);
 	updateCombinedView();
 }
@@ -111,9 +119,12 @@ geooverlay = null;
 
 function updateCombinedView() {
 	georef = parameterForm.read();
-	if(geooverlay != null) map2.removeOverlay(geooverlay);
-	geooverlay = new GeoRefImageOverlay(new GPoint(1*georef.originx, 1*georef.originy), new GLatLng(1*georef.originlat, 1*georef.originlng), georef.angle, georef.scale, "${image.id}", new GSize(1*georef.width, 1*georef.height), georef.opacity);
-	map2.addOverlay(geooverlay);
+	var geotype = {name : "Georef Overlay", id: "${image.id}", angle: georef.angle, scale: georef.scale, originx: georef.originx, originy: georef.originy, originlat: georef.originlat, originlng: georef.originlng, width: georef.width, height: georef.height};
+	egm2.geoRefImages = egm.setGeoRefImages([geotype]);
+	map2.removeControl(map2._overlaydropdownmapcontrol);
+	var dd = new OverlayDropdownMapControl();
+	map2.addControl(dd);
+	dd.updateMap(dd.types[dd.typeSelect.value], geotype, 1);
 	map2.setCenter(new GLatLng(1*georef.originlat, 1*georef.originlng), 12);
 	tabView.set('activeIndex', 2);
 }
@@ -128,7 +139,6 @@ var tabView = new YAHOO.widget.TabView('tabs');
 georef = new Object();
 georef.width = ${width};
 georef.height = ${height};
-georef.opacity = 0.6;
 <c:if test="${image.angle ne null}">
 org.sarsoft.Loader.queue(function() {
 	georef.angle = ${image.angle};
@@ -163,25 +173,24 @@ and then save it.
 
 <div id="image">
 <div>Please <b>click</b> on the image to select your two reference points, then select the <b>Map</b> tab.  Because SARSOFT surrounds your image with transparent pixels so that 
-you can rotate it without causing any cropping, you may need to scroll the browser window to see your image.</div>
-<div id="imagecontainer">
+you can rotate it without causing any cropping, you may need to scroll to see your image.</div>
+<div id="imagecontainer" style="width: 800px; height: 500px; overflow: scroll">
 <img src="/resource/imagery/georef/${image.id}.png" id="actualimage"/>
 </div>
 </div>
 
 <div id="map">
 Please <b>right-click</b> on the map to identify the location of your two reference points.
-<div id="map_canvas" style="width: 500px; height: 350px;"></div>
+<div id="map_canvas" style="width: 800px; height: 500px"></div>
 </div>
 
 <div id="combined">
-Please confirm that the image is properly placed, and then click on the <b>Parameters</b> tab.  You can alter the image's opacity on that tab as well.<br/>
-<div id="combined_canvas" style="width: 500px; height: 350px;"></div>
+Please confirm that the image is properly placed, and then click on the <b>Parameters</b> tab.<br/>
+<div id="combined_canvas" style="width: 800px; height: 500px;"></div>
 </div>
 
 <div id="parameters">
 You can manually update any parameters below.  When done, click <b>Save these parameters</b> to finish georeferencing the image.<br/>
-Opacity is only used on the result tab and is not saved.<br/>
 <div id="paramform"></div>
 <br/>
 <a href="javascript:updateCombinedView()">Show map using these parameters.</a><br/>

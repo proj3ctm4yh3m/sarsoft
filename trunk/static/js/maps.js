@@ -100,7 +100,12 @@ OverlayDropdownMapControl.prototype._createSelect = function(types) {
 
 OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var that = this;
-	this.types = map.getMapTypes();
+	var mapTypes = map.getMapTypes();
+	this.types = new Array();
+	// georef images get added to this list; need to shallow cop
+	for(var i = 0; i < mapTypes.length; i++) {
+		this.types[i] = mapTypes[i];
+	}
 	this.typeSelect = this._createSelect(this.types);
 	this.overlaySelect = this._createSelect(this.types);
 	for(var i = 0; i < map.geoRefImages.length; i++) {
