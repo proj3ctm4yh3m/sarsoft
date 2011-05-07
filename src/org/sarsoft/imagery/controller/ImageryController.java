@@ -44,12 +44,7 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
 public class ImageryController extends JSONBaseController {
-	
-	static {
-		CacheManager.create();
-		CacheManager.getInstance().addCache("tileCache");
-	}
-	
+		
 	private static String EXTERNAL_TILE_DIR = null;
 	private static String GEOREF_IMAGE_DIR = ".sarsoft/imagery/georef/";
 	
