@@ -18,6 +18,10 @@ You can update the following search attributes.
 <tr><td>Public?</td><td><input type="checkbox" name="public" value="public" <c:if test="${search.visible}">checked="checked"</c:if>/></td></tr>
 <tr><td>Password</td><td><input type="password" size="15" name="password"/></td></tr>
 </c:if>
+<tr><td>Datum</td><td><select name="datum">
+  <option value="WGS84"<c:if test="${search.datum eq 'WGS84'}"> selected="selected"</c:if>>WGS84</option>
+  <option value="NAD27 CONUS"<c:if test="${search.datum eq 'NAD27 CONUS'}"> selected="selected"</c:if>>NAD27 CONUS</option>
+</select></td></tr>
 </table>
 
 <input type="submit" value="Update"/>

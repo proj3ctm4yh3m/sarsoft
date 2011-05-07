@@ -24,6 +24,7 @@ public class Search {
 	private String password;
 	private String description;
 	private UserAccount account;
+	private String datum;
 
 	public void setName(String name) {
 		this.name = name;
@@ -107,5 +108,13 @@ public class Search {
 
 	public void setVisible(boolean visible) {
 		this.visible = visible;
+	}
+	
+	public String getDatum() {
+		return datum;
+	}
+	
+	public void setDatum(String datum) {
+		this.datum = datum;
 	}
 }
