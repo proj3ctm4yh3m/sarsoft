@@ -28,3 +28,5 @@ org.sarsoft.EnhancedGMap.geoRefImages = [
 <c:if test="${status.index gt 0}">,</c:if>{name : "${image.name}",  id: ${image.id}, angle: ${image.angle}, scale : ${image.scale}, originx: ${image.originx}, originy: ${image.originy}, originlat: ${image.originlat}, originlng: ${image.originlng}, width: ${image.width}, height: ${image.height}}
 </c:forEach>
 ];
+
+org.sarsoft.map.datum = "WGS84";
