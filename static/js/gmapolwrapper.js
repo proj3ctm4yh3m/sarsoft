@@ -293,8 +293,13 @@ GMap2.prototype.getContainer = function() {
 	return this.ol.map.div;
 }
 
+GMap2.prototype._controlObj = new Array();
+GMap2.prototype._controlRef = new Array();
 GMap2.prototype.addControl = function(control) {
 	var ref = control.initialize(this);
+	var i = this._controlObj.length;
+	this._controlObj[i] = control;
+	this._controlRef[i] = ref;
     if(ref != null) ref.className += " noprint";
 	var position = control.getDefaultPosition();
 	if(position != null) {
@@ -305,6 +310,17 @@ GMap2.prototype.addControl = function(control) {
 			ref.style.zIndex=1000;
 		}
 	} 
+}
+
+GMap2.prototype.removeControl = function(control) {
+	for(var i = 0; i < this._controlObj.length; i++) {
+		if(this._controlObj[i] == control) {
+			var ref = this._controlRef[i];
+			ref.parentNode.removeChild(ref);
+			delete this._controlObj[i];
+			delete this._controlRef[i];
+		}
+	}
 }
 
 GMap2.prototype.addOverlay = function(overlay) {
