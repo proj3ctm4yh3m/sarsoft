@@ -8,6 +8,9 @@ import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
 public class RuntimeProperties {
 
 	private static ThreadLocal<String> tSearch = new ThreadLocal<String>();
@@ -34,6 +37,7 @@ public class RuntimeProperties {
 					FileInputStream fis = new FileInputStream("sarsoft.properties");
 					properties.load(fis);
 				}
+				PropertyConfigurator.configure(properties);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
