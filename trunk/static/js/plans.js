@@ -749,7 +749,8 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.placePls = funct
 org.sarsoft.controller.OperationalPeriodMapController.prototype.placeCP = function(cp) {
 	if(this.cp != null) this.emap.removeWaypoint(this.cp);
 	this.cp = cp;
-	this.emap.addWaypoint(cp, {color: "#FF0000"}, "CP", "CP");
+	var icon = org.sarsoft.MapUtil.createIcon(15, "/static/images/cp.png");
+	this.emap.addWaypoint(cp, {icon: icon}, "CP", "CP");
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setAssignmentAttr = function(assignment, key, value) {
