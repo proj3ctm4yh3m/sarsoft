@@ -56,9 +56,9 @@
 </div>
 
 <div style="width: 100%; height: 24pt; border-bottom: 1px solid black">
-	<div class="lbox" style="width: 15%"><div class="label">8. TIME ALLOCATED</div>${assignment.timeAllocated} hours</div>
+	<div class="lbox" style="width: 15%"><div class="label">8. TIME ALLOCATED</div><c:if test="${assignment.timeAllocated ne null}">${assignment.timeAllocated} hours</c:if></div>
 	<div class="box" style="width: 20%"><div class="label">9. SIZE OF ASSIGNMENT</div>${assignment.formattedSize}</div>
-	<div class="box" style="width: 64%"><div class="label">10. EXPECTED P.O.D.</div><b>${assignment.responsivePOD}</b> (responsive), <b>${assignment.unresponsivePOD}</b> (unresponsive)</div>
+	<div class="box" style="width: 64%"><div class="label">10. EXPECTED P.O.D.</div><span style="text-transform: capitalize; font-size: 80%">Responsive: ${fn:toLowerCase(assignment.responsivePOD)}&nbsp;&nbsp;&nbsp;Unresponsive: ${fn:toLowerCase(assignment.unresponsivePOD)}&nbsp;&nbsp;&nbsp;Clue: ${fn:toLowerCase(assignment.cluePOD)}</span></div>
 </div>
 
 <div style="width: 100%; height: 60pt; border-bottom: 1px solid black">

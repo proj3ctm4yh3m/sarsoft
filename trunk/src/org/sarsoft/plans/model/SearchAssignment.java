@@ -47,12 +47,13 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private ResourceType resourceType;
 	private Status status = Status.DRAFT;
 	private Long operationalPeriodId;
-	private Double timeAllocated;
+	private Double timeAllocated = new Double(0);
 	private String previousEfforts;
 	private String transportation;
 	private Set<MapConfig> mapConfigs;
 	private Probability responsivePOD;
 	private Probability unresponsivePOD;
+	private Probability cluePOD;
 	private List<Way> ways;
 	private List<Waypoint> waypoints;
 	private Date updated;
@@ -150,7 +151,17 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	}
 
 	@JSONSerializable
+	public Probability getCluePOD() {
+		return cluePOD;
+	}
+
+	public void setCluePOD(Probability pod) {
+		this.cluePOD = pod;
+	}
+
+	@JSONSerializable
 	public Double getTimeAllocated() {
+		if(timeAllocated == null) return new Double(0);
 		return timeAllocated;
 	}
 

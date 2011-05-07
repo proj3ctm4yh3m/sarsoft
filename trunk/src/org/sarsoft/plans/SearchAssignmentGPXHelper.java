@@ -123,6 +123,7 @@ public class SearchAssignmentGPXHelper {
 		attrs.put("transportation", assignment.getTransportation());
 		if(assignment.getResponsivePOD() != null) attrs.put("responsivePOD", assignment.getResponsivePOD().toString());
 		if(assignment.getUnresponsivePOD() != null) attrs.put("unresponsivePOD", assignment.getUnresponsivePOD().toString());
+		if(assignment.getCluePOD() != null) attrs.put("cluePOD", assignment.getCluePOD().toString());
 		if(assignment.getUpdated() != null) attrs.put("updated", Long.toString(assignment.getUpdated().getTime()));
 		if(assignment.getPreparedOn() != null) attrs.put("preparedOn", Long.toString(assignment.getPreparedOn().getTime()));
 		attrs.put("preparedBy", assignment.getPreparedBy());
@@ -208,6 +209,7 @@ public class SearchAssignmentGPXHelper {
 					if(attrs.containsKey("transportation")) assignment.setTransportation(attrs.get("transportation"));
 					if(attrs.containsKey("responsivePOD")) assignment.setResponsivePOD(Probability.valueOf(attrs.get("responsivePOD")));
 					if(attrs.containsKey("unresponsivePOD")) assignment.setUnresponsivePOD(Probability.valueOf(attrs.get("unresponsivePOD")));
+					if(attrs.containsKey("cluePOD")) assignment.setCluePOD(Probability.valueOf(attrs.get("cluePOD")));
 					if(attrs.containsKey("updated")) assignment.setUpdated(new Date(Long.parseLong(attrs.get("updated"))));
 					if(attrs.containsKey("preparedOn")) assignment.setPreparedOn(new Date(Long.parseLong(attrs.get("preparedOn"))));
 					if(attrs.containsKey("preparedBy")) assignment.setPreparedBy(attrs.get("preparedBy"));
