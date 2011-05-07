@@ -302,6 +302,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			while(it.hasNext()) {
 				Resource resource = it.next();
 				it.remove();
+				resource.setAssignment(null);
 				dao.save(resource);
 			}
 			break;
