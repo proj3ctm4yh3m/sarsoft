@@ -684,9 +684,9 @@ GeoUtil.convertDatum = function(gll, from, to) {
 	var bda = 1 - from.f;
 	var df = to.f - from.f;
 	var fromEs = 2*from.f-from.f*from.f;
-	var dx = to.x-from.x;
-	var dy = to.y-from.y;
-	var dz = to.z-from.z;
+	var dx = from.x-to.x;
+	var dy = from.y-to.y;
+	var dz = from.z-to.z;
 	
 	var Rn = from.a/Math.sqrt(1-fromEs*Math.sin(lat));
 	var Rm = from.a*(1-fromEs)/Math.pow(1 - fromEs*Math.sin(lat), 1.5);
