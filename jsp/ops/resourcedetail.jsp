@@ -19,7 +19,10 @@ Not currently on assignment.
 
 <c:choose>
 <c:when test="${resource.position ne null}">
-Lastest position: ${resource.position.formattedUTM} at ${resource.position.time}
+Latest position: <span id="latestposition"></span> at ${resource.position.time}
+<script>
+document.getElementById('latestposition').innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(${resource.position.lat}, ${resource.position.lng}))).toString();
+</script>
 </c:when>
 <c:otherwise>
 ${resource.name}'s location is unknown.

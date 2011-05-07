@@ -185,6 +185,7 @@ public class SearchController extends JSONBaseController {
 		if(request.getParameter("pasword") != null && request.getParameter("password").length() > 0) {
 			search.setPassword(hash(request.getParameter("password")));
 		}
+		search.setDatum(request.getParameter("datum"));
 		dao.save(search);
 		List l = dao.loadAll(OperationalPeriod.class);
 		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);

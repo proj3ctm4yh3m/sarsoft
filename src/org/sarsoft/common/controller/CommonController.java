@@ -11,6 +11,7 @@ import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.util.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.imagery.model.GeoRefImage;
+import org.sarsoft.plans.model.Search;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,6 +52,8 @@ public class CommonController extends JSONBaseController {
 		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
 		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
 		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
+		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		if(search != null) model.addAttribute("datum", search.getDatum());
 		return "/global/constants";
 	}
 
