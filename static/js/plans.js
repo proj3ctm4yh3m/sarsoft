@@ -116,8 +116,9 @@ org.sarsoft.view.SearchAssignmentForm = function() {
 		{ name : "polygon", label: "Area Assignment?", type: "boolean", value: true},
 		{ name : "operationalPeriodId", label: "Operational Period", type: "number"},
 		{ name : "resourceType", type : ["GROUND","DOG","MOUNTED","OHV"] },
-		{ name : "unresponsivePOD", type : ["LOW","MEDIUM","HIGH","VERY_HIGH"] },
-		{ name : "responsivePOD", type : ["LOW","MEDIUM","HIGH","VERY_HIGH"] },
+		{ name : "unresponsivePOD", type : ["LOW","MEDIUM","HIGH"] },
+		{ name : "responsivePOD", type : ["LOW","MEDIUM","HIGH"] },
+		{ name : "cluePOD", type : ["LOW","MEDIUM","HIGH"]},
 		{ name : "timeAllocated", type : "number" },
 		{ name : "details", type : "text" }
 	];
@@ -521,7 +522,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "View Assignment Details", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable"); }, handler : function(data) { window.open('/app/assignment/' + data.subject.id); }},
 		{text : "Delete Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.assignmentDAO.del(data.subject.id); that.removeAssignment(data.subject); }},
 		{text : "Clone Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable")}, handler : function(data) { that.newAssignmentDlg.point = null; that.newAssignmentDlg.original = data.subject;
-			that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: data.subject.resourceType, unresponsivePOD: data.subject.unresponsivePOD, responsivePOD: data.subject.responsivePOD, timeAllocated: data.subject.timeAllocated, details: data.subject.details}); }},
+			that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: data.subject.resourceType, unresponsivePOD: data.subject.unresponsivePOD, responsivePOD: data.subject.responsivePOD, cluePOD: data.subject.cluePOD, timeAllocated: data.subject.timeAllocated, details: data.subject.details}); }},
 		{text : "Save Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.save(data.subject) }},
 		{text : "Discard Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.discard(data.subject) }}
 		]);

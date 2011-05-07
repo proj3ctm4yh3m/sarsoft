@@ -138,6 +138,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			if(form.getTimeAllocated() != null) assignment.setTimeAllocated(form.getTimeAllocated());
 			if(form.getResponsivePOD() != null) assignment.setResponsivePOD(form.getResponsivePOD());
 			if(form.getUnresponsivePOD() != null) assignment.setUnresponsivePOD(form.getUnresponsivePOD());
+			if(form.getCluePOD() != null) assignment.setCluePOD(form.getCluePOD());
 			if(form.getPrimaryFrequency() != null && form.getPrimaryFrequency().length() > 0) assignment.setPrimaryFrequency(form.getPrimaryFrequency());
 			if(form.getSecondaryFrequency() != null && form.getSecondaryFrequency().length() > 0) assignment.setSecondaryFrequency(form.getSecondaryFrequency());
 			if(form.getPreviousEfforts() != null && form.getPreviousEfforts().length() > 0) assignment.setPreviousEfforts(form.getPreviousEfforts());
@@ -163,6 +164,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		assignment.setTimeAllocated(form.getTimeAllocated());
 		assignment.setResponsivePOD(form.getResponsivePOD());
 		assignment.setUnresponsivePOD(form.getUnresponsivePOD());
+		assignment.setCluePOD(form.getCluePOD());
 		assignment.setStatus(SearchAssignment.Status.DRAFT);
 		assignment.setPrimaryFrequency(form.getPrimaryFrequency());
 		assignment.setSecondaryFrequency(form.getSecondaryFrequency());

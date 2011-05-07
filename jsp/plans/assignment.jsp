@@ -112,6 +112,13 @@ back to draft status; if you do this, you must track down any existing copies in
 			    </c:forEach>
 			    </select>
 			  </td></tr>
+			<tr><td style="padding-right: 5px">POD (Clue)</td><td>
+			    <select name="cluePOD">
+			    <c:forEach var="type" items="<%= org.sarsoft.plans.model.Probability.values() %>">
+			      <option value="${type}"<c:if test="${assignment.cluePOD == type}"> selected="selected"</c:if>>${type}</option>
+			    </c:forEach>
+			    </select>
+			  </td></tr>
 			<tr><td style="padding-right: 5px">Primary Freq</td><td><input name="primaryFrequency" type="text" size="10" value="${assignment.primaryFrequency}"></td></tr>
 			<tr><td style="padding-right: 5px">Secondary Freq</td><td><input name="secondaryFrequency" type="text" size="10" value="${assignment.secondaryFrequency}"></td></tr>
 			  </table>

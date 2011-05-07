@@ -14,6 +14,7 @@ public class SearchAssignmentForm {
 	private String preparedBy;
 	private Probability responsivePOD;
 	private Probability unresponsivePOD;
+	private Probability cluePOD;
 	private String primaryFrequency;
 	private String secondaryFrequency;
 
@@ -64,6 +65,12 @@ public class SearchAssignmentForm {
 	}
 	public void setUnresponsivePOD(Probability unresponsivePOD) {
 		this.unresponsivePOD = unresponsivePOD;
+	}
+	public Probability getCluePOD() {
+		return cluePOD;
+	}
+	public void setCluePOD(Probability cluePOD) {
+		this.cluePOD = cluePOD;
 	}
 	public String getTransportation() {
 		return transportation;
