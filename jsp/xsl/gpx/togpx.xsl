@@ -6,7 +6,10 @@
 <gpx version="1.1" creator="SARSOFT">
 	<xsl:choose>
 		<xsl:when test="$template='SearchAssignment'">
-			<xsl:call-template name="SearchAssignmentToGpx"/>
+			<xsl:call-template name="SearchWaypointsToGpx"/>
+			<xsl:for-each select="json:assignment">
+				<xsl:call-template name="SearchAssignmentToGpx"/>
+			</xsl:for-each>
 		</xsl:when>
 		<xsl:when test="$template='Search'">
 			<xsl:call-template name="SearchToGpx"/>
@@ -23,17 +26,31 @@
 	</xsl:choose>
 </gpx>
 </xsl:template>
-<xsl:template name="SearchToGpx">
-	<metadata>
-		<desc><xsl:value-of select="json:desc"/></desc>
-	</metadata>
-	<xsl:for-each select="json:assignments">
-		<xsl:call-template name="SearchAssignmentsToGpx"/>
-	</xsl:for-each>
+<xsl:template name="SearchWaypointsToGpx">
 	<xsl:for-each select="json:lkp">
 		<xsl:call-template name="WaypointToWpt">
 			<xsl:with-param name="name" select="'lkp'"/>
 		</xsl:call-template>
+	</xsl:for-each>
+	<xsl:for-each select="json:pls">
+		<xsl:call-template name="WaypointToWpt">
+			<xsl:with-param name="name" select="'pls'"/>
+		</xsl:call-template>
+	</xsl:for-each>
+	<xsl:for-each select="json:cp">
+		<xsl:call-template name="WaypointToWpt">
+			<xsl:with-param name="name" select="'cp'"/>
+		</xsl:call-template>
+	</xsl:for-each>
+
+</xsl:template>
+<xsl:template name="SearchToGpx">
+	<metadata>
+		<desc><xsl:value-of select="json:desc"/></desc>
+	</metadata>
+	<xsl:call-template name="SearchWaypointsToGpx"/>
+	<xsl:for-each select="json:assignments">
+		<xsl:call-template name="SearchAssignmentsToGpx"/>
 	</xsl:for-each>
 </xsl:template>
 <xsl:template name="SearchAssignmentsToGpx">

@@ -3,7 +3,7 @@
 <xsl:param name="template"/>
 <xsl:template match="/gpx:gpx | gpx0:gpx">
 <o>
-<desc type="string"><xsl:value-of select="gpx:metadata/gpx:desc | gpx0:metadata/gpx0:desc"/></desc>
+<xsl:if test="string-length(gpx:metadata/gpx:desc | gpx0:metadata/gpx0:desc) &gt; 0"><desc type="string"><xsl:value-of select="gpx:metadata/gpx:desc | gpx0:metadata/gpx0:desc"/></desc></xsl:if>
 <assignments class="array">
 	<xsl:for-each select="gpx:trk | gpx0:trk">
 		<e class="object">
@@ -15,7 +15,7 @@
 		<xsl:call-template name="GpxToRoute"/>
 		</e>
 	</xsl:for-each>
-	<xsl:for-each select="gpx:wpt[string(gpx:name | gpx0:name)!='lkp']">
+	<xsl:for-each select="gpx:wpt[string(gpx:name | gpx0:name)!='lkp' and string(gpx:name | gpx0:name)!='pls' and string(gpx:name | gpx0:name)!='cp']">
 		<e class="object">
 		<xsl:call-template name="GpxToWaypoint"/>
 		</e>
@@ -25,6 +25,16 @@
 <lkp class="object">
 	<xsl:call-template name="GpxToWaypoint"/>
 </lkp>
+</xsl:for-each>
+<xsl:for-each select="gpx:wpt[string(gpx:name | gpx0:name)='pls']">
+<pls class="object">
+	<xsl:call-template name="GpxToWaypoint"/>
+</pls>
+</xsl:for-each>
+<xsl:for-each select="gpx:wpt[string(gpx:name | gpx0:name)='cp']">
+<cp class="object">
+	<xsl:call-template name="GpxToWaypoint"/>
+</cp>
 </xsl:for-each>
 </o>
 </xsl:template>

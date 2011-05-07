@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletException;
@@ -229,9 +231,14 @@ public class SearchAssignmentController extends JSONBaseController {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 		switch (format) {
 		case GPX :
-			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".gpx");
-			return gpx(model, assignment, "SearchAssignment");
+			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+			Map<String, Object> m = new HashMap<String, Object>();
+			m.put("assignment", assignment);
+			m.put("lkp", search.getLkp());
+			m.put("pls", search.getPls());
+			m.put("cp", search.getCP());
+			return gpx(model, m, "SearchAssignment");
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".kml");
 			return kml(model, assignment, "SearchAssignment");
