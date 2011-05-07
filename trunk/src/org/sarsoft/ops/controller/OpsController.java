@@ -203,6 +203,12 @@ public class OpsController extends JSONBaseController {
 	@RequestMapping(value="/app/resource", method = RequestMethod.POST)
 	public String importResources(Model model, JSONForm params, HttpServletRequest request) {
 		String csv = params.getFile();
+		int NAME = 0;
+		int TYPE = 1;
+		int AGENCY = 2;
+		int CALLSIGN = 3;
+		int SPOT_ID = 4;
+		int SPOT_PASSWORD = 5;
 		if(csv != null) {
 			long maxId = 0L;
 			List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
@@ -212,27 +218,27 @@ public class OpsController extends JSONBaseController {
 			String[] rows = csv.split("\n");
 			for(String row : rows) {
 				String[] cols = row.split(",");
-				String name = cols[0];
-				String callsign = cols[1];
+				String name = cols[NAME];
+				String callsign = cols[CALLSIGN];
 				if("callsign".equalsIgnoreCase(callsign) || "name".equalsIgnoreCase(name)) continue;
 				Resource resource = (Resource) dao.getByAttr(Resource.class, "callsign", callsign);
 				if(resource != null) {
-					if(cols.length > 4)
-						if(resource.getSpotId() == null) resource.setSpotId(cols[4]);
-					if(cols.length > 5)
-						if(resource.getSpotPassword() == null) resource.setSpotPassword(cols[5]);
+					if(cols.length > SPOT_ID)
+						if(resource.getSpotId() == null) resource.setSpotId(cols[SPOT_ID]);
+					if(cols.length > SPOT_PASSWORD)
+						if(resource.getSpotPassword() == null) resource.setSpotPassword(cols[SPOT_PASSWORD]);
 				} else {
 					resource = new Resource();
 					resource.setId(maxId);
 					maxId++;
-					resource.setType(Type.valueOf(cols[2]));
-					resource.setAgency(cols[3]);
+					resource.setType(Type.valueOf(cols[TYPE]));
+					resource.setAgency(cols[AGENCY]);
 					resource.setName(name);
 					resource.setCallsign(callsign);
-					if(cols.length > 4)
-						resource.setSpotId(cols[4]);
-					if(cols.length > 5)
-						resource.setSpotPassword(cols[5]);
+					if(cols.length > SPOT_ID)
+						resource.setSpotId(cols[SPOT_ID]);
+					if(cols.length > SPOT_PASSWORD)
+						resource.setSpotPassword(cols[SPOT_PASSWORD]);
 				}
 				dao.save(resource);
 			}
