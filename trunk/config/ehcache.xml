@@ -9,6 +9,13 @@
 		diskPersistent="true"
 		memoryStoreEvictionPolicy="LRU"/>
 		
-	<cache name="tileCache"/>			
+	<cache name="tileCache"
+		maxElementsInMemory="5000"
+		eternal="false"
+		timeToIdleSeconds="172800"
+		timeToLiveSeconds="172800"
+		overflowToDisk="true"
+		diskPersistent="true"
+		memoryStoreEvictionPolicy="LRU"/>
 		
 </ehcache>
