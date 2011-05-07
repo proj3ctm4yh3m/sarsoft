@@ -35,6 +35,8 @@ public class SearchAssignmentGPXHelper {
 		Map<String, Class> m = new HashMap<String, Class>();
 		m.put("waypoints", Waypoint.class);
 		m.put("lkp", Waypoint.class);
+		m.put("pls", Waypoint.class);
+		m.put("cp", Waypoint.class);
 		m.put("ways", Map.class);
 		m.put("assignments", Map.class);
 		searchClassHints = Collections.unmodifiableMap(m);
@@ -45,6 +47,8 @@ public class SearchAssignmentGPXHelper {
 		Map<String, Object> modified = new HashMap<String, Object>();		
 		modified.put("assignments", gpxifyAssignmentList((List<SearchAssignment>) dao.loadAll(SearchAssignment.class)));
 		modified.put("lkp", search.getLkp());
+		modified.put("pls", search.getPls());
+		modified.put("cp", search.getCP());
 		
 		Map<String, String> attrs = new HashMap<String, String>();
 		attrs.put("mapConfig", search.getMapConfig());
@@ -69,6 +73,9 @@ public class SearchAssignmentGPXHelper {
 		if(attrs.containsKey("mapConfig")) search.setMapConfig(attrs.get("mapConfig"));
 		
 		if(m.containsKey("lkp")) search.setLkp((Waypoint) m.get("lkp"));
+		if(m.containsKey("pls")) search.setPls((Waypoint) m.get("pls"));
+		if(m.containsKey("cp")) search.setCP((Waypoint) m.get("cp"));
+		
 		dao.save(search);
 
 		Map<String, String> periodAttrs = decodeAttrs(attrs.get("periods"));
@@ -228,6 +235,7 @@ public class SearchAssignmentGPXHelper {
 	
 	private static Map<String, String> decodeAttrs(String encoded) {
 		Map<String, String> attrs = new HashMap<String, String>();
+		if(encoded == null) return attrs;
 		for(String pair : encoded.split("&")) {
 			String[] split = pair.split("=");
 			String key = split[0];
