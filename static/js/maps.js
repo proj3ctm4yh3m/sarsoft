@@ -462,14 +462,14 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 	var that = this;
 	var id = waypoint.id;
 	var gll = new GLatLng(waypoint.lat, waypoint.lng);
-	var icon = createFlatCircleIcon(12, config.color);
+	var icon = (config.icon) ? config.icon : org.sarsoft.MapUtil.createFlatCircleIcon(12, config.color);
 	if(typeof tooltip == "undefined") tooltip = waypoint.name;
 	tooltip = tooltip +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(waypoint.lat, waypoint.lng))).toString() + ")";
 	var marker = new GMarker(gll, { title : tooltip, icon : icon});
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
 	if(label != null) {
-		labelOverlay = new ELabel(gll, label, null, new GSize(6, -6));
+		labelOverlay = new ELabel(gll, label, null, new GSize(4, -4));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
 	}
@@ -852,7 +852,23 @@ GeoUtil.UTMXYToLatLon = function(x, y, zone, southhemi, latlon) {
 }
 
 
-createFlatCircleIcon = function (size, color) {
+org.sarsoft.MapUtil = new Object();
+
+org.sarsoft.MapUtil.createIcon = function(size, url) {
+  var icon = new GIcon(G_DEFAULT_ICON);
+  icon.image = url;
+  icon.iconSize = new GSize(size, size);
+  icon.shadowSize = new GSize(0, 0);
+  icon.iconAnchor = new GPoint(size / 2, size / 2);
+  icon.infoWindowAnchor = new GPoint(size / 2, size / 2);
+  icon.printImage = url;
+  icon.mozPrintImage = url;
+  icon.transparent = url;
+  return icon;
+	
+}
+
+org.sarsoft.MapUtil.createFlatCircleIcon = function (size, color) {
   if(color.indexOf('#') == 0) color = color.substring(1);
   var url = "/resource/imagery/icons/circle/" + color + ".png";
   var icon = new GIcon(G_DEFAULT_ICON);

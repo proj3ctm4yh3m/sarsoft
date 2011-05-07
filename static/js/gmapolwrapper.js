@@ -493,14 +493,14 @@ GPolyline.prototype = new GPoly();
 
 function GMarker(latlng, opts) {
 	var size = new OpenLayers.Size(12,12);
-	var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+	var offset = new OpenLayers.Pixel(-(size.w/2), -(size.h/2));
 	var icon = new OpenLayers.Icon('/resources/images/circle/000000.png', size, offset);
 	if(opts != null) {
 		this._title = opts.title;
 		// handle cusotm google icons
 		if(opts.icon != null) {
 			size = new OpenLayers.Size(opts.icon.iconSize.width,opts.icon.iconSize.height);
-			offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+			offset = new OpenLayers.Pixel(-1*(size.w/2), -1*(size.h/2));
 			icon = new OpenLayers.Icon(opts.icon.image, size, offset);
 		}
 	}
