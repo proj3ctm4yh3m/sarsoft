@@ -116,12 +116,12 @@ public class OperationalPeriod extends SarModelObject {
 	@Transient
 	@JSONSerializable
 	public long getTimeAllocated() {
-		long time = 0;
-		if(assignments == null) return time;
+		if(assignments == null) return 0;
+		double time = 0;
 		for(SearchAssignment assignment : assignments) {
 			time += assignment.getTimeAllocated();
 		}
-		return time;
+		return Math.round(time);
 	}
 
 	@Transient

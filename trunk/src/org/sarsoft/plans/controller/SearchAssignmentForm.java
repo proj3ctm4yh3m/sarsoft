@@ -8,7 +8,7 @@ public class SearchAssignmentForm {
 	private String bulkIds;
 	private SearchAssignment.ResourceType resourceType;
 	private String details;
-	private Long timeAllocated;
+	private Double timeAllocated;
 	private String previousEfforts;
 	private String transportation;
 	private String preparedBy;
@@ -47,10 +47,10 @@ public class SearchAssignmentForm {
 	public void setResourceType(SearchAssignment.ResourceType resourceType) {
 		this.resourceType = resourceType;
 	}
-	public Long getTimeAllocated() {
+	public Double getTimeAllocated() {
 		return timeAllocated;
 	}
-	public void setTimeAllocated(Long timeAllocated) {
+	public void setTimeAllocated(Double timeAllocated) {
 		this.timeAllocated = timeAllocated;
 	}
 	public Probability getResponsivePOD() {

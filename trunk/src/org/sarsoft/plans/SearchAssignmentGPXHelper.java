@@ -111,7 +111,7 @@ public class SearchAssignmentGPXHelper {
 		attrs.put("details", assignment.getDetails());
 		if(assignment.getResourceType() != null) attrs.put("resourceType", assignment.getResourceType().toString());
 		if(assignment.getStatus() != null) attrs.put("status", assignment.getStatus().toString());
-		attrs.put("timeAllocated", Long.toString(assignment.getTimeAllocated()));
+		if(assignment.getTimeAllocated() != null) attrs.put("timeAllocated", Double.toString(assignment.getTimeAllocated()));
 		attrs.put("previousEfforts", assignment.getPreviousEfforts());
 		attrs.put("transportation", assignment.getTransportation());
 		if(assignment.getResponsivePOD() != null) attrs.put("responsivePOD", assignment.getResponsivePOD().toString());
@@ -196,7 +196,7 @@ public class SearchAssignmentGPXHelper {
 					if(attrs.containsKey("details")) assignment.setDetails(attrs.get("details"));
 					if(attrs.containsKey("resourceType")) assignment.setResourceType(ResourceType.valueOf(attrs.get("resourceType")));
 					if(attrs.containsKey("status")) assignment.setStatus(Status.valueOf(attrs.get("status")));
-					if(attrs.containsKey("timeAllocated")) assignment.setTimeAllocated(Long.parseLong(attrs.get("timeAllocated")));
+					if(attrs.containsKey("timeAllocated")) assignment.setTimeAllocated(Double.parseDouble(attrs.get("timeAllocated")));
 					if(attrs.containsKey("previousEfforts")) assignment.setPreviousEfforts(attrs.get("previousEfforts"));
 					if(attrs.containsKey("transportation")) assignment.setTransportation(attrs.get("transportation"));
 					if(attrs.containsKey("responsivePOD")) assignment.setResponsivePOD(Probability.valueOf(attrs.get("responsivePOD")));
