@@ -291,12 +291,10 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 
 org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, right) {
 	var bounds = this.map.getBounds();
-	var sw = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getSouthWest()), zone);
-	var ne = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getNorthEast()), zone);
-	sw.e = sw.e-spacing;
-	sw.n = sw.n-spacing;
-	ne.e = ne.e+spacing;
-	ne.n = ne.n+spacing;
+	var screenSW = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getSouthWest()), zone);
+	var screenNE = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getNorthEast()), zone);
+	var sw = new UTM(screenSW.e-spacing, screenSW.n-spacing, screenSW.zone);
+	var ne = new UTM(screenNE.e+spacing, screenNE.n+spacing, screenNE.zone);
 
 	var east = GeoUtil.getEastBorder(zone);
 	var west = GeoUtil.getWestBorder(zone);
@@ -318,10 +316,10 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 			this.utmgridlines.push(overlay);
 			this.map.addOverlay(overlay);
 
-			var offset = this.map.fromLatLngToContainerPixel(vertices[0]).x;
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: screenSW.n, zone: zone}))).x;
 			if(0 < offset && offset < pxmax && easting % 1000 == 0) {
-				var point = new GPoint(offset, pymax-10);
-				var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting));
+				var point = new GPoint(offset, pymax-15);
+				var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-1));
 				this.map.addOverlay(label);
 				this.text.push(label);
 			}
@@ -346,13 +344,13 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 		this.utmgridlines.push(overlay);
 		this.map.addOverlay(overlay);
 
-		var offset = this.map.fromLatLngToContainerPixel(vertices[0]).y;
+		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: screenSW.e, n: northing, zone: zone}))).y;
 		if(0 < offset && offset < pymax && northing % 1000 == 0) {
 			var point = new GPoint(0, offset);
 			if(right) {
-				point = new GPoint(this.map.getSize().width-50, this.map.fromLatLngToContainerPixel(vertices[1]).y);
+				point = new GPoint(this.map.getSize().width-50, this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: screenNE.e, n: northing, zone: zone}))).y);
 			}
-			var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(northing));
+			var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(northing), null, null, new GSize(0,-0.5));
 			this.map.addOverlay(label);
 			this.text.push(label);
 		}
@@ -881,21 +879,16 @@ createFlatCircleIcon = function (size, color) {
 }
 
 
-function ELabel(point, html, classname, pixelOffset, percentOpacity, overlap) {
+function ELabel(point, html, style, pixelOffset, centerOffset) {
   this._olcapable = true;
   // Mandatory parameters
   this.point = point;
   this.html = html;
 
   // Optional parameters
-  this.classname = classname||"";
+  this.style = style||"";
   this.pixelOffset = pixelOffset||new GSize(0,0);
-  if (percentOpacity) {
-    if(percentOpacity<0){percentOpacity=0;}
-    if(percentOpacity>100){percentOpacity=100;}
-  }
-  this.percentOpacity = percentOpacity;
-  this.overlap=overlap||false;
+  this.centerOffset = centerOffset||new GSize(0,-1);
   this.hidden = false;
 }
 
@@ -904,20 +897,10 @@ ELabel.prototype = new GOverlay();
 ELabel.prototype.initialize = function(map) {
   var div = document.createElement("div");
   div.style.position = "absolute";
-  div.innerHTML = '<div class="' + this.classname + '">' + this.html + '</div>' ;
+  div.innerHTML = '<div style="' + this.style + '">' + this.html + '</div>' ;
   map.getPane(G_MAP_FLOAT_SHADOW_PANE).appendChild(div);
   this.map_ = map;
   this.div_ = div;
-  if (this.percentOpacity) {
-    if(typeof(div.style.filter)=='string'){div.style.filter='alpha(opacity:'+this.percentOpacity+')';}
-    if(typeof(div.style.KHTMLOpacity)=='string'){div.style.KHTMLOpacity=this.percentOpacity/100;}
-    if(typeof(div.style.MozOpacity)=='string'){div.style.MozOpacity=this.percentOpacity/100;}
-    if(typeof(div.style.opacity)=='string'){div.style.opacity=this.percentOpacity/100;}
-  }
-  if (this.overlap) {
-    var z = GOverlay.getZIndex(this.point.lat());
-    this.div_.style.zIndex = z;
-  }
   if (this.hidden) {
     this.hide();
   }
@@ -934,8 +917,9 @@ ELabel.prototype.copy = function() {
 ELabel.prototype.redraw = function(force) {
   var p = this.map_.fromLatLngToDivPixel(this.point);
   var h = parseInt(this.div_.clientHeight);
-  this.div_.style.left = (p.x + this.pixelOffset.width) + "px";
-  this.div_.style.top = (p.y +this.pixelOffset.height - h) + "px";
+  var w = parseInt(this.div_.clientWidth);
+  this.div_.style.left = Math.round(p.x + this.pixelOffset.width + w * this.centerOffset.width) + "px";
+  this.div_.style.top = Math.round(p.y +this.pixelOffset.height + h * this.centerOffset.height) + "px";
 }
 
 ELabel.prototype.show = function() {
@@ -974,20 +958,6 @@ ELabel.prototype.setPoint = function(point) {
     this.div_.style.zIndex = z;
   }
   this.redraw(true);
-}
-
-ELabel.prototype.setOpacity = function(percentOpacity) {
-  if (percentOpacity) {
-    if(percentOpacity<0){percentOpacity=0;}
-    if(percentOpacity>100){percentOpacity=100;}
-  }
-  this.percentOpacity = percentOpacity;
-  if (this.percentOpacity) {
-    if(typeof(this.div_.style.filter)=='string'){this.div_.style.filter='alpha(opacity:'+this.percentOpacity+')';}
-    if(typeof(this.div_.style.KHTMLOpacity)=='string'){this.div_.style.KHTMLOpacity=this.percentOpacity/100;}
-    if(typeof(this.div_.style.MozOpacity)=='string'){this.div_.style.MozOpacity=this.percentOpacity/100;}
-    if(typeof(this.div_.style.opacity)=='string'){this.div_.style.opacity=this.percentOpacity/100;}
-  }
 }
 
 ELabel.prototype.getPoint = function() {
