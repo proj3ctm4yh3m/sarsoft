@@ -30,7 +30,7 @@ org.sarsoft.EnhancedGMap.geoRefImages = [
 ];
 
 org.sarsoft.map.datums = new Object();
-org.sarsoft.map.datums["NAD27 CONUS"] = {a: 6378206.4, b: 6356583.8, f: 1/294.9786982, x : 8, y : -160, z : -176};
+org.sarsoft.map.datums["NAD27 CONUS"] = {a: 6378206.4, b: 6356583.8, f: 1/294.9786982, x : -8, y : 160, z : 176};
 org.sarsoft.map.datums["WGS84"] = {a: 6378137.0, b: 6356752.314, f: 1/298.257223563, x : 0, y : 0, z : 0};
 
 <c:choose>
