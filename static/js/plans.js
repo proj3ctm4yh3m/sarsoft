@@ -132,7 +132,7 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	var dao = new org.sarsoft.SearchAssignmentDAO();
 	var dlg = document.createElement("div");
 	dlg.style.position="absolute";
-	dlg.style.zIndex="1000";
+	dlg.style.zIndex="2500";
 	dlg.style.top="200px";
 	dlg.style.left="200px";
 	dlg.style.width="420px";
@@ -142,9 +142,9 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	dlg.appendChild(hd);
 	var bd = document.createElement("div");
 	bd.className = "bd";
-	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/rest/assignment/" + id + "/way'><input type='file' name='file'/><input type='hidden' name='format' value='gpx'/></form>";
+	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/app/assignment/" + id + "/way'><input type='file' name='file'/><input type='hidden' name='format' value='gpx'/></form>";
 	dlg.appendChild(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "420px"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "420px"});
 	var buttons = [ { text : "Import", handler: function() {
 		that.dialog.hide(); document.forms['gpxupload'].submit();
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
@@ -363,7 +363,7 @@ org.sarsoft.view.OperationalPeriodMapSizeDlg = function(map) {
 	bd.className = "bd";
 	dlg.appendChild(bd);
 	bd.innerHTML="Width: <input type='text' size='8' name='opmsdwidth' id='opmsdwidth'/>&nbsp;&nbsp;&nbsp;Height: <input type='text' size='8' name='opmsdheight' id='opmsdheight'/>";
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "350px"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
 	var buttons = [ { text : "Update", handler: function() {
 		that.dialog.hide();
 		var width = document.getElementById('opmsdwidth').value;
@@ -399,7 +399,7 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
 	this.mapForm = new org.sarsoft.view.EntityForm([{name : "rangerings", label: "Range Rings", type: "string"},{name : "labeltw", label: "Label Tracks & Waypoints", type: "boolean"}]);
 	var dlg = document.createElement("div");
 	dlg.style.position="absolute";
-	dlg.style.zIndex="1000";
+	dlg.style.zIndex="2500";
 	dlg.style.top="200px";
 	dlg.style.left="200px";
 	dlg.style.width="350px";
@@ -422,7 +422,7 @@ org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
 	this.pastEntityForm.create(past);
 	this.presentEntityForm.create(present);
 	this.mapForm.create(map);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "350px"});
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
 	var buttons = [ { text : "Update", handler: function() {
 		that.dialog.hide();
 		var obj = new Object();
