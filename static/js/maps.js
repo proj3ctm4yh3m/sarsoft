@@ -230,7 +230,7 @@ org.sarsoft.FixedGMap = function(map) {
 		datum.style.bottom="0px";
 		datum.style.left="0px";
 		datum.style.backgroundColor="white";
-		datum.innerHTML = "WGS84";
+		datum.innerHTML = org.sarsoft.map.datum;
 		map.getContainer().appendChild(datum);
 	}
 }
@@ -282,8 +282,8 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 	if(span > 30000) spacing = 10000;
 	if(span > 300000) spacing = 100000;
 	
-	var sw = GeoUtil.GLatLngToUTM(bounds.getSouthWest());
-	var ne = GeoUtil.GLatLngToUTM(bounds.getNorthEast());
+	var sw = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getSouthWest()));
+	var ne = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getNorthEast()));
 	if(ne.zone - sw.zone > 1) return;
 	this._drawUTMGridForZone(sw.zone, spacing, false);
 	if(sw.zone != ne.zone)  this._drawUTMGridForZone(ne.zone, spacing, true);
@@ -291,8 +291,8 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 
 org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, right) {
 	var bounds = this.map.getBounds();
-	var sw = GeoUtil.GLatLngToUTM(bounds.getSouthWest(), zone);
-	var ne = GeoUtil.GLatLngToUTM(bounds.getNorthEast(), zone);
+	var sw = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getSouthWest()), zone);
+	var ne = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getNorthEast()), zone);
 	sw.e = sw.e-spacing;
 	sw.n = sw.n-spacing;
 	ne.e = ne.e+spacing;
@@ -310,8 +310,8 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	while(easting < ne.e) {
 		var vertices = new Array();
-		vertices.push(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
-		vertices.push(GeoUtil.UTMToGLatLng({e: easting, n: ne.n, zone: zone}));
+		vertices.push(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone})));
+		vertices.push(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: ne.n, zone: zone})));
 
 		if(west < vertices[0].lng() && vertices[0].lng() < east) {
 			var overlay = new GPolyline(vertices, "#0000FF", 1, (easting % 1000 == 0) ? 1 : 0.4);
@@ -331,14 +331,14 @@ org.sarsoft.FixedGMap.prototype._drawUTMGridForZone = function(zone, spacing, ri
 	var northing = Math.round(sw.n / spacing) * spacing;
 	while(northing < ne.n) {
 		var vertices = new Array();
-		var start = GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone});
+		var start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone}));
 		if(start.lng() < west) {
-			start = GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(start.lat(), west), zone).e, n: northing, zone: zone});
+			start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(start.lat(), west), zone).e, n: northing, zone: zone}));
 		}
 		vertices.push(start);
-		var end = GeoUtil.UTMToGLatLng({e: ne.e, n: northing, zone: zone});
+		var end = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: ne.e, n: northing, zone: zone}));
 		if(end.lng() > east) {
-			end = GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(end.lat(), east), zone).e, n: northing, zone: zone});
+			end = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(end.lat(), east), zone).e, n: northing, zone: zone}));
 		}
 		vertices.push(end);
 
@@ -437,7 +437,7 @@ org.sarsoft.FixedGMap.prototype.addWay = function(way, config, label) {
 
 org.sarsoft.FixedGMap.prototype.addRangeRing = function(center, radius, vertices) {
 	var glls = new Array();
-	var centerUTM = GeoUtil.GLatLngToUTM(center);
+	var centerUTM = GeoUtil.GLatLngToUTM(new GLatLng(center.lat, center.lng));
 	for(var i = 0; i <= vertices; i++) {
 		var vertexUTM = new UTM(centerUTM.e + radius*Math.sin(i*2*Math.PI/vertices), centerUTM.n + radius*Math.cos(i*2*Math.PI/vertices), centerUTM.zone);
 		glls.push(GeoUtil.UTMToGLatLng(vertexUTM));
@@ -466,7 +466,7 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 	var gll = new GLatLng(waypoint.lat, waypoint.lng);
 	var icon = createFlatCircleIcon(12, config.color);
 	if(typeof tooltip == "undefined") tooltip = waypoint.name;
-	tooltip = tooltip +  "  (" + GeoUtil.GLatLngToUTM(gll).toString() + ")";
+	tooltip = tooltip +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(waypoint.lat, waypoint.lng))).toString() + ")";
 	var marker = new GMarker(gll, { title : tooltip, icon : icon});
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
@@ -528,7 +528,7 @@ org.sarsoft.EditableGMap = function(map) {
 	});
 
 	GEvent.addListener(map, "mousemove", function(latlng) {
-		var utm = GeoUtil.GLatLngToUTM(latlng);
+		var utm = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(latlng));
 		var e = "" + Math.round(utm.e);
 		var n = "" + Math.round(utm.n);
 		var e1 = e.substring(0, e.length-3);
@@ -595,7 +595,8 @@ org.sarsoft.EditableGMap.prototype._buildGLatLngListFromOverlay = function(overl
 org.sarsoft.EditableGMap.prototype._GLatLngListToWpt = function(glls) {
 	var waypoints = new Array();
 	for(var i = 0; i < glls.length; i++) {
-		waypoints.push({lat: glls[i].lat(), lng: glls[i].lng()});
+		var gll = glls[i];
+		waypoints.push({lat: gll.lat(), lng: gll.lng()});
 	}
 	return waypoints;
 }
@@ -643,14 +644,14 @@ GeoUtil = new Object();
 
 GeoUtil.UTMToGLatLng = function(utm) {
 	var ll = new Object();
-	UTMXYToLatLon(utm.e, utm.n, utm.zone, false, ll);
-	return new GLatLng(RadToDeg(ll[0]),RadToDeg(ll[1]));
+	GeoUtil.UTMXYToLatLon(utm.e, utm.n, utm.zone, false, ll);
+	return new GLatLng(GeoUtil.RadToDeg(ll[0]),GeoUtil.RadToDeg(ll[1]));
 }
 
 GeoUtil.GLatLngToUTM = function(gll, zone) {
 	var xy = new Object();
 	if(typeof zone == "undefined") zone = Math.floor ((gll.lng() + 180.0) / 6) + 1;
-	var zone = LatLonToUTMXY (DegToRad(gll.lat()), DegToRad(gll.lng()), zone, xy);
+	var zone = GeoUtil.LatLonToUTMXY (GeoUtil.DegToRad(gll.lat()), GeoUtil.DegToRad(gll.lng()), zone, xy);
 	return new UTM(xy[0], xy[1], zone);
 }
 
@@ -662,462 +663,199 @@ GeoUtil.getEastBorder = function(zone) {
 	return GeoUtil.getWestBorder(zone + 1);
 }
 
-// Copyright 1997-1998 by Charles L. Taylor -->
-    var pi = 3.14159265358979323;
+org.sarsoft.map.datums = new Object();
+org.sarsoft.map.datums["NAD27 CONUS"] = {a: 6378206.4, b: 6356583.8, f: 1/294.9786982, x : 8, y : -160, z : -176};
+org.sarsoft.map.datums["WGS84"] = {a: 6378137.0, b: 6356752.314, f: 1/298.257223563, x : 0, y : 0, z : 0};
 
-    /* Ellipsoid model constants (actual values here are for WGS84) */
-    var sm_a = 6378137.0;
-    var sm_b = 6356752.314;
-    var sm_EccSquared = 6.69437999013e-03;
+GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
 
-    var UTMScaleFactor = 0.9996;
+GeoUtil.toWGS84 = function(gll) {
+	var wgs84 = org.sarsoft.map.datums["WGS84"];
+	if(GeoUtil.datum == wgs84) return gll;
+	return GeoUtil.convertDatum(gll, GeoUtil.datum, wgs84);
+}
 
+GeoUtil.fromWGS84 = function(gll) {
+	var wgs84 = org.sarsoft.map.datums["WGS84"];
+	if(GeoUtil.datum == wgs84) return gll;
+	return GeoUtil.convertDatum(gll, wgs84, GeoUtil.datum);
+}
 
-    /*
-    * DegToRad
-    *
-    * Converts degrees to radians.
-    *
-    */
-    function DegToRad (deg)
-    {
-        return (deg / 180.0 * pi)
-    }
+GeoUtil.convertDatum = function(gll, from, to) {
+	var lat = GeoUtil.DegToRad(gll.lat());
+	var lng = GeoUtil.DegToRad(gll.lng());
+	var da = to.a - from.a;
+	var bda = 1 - from.f;
+	var df = to.f - from.f;
+	var fromEs = 2*from.f-from.f*from.f;
+	var dx = to.x-from.x;
+	var dy = to.y-from.y;
+	var dz = to.z-from.z;
+	
+	var Rn = from.a/Math.sqrt(1-fromEs*Math.sin(lat));
+	var Rm = from.a*(1-fromEs)/Math.pow(1 - fromEs*Math.sin(lat), 1.5);
+	
+	var dLat = ((-1*dx*Math.sin(lat)*Math.cos(lng) - dy*Math.sin(lat)*Math.sin(lng) + dz*Math.cos(lat)) + 
+			(da*Rn*fromEs*Math.sin(lat)*Math.cos(lat)/from.a) + df*(Rm/bda+Rn*bda)*Math.sin(lat)*Math.cos(lat))/Rm;
+	var dLng = (-1*dx*Math.sin(lng) + dy*Math.cos(lng))/(Rn * Math.cos(lat));
+	
+	return new GLatLng(GeoUtil.RadToDeg(lat+dLat), GeoUtil.RadToDeg(lng+dLng));
+}
 
+GeoUtil.UTMScaleFactor = 0.9996;
 
+GeoUtil.DegToRad = function(deg) { return (deg / 180.0 * Math.PI) }
+GeoUtil.RadToDeg = function(rad) { return (rad / Math.PI * 180.0) }
 
+GeoUtil.ArcLengthOfMeridian = function(phi) {
+	var datum = GeoUtil.datum;
 
-    /*
-    * RadToDeg
-    *
-    * Converts radians to degrees.
-    *
-    */
-    function RadToDeg (rad)
-    {
-        return (rad / pi * 180.0)
-    }
+    var n = (datum.a - datum.b) / (datum.a + datum.b);
 
+    var alpha = ((datum.a + datum.b) / 2.0) * (1.0 + (Math.pow (n, 2.0) / 4.0) + (Math.pow (n, 4.0) / 64.0));
+    var beta = (-3.0 * n / 2.0) + (9.0 * Math.pow (n, 3.0) / 16.0) + (-3.0 * Math.pow (n, 5.0) / 32.0);
+    var gamma = (15.0 * Math.pow (n, 2.0) / 16.0) + (-15.0 * Math.pow (n, 4.0) / 32.0);
+    var delta = (-35.0 * Math.pow (n, 3.0) / 48.0) + (105.0 * Math.pow (n, 5.0) / 256.0);
+    var epsilon = (315.0 * Math.pow (n, 4.0) / 512.0);
 
-
-
-    /*
-    * ArcLengthOfMeridian
-    *
-    * Computes the ellipsoidal distance from the equator to a point at a
-    * given latitude.
-    *
-    * Reference: Hoffmann-Wellenhof, B., Lichtenegger, H., and Collins, J.,
-    * GPS: Theory and Practice, 3rd ed.  New York: Springer-Verlag Wien, 1994.
-    *
-    * Inputs:
-    *     phi - Latitude of the point, in radians.
-    *
-    * Globals:
-    *     sm_a - Ellipsoid model major axis.
-    *     sm_b - Ellipsoid model minor axis.
-    *
-    * Returns:
-    *     The ellipsoidal distance of the point from the equator, in meters.
-    *
-    */
-    function ArcLengthOfMeridian (phi)
-    {
-        var alpha, beta, gamma, delta, epsilon, n;
-        var result;
-
-        /* Precalculate n */
-        n = (sm_a - sm_b) / (sm_a + sm_b);
-
-        /* Precalculate alpha */
-        alpha = ((sm_a + sm_b) / 2.0)
-           * (1.0 + (Math.pow (n, 2.0) / 4.0) + (Math.pow (n, 4.0) / 64.0));
-
-        /* Precalculate beta */
-        beta = (-3.0 * n / 2.0) + (9.0 * Math.pow (n, 3.0) / 16.0)
-           + (-3.0 * Math.pow (n, 5.0) / 32.0);
-
-        /* Precalculate gamma */
-        gamma = (15.0 * Math.pow (n, 2.0) / 16.0)
-            + (-15.0 * Math.pow (n, 4.0) / 32.0);
-
-        /* Precalculate delta */
-        delta = (-35.0 * Math.pow (n, 3.0) / 48.0)
-            + (105.0 * Math.pow (n, 5.0) / 256.0);
-
-        /* Precalculate epsilon */
-        epsilon = (315.0 * Math.pow (n, 4.0) / 512.0);
-
-    /* Now calculate the sum of the series and return */
-    result = alpha
-        * (phi + (beta * Math.sin (2.0 * phi))
+    return alpha * (phi + (beta * Math.sin (2.0 * phi))
             + (gamma * Math.sin (4.0 * phi))
             + (delta * Math.sin (6.0 * phi))
             + (epsilon * Math.sin (8.0 * phi)));
 
-    return result;
-    }
+}
 
+GeoUtil.UTMCentralMeridian = function(zone) { return GeoUtil.DegToRad (-183.0 + (zone * 6.0)); }
 
+GeoUtil.FootpointLatitude = function(y) {
+	var datum = GeoUtil.datum;
+	
+    var n = (datum.a - datum.b) / (datum.a + datum.b);
 
-    /*
-    * UTMCentralMeridian
-    *
-    * Determines the central meridian for the given UTM zone.
-    *
-    * Inputs:
-    *     zone - An integer value designating the UTM zone, range [1,60].
-    *
-    * Returns:
-    *   The central meridian for the given UTM zone, in radians, or zero
-    *   if the UTM zone parameter is outside the range [1,60].
-    *   Range of the central meridian is the radian equivalent of [-177,+177].
-    *
-    */
-    function UTMCentralMeridian (zone)
-    {
-        var cmeridian;
+    var alpha_ = ((datum.a + datum.b) / 2.0) * (1 + (Math.pow (n, 2.0) / 4) + (Math.pow (n, 4.0) / 64));
+    var y_ = y / alpha_;
+    var beta_ = (3.0 * n / 2.0) + (-27.0 * Math.pow (n, 3.0) / 32.0) + (269.0 * Math.pow (n, 5.0) / 512.0);
+    var gamma_ = (21.0 * Math.pow (n, 2.0) / 16.0) + (-55.0 * Math.pow (n, 4.0) / 32.0);
+    var delta_ = (151.0 * Math.pow (n, 3.0) / 96.0) + (-417.0 * Math.pow (n, 5.0) / 128.0);
+    var epsilon_ = (1097.0 * Math.pow (n, 4.0) / 512.0);
 
-        cmeridian = DegToRad (-183.0 + (zone * 6.0));
-        return cmeridian;
-    }
-
-
-
-    /*
-    * FootpointLatitude
-    *
-    * Computes the footpoint latitude for use in converting transverse
-    * Mercator coordinates to ellipsoidal coordinates.
-    *
-    * Reference: Hoffmann-Wellenhof, B., Lichtenegger, H., and Collins, J.,
-    *   GPS: Theory and Practice, 3rd ed.  New York: Springer-Verlag Wien, 1994.
-    *
-    * Inputs:
-    *   y - The UTM northing coordinate, in meters.
-    *
-    * Returns:
-    *   The footpoint latitude, in radians.
-    *
-    */
-    function FootpointLatitude (y)
-    {
-        var y_, alpha_, beta_, gamma_, delta_, epsilon_, n;
-        var result;
-
-        /* Precalculate n (Eq. 10.18) */
-        n = (sm_a - sm_b) / (sm_a + sm_b);
-
-        /* Precalculate alpha_ (Eq. 10.22) */
-        /* (Same as alpha in Eq. 10.17) */
-        alpha_ = ((sm_a + sm_b) / 2.0)
-            * (1 + (Math.pow (n, 2.0) / 4) + (Math.pow (n, 4.0) / 64));
-
-        /* Precalculate y_ (Eq. 10.23) */
-        y_ = y / alpha_;
-
-        /* Precalculate beta_ (Eq. 10.22) */
-        beta_ = (3.0 * n / 2.0) + (-27.0 * Math.pow (n, 3.0) / 32.0)
-            + (269.0 * Math.pow (n, 5.0) / 512.0);
-
-        /* Precalculate gamma_ (Eq. 10.22) */
-        gamma_ = (21.0 * Math.pow (n, 2.0) / 16.0)
-            + (-55.0 * Math.pow (n, 4.0) / 32.0);
-
-        /* Precalculate delta_ (Eq. 10.22) */
-        delta_ = (151.0 * Math.pow (n, 3.0) / 96.0)
-            + (-417.0 * Math.pow (n, 5.0) / 128.0);
-
-        /* Precalculate epsilon_ (Eq. 10.22) */
-        epsilon_ = (1097.0 * Math.pow (n, 4.0) / 512.0);
-
-        /* Now calculate the sum of the series (Eq. 10.21) */
-        result = y_ + (beta_ * Math.sin (2.0 * y_))
+    return y_ + (beta_ * Math.sin (2.0 * y_))
             + (gamma_ * Math.sin (4.0 * y_))
             + (delta_ * Math.sin (6.0 * y_))
             + (epsilon_ * Math.sin (8.0 * y_));
+}
 
-        return result;
-    }
-
-
-
-    /*
-    * MapLatLonToXY
-    *
-    * Converts a latitude/longitude pair to x and y coordinates in the
-    * Transverse Mercator projection.  Note that Transverse Mercator is not
-    * the same as UTM; a scale factor is required to convert between them.
-    *
-    * Reference: Hoffmann-Wellenhof, B., Lichtenegger, H., and Collins, J.,
-    * GPS: Theory and Practice, 3rd ed.  New York: Springer-Verlag Wien, 1994.
-    *
-    * Inputs:
-    *    phi - Latitude of the point, in radians.
-    *    lambda - Longitude of the point, in radians.
-    *    lambda0 - Longitude of the central meridian to be used, in radians.
-    *
-    * Outputs:
-    *    xy - A 2-element array containing the x and y coordinates
-    *         of the computed point.
-    *
-    * Returns:
-    *    The function does not return a value.
-    *
-    */
-    function MapLatLonToXY (phi, lambda, lambda0, xy)
-    {
-        var N, nu2, ep2, t, t2, l;
-        var l3coef, l4coef, l5coef, l6coef, l7coef, l8coef;
-        var tmp;
-
-        /* Precalculate ep2 */
-        ep2 = (Math.pow (sm_a, 2.0) - Math.pow (sm_b, 2.0)) / Math.pow (sm_b, 2.0);
-
-        /* Precalculate nu2 */
-        nu2 = ep2 * Math.pow (Math.cos (phi), 2.0);
-
-        /* Precalculate N */
-        N = Math.pow (sm_a, 2.0) / (sm_b * Math.sqrt (1 + nu2));
-
-        /* Precalculate t */
-        t = Math.tan (phi);
-        t2 = t * t;
-        tmp = (t2 * t2 * t2) - Math.pow (t, 6.0);
-
-        /* Precalculate l */
-        l = lambda - lambda0;
-
-        /* Precalculate coefficients for l**n in the equations below
-           so a normal human being can read the expressions for easting
-           and northing
-           -- l**1 and l**2 have coefficients of 1.0 */
-        l3coef = 1.0 - t2 + nu2;
-
-        l4coef = 5.0 - t2 + 9 * nu2 + 4.0 * (nu2 * nu2);
-
-        l5coef = 5.0 - 18.0 * t2 + (t2 * t2) + 14.0 * nu2
+GeoUtil.MapLatLonToXY = function(phi, lambda, lambda0, xy) {
+    var datum = GeoUtil.datum;    
+	
+	var ep2 = (Math.pow (datum.a, 2.0) - Math.pow (datum.b, 2.0)) / Math.pow (datum.b, 2.0);
+	var nu2 = ep2 * Math.pow (Math.cos (phi), 2.0);
+	var N = Math.pow (datum.a, 2.0) / (datum.b * Math.sqrt (1 + nu2));
+	var t = Math.tan (phi);
+	var t2 = t * t;
+	var tmp = (t2 * t2 * t2) - Math.pow (t, 6.0);
+	var l = lambda - lambda0;
+        
+	var l3coef = 1.0 - t2 + nu2;
+	var l4coef = 5.0 - t2 + 9 * nu2 + 4.0 * (nu2 * nu2);
+	var l5coef = 5.0 - 18.0 * t2 + (t2 * t2) + 14.0 * nu2
             - 58.0 * t2 * nu2;
-
-        l6coef = 61.0 - 58.0 * t2 + (t2 * t2) + 270.0 * nu2
+	var l6coef = 61.0 - 58.0 * t2 + (t2 * t2) + 270.0 * nu2
             - 330.0 * t2 * nu2;
+	var l7coef = 61.0 - 479.0 * t2 + 179.0 * (t2 * t2) - (t2 * t2 * t2);
+	var l8coef = 1385.0 - 3111.0 * t2 + 543.0 * (t2 * t2) - (t2 * t2 * t2);
 
-        l7coef = 61.0 - 479.0 * t2 + 179.0 * (t2 * t2) - (t2 * t2 * t2);
-
-        l8coef = 1385.0 - 3111.0 * t2 + 543.0 * (t2 * t2) - (t2 * t2 * t2);
-
-        /* Calculate easting (x) */
-        xy[0] = N * Math.cos (phi) * l
+	xy[0] = N * Math.cos (phi) * l
             + (N / 6.0 * Math.pow (Math.cos (phi), 3.0) * l3coef * Math.pow (l, 3.0))
             + (N / 120.0 * Math.pow (Math.cos (phi), 5.0) * l5coef * Math.pow (l, 5.0))
             + (N / 5040.0 * Math.pow (Math.cos (phi), 7.0) * l7coef * Math.pow (l, 7.0));
 
-        /* Calculate northing (y) */
-        xy[1] = ArcLengthOfMeridian (phi)
+    xy[1] = GeoUtil.ArcLengthOfMeridian (phi)
             + (t / 2.0 * N * Math.pow (Math.cos (phi), 2.0) * Math.pow (l, 2.0))
             + (t / 24.0 * N * Math.pow (Math.cos (phi), 4.0) * l4coef * Math.pow (l, 4.0))
             + (t / 720.0 * N * Math.pow (Math.cos (phi), 6.0) * l6coef * Math.pow (l, 6.0))
             + (t / 40320.0 * N * Math.pow (Math.cos (phi), 8.0) * l8coef * Math.pow (l, 8.0));
 
-        return;
-    }
+   return;
+}
+
+GeoUtil.MapXYToLatLon = function(x, y, lambda0, philambda) {
+    var datum = GeoUtil.datum;
+	var phif = GeoUtil.FootpointLatitude(y);
+
+	var ep2 = (Math.pow (datum.a, 2.0) - Math.pow (datum.b, 2.0)) / Math.pow (datum.b, 2.0);
+    var cf = Math.cos (phif);
+    var nuf2 = ep2 * Math.pow (cf, 2.0);
+    var Nf = Math.pow (datum.a, 2.0) / (datum.b * Math.sqrt (1 + nuf2));
+    var Nfpow = Nf;
+    var tf = Math.tan (phif);
+    var tf2 = tf * tf;
+    var tf4 = tf2 * tf2;
+
+    var x1frac = 1.0 / (Nfpow * cf);
+    Nfpow *= Nf;   /* now equals Nf**2) */
+    var x2frac = tf / (2.0 * Nfpow);
+    Nfpow *= Nf;   /* now equals Nf**3) */
+    var x3frac = 1.0 / (6.0 * Nfpow * cf);
+    Nfpow *= Nf;   /* now equals Nf**4) */
+    var x4frac = tf / (24.0 * Nfpow);
+    Nfpow *= Nf;   /* now equals Nf**5) */
+    var x5frac = 1.0 / (120.0 * Nfpow * cf);
+    Nfpow *= Nf;   /* now equals Nf**6) */
+    var x6frac = tf / (720.0 * Nfpow);
+    Nfpow *= Nf;   /* now equals Nf**7) */
+    var x7frac = 1.0 / (5040.0 * Nfpow * cf);
+    Nfpow *= Nf;   /* now equals Nf**8) */
+    var x8frac = tf / (40320.0 * Nfpow);
+
+    var x2poly = -1.0 - nuf2;
+    var x3poly = -1.0 - 2 * tf2 - nuf2;
+    var x4poly = 5.0 + 3.0 * tf2 + 6.0 * nuf2 - 6.0 * tf2 * nuf2 - 3.0 * (nuf2 *nuf2) - 9.0 * tf2 * (nuf2 * nuf2);
+    var x5poly = 5.0 + 28.0 * tf2 + 24.0 * tf4 + 6.0 * nuf2 + 8.0 * tf2 * nuf2;
+    var x6poly = -61.0 - 90.0 * tf2 - 45.0 * tf4 - 107.0 * nuf2 + 162.0 * tf2 * nuf2;
+    var x7poly = -61.0 - 662.0 * tf2 - 1320.0 * tf4 - 720.0 * (tf4 * tf2);
+    var x8poly = 1385.0 + 3633.0 * tf2 + 4095.0 * tf4 + 1575 * (tf4 * tf2);
+
+    philambda[0] = phif + x2frac * x2poly * (x * x)
+    	+ x4frac * x4poly * Math.pow (x, 4.0)
+    	+ x6frac * x6poly * Math.pow (x, 6.0)
+    	+ x8frac * x8poly * Math.pow (x, 8.0);
+
+    philambda[1] = lambda0 + x1frac * x
+    	+ x3frac * x3poly * Math.pow (x, 3.0)
+    	+ x5frac * x5poly * Math.pow (x, 5.0)
+    	+ x7frac * x7poly * Math.pow (x, 7.0);
+
+   return;
+}
 
 
+GeoUtil.LatLonToUTMXY = function(lat, lon, zone, xy) {
+	GeoUtil.MapLatLonToXY (lat, lon, GeoUtil.UTMCentralMeridian (zone), xy);
 
-    /*
-    * MapXYToLatLon
-    *
-    * Converts x and y coordinates in the Transverse Mercator projection to
-    * a latitude/longitude pair.  Note that Transverse Mercator is not
-    * the same as UTM; a scale factor is required to convert between them.
-    *
-    * Reference: Hoffmann-Wellenhof, B., Lichtenegger, H., and Collins, J.,
-    *   GPS: Theory and Practice, 3rd ed.  New York: Springer-Verlag Wien, 1994.
-    *
-    * Inputs:
-    *   x - The easting of the point, in meters.
-    *   y - The northing of the point, in meters.
-    *   lambda0 - Longitude of the central meridian to be used, in radians.
-    *
-    * Outputs:
-    *   philambda - A 2-element containing the latitude and longitude
-    *               in radians.
-    *
-    * Returns:
-    *   The function does not return a value.
-    *
-    * Remarks:
-    *   The local variables Nf, nuf2, tf, and tf2 serve the same purpose as
-    *   N, nu2, t, and t2 in MapLatLonToXY, but they are computed with respect
-    *   to the footpoint latitude phif.
-    *
-    *   x1frac, x2frac, x2poly, x3poly, etc. are to enhance readability and
-    *   to optimize computations.
-    *
-    */
-    function MapXYToLatLon (x, y, lambda0, philambda)
-    {
-        var phif, Nf, Nfpow, nuf2, ep2, tf, tf2, tf4, cf;
-        var x1frac, x2frac, x3frac, x4frac, x5frac, x6frac, x7frac, x8frac;
-        var x2poly, x3poly, x4poly, x5poly, x6poly, x7poly, x8poly;
-
-        /* Get the value of phif, the footpoint latitude. */
-        phif = FootpointLatitude (y);
-
-        /* Precalculate ep2 */
-        ep2 = (Math.pow (sm_a, 2.0) - Math.pow (sm_b, 2.0))
-              / Math.pow (sm_b, 2.0);
-
-        /* Precalculate cos (phif) */
-        cf = Math.cos (phif);
-
-        /* Precalculate nuf2 */
-        nuf2 = ep2 * Math.pow (cf, 2.0);
-
-        /* Precalculate Nf and initialize Nfpow */
-        Nf = Math.pow (sm_a, 2.0) / (sm_b * Math.sqrt (1 + nuf2));
-        Nfpow = Nf;
-
-        /* Precalculate tf */
-        tf = Math.tan (phif);
-        tf2 = tf * tf;
-        tf4 = tf2 * tf2;
-
-        /* Precalculate fractional coefficients for x**n in the equations
-           below to simplify the expressions for latitude and longitude. */
-        x1frac = 1.0 / (Nfpow * cf);
-
-        Nfpow *= Nf;   /* now equals Nf**2) */
-        x2frac = tf / (2.0 * Nfpow);
-
-        Nfpow *= Nf;   /* now equals Nf**3) */
-        x3frac = 1.0 / (6.0 * Nfpow * cf);
-
-        Nfpow *= Nf;   /* now equals Nf**4) */
-        x4frac = tf / (24.0 * Nfpow);
-
-        Nfpow *= Nf;   /* now equals Nf**5) */
-        x5frac = 1.0 / (120.0 * Nfpow * cf);
-
-        Nfpow *= Nf;   /* now equals Nf**6) */
-        x6frac = tf / (720.0 * Nfpow);
-
-        Nfpow *= Nf;   /* now equals Nf**7) */
-        x7frac = 1.0 / (5040.0 * Nfpow * cf);
-
-        Nfpow *= Nf;   /* now equals Nf**8) */
-        x8frac = tf / (40320.0 * Nfpow);
-
-        /* Precalculate polynomial coefficients for x**n.
-           -- x**1 does not have a polynomial coefficient. */
-        x2poly = -1.0 - nuf2;
-
-        x3poly = -1.0 - 2 * tf2 - nuf2;
-
-        x4poly = 5.0 + 3.0 * tf2 + 6.0 * nuf2 - 6.0 * tf2 * nuf2
-        	- 3.0 * (nuf2 *nuf2) - 9.0 * tf2 * (nuf2 * nuf2);
-
-        x5poly = 5.0 + 28.0 * tf2 + 24.0 * tf4 + 6.0 * nuf2 + 8.0 * tf2 * nuf2;
-
-        x6poly = -61.0 - 90.0 * tf2 - 45.0 * tf4 - 107.0 * nuf2
-        	+ 162.0 * tf2 * nuf2;
-
-        x7poly = -61.0 - 662.0 * tf2 - 1320.0 * tf4 - 720.0 * (tf4 * tf2);
-
-        x8poly = 1385.0 + 3633.0 * tf2 + 4095.0 * tf4 + 1575 * (tf4 * tf2);
-
-        /* Calculate latitude */
-        philambda[0] = phif + x2frac * x2poly * (x * x)
-        	+ x4frac * x4poly * Math.pow (x, 4.0)
-        	+ x6frac * x6poly * Math.pow (x, 6.0)
-        	+ x8frac * x8poly * Math.pow (x, 8.0);
-
-        /* Calculate longitude */
-        philambda[1] = lambda0 + x1frac * x
-        	+ x3frac * x3poly * Math.pow (x, 3.0)
-        	+ x5frac * x5poly * Math.pow (x, 5.0)
-        	+ x7frac * x7poly * Math.pow (x, 7.0);
-
-        return;
-    }
+	xy[0] = xy[0] * GeoUtil.UTMScaleFactor + 500000.0;
+	xy[1] = xy[1] * GeoUtil.UTMScaleFactor;
+	if (xy[1] < 0.0)
+		xy[1] = xy[1] + 10000000.0;
+	return zone;
+}
 
 
+GeoUtil.UTMXYToLatLon = function(x, y, zone, southhemi, latlon) {
+    var cmeridian;
 
+    x -= 500000.0;
+    x /= GeoUtil.UTMScaleFactor;
 
-    /*
-    * LatLonToUTMXY
-    *
-    * Converts a latitude/longitude pair to x and y coordinates in the
-    * Universal Transverse Mercator projection.
-    *
-    * Inputs:
-    *   lat - Latitude of the point, in radians.
-    *   lon - Longitude of the point, in radians.
-    *   zone - UTM zone to be used for calculating values for x and y.
-    *          If zone is less than 1 or greater than 60, the routine
-    *          will determine the appropriate zone from the value of lon.
-    *
-    * Outputs:
-    *   xy - A 2-element array where the UTM x and y values will be stored.
-    *
-    * Returns:
-    *   The UTM zone used for calculating the values of x and y.
-    *
-    */
-    function LatLonToUTMXY (lat, lon, zone, xy)
-    {
-        MapLatLonToXY (lat, lon, UTMCentralMeridian (zone), xy);
+    if (southhemi)
+    	y -= 10000000.0;
 
-        /* Adjust easting and northing for UTM system. */
-        xy[0] = xy[0] * UTMScaleFactor + 500000.0;
-        xy[1] = xy[1] * UTMScaleFactor;
-        if (xy[1] < 0.0)
-            xy[1] = xy[1] + 10000000.0;
+    y /= GeoUtil.UTMScaleFactor;
 
-        return zone;
-    }
-
-
-
-    /*
-    * UTMXYToLatLon
-    *
-    * Converts x and y coordinates in the Universal Transverse Mercator
-    * projection to a latitude/longitude pair.
-    *
-    * Inputs:
-    *	x - The easting of the point, in meters.
-    *	y - The northing of the point, in meters.
-    *	zone - The UTM zone in which the point lies.
-    *	southhemi - True if the point is in the southern hemisphere;
-    *               false otherwise.
-    *
-    * Outputs:
-    *	latlon - A 2-element array containing the latitude and
-    *            longitude of the point, in radians.
-    *
-    * Returns:
-    *	The function does not return a value.
-    *
-    */
-    function UTMXYToLatLon (x, y, zone, southhemi, latlon)
-    {
-        var cmeridian;
-
-        x -= 500000.0;
-        x /= UTMScaleFactor;
-
-        /* If in southern hemisphere, adjust y accordingly. */
-        if (southhemi)
-        y -= 10000000.0;
-
-        y /= UTMScaleFactor;
-
-        cmeridian = UTMCentralMeridian (zone);
-        MapXYToLatLon (x, y, cmeridian, latlon);
-
-        return;
-    }
+    cmeridian = GeoUtil.UTMCentralMeridian(zone);
+    GeoUtil.MapXYToLatLon (x, y, cmeridian, latlon);
+    return;
+}
 
 
 createFlatCircleIcon = function (size, color) {

@@ -703,23 +703,26 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.edit = function(
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setLkp = function(lkp) {
-	lkp = this.emap.map.fromContainerPixelToLatLng(new GPoint(lkp.x, lkp.y));
+	var lkp = this.emap.map.fromContainerPixelToLatLng(new GPoint(lkp.x, lkp.y));
 	lkp = {lat: lkp.lat(), lng: lkp.lng()};
 	this.searchDAO.save("lkp", { value: lkp});
+	lkp.id = "lkp";
 	this.placeLkp(lkp);
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setPls = function(pls) {
-	pls = this.emap.map.fromContainerPixelToLatLng(new GPoint(pls.x, pls.y));
+	var pls = this.emap.map.fromContainerPixelToLatLng(new GPoint(pls.x, pls.y));
 	pls = {lat: pls.lat(), lng: pls.lng()};
 	this.searchDAO.save("pls", { value: pls});
+	pls.id = "pls";
 	this.placePls(pls);
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setCP = function(cp) {
-	cp = this.emap.map.fromContainerPixelToLatLng(new GPoint(cp.x, cp.y));
+	var cp = this.emap.map.fromContainerPixelToLatLng(new GPoint(cp.x, cp.y));
 	cp = {lat: cp.lat(), lng: cp.lng()};
 	this.searchDAO.save("cp", { value: cp});
+	cp.id = "cp";
 	this.placeCP(cp);
 }
 
@@ -731,7 +734,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.placeLkp = funct
 	if(this._mapsetup.map.rangerings != null) {
 		var radii = this._mapsetup.map.rangerings.split(",");
 		for(var i = 0; i < radii.length; i++) {
-			this.emap.addRangeRing(new GLatLng(lkp.lat, lkp.lng), radii[i], 36);
+			this.emap.addRangeRing(lkp, radii[i], 36);
 		}
 	}
 }

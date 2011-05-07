@@ -311,6 +311,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	
 	@Transient
 	public List<Resource> getPeople() {
+		if(resources == null) return null;
 		List<Resource> people = new ArrayList<Resource>();
 		for(Resource resource : resources) {
 			if(resource.getType() == Type.PERSON) people.add(resource);
@@ -320,6 +321,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 
 	@Transient
 	public List<Resource> getEquipment() {
+		if(resources == null) return null;
 		List<Resource> equipment = new ArrayList<Resource>();
 		for(Resource resource : resources) {
 			if(resource.getType() == Type.EQUIPMENT) equipment.add(resource);
