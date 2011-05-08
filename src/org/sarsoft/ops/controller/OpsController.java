@@ -79,6 +79,8 @@ public class OpsController extends JSONBaseController {
 	
 	private APRSLocalEngine createAprsLocal() {
 		APRSLocalEngine aprsLocal = new APRSLocalEngine();
+		if(getProperty("sarsoft.location.aprs.local.deviceNames") != null) aprsLocal.setDeviceNames(getProperty("sarsoft.location.aprs.local.deviceNames"));
+		if(getProperty("sarsoft.location.aprs.local.deviceNamePrefixes") != null) aprsLocal.setDeviceNamePrefixes(getProperty("sarsoft.location.aprs.local.deviceNamePrefixes"));
 		aprsLocal.setDao(this.dao);
 		aprsLocal.setSearch(RuntimeProperties.getSearch());
 		aprsLocal.setAprsFiKey(getProperty("sarsoft.location.aprs.fi.key"));
