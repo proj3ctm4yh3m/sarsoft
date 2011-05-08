@@ -86,7 +86,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 				closeTransaction();
 			}
 			try {
-				sleep(60000);
+				sleep(30000);
 			} catch (InterruptedException e) {
 			}
 		}

@@ -1,5 +1,6 @@
 package org.sarsoft.ops.service.location;
 
+import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -20,7 +21,7 @@ public abstract class AsyncTransactionalEngine extends Thread {
 	private Session session = null;
 	protected boolean enabled = true;
 	protected String statusMessage = "";
-	protected long timeout = 60000;
+	protected long timeout = 600000;
 	protected long keepAlive;
 
 	@SuppressWarnings("deprecation")
@@ -62,6 +63,14 @@ public abstract class AsyncTransactionalEngine extends Thread {
 	
 	public void setTimeout(long timeout) {
 		this.timeout = timeout;
+	}
+	
+	public void setTimeout(String timeout) {
+		try {
+			this.timeout = Long.parseLong(timeout);
+		} catch (Exception e) {
+			Logger.getLogger(AsyncTransactionalEngine.class).warn("Invalid timeToIdle: " + timeout);
+		}
 	}
 	
 	public void keepAlive() {
