@@ -100,6 +100,8 @@ public class AdminController extends JSONBaseController {
 		request.getSession().setAttribute("search", name);
 		RuntimeProperties.setSearch(name);
 		opsController.checkLocators();
+		String dest = request.getParameter("dest");
+		if(dest != null && dest.length() > 0) return "redirect:" + dest;
 		return homePage(model);
 	}
 
