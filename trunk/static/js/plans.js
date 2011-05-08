@@ -209,7 +209,8 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	}, "pls");
 	searchDAO.load(function(cp) {
 		if(cp.value != null) {
-			that.fmap.addWaypoint(cp.value, {color: "#FF0000"}, "CP", "CP");
+			var icon = org.sarsoft.MapUtil.createIcon(15, "/static/images/cp.png");
+			that.fmap.addWaypoint(cp.value, {icon: icon}, "CP", "CP");
 		}
 	}, "cp");
 
