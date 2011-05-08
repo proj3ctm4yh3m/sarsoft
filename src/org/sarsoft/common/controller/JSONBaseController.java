@@ -95,6 +95,7 @@ public abstract class JSONBaseController {
 				logger.error("IOException encountered reading from " + propertiesFileName + " or sarsoft.properties", e);
 			}
 		}
+		if(System.getProperty(name) != null) return System.getProperty(name);
 		return properties.getProperty(name);
 	}
 
