@@ -21,7 +21,7 @@ ${mapjs}
 
 <tiles:importAttribute name="app"/>
 <div class="header">
-<div style="font-weight: bold; float: left"><a href="/" class="sarsoft">SARSOFT</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<div style="font-weight: bold; float: left"><a href="/" class="sarsoft">${search.description}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <c:choose>
  <c:when test="${app eq 'plans'}">
   <a href="/app/operationalperiod">Plans</a>
@@ -48,7 +48,7 @@ ${mapjs}
  </c:when>
 </c:choose>
 </div>
-<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>${search.description}</div>
+<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>SARSOFT&nbsp;<%= org.sarsoft.common.util.Constants.version %></div>
 </div>
 <div class="headerbottom"></div>
 </div>
