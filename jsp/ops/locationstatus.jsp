@@ -45,3 +45,6 @@ ${engines.aprsLocal.statusMessage}
 <h3>APRS Local: OFF</h3>
 </c:otherwise>
 </c:choose>
+<div>
+Note that if you are running Windows XP or 2000, you need to install the <a href="/static/OpenTrackerUSB.inf">.INF file located here</a> for the OpenTracker USB to work properly.
+</div>
