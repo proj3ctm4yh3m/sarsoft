@@ -31,7 +31,7 @@ This page shows you all available resources.
 </div>
 
 <h2>Nearby Callsigns</h2>
-The following callsigns have been picked up near the LKP.  You can use them to identify resources you'd like to add to the search.
+The following callsigns have been picked up near the LKP.  You can use them to identify resources you'd like to add to the search, or <a href="/app/callsign/clear">clear the list</a>.
 
 <div id="callsigns">
 </div>

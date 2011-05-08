@@ -318,7 +318,7 @@ public class OpsController extends JSONBaseController {
 	@RequestMapping(value="/rest/callsign/since/{date}", method = RequestMethod.GET)
 	public String getCallsignsSince(Model model, @PathVariable("date") long date) {
 		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());
-		if(engines != null && engines.aprsLocal != null) {
+		if(engines != null && (engines.aprsLocal != null || engines.aprst2 != null)) {
 			Map<String, Waypoint> csmap = new HashMap<String, Waypoint>();
 			if(engines.aprst2 != null) csmap.putAll(engines.aprst2.getCallsigns());
 			if(engines.aprsLocal != null) csmap.putAll(engines.aprsLocal.getCallsigns());
