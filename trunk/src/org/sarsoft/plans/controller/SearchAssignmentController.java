@@ -263,7 +263,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			SearchAssignment existing = (SearchAssignment) dao.load(SearchAssignment.class, assignment.getId());
 			if(existing != null) assignment.setId(null);
 		}
-		if(assignment.getId() == null) {
+		if(assignment.getId() == null || assignment.getId() < 1) {
 			List<SearchAssignment> assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
 			long maxId = 0L;
 			for(SearchAssignment obj : assignments) {
