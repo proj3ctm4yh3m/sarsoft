@@ -5,6 +5,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
 import org.sarsoft.admin.util.OIDConsumer;
 import org.sarsoft.common.controller.JSONBaseController;
@@ -41,6 +42,8 @@ public class AdminController extends JSONBaseController {
 	OpsController opsController;
 	
 	private OIDConsumer consumer = null;
+	
+	private Logger logger = Logger.getLogger(AdminController.class);
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
@@ -156,7 +159,7 @@ public class AdminController extends JSONBaseController {
 			if("google".equalsIgnoreCase(domain)) consumer.authRequest("https://www.google.com/accounts/o8/id", request, response);
 			if("yahoo".equalsIgnoreCase(domain)) consumer.authRequest("https://me.yahoo.com", request, response);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Exception encountered sending OpenID request to " + domain, e);
 		}
 	}
 
@@ -182,7 +185,7 @@ public class AdminController extends JSONBaseController {
 			RuntimeProperties.setUsername(account.getName());
 			return bounce(model);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Exception encountered handling OpenID response", e);
 			return "error";
 		}
 	}

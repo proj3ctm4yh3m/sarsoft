@@ -26,6 +26,7 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
@@ -47,6 +48,7 @@ public class ImageryController extends JSONBaseController {
 		
 	private static String EXTERNAL_TILE_DIR = null;
 	private static String GEOREF_IMAGE_DIR = ".sarsoft/imagery/georef/";
+	private Logger logger = Logger.getLogger(ImageryController.class);
 	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
@@ -79,8 +81,11 @@ public class ImageryController extends JSONBaseController {
 			    out.write(bytes, 0, bytesRead);
 			}
 		} catch (Exception e) {
+			logger.error("Error reading local tile " + file.getAbsolutePath(), e);
 		} finally {
-			try { if(in != null) in.close(); } catch(Exception e) { e.printStackTrace(); }
+			try { if(in != null) in.close(); } catch(Exception e) {
+				logger.error("Doubly bad error closing inputstream for local tile " + file.getAbsolutePath(), e);
+			}
 		}
 	}
 	
@@ -127,7 +132,7 @@ public class ImageryController extends JSONBaseController {
 						response.sendError(HttpServletResponse.SC_NOT_FOUND);
 						return;
 						} catch (Exception e2) {}
-						e.printStackTrace();
+						logger.error("Unable to send SC_NOT_FOUND to client", e);
 					}
 				}
 				response.setContentType("image/png");
@@ -161,7 +166,7 @@ public class ImageryController extends JSONBaseController {
 		try {
 			ImageIO.write(image, "png", response.getOutputStream());
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Error writing circle icon " + rgb + " to client", e);
 		}
 		graphics.dispose();
 		image.flush();
@@ -192,7 +197,7 @@ public class ImageryController extends JSONBaseController {
 			g.dispose();
 			rotated.flush();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Couldn't serve georeferenced image " + id, e);
 		}
 	}
 	
@@ -235,7 +240,7 @@ public class ImageryController extends JSONBaseController {
 			original.flush();
 			resized.flush();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Unable to resize uploaded georef image", e);
 		}
 		return editGeoRefImage(model, request, image.getId());
 	}
@@ -257,7 +262,7 @@ public class ImageryController extends JSONBaseController {
 			model.addAttribute("height", rawImage.getHeight());
 			rawImage.flush();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Unable to read height/width from georeferenced image " + id, e);
 			return georef(model);
 		}
 		return app(model, "/imagery/georef");

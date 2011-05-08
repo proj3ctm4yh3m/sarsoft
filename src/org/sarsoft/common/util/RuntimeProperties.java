@@ -27,10 +27,10 @@ public class RuntimeProperties {
 		synchronized(RuntimeProperties.class) {
 			if(properties != null) return;
 			properties = new Properties();
+			String prop = System.getProperty("config");
+			if(prop == null) prop ="local";
+			String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
 			try {
-				String prop = System.getProperty("config");
-				if(prop == null) prop ="local";
-				String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
 				InputStream inputStream = context.getResourceAsStream(propertiesFileName);
 				properties.load(inputStream);
 				if(new File("sarsoft.properties").exists()) {
@@ -39,7 +39,7 @@ public class RuntimeProperties {
 				}
 				PropertyConfigurator.configure(properties);
 			} catch (IOException e) {
-				e.printStackTrace();
+				Logger.getLogger(RuntimeProperties.class).error("IOException encountered reading from " + propertiesFileName + " or sarsoft.properties", e);
 			}
 		}
 	}

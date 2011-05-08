@@ -15,6 +15,7 @@ import net.sf.ezmorph.bean.MorphDynaBean;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
@@ -31,6 +32,7 @@ public class APRSTier2Engine extends APRSEngine {
 	private int t2port = 14580;
 	private BufferedReader in;
 	private OutputStream out;
+	private Logger logger = Logger.getLogger(APRSTier2Engine.class);
 	
 	public void setServer(String server) {
 		t2server = server;
@@ -82,6 +84,7 @@ public class APRSTier2Engine extends APRSEngine {
 			if(createTransaction) closeTransaction();
 		}
 		
+		logger.debug("Filter for " + RuntimeProperties.getSearch() + " " + t2server + ":" + t2port + " is " + filter);
 		return filter + "\r\n";
 	}
 	
@@ -95,6 +98,7 @@ public class APRSTier2Engine extends APRSEngine {
 		writeLine(out, filter);
 		} catch (IOException e) {
 			statusMessage = "IOException setting filter.  Parameters " + t2server + ":" + t2port + " " + filter;
+			logger.error(statusMessage, e);
 			return;
 		}
 		statusMessage = "Listening on " + t2server + ":" + t2port + " for " + filter;
@@ -102,6 +106,7 @@ public class APRSTier2Engine extends APRSEngine {
 	
 	public void doRun() {
 		try {
+			logger.info("Connecting to APRS Tier 2 server " + t2server + ":" + t2port + " for search " + RuntimeProperties.getSearch());
 			Socket socket = new Socket(t2server, t2port);
 			
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -124,6 +129,7 @@ public class APRSTier2Engine extends APRSEngine {
 
 			while(enabled && !timedout() && str != null) {
 				str = in.readLine();
+				logger.debug("APRS data from " + t2server + ":" + t2port + " " + str);
 				updateResource(str);
 				if(System.currentTimeMillis() - lastFilterUpdate > 180000) {
 					updateFilter(true);
@@ -134,11 +140,16 @@ public class APRSTier2Engine extends APRSEngine {
 			socket.close();
 			
 			if(enabled && !timedout()) {
+				logger.info("Lost connection to " + t2server + ":" + t2port);
 				statusMessage = t2server + ":" + t2port + " Connection Lost";
+			} else if(timedout()){
+				logger.info("Idling APRS Tier 2 connection for search " + RuntimeProperties.getSearch() + " due to inactivity");
+			} else {
+				logger.info("APRS Tier 2 connection for search " + RuntimeProperties.getSearch() + " stopped by user");
 			}
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("General error talking to APRS Tier 2 server " + t2server + ":" + t2port, e);
 			statusMessage = e.getMessage();
 		}
 		

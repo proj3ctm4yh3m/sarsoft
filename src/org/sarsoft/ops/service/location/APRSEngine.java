@@ -12,6 +12,7 @@ import net.sf.ezmorph.bean.MorphDynaBean;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.ops.model.Resource;
 
@@ -25,6 +26,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 	protected String user = null;
 	protected String aprsFiKey = null;
 	protected Map<String, Waypoint> callsigns = new HashMap<String, Waypoint>();
+	private Logger logger = Logger.getLogger(APRSEngine.class);
 		
 	public void setUser(String user) {
 		this.user = user;
@@ -64,6 +66,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			if(lngHemisphere == 'W' || lngHemisphere == 'w') lng = lng*-1;
 			return new Waypoint(lat, lng);
 		} catch (Exception e) {
+			// IndexOutOfBoundsException is normal behavior for non-posit threads
 			return null;
 		}
 	}
@@ -84,14 +87,17 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			wpt = positToWpt(message.substring(8));
 		}
 		if(wpt != null) {
+			logger.debug("Sniffed APRS position (" + wpt.getLat() + ", " + wpt.getLng() + ") from " + from);
 			wpt.setTime(new Date());
 			try {
 				beginTransaction();
 				Resource resource = (Resource) dao.getByAttr(Resource.class, "callsign", from);
 				if(resource != null) {
+					logger.debug("Updating resource " + resource.getName() + "/" + resource.getAgency() + " based on APRS callsign " + from);
 					resource.setPosition(wpt);
 					dao.save(resource);
 				} else {
+					logger.debug("No resource found for " + from + "; adding to callsign list");
 					callsigns.put(from, wpt);
 				}
 			} finally {
@@ -111,7 +117,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			try {
 				json = request.execute().parseAsString();
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("IOException checking aprs.fi for " + resource.getCallsign(), e);
 				return;
 			}
 
