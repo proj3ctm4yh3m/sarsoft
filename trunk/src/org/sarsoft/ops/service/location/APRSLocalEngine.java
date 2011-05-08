@@ -114,7 +114,7 @@ public class APRSLocalEngine extends APRSEngine {
 		if(statusMessage != null) return statusMessage;
 		String message = "";
 		for(APRSConsoleThread thread : threads.values()) {
-			message += thread.getDevice() + ": " + thread.getStatusMessage() + "\n";
+			message += thread.getDevice() + ": " + thread.getStatusMessage() + "\n\n";
 		}
 		return message;
 	}

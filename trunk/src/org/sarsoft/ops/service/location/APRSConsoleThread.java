@@ -62,8 +62,8 @@ public class APRSConsoleThread extends Thread {
 
 			connected = true;
 			statusMessage = "Connected.  No data received yet.";
-			while(enabled) {
-				if(str != null && str.length() > 0) {
+			while(enabled && str != null) {
+				if(str.length() > 0) {
 					synchronized(listeners) {
 						for(Set<String> listener : listeners) {
 							synchronized(listener) {
