@@ -163,7 +163,7 @@ you can see how it relates to neighboring assignments.</i></div>
 			</div>
 			<div style="float: left; margin-left: 20px">
 			<form name="cleanuptracks" method="POST" action="/app/assignment/${assignment.id}/cleantracks#tracks">
-			<i>Clean Up Track Data:</i><br/>Remove all trackpoints waypoints more than<br/><input name="radius" type="text" size="5" value="100"/>&nbsp;km from assignment.&nbsp;&nbsp;<input type="submit" value="GO"/>
+			<i>Clean Up Track Data:</i><br/>Remove all trackpoints waypoints more than<br/><input name="radius" type="text" size="5" value="15"/>&nbsp;km from assignment.&nbsp;&nbsp;<input type="submit" value="GO"/>
 			</form>
 			</div>
 		</div>
