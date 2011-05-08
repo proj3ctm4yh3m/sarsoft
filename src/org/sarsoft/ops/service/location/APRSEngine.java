@@ -2,6 +2,7 @@ package org.sarsoft.ops.service.location;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,8 +14,11 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
+import org.sarsoft.common.model.Way;
+import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.ops.model.Resource;
+import org.sarsoft.plans.model.SearchAssignment;
 
 import com.google.api.client.googleapis.GoogleTransport;
 import com.google.api.client.googleapis.json.JsonCParser;
@@ -96,6 +100,29 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 					logger.debug("Updating resource " + resource.getName() + "/" + resource.getAgency() + " based on APRS callsign " + from);
 					resource.setPosition(wpt);
 					dao.save(resource);
+					if(resource.getAssignment() != null) {
+						SearchAssignment assignment = resource.getAssignment();
+						boolean updated = false;
+						for(Way way : assignment.getWays()) {
+							if(way != null && from.equalsIgnoreCase(way.getName())) {
+								way.getWaypoints().add(new Waypoint(wpt.getLat(), wpt.getLng()));
+								dao.save(way);
+								dao.save(assignment);
+								updated = true;
+							}
+						}
+						if(!updated) {
+							Way way = new Way();
+							way.setType(WayType.TRACK);
+							way.setName(from);
+							way.setPolygon(false);
+							ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
+							waypoints.add(new Waypoint(wpt.getLat(), wpt.getLng()));
+							way.setWaypoints(waypoints);
+							assignment.getWays().add(way);
+							dao.save(assignment);							
+						}
+					}
 				} else {
 					logger.debug("No resource found for " + from + "; adding to callsign list");
 					callsigns.put(from, wpt);
