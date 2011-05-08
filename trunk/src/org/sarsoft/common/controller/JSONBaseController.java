@@ -21,6 +21,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.admin.model.Config;
 import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.model.MapConfig;
@@ -62,6 +63,8 @@ public abstract class JSONBaseController {
 	
 	@Value("${sarsoft.map.viewer}")
 	String mapViewer = "google";
+	
+	private Logger logger = Logger.getLogger(JSONBaseController.class);
 
 	public void setDao(GenericHibernateDAO dao) {
 		this.dao = dao;
@@ -78,10 +81,10 @@ public abstract class JSONBaseController {
 		if(properties != null) return properties.getProperty(name);
 		synchronized(this) {
 			properties = new Properties();
+			String prop = System.getProperty("config");
+			if(prop == null) prop ="local";
+			String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
 			try {
-				String prop = System.getProperty("config");
-				if(prop == null) prop ="local";
-				String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
 				InputStream inputStream = context.getResourceAsStream(propertiesFileName);
 				properties.load(inputStream);
 				if(new File("sarsoft.properties").exists()) {
@@ -89,7 +92,7 @@ public abstract class JSONBaseController {
 					properties.load(fis);
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("IOException encountered reading from " + propertiesFileName + " or sarsoft.properties", e);
 			}
 		}
 		return properties.getProperty(name);
@@ -236,7 +239,7 @@ public abstract class JSONBaseController {
 			JSON json = serializer.read(xml);
 			return json;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Exception in parseGPXInternal", e);
 			return JSONSerializer.toJSON("[]");
 		}
 	}

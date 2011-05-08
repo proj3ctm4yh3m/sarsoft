@@ -14,6 +14,7 @@ import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
@@ -28,8 +29,8 @@ import org.sarsoft.plans.model.SearchAssignment.Status;
 
 public class SearchAssignmentGPXHelper {
 
-	
 	public static Map<String, Class> searchClassHints = new HashMap<String, Class>();
+	private static Logger logger = Logger.getLogger(SearchAssignmentGPXHelper.class);
 
 	static {
 		Map<String, Class> m = new HashMap<String, Class>();
@@ -144,7 +145,7 @@ public class SearchAssignmentGPXHelper {
 				try {
 					encoded.append(URLEncoder.encode(value, "UTF-8"));
 				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
+					logger.error("UnsupportedEncodingException while trying to URLEncode gpx attrs.  This should never, ever happen as Java explicity advises you to use UTF-8.");
 				}
 				encoded.append("&");
 			}
@@ -245,7 +246,7 @@ public class SearchAssignmentGPXHelper {
 			try {
 				attrs.put(key, URLDecoder.decode(value, "UTF-8"));
 			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
+				logger.error("UnsupportedEncodingException while trying to URLDecode gpx attrs.  This should never, ever happen as Java explicity advises you to use UTF-8.");
 			}
 		}
 		return attrs;

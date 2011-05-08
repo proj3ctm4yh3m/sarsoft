@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 public class PropertyConfigurer extends PropertyPlaceholderConfigurer {
@@ -30,10 +31,10 @@ public class PropertyConfigurer extends PropertyPlaceholderConfigurer {
 
 	private void loadSpringProperties() {
 		springProperties = new Properties();
+		String prop = System.getProperty("config");
+		if(prop == null) prop ="local";
+		String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
 		try {
-			String prop = System.getProperty("config");
-			if(prop == null) prop ="local";
-			String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
 			InputStream inputStream = context.getResourceAsStream(propertiesFileName);
 			springProperties.load(inputStream);
 			if(new File("sarsoft.properties").exists()) {
@@ -41,7 +42,8 @@ public class PropertyConfigurer extends PropertyPlaceholderConfigurer {
 				springProperties.load(fis);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger logger = Logger.getLogger(PropertyConfigurer.class);
+			logger.error("IOException encountered reading from " + propertiesFileName + " or sarsoft.properties", e);
 		}
 	}
 

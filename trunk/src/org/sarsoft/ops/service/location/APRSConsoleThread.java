@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 public class APRSConsoleThread extends Thread {
 
 	private String device;
@@ -45,8 +47,10 @@ public class APRSConsoleThread extends Thread {
 	}
 	
 	public void run() {
+		Logger logger = Logger.getLogger(APRSConsoleThread.class);
 		try {
 			statusMessage = "Establishing connection on " + device;
+			logger.info("Connecting to APRS device " + device);
 			File file = new File(device);
 			fis = new FileInputStream(file);
 			fos = new FileOutputStream(file);
@@ -55,11 +59,6 @@ public class APRSConsoleThread extends Thread {
 			fos.write("\r\n\r\n\r\n\r\n".getBytes());
 
 			String str = in.readLine();
-			if(str.startsWith("cmd:")) {
-				System.out.println("Connection established on " + device);
-			} else {
-				System.out.println("Unrecognized " + str);
-			}
 
 			connected = true;
 			statusMessage = "Connected.  No data received yet.";
@@ -75,16 +74,17 @@ public class APRSConsoleThread extends Thread {
 					statusMessage = "Connected.  Last received \n\n" + str + "\n\nat " + new Date();
 				}
 				str = in.readLine();
+				logger.debug("APRS data from " + device + ": " + str);
 			}
-						
+			
 			fis.close();
 			fos.close();
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Exception on APRS device " + device, e);
 		}
 		statusMessage = "Connection Lost";
-		
+		logger.info("Disconnected from APRS device " + device);
 	}
 	
 	public void quit() {

@@ -10,7 +10,9 @@ import net.sf.ezmorph.bean.MorphDynaBean;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
 
 import com.google.api.client.googleapis.GoogleTransport;
@@ -24,16 +26,18 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 	private long refreshInterval = 120000;	
 	protected static HttpTransport transport = GoogleTransport.create();
 	private int counter = 0;
+	private Logger logger = Logger.getLogger(SpotLocationEngine.class);
 
 	static {
 		transport.addParser(new JsonCParser());
 	}
-
+	
 	public void checkSpot(Resource resource) {
 		long time = new Date().getTime();
 		Long lastUpdate = lastRefreshed.get(resource.getPk());
 		Waypoint fresh = null;
 		if(resource.getSpotId() != null && resource.getSpotId().length() > 0 && (lastUpdate == null || lastUpdate < time - refreshInterval)) {
+			logger.debug("Checking SPOT ID " + resource.getSpotId());
 			HttpRequest request = transport.buildGetRequest();
 			String url = "http://share.findmespot.com/spot-adventures/rest-api/1.0/public/feed/" + resource.getSpotId() + "/message?&sort=timeInMili&dir=DESC";
 			if(resource.getSpotPassword() != null) url += "&feedPassword=" + resource.getSpotPassword();
@@ -41,7 +45,6 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 			String json;
 			try {
 				json = request.execute().parseAsString();
-
 				MorphDynaBean bean = (MorphDynaBean) JSONObject.toBean((JSONObject) JSONSerializer.toJSON(json));
 				List messages = (List) ((MorphDynaBean) ((MorphDynaBean) ((MorphDynaBean) bean.get("response")).get("feedMessageResponse")).get("messages")).get("message");
 				MorphDynaBean message = (MorphDynaBean) messages.get(0);
@@ -50,8 +53,8 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 				fresh.setLat((Double) message.get("latitude"));
 				fresh.setLng((Double) message.get("longitude"));
 				fresh.setTime(new Date(((long) ((Integer) message.get("timeInSec"))*1000)));
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
+				logger.error("Error checking SPOT ID " + resource.getSpotId(), e);
 			}
 			counter++;
 
@@ -66,7 +69,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 	}
 	
 	public void doRun() {
-		
+		logger.info("Starting SPOT beacon checks for " + RuntimeProperties.getSearch() + " every " + Math.round(refreshInterval/1000) + " seconds");
 		statusMessage = "Checking SPOT server every " + Math.round(refreshInterval/1000) + " seconds";
 
 		while(enabled && !timedout()) {
@@ -86,6 +89,12 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 				sleep(60000);
 			} catch (InterruptedException e) {
 			}
+		}
+		
+		if(timedout()) {
+			logger.info("SPOT beacon checks for " + RuntimeProperties.getSearch() + " idled due to inactivity");
+		} else {
+			logger.info("SPOT beacon checks for " + RuntimeProperties.getSearch() + " stopped by user");
 		}
 	}
 

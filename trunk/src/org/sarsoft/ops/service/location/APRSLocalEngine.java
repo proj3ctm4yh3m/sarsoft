@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.RuntimeProperties;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
@@ -17,7 +19,8 @@ public class APRSLocalEngine extends APRSEngine {
 	private Set<String> messages = new HashSet<String>();
 
 	public void doRun() {
-
+		Logger logger = Logger.getLogger(APRSLocalEngine.class);
+		logger.info("Now monitoring local APRS devices for search " + RuntimeProperties.getSearch());
 		statusMessage = null;
 
 		synchronized(threads) {
@@ -27,10 +30,12 @@ public class APRSLocalEngine extends APRSEngine {
 					String device = "/dev/" + filename;
 					APRSConsoleThread thread = threads.get(device);
 					if(thread != null && !thread.isAlive()) {
+						logger.info("APRS device " + device + " no longer active; removing from pool");
 						threads.remove(device);
 						thread = null;
 					}
 					if(thread == null) {
+						logger.info("Adding APRS device " + device + " to pool");
 						thread = new APRSConsoleThread();
 						thread.setDevice(device);
 						threads.put(device, thread);
@@ -40,11 +45,13 @@ public class APRSLocalEngine extends APRSEngine {
 			}
 			
 			if(threads.size() == 0) {
+				logger.info("Unable to find any physically connected APRS devices");
 				statusMessage = "No Ports Found";
 				return;
 			}
 		
 			for(APRSConsoleThread thread : threads.values()) {
+				logger.debug(RuntimeProperties.getSearch() + " listening to APRS traffic on " + thread.getDevice());
 				thread.addListener(messages);
 			}
 		}
@@ -70,6 +77,7 @@ public class APRSLocalEngine extends APRSEngine {
 		}
 
 		for(APRSConsoleThread thread : threads.values()) {
+			logger.debug(RuntimeProperties.getSearch() + " no longer listening to APRS traffic on " + thread.getDevice());
 			thread.removeListener(messages);
 		}
 	}
