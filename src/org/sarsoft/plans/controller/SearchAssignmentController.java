@@ -413,6 +413,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		return json(model, assignment);
 	}
 
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/way/{wayId}/waypoints", method= RequestMethod.POST)
 	public String setRouteWaypoints(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("wayId") int wayId, Model model) {
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
