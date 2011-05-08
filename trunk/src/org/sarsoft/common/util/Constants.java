@@ -9,6 +9,7 @@ import org.sarsoft.plans.model.SearchAssignment.ResourceType;
 
 public class Constants {
 
+	public static String version = "0.5b";
 	public static String[] colorsById = {"#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"};
 
 	public static Map<ResourceType, String> colorsByResourceType = new HashMap<ResourceType, String>();
