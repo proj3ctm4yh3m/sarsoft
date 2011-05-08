@@ -107,10 +107,10 @@ public class OpsController extends JSONBaseController {
 			locationEngines.put(search, engines);
 		}
 
-		if(engines.spot == null || !engines.spot.isAlive()) {
+		if((engines.spot == null || !engines.spot.isAlive()) && Boolean.parseBoolean(getProperty("sarsoft.location.spot.enabled"))) {
 			engines.spot = createSpot();
 			engines.spot.start();
-		} else {
+		} else if(engines.spot != null) {
 			engines.spot.keepAlive();
 		}
 		

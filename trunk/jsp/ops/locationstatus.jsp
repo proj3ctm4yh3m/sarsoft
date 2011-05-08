@@ -5,7 +5,7 @@
 
 <ul>
   <li><a href="/app/location/reset">Force Reset</a> all location services.</li>
-  <li><a href="window.location.refresh()">Refresh</a> this information.</li>
+  <li><a href="javascript:window.location.reload()">Refresh</a> this information.</li>
   <li>Perform a <a href="/app/location/check">one-time check</a> on all resources using SPOT and aprs.fi</li>
 </ul>
 
