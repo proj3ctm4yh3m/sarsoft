@@ -194,7 +194,7 @@ public abstract class JSONBaseController {
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
 		model.addAttribute("mapjs", getMapJS());
-		if(RuntimeProperties.getSearch() == null) {
+		if(RuntimeProperties.getSearch() == null && !"/map".equals(view)) {
 			return bounce(model);
 		}
 		if(RuntimeProperties.getSearch() != null) model.addAttribute("search", dao.getByPk(Search.class, RuntimeProperties.getSearch()));

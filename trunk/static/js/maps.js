@@ -145,6 +145,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		opacity = opacity / 100;
 		that.updateMap(base, overlay, opacity);
 	});
+	this._go = go;
 	return div;
 }
 
