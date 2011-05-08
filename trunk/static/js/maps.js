@@ -282,10 +282,14 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 	this.text = new Array();
 	var bounds = this.map.getBounds();
 	var span = bounds.getSouthWest().distanceFrom(bounds.getNorthEast());
+	var px1 = this.map.fromLatLngToContainerPixel(bounds.getSouthWest());
+	var px2 = this.map.fromLatLngToContainerPixel(bounds.getNorthEast());
+	var pxspan = Math.sqrt(Math.pow(px1.x-px2.x, 2) + Math.pow(px1.y-px2.y, 2));
+	scale = span/pxspan;
 	var spacing = 100;
-	if(span > 3000) spacing = 1000;
-	if(span > 30000) spacing = 10000;
-	if(span > 300000) spacing = 100000;
+	if(scale > 2) spacing = 1000;
+	if(scale > 20) spacing = 10000;
+	if(scale > 200) spacing = 100000;
 	
 	var sw = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getSouthWest()));
 	var ne = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getNorthEast()));
