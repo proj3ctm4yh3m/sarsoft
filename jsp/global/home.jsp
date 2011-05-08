@@ -46,7 +46,7 @@ Working on ${search.description}.  <a href="/app/setsearch">Change</a>
  <a href="javascript:gotoAssignment()">GO</a></li>
  <li><a href="/app/operationalperiod">List of all operational periods</a></li>
 </ul>
-<h4>Operations (beta)</h4>
+<h4>Operations</h4>
 <ul>
  <li><a href="/app/resource/">Resources</a></li>
  <li><a href="/app/location/status">Location Tracking</a></li>
