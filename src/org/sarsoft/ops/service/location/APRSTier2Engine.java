@@ -17,6 +17,7 @@ import net.sf.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.Search;
@@ -114,7 +115,7 @@ public class APRSTier2Engine extends APRSEngine {
 
 			String str = in.readLine();	
 
-			String login = "user " + user + " pass -1 vers testsoftware 1.0\r\n";
+			String login = "user " + user + " pass -1 vers Sarsoft " + Constants.version + "\r\n";
 
 			writeLine(out, login);
 			String message = in.readLine();
