@@ -47,6 +47,9 @@ public class APRSLocalEngine extends APRSEngine {
 			if(threads.size() == 0) {
 				logger.info("Unable to find any physically connected APRS devices");
 				statusMessage = "No Ports Found";
+				try {
+					sleep(60000);
+				} catch (InterruptedException e) {}
 				return;
 			}
 		

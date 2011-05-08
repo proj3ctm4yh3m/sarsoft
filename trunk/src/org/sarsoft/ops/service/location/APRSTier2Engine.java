@@ -84,7 +84,7 @@ public class APRSTier2Engine extends APRSEngine {
 			if(createTransaction) closeTransaction();
 		}
 		
-		logger.debug("Filter for " + RuntimeProperties.getSearch() + " " + t2server + ":" + t2port + " is " + filter);
+		logger.debug("Filter for " + RuntimeProperties.getSearch() + " on " + t2server + ":" + t2port + " is " + filter);
 		return filter + "\r\n";
 	}
 	
@@ -121,6 +121,7 @@ public class APRSTier2Engine extends APRSEngine {
 			if(!message.contains(user)) {
 				statusMessage = "Invalid login response: " + message;
 				socket.close();
+				sleep(60000);
 				return;
 			}
 

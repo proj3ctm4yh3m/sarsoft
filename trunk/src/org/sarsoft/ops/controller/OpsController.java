@@ -73,6 +73,7 @@ public class OpsController extends JSONBaseController {
 		aprst2.setUser(getProperty("sarsoft.location.aprs.is.user"));
 		aprst2.setServer(getProperty("sarsoft.location.aprs.is.serverName"));
 		aprst2.setPort(Integer.parseInt(getProperty("sarsoft.location.aprs.is.serverPort")));
+		aprst2.setTimeout(getProperty("sarsoft.location.aprs.is.timeToIdle"));
 		return aprst2;
 	}
 	
@@ -82,6 +83,7 @@ public class OpsController extends JSONBaseController {
 		aprsLocal.setSearch(RuntimeProperties.getSearch());
 		aprsLocal.setAprsFiKey(getProperty("sarsoft.location.aprs.fi.key"));
 		aprsLocal.setUser(getProperty("sarsoft.location.aprs.is.user"));
+		aprsLocal.setTimeout(getProperty("sarsoft.location.aprs.local.timeToIdle"));
 		return aprsLocal;
 	}
 	
@@ -90,11 +92,13 @@ public class OpsController extends JSONBaseController {
 		spot.setDao(this.dao);
 		spot.setSearch(RuntimeProperties.getSearch());
 		spot.setRefreshInterval(getProperty("sarsoft.location.spot.refreshInterval"));
+		spot.setTimeout(getProperty("sarsoft.location.spot.timeToIdle"));
 		return spot;
 	}
 	
 	public void checkLocators() {
 		String search = RuntimeProperties.getSearch();
+		if(search == null) return;
 		EngineList engines = locationEngines.get(search);
 		if(engines == null) {
 			engines = new EngineList();
