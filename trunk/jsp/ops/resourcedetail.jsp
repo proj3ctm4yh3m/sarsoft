@@ -53,6 +53,7 @@ You can delete ${resource.name}, but this action cannot be undone.
 <form method="POST" action="/app/resource/${resource.id}">
 <input type="hidden" name="action" value="DELETE"/>
 <input type="hidden" name="name" value="whatever"/>
+<input type="hidden" name="type" value="whatever"/>
 <input type="submit" value="Delete"/>
 </form>
 

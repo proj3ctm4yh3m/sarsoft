@@ -1,6 +1,8 @@
 package org.sarsoft.ops.service.location;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,16 +32,26 @@ public class APRSLocalEngine extends APRSEngine {
 		// build list of all possible linux and windows device locations
 		List<String> devices = new ArrayList<String>();
 		if(deviceNames != null) for(String name : deviceNames.split(",")) {
-			if(new File(name).exists()) devices.add(name);
+			// Windows com ports don't .exists()
+			try {
+				FileInputStream fis = new FileInputStream(new File(name));
+				logger.debug("specified device device " + name + " exists");
+				devices.add(name);
+				fis.close();
+			} catch (Exception e){
+				logger.debug("specified device device " + name + " not found");
+			}
 		}
 		if(deviceNamePrefixes != null) for(String prefix : deviceNamePrefixes.split(",")) {
 			if(prefix != null && prefix.length() > 0 && prefix.contains("/")) {
 				String dirname = prefix.substring(0, prefix.lastIndexOf('/'));
-				prefix = prefix.substring(prefix.lastIndexOf('/') + 1);
+				String fileprefix = prefix.substring(prefix.lastIndexOf('/') + 1);
 				File dir = new File(dirname);
 				if(dir.exists()) for(String filename : dir.list()) {
-					if(filename.startsWith(prefix))
+					if(filename.startsWith(fileprefix)) {
+						logger.debug("device found at " + dirname + "/" + filename + " based on prefix " + prefix);
 						devices.add(dirname + "/" + filename);
+					}
 				}
 			}
 		}
@@ -78,7 +90,6 @@ public class APRSLocalEngine extends APRSEngine {
 		
 		while(enabled && !timedout()) {
 			if(messages.size() > 0) try {
-				beginTransaction();
 				synchronized(messages) {
 					Iterator<String> it = messages.iterator();
 					while(it.hasNext()) {
@@ -87,8 +98,8 @@ public class APRSLocalEngine extends APRSEngine {
 						updateResource(message);
 					}
 				}
-			} finally {
-				closeTransaction();
+			} catch (Exception e) {
+				logger.error("Error processing APRS message", e);
 			}
 			try {
 				sleep(5000);					

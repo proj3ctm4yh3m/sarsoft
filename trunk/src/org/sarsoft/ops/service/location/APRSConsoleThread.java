@@ -48,20 +48,26 @@ public class APRSConsoleThread extends Thread {
 	
 	public void run() {
 		Logger logger = Logger.getLogger(APRSConsoleThread.class);
+		String str = null;
 		try {
 			statusMessage = "Establishing connection on " + device;
 			logger.info("Connecting to APRS device " + device);
 			File file = new File(device);
 			fis = new FileInputStream(file);
-			fos = new FileOutputStream(file);
 			in = new BufferedReader(new InputStreamReader(fis));
+			try {
+				fos = new FileOutputStream(file);
+				fos.write("\r\n\r\n\r\n\r\n".getBytes());
+				str = in.readLine();
+				statusMessage = "Connected.  No data received yet.";
+			} catch (Exception e) {
+				logger.warn("APRS device " + device + " is read-only.  If it requires waking, sarsoft may be waiting indefinitely.");
+				statusMessage = "Read only.  Waiting indefinitely for first transmission.";
+			}
 
-			fos.write("\r\n\r\n\r\n\r\n".getBytes());
-
-			String str = in.readLine();
-
+			str = in.readLine();
+			
 			connected = true;
-			statusMessage = "Connected.  No data received yet.";
 			while(enabled && str != null) {
 				if(str.length() > 0) {
 					synchronized(listeners) {
@@ -78,8 +84,7 @@ public class APRSConsoleThread extends Thread {
 			}
 			
 			fis.close();
-			fos.close();
-			
+			if(fos != null) fos.close();
 		} catch (Exception e) {
 			logger.error("Exception on APRS device " + device, e);
 		}

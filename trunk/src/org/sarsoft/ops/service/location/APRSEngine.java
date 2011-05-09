@@ -74,21 +74,48 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			return null;
 		}
 	}
+	
+	protected Waypoint gpwplToWpt(String gpwpl) {
+		String[] parts = gpwpl.split(",");
+
+		String latD = parts[1].substring(0, 2);
+		String latM = parts[1].substring(2,4);
+		String lath = parts[1].substring(5, 7);
+		char latHemisphere = parts[2].charAt(0);
+		String lngD = parts[3].substring(0,3);
+		String lngM = parts[3].substring(3, 5);
+		String lngh = parts[3].substring(6, 8);
+		char lngHemisphere = parts[4].charAt(0);
+		
+		double lat = Double.parseDouble(latD) + (Double.parseDouble(latM)/60) + (Double.parseDouble(lath)/6000);
+		if(latHemisphere == 'S' || latHemisphere == 's') lat = lat*-1;
+		double lng = Double.parseDouble(lngD) + (Double.parseDouble(lngM)/60) + (Double.parseDouble(lngh)/6000);
+		if(lngHemisphere == 'W' || lngHemisphere == 'w') lng = lng*-1;
+		return new Waypoint(lat, lng);
+	}
 
 	protected void updateResource(String str) {
-		if(str.startsWith("#") || str.length() < 10) return;
-		int s1 = str.indexOf('>');
-		int s2 = str.indexOf(':');
-		if(s1 == -1 || s1 > 10) return;
-		String from = str.substring(0, s1);
-		String to = str.substring(s1 + 1, s2);
-		String message= str.substring(s2 + 1);
+		String from = null;
 		Waypoint wpt = null;
-		char c = message.charAt(0);
-		if(c == '!' || c == '=') {
-			wpt = positToWpt(message.substring(1));
-		} else if(c == '/' || c == '@'){
-			wpt = positToWpt(message.substring(8));
+		if(str.startsWith("#") || str.length() < 10) return;
+		if(str.startsWith("$GPWPL")) {
+			String[] parts = str.split(",");
+			from = parts[5];
+			if(from.indexOf('*') > 0) from = from.substring(0, from.indexOf('*'));
+			wpt = gpwplToWpt(str);
+		} else if(!str.startsWith("$")){
+			int s1 = str.indexOf('>');
+			int s2 = str.indexOf(':');
+			if(s1 == -1 || s1 > 10) return;
+			from = str.substring(0, s1);
+			String to = str.substring(s1 + 1, s2);
+			String message= str.substring(s2 + 1);
+			char c = message.charAt(0);
+			if(c == '!' || c == '=') {
+				wpt = positToWpt(message.substring(1));
+			} else if(c == '/' || c == '@'){
+				wpt = positToWpt(message.substring(8));
+			}
 		}
 		if(wpt != null) {
 			logger.debug("Sniffed APRS position (" + wpt.getLat() + ", " + wpt.getLng() + ") from " + from);
