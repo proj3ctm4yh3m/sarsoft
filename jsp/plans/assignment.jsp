@@ -286,6 +286,7 @@ org.sarsoft.Loader.queue(function() {
 		for(var i = 0; i < _assignment.waypoints.length; i++) {
 			wpttable.table.addRow(_assignment.waypoints[i]);
 		}
+		if(_assignment.resources.length == 0) resourcetable.table.showTableMessage("<i>No Resources Attached</i>");
 		for(var i = 0; i < _assignment.resources.length; i++) {
 			resourcetable.table.addRow(_assignment.resources[i]);
 		}
