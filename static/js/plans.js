@@ -171,6 +171,12 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	config.fill = false;
 	config.color = "#FF0000";
 	config.opacity = 100;
+	
+	var trackConfig = new Object();
+	trackConfig.clickable = false;
+	trackConfig.fill = false;
+	trackConfig.color = "#FF8800";
+	trackConfig.opacity = 100;
 
 	this.div = document.createElement("div");
 	this.container.appendChild(this.div);
@@ -218,7 +224,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 		for(var i = 0; i < ways.length; i++) {
 			var way = ways[i];
 			way.waypoints = way.zoomAdjustedWaypoints;
-			that.fmap.addWay(way, config, (way.type == "ROUTE") ? null : way.name);
+			that.fmap.addWay(way, (way.type == "ROUTE") ? config : trackConfig, (way.type == "ROUTE") ? null : way.name);
 		}
 	}, assignment, 10);
 
