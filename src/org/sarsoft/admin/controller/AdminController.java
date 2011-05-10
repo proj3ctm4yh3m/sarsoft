@@ -125,6 +125,7 @@ public class AdminController extends JSONBaseController {
 		Search search = new Search();
 		search.setName(name);
 		search.setDescription(name);
+		if(getProperty("sarsoft.map.datum") != null) search.setDatum(getProperty("sarsoft.map.datum"));
 		if(password != null && password.length() > 0) {
 			search.setPassword(password);
 		}
