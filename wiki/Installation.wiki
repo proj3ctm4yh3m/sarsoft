@@ -2,17 +2,17 @@
 
 = Installation =
 
-Sarsoft is packaged as a JAR file; all you need to run it is Java 6.
+Sarsoft is packaged as a JAR file; all you need to run it is Java 5.
 
- * Download the jar file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.4.jar">http://sarsoft.googlecode.com/files/sarsoft-0.4.2.jar</a>.
+ * Download the jar file at <a href="http://sarsoft.googlecode.com/files/sarsoft-0.4.jar">http://sarsoft.googlecode.com/files/sarsoft-0.5.jar</a>.
 
- * Start the jar file by typing `java -jar sarsoft-0.4.jar` at the command line or double-clicking the file in the windows file explorer.
+ * Start the jar file by typing `java -jar sarsoft-0.5.jar` at the command line or double-clicking the file in the windows file explorer.
 
  * Point your browser at http://localhost:8080 to access Sarsoft.
 
  * Working data will be placed in a folder named `.sarsoft`, in the directory you start the .jar file from.
 
- * If you want to use user-supplied georeferenced imagery, it is recommended that you increase the memory available to the JVM, e.g. by using `java -Xmx256M -jar sarsoft-0.4.jar` with the Sun JVM.
+ * If you want to use user-supplied georeferenced imagery, it is recommended that you increase the memory available to the JVM, e.g. by using `java -Xmx256M -jar sarsoft-0.5.jar` with the Sun JVM.
 
 = Configuration =
 
@@ -57,6 +57,17 @@ sarsoft.map.default.zoom=5
 sarsoft.map.default.lat=38
 sarsoft.map.default.lng=-97
 }}}
+
+=== Map Datum ===
+
+Sarsoft allows you to switch existing searches between WGS84 and NAD27 CONUS datums.  If you want NAD27 to be the default for new searches, add the following to sarsoft.properties:
+
+{{{
+sarsoft.map.datum=NAD27 CONUS
+}}}
+
+Before doing this, please read up on how Sarsoft handles [datums non-WGS84 datums].
+
 
 === Map Backgrounds ===
 
@@ -125,4 +136,25 @@ google.maps.apikey.sarsoft.org=api key
 
 garmin.key.192.168.1.1=api key
 garmin.key.sarsoft.org=api key
+}}}
+
+
+=== Logging ===
+
+
+Sarsoft allows you to configure log4j by putting log4j configuration commands inline with your other properties.  If you do this, you need to start from scratch, creating an appender and setting the root logger level.  For example, to enable debug-level statements for all sarsoft code, you can add the following:
+
+{{{
+log4j.appender.console=org.apache.log4j.ConsoleAppender
+log4j.appender.console.layout=org.apache.log4j.SimpleLayout
+log4j.rootLogger=WARN,console
+log4j.logger.org.sarsoft=DEBUG,console
+}}}
+
+There is a brief window during startup where Sarsoft will run off its internal log4j configuration before reconfiguring log4j based on the sarsoft.properties file.
+
+Winstone, the embedded servlet container that Sarsoft runs in, does its own logging.  You can control its logging level by adding --debug=[1-9] when you start Sarsoft, with 1 being the most severe and 9 being the most verbose.  You can use this to quiet the BrokenPipeExceptions that proliferate when a browser halts its request mid-stream.
+
+{{{
+java -jar sarsoft.jar --debug=1
 }}}
