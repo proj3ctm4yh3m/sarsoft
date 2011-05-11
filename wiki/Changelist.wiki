@@ -1,0 +1,18 @@
+#summary Changelist and migration instructions
+
+= Version 0.5 =
+_This section still under construction_
+
+Major changes for 0.5:
+  * Redid resource pages so that people and equipment could be imported/exported as CSV files.
+  * Redid location tracking to use APRS tier2 servers & physically attached TNCs. 
+  * Routed all errors to log4j rather than console.
+  * Support for NAD27 datum.
+  * Added CP & PLS waypoints to search map.
+
+Minor changes for 0.5:
+  * Download LKP, PLS and CP to GPS devices along with search assignment.
+  * Auto print attached resources with SAR 104 forms.
+  * Improved UTM gridline labels and gridline spacing for large maps.
+  * Print tracks as a different color than assignment on debrief maps.
+  * Standalone map page for viewing/printing a blank map without creating an assignment.
