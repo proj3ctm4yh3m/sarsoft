@@ -254,7 +254,7 @@ org.sarsoft.FixedGMap.prototype.setConfig = function(config) {
 }
 
 org.sarsoft.FixedGMap.prototype.setMapLayers = function(baseName, overlayName, opacity) {
-	var types = this.map.getMapTypes();
+	var types = this.map._overlaydropdownmapcontrol.types;
 	var base = null;
 	var overlay = null;
 	opacity = opacity ? opacity : 0;
