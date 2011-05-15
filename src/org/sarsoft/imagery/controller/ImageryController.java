@@ -185,6 +185,9 @@ public class ImageryController extends JSONBaseController {
 			
 			BufferedImage rotated = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
 			Graphics2D g = rotated.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 			g.setBackground(new Color(255, 255, 255, 0));
 			g.clearRect(0, 0, width, height);
 			if(angle != null) {
