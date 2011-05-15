@@ -47,9 +47,9 @@ public class SearchAssignmentGPXHelper {
 	public static Map<String, Object> gpxifySearch(Search search, GenericHibernateDAO dao) {
 		Map<String, Object> modified = new HashMap<String, Object>();		
 		modified.put("assignments", gpxifyAssignmentList((List<SearchAssignment>) dao.loadAll(SearchAssignment.class)));
-		modified.put("lkp", search.getLkp());
-		modified.put("pls", search.getPls());
-		modified.put("cp", search.getCP());
+		if(search.getLkp() != null) modified.put("lkp", search.getLkp());
+		if(search.getPls() != null) modified.put("pls", search.getPls());
+		if(search.getCP() != null) modified.put("cp", search.getCP());
 		
 		Map<String, String> attrs = new HashMap<String, String>();
 		attrs.put("mapConfig", search.getMapConfig());
