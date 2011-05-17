@@ -237,9 +237,9 @@ public class SearchAssignmentController extends JSONBaseController {
 			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 			Map<String, Object> m = new HashMap<String, Object>();
 			m.put("assignment", assignment);
-			m.put("lkp", search.getLkp());
-			m.put("pls", search.getPls());
-			m.put("cp", search.getCP());
+			if(search.getLkp() != null) m.put("lkp", search.getLkp());
+			if(search.getPls() != null) m.put("pls", search.getPls());
+			if(search.getCP() != null) m.put("cp", search.getCP());
 			return gpx(model, m, "SearchAssignment");
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".kml");
