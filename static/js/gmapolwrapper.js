@@ -51,7 +51,7 @@ GTileLayer.prototype._init = function(name, baseLayer) {
 	xyz = xyz.replace(/{X}/, "{x}");
 	xyz = xyz.replace(/{Y}/, "{y}");
 	xyz = xyz.replace(/{Z}/, "{z}");
-	this.ol.layer = new OpenLayers.Layer.XYZ(name, xyz, {sphericalMercator: true, isBaseLayer: baseLayer == null ? true : baseLayer, numZoomLevels: this._maxResolution});	
+	this.ol.layer = new OpenLayers.Layer.XYZ(name, xyz, {sphericalMercator: true, isBaseLayer: baseLayer == null ? true : baseLayer, numZoomLevels: this._maxResolution+1});	
 	if(this._options.tileUrlTemplate == null) {
 		this.ol.layer.getURL = function(bounds) {
 			var url = that.wmstemplate;
@@ -336,7 +336,7 @@ GMap2.prototype.addOverlay = function(overlay) {
 	} else if(overlay.ol.marker != null) {
 		this.ol.markerLayer.addMarker(overlay.ol.marker);
 	} else if(overlay.ol.layer != null) {
-		this.ol.currentMapType.ol.layers[0].ol.layer.numZoomLevels = Math.min(this.ol.currentMapType.ol.layers[0].maxResolution(), overlay.ol.layer.maxResolution());
+		this.ol.currentMapType.ol.layers[0].ol.layer.numZoomLevels = Math.min(this.ol.currentMapType.ol.layers[0].maxResolution(), overlay.ol.layer.maxResolution())+1;
 		overlay.ol.layer.ol.layer.setOpacity(overlay.ol.layer.getOpacity());
 		this.ol.map.addLayer(overlay.ol.layer.ol.layer);
 		this.ol.map.raiseLayer(overlay.ol.layer.ol.layer, -100);
