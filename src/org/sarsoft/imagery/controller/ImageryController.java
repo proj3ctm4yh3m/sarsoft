@@ -175,7 +175,7 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/resource/imagery/georef/{id}.png", method=RequestMethod.GET)
 	public void getImage(HttpServletResponse response, @PathVariable("id") long id, @RequestParam(value="angle", required=false) Double angle, 
 			@RequestParam(value="originy", required=false) Integer originy, @RequestParam(value="originx", required=false) Integer originx) {
-		response.setHeader("Cache-Control", "max-age=3600, public");
+		if(angle != null) response.setHeader("Cache-Control", "max-age=3600, public");
 		response.setContentType("image/png");
 		GeoRefImage georefimage = (GeoRefImage) dao.load(GeoRefImage.class, id);
 		try {
