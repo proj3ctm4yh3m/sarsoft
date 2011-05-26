@@ -2,11 +2,11 @@
 
 In order to use Sarsoft in the field, it's important to have map data stored locally, so that you can access it anywhere.  These instructions will also allow you to create maps you may not be able to find elsewhere, like converting trail shapefiles into a map layer.
 
-== Installation ==
+= Installation =
 
 Install the [http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries GDAL] library and, if you wish to work with shapefiles, [http://mapnik.org/download/ Mapnik].  Also make sure [http://www.python.org/download/ Python] is installed on your system.
 
-== Understanding Map Backgrounds ==
+= Understanding Map Backgrounds =
 
 Google Maps takes a spherical mercator projection of the world and breaks it up into 256x256 pixel tiles.  The first zoom level fits the world onto a single tile, the next onto a 2x2 grid, then a 4x4 grid, etc.  Because the spherical mercator projection exaggerates distances at the poles, the map's scale will vary depending on latitude for a given zoom level.
 
@@ -16,16 +16,16 @@ The first two steps are to get your hands on digital map data and align it with 
 
 As you manipulate map data, you'll have to be aware of which spatial reference system (SRS) you're using.  GDAL can't work with coordinates unless it knows which SRS they're on, and it can't project the 3D world onto a 2D map without knowing which projection to use.  spatialreference.org is a good resource for translating between the various srs descriptions (epsg code, proj4, etc).
 
-== Raster Images ==
+= Raster Images =
 
-=== Georeferencing ===
+== Georeferencing ==
 If you're lucky, your map data will come as either a MrSID or GeoTIFF file which has already been aligned with real-world coordinates.  If not, you'll have to pick several points on the map, find their real-world coordinates, and convert your ordinary image into a GeoTIFF.  Assuming your real-world coordinates are in WGS84, you would take four x,y pixel coordinates that are mapped to a lat/lng and georeference the image by running:
 
 {{{
 gdal_translate -t_srs EPSG:4326 -gcp x1 y1 lat1 lng1 -gcp x2 y2 lat2 lng2 -gcp x3 y3 lat3 lng3 -gcp x4 y5 lat5 lng4 -of GTiff your_file.ext map.tif
 }}}
 
-=== Building a VRT ===
+== Building a VRT ==
 Once all your files are georeferenced, you have to turn them into one large file that the tiling program understands.  The fastest way to do this is to create a VRT, which simply points to the source files rather than copying all their data.
 
 A TIFF file can either store RGB data for each pixel, or pick a set of colors that best represent the image, store those colors in a _color table_, and then store a lookup into the color table for each pixel.  The color table approach yields smaller, but potentially lower quality, files; you can tell which approach an image is using by running
@@ -79,7 +79,7 @@ The srcnodata flag allows you to build a VRT from overlapping files without havi
 
 Gdalbuildvrt is very particular about the inputs it accepts.  If you convert one source TIFF or MrSID file to VRT, you may need to convert them all to VRT so that they have the same number and type of color bands.  I've also had to rename my .sid files with a .ro extension before gdalbuildvrt would read them.
 
-=== Creating Tiles ===
+== Creating Tiles ==
 
 In order to create map tiles, you need to customize the gdal2tiles python script that comes with GDAL.  Gdal2tiles assumes that the Y axis for tiles is zeroed to the South end of the map, while Google assumes that 0 is at the North end of the map.
 
@@ -125,11 +125,11 @@ gdal2tiles.py --resume --config GDAL_FORCE_CACHING YES merged.vrt tiledir
 
 That's it!  Grab a beer, this might take a while.
 
-== Shapefiles ==
+= Shapefiles =
 
 The Mapnik toolkit is capable of taking a shapefile and rendering it out as a map image.  The actual Mapnik code is a native binary, and although you can use plain-text configuration files to generate a large map, the easiest way to create individual background tiles is using a Python script.
 
-=== Shapefile Metadata ===
+== Shapefile Metadata ==
 
 Your shapefile should be packaged as a set of files with the same name and different extensions.  At a minimum, you need the .dbf, .prj, .shp and .shx files for Mapnik to work.
 
@@ -147,7 +147,7 @@ ogr2ogr -f KML trails.kml trails.shp
 
 and then opening it in Google Earth.
 
-=== Configuring the Mapnik map ===
+== Configuring the Mapnik map ==
 
 Armed with the metadata from above, you can create and style a new map in Python.  First, create a new Mapnik map that matches Google Maps' Shperical Mercator projection.  We'll also set the background to fully transparent so that Sarsoft can overlay it without obscuring a background layer, and create a style object:
 
