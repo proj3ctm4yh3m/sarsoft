@@ -5,20 +5,22 @@
 <h2>Operational Period ${period.id}: ${period.description}</h2>
 
 <c:set var="area" value="${period.area*10}"/>
-This period has ${fn:length(period.assignments)} assignments, covering ${(area+((area%1 ge 0.5)?(1-(area%1))%1:-(area%1)))/10} km&sup2; and ${period.timeAllocated} team-hours.
+<c:set var="perimeter" value="${period.perimeter*10}"/>
+This period has ${fn:length(period.assignments)} assignments, covering ${(area+((area%1 ge 0.5)?(1-(area%1))%1:-(area%1)))/10} km&sup2; of grid searching,
+ ${(perimeter+((perimeter%1 ge 0.5)?(1-(perimeter%1))%1:-(perimeter%1)))/10} km of trails and ${period.timeAllocated} team-hours.
 <c:set var="distance" value="${period.trackDistance*10}"/>
 <c:if test="${distance gt 0}">${(distance+((distance%1 ge 0.5)?(1-(distance%1))%1:-(distance%1)))/10} km of tracks have been downloaded.</c:if>  You can:<br/>
 
 <ul>
- <li><a href="/app/operationalperiod/${period.id}/map">View assignments in a map</a> (new assignments can be created on this page)</li>
+ <li><a href="/app/operationalperiod/${period.id}/map">Switch to a map view</a> to create assignments and edit segments.</li>
  <li>Export as:&nbsp;<a href="/rest/operationalperiod/${period.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=kml">KML</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=csv">CSV</a></li>
- <li>Bulk:&nbsp;<a href="javascript:showbulkupdate()">Update</a>&nbsp;|&nbsp;<a href="javascript:showbulkprint()">Print</a></li>
+ <li><a href="javascript:showbulkupdate()">Update</a> or <a href="javascript:showbulkprint()">Print</a> multiple assignments at once.</li>
 <c:choose>
  <c:when test="${fn:length(period.assignments) eq 0}">
  <li><a href="/app/operationalperiod/${period.id}?action=DELETE">Delete Operational Period</a> (must not contain any assignments).</li>
  </c:when>
  <c:otherwise>
- <li><a href="javascript:showrename()">Rename</a></li>
+ <li><a href="javascript:showrename()">Rename</a> this operational period.</li>
  </c:otherwise>
 </c:choose>
 </ul>

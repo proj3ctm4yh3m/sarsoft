@@ -39,6 +39,8 @@ org.sarsoft.Loader.queue(function() {
 				{x: point.x + YAHOO.util.Dom.getXY('map_canvas')[0], y: point.y + YAHOO.util.Dom.getXY('map_canvas')[1]},
 				point);
 	});
+  document.getElementById("imagecontainer").scrollTop=document.getElementById("actualimage").height/2;
+  document.getElementById("imagecontainer").scrollLeft=document.getElementById("actualimage").width/2;
 
   GeoRefIMGForm = function() {
 	 	var fields = [
@@ -121,6 +123,10 @@ function updateCombinedView() {
 	georef = parameterForm.read();
 	var geotype = {name : "Georef Overlay", id: "${image.id}", angle: georef.angle, scale: georef.scale, originx: georef.originx, originy: georef.originy, originlat: georef.originlat, originlng: georef.originlng, width: georef.width, height: georef.height};
 	egm2.geoRefImages = egm.setGeoRefImages([geotype]);
+
+	if(map2._overlaydropdownmapcontrol._overlays != null && map2._overlaydropdownmapcontrol._overlays[0].angle != null) {
+		map2.removeOverlay(map2._overlaydropdownmapcontrol._overlays[0]);
+	}
 	map2.removeControl(map2._overlaydropdownmapcontrol);
 	var dd = new OverlayDropdownMapControl();
 	map2.addControl(dd);
@@ -131,7 +137,8 @@ function updateCombinedView() {
 
 function save() {
   var dao = new org.sarsoft.GeoRefImageDAO();
-  dao.save('${image.id}', georef);
+  dao.save('${image.id}', georef, function() {window.location="/app/imagery/georef"});
+  
 }
 
 var tabView = new YAHOO.widget.TabView('tabs');
@@ -158,9 +165,10 @@ org.sarsoft.Loader.queue(function() {
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
 
-This page allows you to georeference an image, allowing Sarsoft to display it on top of a map.  Your image must be to scale, as Sarsoft will only
-rotate and scale it, not warp it.  Start by selecting two points on the image, then select the same two points on the map, double check the image,
-and then save it.
+<h2>Image Georeferencing</h2>
+<p>
+This page allows you to georeference an image so that Sarsoft can display it on top of a map.  The image must be drawn at a consistent scale.  
+Start by selecting two points on the image, then select the same two points on a map, double check the image, save it and you're ready to go.</p>
 <div id="tabs" class="yui-navset">
 <ul class="yui-nav">
 	<li class="selected"><a href="#image"><em>Image</em></a></li>
@@ -173,7 +181,7 @@ and then save it.
 
 <div id="image">
 <div>Please <b>click</b> on the image to select your two reference points, then select the <b>Map</b> tab.  Because SARSOFT surrounds your image with transparent pixels so that 
-you can rotate it without causing any cropping, you may need to scroll to see your image.</div>
+you can rotate it without causing any cropping, you may need to scroll to see it.</div>
 <div id="imagecontainer" style="width: 800px; height: 500px; overflow: scroll">
 <img src="/resource/imagery/georef/${image.id}.png" id="actualimage"/>
 </div>
@@ -196,8 +204,7 @@ You can manually update any parameters below.  When done, click <b>Save these pa
 <a href="javascript:updateCombinedView()">Show map using these parameters.</a><br/>
 <a href="javascript:save()">Save these parameters.</a>
 <br/><br/>
-All Done?<br/>
-<a href="/app/index.html">Take me home!</a>
+<a href="/app/imagery/georef">Discard Changes</a>
 </div>
 </div>
 </div>

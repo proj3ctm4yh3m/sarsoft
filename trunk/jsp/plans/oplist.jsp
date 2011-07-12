@@ -12,10 +12,13 @@ newAssignmentDlg = new org.sarsoft.view.EntityCreateDialog("New Operational Peri
 });
 </script>
 
-<h2>List of Operational Periods</h2>
+<h2>All Operational Periods</h2>
+
+<p>This is a list of all operational periods that have been created for the ${search.description} search.  If you're lost, you probably want to click on an operational period
+and then onto either the map view or an individual assignment's details.</p>
 
 <ul>
-<li><a href="javascript:newAssignmentDlg.dialog.show()">New operational period</a></li>
+<li><a href="javascript:newAssignmentDlg.dialog.show()">Create</a> a new operational period</li>
 </ul>
 
 <div id="listcontainer">

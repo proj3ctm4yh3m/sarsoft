@@ -1,6 +1,7 @@
 package org.sarsoft.imagery.model;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 import net.sf.json.JSONObject;
 
@@ -93,6 +94,11 @@ public class GeoRefImage extends SarModelObject {
 	}
 	@JSONSerializable
 	public Boolean isReferenced() {
+		return referenced;
+	}
+	// JSTL seems to have a problem with isReferenced.  Not sure why.
+	@Transient
+	public boolean isRefd() {
 		return referenced;
 	}
 	public void setReferenced(Boolean referenced) {

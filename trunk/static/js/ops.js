@@ -53,7 +53,7 @@ org.sarsoft.view.ResourceImportDlg = function(id) {
 	dlg.appendChild(hd);
 	var bd = document.createElement("div");
 	bd.className = "bd";
-	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='resourceupload' action='/app/resource/'><input type='file' name='file'/><input type='hidden' name='format' value='csv'/></form>";
+	bd.innerHTML="<p>Data should be a comma separated file without character escaping.  Column ordering should match the file created when selecting 'Export to CSV'.</p><form method='post' enctype='multipart/form-data' name='resourceupload' action='/app/resource/'><input type='file' name='file'/><input type='hidden' name='format' value='csv'/></form>";
 	dlg.appendChild(bd);
 	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "420px"});
 	var buttons = [ { text : "Import", handler: function() {

@@ -226,6 +226,15 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 		}
 		return area;
 	}
+	
+	@Transient
+	@JSONSerializable
+	public boolean isPolygon() {
+		for(Way way : ways) {
+			if(way.getType() == WayType.ROUTE && way.isPolygon()) return true;
+		}
+		return false;
+	}
 
 	@Transient
 	@JSONSerializable
