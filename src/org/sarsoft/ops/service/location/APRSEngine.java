@@ -52,9 +52,63 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 		str = str + "\r\n";
 		out.write(str.getBytes());
 	}
+		
+	protected static Waypoint parseCompressed(String data) {
+		String lat91 = data.substring(1,5);
+		String lng91 = data.substring(5,9);
+		
+		double lat = 0;
+		double lng = 0;
+		
+		for(int i = 0; i < 4; i++) {
+			lat = lat+(lat91.charAt(i)-33)*Math.pow(91, 3-i);
+			lng = lng+(lng91.charAt(i)-33)*Math.pow(91, 3-i);			
+		}
+		
+		lat = 90-lat/380926;
+		lng = lng/190463-180;
+				
+		return new Waypoint(lat, lng);
+	}
+	
+	private static int micELat(char c) {
+		if(c >= 48 && c <= 57) return c - 48;
+		if(c >= 65 && c <= 74) return c - 65;
+		if(c >= 80 && c <= 89) return c - 80;
+		return 0;
+	}
+	
+	protected static Waypoint parseMicE(String dest, String data) {
+		int latD = micELat(dest.charAt(0))*10 + micELat(dest.charAt(1));
+		int latM = micELat(dest.charAt(2))*10 + micELat(dest.charAt(3));
+		int latH = micELat(dest.charAt(4))*10 + micELat(dest.charAt(5));
+		double lat = latD + ((double)latM)/60 + ((double) latH)/6000;
+		if(dest.charAt(3) < 'P') lat = lat*-1;
+		
+		int lngOffset = 0;
+		if(dest.charAt(4) >= 'P') lngOffset = 100;
+		
+		boolean east = true;
+		if(dest.charAt(5) >= 'P') east = false;
+		
+		int lngD = data.charAt(1)-28+lngOffset;
+		if(lngD >= 180 && lngD <= 189) lngD = lngD - 80;
+		if(lngD >= 190 && lngD <=199) lngD = lngD - 190;
+		
+		int lngM = data.charAt(2)-28;
+		if(lngM >= 60) lngM = lngM - 60;
+		
+		int lngH = data.charAt(3)-28;
+		
+		double lng = lngD + ((double)lngM)/60 + ((double) lngH)/6000;
+		if(!east) lng = lng*-1;
+		
+		return new Waypoint(lat, lng);
+	}
 	
 	protected Waypoint positToWpt(String posit) {
 		try {
+			if(posit.charAt(0) < '0' || posit.charAt(0) > '9') return parseCompressed(posit);
 			String latD = posit.substring(0, 2);
 			String latM = posit.substring(2, 4);
 			String lath = posit.substring(5, 7);
@@ -69,7 +123,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			double lng = Double.parseDouble(lngD) + (Double.parseDouble(lngM)/60) + (Double.parseDouble(lngh)/6000);
 			if(lngHemisphere == 'W' || lngHemisphere == 'w') lng = lng*-1;
 			return new Waypoint(lat, lng);
-		} catch (Exception e) {
+		} catch (IndexOutOfBoundsException e) {
 			// IndexOutOfBoundsException is normal behavior for non-posit threads
 			return null;
 		}
@@ -111,10 +165,12 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			String to = str.substring(s1 + 1, s2);
 			String message= str.substring(s2 + 1);
 			char c = message.charAt(0);
-			if(c == '!' || c == '=') {
+			if(c == '!' || c == '=') {	// no timestamp
 				wpt = positToWpt(message.substring(1));
-			} else if(c == '/' || c == '@'){
+			} else if(c == '/' || c == '@') {	// has timestamp
 				wpt = positToWpt(message.substring(8));
+			} else if(c == '`' || c == '\'') {  // MicE encoded
+				wpt = parseMicE(to.substring(0, 6), message);
 			}
 		}
 		if(wpt != null) {
