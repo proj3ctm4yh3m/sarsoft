@@ -34,8 +34,8 @@ org.sarsoft.BaseDAO.prototype.create = function(handler, obj) {
 	this._doPost("/", handler, obj);
 }
 
-org.sarsoft.BaseDAO.prototype.save = function(id, obj) {
-	this._doPost("/" + id + ".do", function() {}, obj);
+org.sarsoft.BaseDAO.prototype.save = function(id, obj, handler) {
+	this._doPost("/" + id + ".do", function() {if(handler != null) handler();}, obj);
 }
 
 org.sarsoft.BaseDAO.prototype.del = function(id) {

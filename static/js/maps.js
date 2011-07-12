@@ -514,8 +514,10 @@ org.sarsoft.EditableGMap = function(map) {
 	
 	var pos = document.createElement("div");
 	pos.style.fontWeight="bold";
+	pos.className="noprint";
 	id.appendChild(pos);
 	var msg = document.createElement("div");
+	msg.className="noprint";
 	id.appendChild(msg);
 	
 	this._infodiv = id;

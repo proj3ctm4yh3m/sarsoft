@@ -9,6 +9,12 @@
   <li>Perform a <a href="/app/location/check">one-time check</a> on all resources using SPOT and aprs.fi</li>
 </ul>
 
+<p>This page can help you debug Sarsoft location tracking issues.  Locations are provided by 3 services (SPOT, APRS-IS, APRS Local); these are configured
+through properties files and cannot be turned on or altered through Sarsoft's UI.  SPOT and APRS-IS require an internet connection to get location data from 3rd party services, and
+APRS Local requires you to interface with a TNC or NMEA data stream using USB or a serial port.  If you suspect any of these services are not working properly, you can get
+Sarsoft to reset and start from scratch by clicking <a href="/app/location/reset">Force Reset</a>.  If you've just added a large number of resources to Sarsoft, you can get their
+last known position by running a <a href="/app/location/check">one-time check</a> that uses stored locations on the aprs.fi server rather than waiting for live APRS transmissions. </p>
+
 <c:choose>
 <c:when test="${engines.spot ne null}">
 <h3>SPOT: ON</h3>

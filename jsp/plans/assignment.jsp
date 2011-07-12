@@ -48,6 +48,14 @@ function transition(state) {
 
 </script>
 
+<div style="width: 30em; position: absolute; right: 25px; top: 10px; text-align: right">
+   <c:forEach var="status" varStatus="loopStatus" items="<%= org.sarsoft.plans.model.SearchAssignment.Status.values() %>">
+     <c:if test="${loopStatus.index gt 0}">-</c:if>
+     <c:choose><c:when test="${assignment.status eq status}"><span style="color: black">${status}</span></c:when><c:otherwise><span style="color: #CCCCCC">${status}</c:otherwise></c:choose>
+   </c:forEach>
+
+</div>
+
 <h2>Assignment ${assignment.id}</h2>
 This ${assignment.status} assignment covers ${assignment.formattedSize} with ${assignment.timeAllocated} hours allocated.
 <c:if test="${assignment.trackDistance gt 0}">  ${assignment.trackDistance} km of tracks have been downloaded.</c:if>
@@ -59,8 +67,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
  	<li><a href="javascript:finalizeDlg.show()">Prepare Assignment</a> (this will allow you to print it)</li>
  </c:when>
  <c:otherwise>
-    <li><a target="_new" href="/app/assignment/${assignment.id}?format=print&content=forms">Print SAR 104 Forms</a></li>
-    <li><a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Print Maps</a></li>
+    <li>Print <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Maps</a> or <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=forms">SAR 104 Forms</a></li>
  </c:otherwise>
 </c:choose>
 <c:if test="${assignment.status == prepared or assignment.status == completed}">
@@ -69,8 +76,9 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <c:if test="${assignment.status ==  inprogress}">
 	<li><a href="javascript:transition('stop')">Finish Assignment</a></li>
 </c:if>
-<li>Export to: <select id="export"><option value="gpx">GPX File</option><option value="kml">KML File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:exportassignment()">GO</button></li>
-<li>Import tracks from: <select id="import"><option value="gpx">GPX File</option><option value="garmin">Garmin GPS Device</option></select>&nbsp;<button onclick="javascript:importassignment()">GO</button></li>
+
+<li>Export to: <a href="javascript:document.forms['togarmin'].submit()">Garmin GPS</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=kml">KML</a></li>
+<li>Import tracks from: <a href="/app/fromgarmin?id=${assignment.id}">Garmin GPS</a>&nbsp;|&nbsp;<a href="javascript:gpxdlg.dialog.show()">GPX</a></li>
 </ul>
 
 <div id="tabs" class="yui-navset">
@@ -84,61 +92,68 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 	<div class="yui-content">
 		<div id="details">
 <c:if test="${assignment.status != draft}">
-<div><i>Note: This assignment is no longer in draft mode.  It may have been printed and copies or GPS routes may already be in the field.  Saving any changes will revert the assignment
-back to draft status; if you do this, you must track down any existing copies in order to avoid confusion.</i></div>
+<div><i>This assignment is no longer in draft mode.  It may have been printed and copies or GPS routes may already be in the field.  If you revert it and make changes,
+ you must track down any existing copies in order to avoid confusion.</i></div>
 </c:if>
 			<form name="assignment" action="/app/assignment/${assignment.id}" method="post">
 			<div style="float: left; width: 20em">
 			 <table border="0">
 			 <tr><td>Number</td><td>${assignment.id}</td></tr>
 			 <tr><td>Resource Type</td><td>
-				 <select name="resourceType" value="${assignment.resourceType}">
+				 <select name="resourceType" value="${assignment.resourceType}"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>>
 				  <c:forEach var="type" items="<%= SearchAssignment.ResourceType.values() %>">
 				   <option value="${type}"<c:if test="${assignment.resourceType == type}"> selected="selected"</c:if>>${type}</option>
 				  </c:forEach>
 				 </select></td></tr>
-			 <tr><td>Time Allocated</td><td><input name="timeAllocated" type="text" size="4" value="${assignment.timeAllocated}"/> hours</td></tr>
+			 <tr><td>Time Allocated</td><td><input name="timeAllocated" type="text" size="4" value="${assignment.timeAllocated}"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>/> hours</td></tr>
 			 <tr><td>POD (Responsive)</td><td>
-			    <select name="responsivePOD">
+			    <select name="responsivePOD"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>>
 			    <c:forEach var="type" items="<%= org.sarsoft.plans.model.Probability.values() %>">
 			      <option value="${type}"<c:if test="${assignment.responsivePOD == type}"> selected="selected"</c:if>>${type}</option>
 			    </c:forEach>
 			    </select>
 			  </td></tr>
 			<tr><td style="padding-right: 5px">POD (Unresponsive)</td><td>
-			    <select name="unresponsivePOD">
+			    <select name="unresponsivePOD"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>>
 			    <c:forEach var="type" items="<%= org.sarsoft.plans.model.Probability.values() %>">
 			      <option value="${type}"<c:if test="${assignment.unresponsivePOD == type}"> selected="selected"</c:if>>${type}</option>
 			    </c:forEach>
 			    </select>
 			  </td></tr>
 			<tr><td style="padding-right: 5px">POD (Clue)</td><td>
-			    <select name="cluePOD">
+			    <select name="cluePOD"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>>
 			    <c:forEach var="type" items="<%= org.sarsoft.plans.model.Probability.values() %>">
 			      <option value="${type}"<c:if test="${assignment.cluePOD == type}"> selected="selected"</c:if>>${type}</option>
 			    </c:forEach>
 			    </select>
 			  </td></tr>
-			<tr><td style="padding-right: 5px">Primary Freq</td><td><input name="primaryFrequency" type="text" size="10" value="${assignment.primaryFrequency}"></td></tr>
-			<tr><td style="padding-right: 5px">Secondary Freq</td><td><input name="secondaryFrequency" type="text" size="10" value="${assignment.secondaryFrequency}"></td></tr>
+			<tr><td style="padding-right: 5px">Primary Freq</td><td><input name="primaryFrequency" type="text" size="10" value="${assignment.primaryFrequency}"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>></td></tr>
+			<tr><td style="padding-right: 5px">Secondary Freq</td><td><input name="secondaryFrequency" type="text" size="10" value="${assignment.secondaryFrequency}"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>></td></tr>
 			  </table>
 
 			 <br/><br/>
-			 <a style="left: 20px" href="javascript:document.forms['assignment'].submit()">Save Changes</a>
+			 <c:choose>
+			 <c:when test="${assignment.status != draft}">
+				 <a style="left: 20px" href="javascript:document.forms['assignment'].submit()">Revert to Draft Mode</a> to make changes
+			 </c:when>
+			 <c:otherwise>
+				 <a style="left: 20px" href="javascript:document.forms['assignment'].submit()">Save Changes</a>
+			 </c:otherwise>
+			 </c:choose>
 
 			 </div>
 			 <div style="float: left; width: 40em">
 
 			<b>Details:</b><br/>
-			<textarea name="details" style="width: 100%; height: 80px">${assignment.details}</textarea>
+			<textarea name="details" style="width: 100%; height: 80px"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>>${assignment.details}</textarea>
 
 			<br/><br/>
 			<b>Previous Efforts in Search Area:</b><br/>
-			<textarea name="previousEfforts" style="width: 100%; height: 80px">${assignment.previousEfforts}</textarea>
+			<textarea name="previousEfforts" style="width: 100%; height: 80px"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>>${assignment.previousEfforts}</textarea>
 
 			<br/><br/>
 			<b>Dropoff and Pickup Instructions:</b><br/>
-			<textarea name="transportation" style="width: 100%; height: 80px">${assignment.transportation}</textarea>
+			<textarea name="transportation" style="width: 100%; height: 80px"<c:if test="${assignment.status != draft}"> disabled="disabled"</c:if>>${assignment.transportation}</textarea>
 
 			</div>
 
@@ -173,7 +188,7 @@ you can see how it relates to neighboring assignments.</i></div>
 			<h4>Attach a resource</h4>
 			<select id="resources">
 			<c:forEach var="resource" items="${resources}">
-				<option value="${resource.id}">${resource.name} -- ${resource.callsign}</option>
+				<option value="${resource.id}">${resource.name} (${resource.agency}) - ${resource.callsign}</option>
 			</c:forEach>
 			</select>
 			<button onclick="attachExistingResource()">GO</button>

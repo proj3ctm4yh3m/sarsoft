@@ -84,6 +84,17 @@ public class OperationalPeriod extends SarModelObject {
 		}
 		return area;
 	}
+	
+	@Transient
+	@JSONSerializable
+	public double getPerimeter() {
+		double perimeter = 0;
+		if(assignments == null) return perimeter;
+		for(SearchAssignment assignment : assignments) {
+			if(!assignment.isPolygon()) perimeter += assignment.getRouteDistance();
+		}
+		return perimeter;
+	}
 
 	@Transient
 	@JSONSerializable

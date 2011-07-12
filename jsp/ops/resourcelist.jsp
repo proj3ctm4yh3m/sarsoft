@@ -4,10 +4,9 @@
 <h2>All Resources</h2>
 
 <ul>
-  <li><a href="/app/resource/map">Map View</a> of all resources.</li>
+  <li><a href="/app/resource/map">Switch to a map view</a> of all resources and nearby callsigns.</li>
+  <li>Create new resource:&nbsp;<a href="javascript:showNewResourceForm()">Manually</a>&nbsp;|&nbsp;<a href="javascript:uploadDlg.dialog.show()">From CSV</a>
   <li>Export to <a href="/app/resource?format=CSV">CSV</a>.
-  <li>Import from <a href="javascript:uploadDlg.dialog.show()">CSV</a>.
-  <li><a href="javascript:showNewResourceForm()">Create</a> a new resource.</li>
 </ul>
 
 <div id="newresource" style="display: none">
@@ -24,8 +23,9 @@
 </form>
 </div>
 
-<br/>
-This page shows you all available resources.
+<p>A resource is anything that goes out on assignment; they are broadly categorized into people and equipment (e.g. vehicles, APRS transponders) and can be tracked via
+APRS transmissions or SPOT beacons.  This page allows you to create, track and delete resources; resource-assignment pairings should be managed from the assignment detail 
+page.  The table below lists all resources known to Sarsoft.</p>
 
 <div id="resources">
 </div>
