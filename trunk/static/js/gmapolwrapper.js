@@ -29,6 +29,8 @@ GEvent.addDomListener = function(obj, event, handler) {
 G_SATELLITE_MAP = new Object();
 G_SATELLITE_MAP.getProjection = function() {
 };
+G_ANCHOR_BOTTOM_RIGHT=3;
+G_ANCHOR_TOP_LEFT=4;
 G_ANCHOR_TOP_RIGHT = 5;
 G_MAP_FLOAT_SHADOW_PANE = 6;
 G_MAP_MAP_PANE=7;
@@ -307,6 +309,16 @@ GMap2.prototype.addControl = function(control) {
 			ref.style.position="absolute";
 			ref.style.right=position.offset.width;
 			ref.style.top=position.offset.height;
+			ref.style.zIndex=1000;
+		} else if(position.anchor == G_ANCHOR_TOP_LEFT) {
+			ref.style.position="absolute";
+			ref.style.left=position.offset.width;
+			ref.style.top=position.offset.height;
+			ref.style.zIndex=1000;
+		} else if(position.anchor == G_ANCHOR_BOTTOM_RIGHT) {
+			ref.style.position="absolute";
+			ref.style.right=position.offset.width;
+			ref.style.bottom=position.offset.height;
 			ref.style.zIndex=1000;
 		}
 	} 
