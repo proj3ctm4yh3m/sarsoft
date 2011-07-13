@@ -12,7 +12,7 @@ function doload() {
 org.sarsoft.Loader.queue(function() {
   egm = new org.sarsoft.EnhancedGMap();
   map = egm.createMap(document.getElementById('map_canvas'));
-  emap = new org.sarsoft.EditableGMap(map);
+  emap = new org.sarsoft.EditableGMap(map, true);
   plansController = new org.sarsoft.controller.OperationalPeriodMapController(emap, {id : ${period.id}});
   setInterval("plansController.timer()", 10000);
 });

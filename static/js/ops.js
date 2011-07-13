@@ -109,15 +109,70 @@ org.sarsoft.controller.ResourceMapController = function(emap) {
 	this.resources = new Object();
 	this.callsigns = new Object();
 	this._callsignId = -1;
+	
+	// place these in the overlaydropdownmapcontrol
+	var controls = this.emap.controls1;
+	controls.appendChild(document.createTextNode(" "));
+	var showHide = document.createElement("span");
+	showHide.innerHTML="CALL";
+	showHide.style.cursor = "pointer";
+	showHide.title = "Show/Hide Nearby Callsigns";
+	GEvent.addDomListener(showHide, "click", function() {
+		if(that.showCallsigns) {
+			that.showCallsigns = false;
+			showHide.innerHTML = "<span style='text-decoration: line-through'>CALL</span>";
+		} else {
+			that.showCallsigns = true;
+			showHide.innerHTML = "CALL";
+		}
+		that._handleSetupChange();
+	});
+	controls.appendChild(showHide);
+	controls.appendChild(document.createTextNode(" "));
 
+	var controls = this.emap.controls2;
+	controls.appendChild(document.createTextNode(" "));
+	var dlg = document.createElement("div");
+	dlg.style.position="absolute";
+	dlg.style.zIndex="200";
+	dlg.style.top="100px";
+	dlg.style.left="100px";
+	dlg.style.width="350px";
+	var hd = document.createElement("div");
+	hd.appendChild(document.createTextNode("Leave Map View"));
+	hd.className = "hd";
+	dlg.appendChild(hd);
+	var bd = document.createElement("div");
+	bd.className = "bd";
+	dlg.appendChild(bd);
+	var d = document.createElement("div");
+	d.innerHTML = "Leave the map view and return to the main resources page?";
+	bd.appendChild(d);
+	var dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
+	var buttons = [ { text : "Leave", handler: function() {
+		dialog.hide();
+		window.location = "/app/resource/";
+	}, isDefault: true}, {text : "Cancel", handler : function() { dialog.hide(); }}];
+	dialog.cfg.queueProperty("buttons", buttons);
+	dialog.render(document.body);
+	dialog.hide();
+
+	var goback = document.createElement("img");
+	goback.src="/static/images/home.png";
+	goback.style.cursor = "pointer";
+	goback.style.verticalAlign="middle";
+	goback.title = "Back to main resources page";
+	GEvent.addDomListener(goback, "click", function() {
+		dialog.show();
+	});
+	controls.appendChild(goback);
+	controls.appendChild(document.createTextNode(" | "));
+
+	
 	this.contextMenu = new org.sarsoft.view.ContextMenu();
 	this.contextMenu.setItems([
-		{text : "Hide Callsigns", applicable : function(obj) { return obj == null && that.showCallsigns; }, handler : function(data) { that.showCallsigns = false; that._handleSetupChange(); }},
-		{text : "Show Callsigns", applicable : function(obj) { return obj == null && !that.showCallsigns; }, handler : function(data) { that.showCallsigns = true; that._handleSetupChange(); }},
 		{text : "View Resource Details", applicable : function(obj) { return obj != null }, handler : function(data) { window.open('/app/resource/' + data.subject.id); }},
 		{text : "Return to Resources List", applicable : function(obj) { return obj == null; }, handler : function(data) { window.location = "/app/resource/"}},
-		{text : "Adjust page size for printing", applicable: function(obj) { return obj == null}, handler : function(data) { that.pageSizeDlg.show(); }},
-		{text : "Make this map background default for search", applicable : function(obj) { return obj == null; }, handler : function(data) { var config = that.emap.getConfig(); that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(that.emap.getConfig())})}}
 		]);
 
 	emap.addListener("singlerightclick", function(point, wpt) {

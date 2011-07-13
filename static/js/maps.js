@@ -123,10 +123,14 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	this.opacityInput.size=2;
 	this.opacityInput.value=0;
 
+	this.extras = document.createElement("span");
+
 	var div = document.createElement("div");
 	div.style.color="red";
+	div.style.background="white";
 	div.style.fontWeight="bold";
-	div.appendChild(document.createTextNode("background: "));
+	div.appendChild(this.extras);
+	div.appendChild(document.createTextNode("base: "));
 	div.appendChild(this.typeSelect);
 	div.appendChild(document.createTextNode("overlay: "));
 	div.appendChild(this.overlaySelect);
@@ -205,7 +209,86 @@ org.sarsoft.GAlphaTileLayerWrapper.prototype.isPng = function() { return this.ti
 org.sarsoft.GAlphaTileLayerWrapper.prototype.getOpacity = function() { return this.opacity; }
 org.sarsoft.GAlphaTileLayerWrapper.prototype.getCopyright = function(bounds, zoom) { return this.tileLayer.getCopyright(bounds, zoom) };
 
-org.sarsoft.FixedGMap = function(map) {
+org.sarsoft.MapInfoControl = function() {	
+}
+
+org.sarsoft.MapInfoControl.prototype = new GControl();
+org.sarsoft.MapInfoControl.prototype.printable = function() { return false; }
+org.sarsoft.MapInfoControl.prototype.selectable = function() { return false; }
+org.sarsoft.MapInfoControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(70, 0)); }
+
+org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
+	this.div = document.createElement("div");
+	map.getContainer().appendChild(this.div);
+	return this.div;
+}
+
+org.sarsoft.MapInfoControl.prototype.redraw = function(str, delay) {
+	if(delay == null) delay = 10000;
+	var that = this;
+	if(this.timeout != null) clearTimeout(this.timeout);
+	this.div.innerHTML = "<span style='background: white; border: 1px solid black'>" + str + "</span>";
+	this.timeout = setTimeout(function() {that.clear();}, delay);
+}
+
+org.sarsoft.MapInfoControl.prototype.clear = function() {
+	this.div.innerHTML = "";
+	this.timeout = null;
+}
+
+org.sarsoft.view.MapSizeDlg = function(map) {
+	var that = this;
+	this.map = map;
+	var dlg = document.createElement("div");
+	dlg.style.position="absolute";
+	dlg.style.zIndex="200";
+	dlg.style.top="100px";
+	dlg.style.left="100px";
+	dlg.style.width="350px";
+	var hd = document.createElement("div");
+	hd.appendChild(document.createTextNode("Map Size"));
+	hd.className = "hd";
+	dlg.appendChild(hd);
+	var bd = document.createElement("div");
+	bd.className = "bd";
+	dlg.appendChild(bd);
+	var d = document.createElement("div");
+	d.style.paddingBottom="10px";
+	bd.appendChild(d);
+	d.innerHTML = "Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm) and account for margins.  Restore map to original size by setting width and height to 100%";
+	bd.appendChild(document.createTextNode("Width: "));
+	this.widthInput = document.createElement("input");
+	this.widthInput.type="text";
+	this.widthInput.size=8;
+	bd.appendChild(this.widthInput);
+	bd.appendChild(document.createTextNode("   Height: "));
+	this.heightInput = document.createElement("input");
+	this.heightInput.type="text";
+	this.heightInput.size=8;
+	bd.appendChild(this.heightInput);
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
+	var buttons = [ { text : "Update", handler: function() {
+		that.dialog.hide();
+		var width = that.widthInput.value;
+		var height = that.heightInput.value;
+		that.map.getContainer().style.width=width;
+		that.map.getContainer().style.height=height;
+		that.map.checkResize();
+	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
+	this.dialog.cfg.queueProperty("buttons", buttons);
+	this._rendered = false;
+	this.dialog.render(document.body);
+	this.dialog.hide();
+}
+
+org.sarsoft.view.MapSizeDlg.prototype.show = function() {
+	this.widthInput.value=this.map.getContainer().style.width;
+	this.heightInput.value=this.map.getContainer().style.height;
+	this.dialog.show();
+}
+
+
+org.sarsoft.FixedGMap = function(map, showtools) {
 	var that = this;
 	this.map = map;
 	this.polys = new Object();
@@ -238,6 +321,47 @@ org.sarsoft.FixedGMap = function(map) {
 		datum.style.backgroundColor="white";
 		datum.innerHTML = org.sarsoft.map.datum;
 		map.getContainer().appendChild(datum);
+		this.mapInfoControl = new org.sarsoft.MapInfoControl();
+		this.map.addControl(this.mapInfoControl);
+		
+		this._showUTM = true;
+		if(showtools && this.map._overlaydropdownmapcontrol != null) {
+			var extras = this.map._overlaydropdownmapcontrol.extras;
+			this._UTMToggle = document.createElement("a");
+			this._UTMToggle.title = "Enable/disable UTM gridlines";
+			this._UTMToggle.style.cursor="pointer";
+			this._UTMToggle.innerHTML = "UTM";
+			GEvent.addDomListener(this._UTMToggle, "click", function() {
+				if(that._showUTM) {
+					that._UTMToggle.innerHTML = "<span style='text-decoration: line-through'>UTM</span>";
+					that._showUTM = false;
+				} else {
+					that._UTMToggle.innerHTML = "UTM";
+					that._showUTM = true;
+				}
+				that._drawUTMGrid(true);
+			});
+			extras.appendChild(this._UTMToggle);
+			extras.appendChild(document.createTextNode(" | "));
+
+			this.controls1 = document.createElement("span");
+			extras.appendChild(this.controls1);
+
+			this.pageSizeDlg = new org.sarsoft.view.MapSizeDlg(this.map);
+			var pagesetup = document.createElement("img");
+			pagesetup.src="/static/images/print.png";
+			pagesetup.style.cursor="pointer";
+			pagesetup.style.verticalAlign="middle";
+			pagesetup.title = "Adjust page size for printing";
+			GEvent.addDomListener(pagesetup, "click", function() {
+				that.pageSizeDlg.show();
+			});
+			extras.appendChild(document.createTextNode(" "));
+			extras.appendChild(pagesetup);
+			this.controls2 = document.createElement("span");
+			extras.appendChild(this.controls2);
+		}
+		
 	}
 }
 
@@ -266,8 +390,8 @@ org.sarsoft.FixedGMap.prototype.setMapLayers = function(baseName, overlayName, o
 	if(base != null && overlay != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity);
 }
 
-org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
-	if(typeof this.utmgridcoverage != "undefined" && this.utmgridcoverage.getSouthWest().distanceFrom(this.map.getBounds().getSouthWest()) == 0 &&
+org.sarsoft.FixedGMap.prototype._drawUTMGrid = function(force) {
+	if(force != true && typeof this.utmgridcoverage != "undefined" && this.utmgridcoverage.getSouthWest().distanceFrom(this.map.getBounds().getSouthWest()) == 0 &&
 		this.utmgridcoverage.getNorthEast().distanceFrom(this.map.getBounds().getNorthEast()) == 0) return;
 
 	this.utmgridcoverage = this.map.getBounds();
@@ -281,6 +405,9 @@ org.sarsoft.FixedGMap.prototype._drawUTMGrid = function() {
 		this.map.removeOverlay(this.text[i]);
 	}
 	this.text = new Array();
+	
+	if(!this._showUTM) return;
+	
 	var bounds = this.map.getBounds();
 	var span = bounds.getSouthWest().distanceFrom(bounds.getNorthEast());
 	var px1 = this.map.fromLatLngToContainerPixel(bounds.getSouthWest());
@@ -499,30 +626,27 @@ org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config, tooltip
 	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config, tooltip, label), config: config};
 }
 
-org.sarsoft.EditableGMap = function(map) {
-	org.sarsoft.FixedGMap.call(this, map);
+org.sarsoft.EditableGMap = function(map, showtools) {
+	org.sarsoft.FixedGMap.call(this, map, showtools);
 	var that = this;
 	this._handlers = new Object();
 
 	var id = document.createElement("div");
 	id.style.zIndex=2000;
 	id.style.position="absolute";
-	id.style.top="30px";
+	id.style.top="25px";
 	id.style.right="0px";
 	id.style.backgroundColor="white";
 	map.getContainer().appendChild(id);
 	
 	var pos = document.createElement("div");
 	pos.style.fontWeight="bold";
+	pos.style.textAlign="right";
 	pos.className="noprint";
 	id.appendChild(pos);
-	var msg = document.createElement("div");
-	msg.className="noprint";
-	id.appendChild(msg);
 	
 	this._infodiv = id;
 	this._infopos = pos;
-	this._infomsg = msg;
 
 	GEvent.addListener(map, "singlerightclick", function(point, src, overlay) {
 		var obj = null;
@@ -546,7 +670,8 @@ org.sarsoft.EditableGMap = function(map) {
 		var n1 = n.substring(0, n.length-3);
 		var n2 = n.substring(n.length-3, n.length);
 
-		var message = utm.zone + " " + e1 + "<span style=\"font-size: smaller\">" + e2 + "</span>E " + n1 + "<span style=\"font-size: smaller\">" + n2 + "</span>N";		
+		var message = utm.zone + " " + e1 + "<span style=\"font-size: smaller\">" + e2 + "</span>E " + n1 + "<span style=\"font-size: smaller\">" + n2 + "</span>N<br/>";
+		message = message + GeoUtil.formatDDMMHH(latlng.lat()) + ", " + GeoUtil.formatDDMMHH(latlng.lng());
 		that._positionMessage(message);
 	});
 }
@@ -556,8 +681,8 @@ org.sarsoft.EditableGMap.prototype = new org.sarsoft.FixedGMap();
 org.sarsoft.EditableGMap.prototype._positionMessage = function(message) {
 	this._infopos.innerHTML = message;
 }
-org.sarsoft.EditableGMap.prototype._infomessage = function(message) {
-	this._infomsg.innerHTML = message;
+org.sarsoft.EditableGMap.prototype._infomessage = function(message, timeout) {
+	this.mapInfoControl.redraw(message, timeout);
 }
 
 org.sarsoft.EditableGMap.prototype._addOverlay = function(way, config, label) {
@@ -651,6 +776,22 @@ UTM.prototype.toString = function() {
 }
 
 GeoUtil = new Object();
+
+GeoUtil.formatDDMMHH = function(deg) {
+	var neg = false;
+	if(deg < 0) {
+		neg = true;
+		deg = deg*-1;
+	}
+	var d=Math.floor(deg);
+	var m=Math.floor((deg-d)*60);
+	var h=Math.round(((deg-d)*60-m)*100);
+	if(h == 100) {
+		h = 0;
+		m = m + 1;
+	}
+	return (neg ? "-" : "") + d+"\u00B0"+m+"."+((h < 10) ? "0" + h : h) +"'";
+}
 
 GeoUtil.UTMToGLatLng = function(utm) {
 	var ll = new Object();
