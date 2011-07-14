@@ -518,23 +518,28 @@ org.sarsoft.controller.SearchWaypointMapController = function(controller) {
 		{text : "Set LKP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("LKP", data.point); }},
 		{text : "Set PLS here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("PLS", data.point); }},
 		{text : "Set CP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("CP", data.point); }},
+		{text : "Delete LKP", applicable : function(obj) { return obj != null && obj == that.waypoints["LKP"]}, handler: function(data) { that.searchDAO.del("lkp"); that.controller.emap.removeWaypoint(that.waypoints["LKP"]); delete that.waypoints["LKP"];}},
+		{text : "Delete PLS", applicable : function(obj) { return obj != null && obj == that.waypoints["PLS"]}, handler: function(data) { that.searchDAO.del("pls"); that.controller.emap.removeWaypoint(that.waypoints["PLS"]); delete that.waypoints["PLS"];}},
+		{text : "Delete CP", applicable : function(obj) { return obj != null && obj == that.waypoints["CP"]}, handler: function(data) { that.searchDAO.del("cp"); that.controller.emap.removeWaypoint(that.waypoints["CP"]); delete that.waypoints["CP"];}}
 	]);
 	this.rangerings = "500,1000,1500";
 
-	this.searchDAO.load(function(config) {
-			if(config.value != null) {
-				that.place("LKP", config.value);
-				that.controller.setCenter(new GLatLng(config.value.lat, config.value.lng), 14, 1);
+	this.searchDAO.load(function(lkp) {
+			if(lkp.value != null) {
+				that.place("LKP", lkp.value);
+				that.controller.setCenter(new GLatLng(lkp.value.lat, lkp.value.lng), 14, 3);
 			}
 		}, "lkp");
 	that.searchDAO.load(function(pls) {
 		if(pls.value != null) {
 			that.place("PLS", pls.value);
+			that.controller.setCenter(new GLatLng(pls.value.lat, pls.value.lng), 14, 2);
 		}
 	}, "pls");
 	that.searchDAO.load(function(cp) {
 		if(cp.value != null) {
 			that.place("CP", cp.value);
+			that.controller.setCenter(new GLatLng(cp.value.lat, cp.value.lng), 14, 1);
 		}
 	}, "cp");
 
