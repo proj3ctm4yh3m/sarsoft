@@ -64,6 +64,30 @@ org.sarsoft.view.ResourceImportDlg = function(id) {
 	this.dialog.hide();
 }
 
+
+org.sarsoft.controller.ResourceViewMapController = function(id, controller) {
+	var that = this;
+	this.controller = controller;
+	this.resourceDAO = new org.sarsoft.ResourceDAO(function() { that._handleServerError(); });
+	this.resourceDAO.load(function(obj) { that._loadResourceCallback(obj); }, id);
+}
+
+org.sarsoft.controller.ResourceViewMapController.prototype._loadResourceCallback = function(resource) {
+	var that = this;
+	this.resource = resource;
+
+	var config = new Object();
+	config.clickable = false;
+	config.fill = false;
+	config.color = "#FF0000";
+	config.opacity = 100;
+
+	var center = new GLatLng(resource.position.lat, resource.position.lng);
+	that.controller.setCenter(center, 13, 1000);
+	that.controller.emap.addWaypoint(resource.position, config, resource.name);
+}
+
+
 org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	var that = this;
 	this.controller = controller;
