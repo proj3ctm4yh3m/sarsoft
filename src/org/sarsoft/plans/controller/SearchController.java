@@ -17,6 +17,7 @@ import net.sf.json.JSONObject;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.dao.GenericHibernateDAO;
+import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
@@ -91,25 +92,49 @@ public class SearchController extends JSONBaseController {
 	}
 
 	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.POST)
-	public String setLkp(Model model, JSONForm params) {
+	public String setLkp(Model model, JSONForm params, HttpServletRequest request) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
-		search.setLkp(getSearchWpt(params));
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
+		switch(action) {
+		case UPDATE : 
+			search.setLkp(getSearchWpt(params));
+			break;
+		case DELETE :
+			search.setLkp(null);
+			break;
+		}
 		dao.save(search);
 		return json(model, search);
 	}
 
 	@RequestMapping(value = "/rest/search/pls", method = RequestMethod.POST)
-	public String setPls(Model model, JSONForm params) {
+	public String setPls(Model model, JSONForm params, HttpServletRequest request) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
-		search.setPls(getSearchWpt(params));
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
+		switch(action) {
+		case UPDATE : 
+			search.setPls(getSearchWpt(params));
+			break;
+		case DELETE :
+			search.setPls(null);
+			break;
+		}
 		dao.save(search);
 		return json(model, search);
 	}
 
 	@RequestMapping(value = "/rest/search/cp", method = RequestMethod.POST)
-	public String setCP(Model model, JSONForm params) {
+	public String setCP(Model model, JSONForm params, HttpServletRequest request) {
 		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
-		search.setCP(getSearchWpt(params));
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
+		switch(action) {
+		case UPDATE : 
+			search.setCP(getSearchWpt(params));
+			break;
+		case DELETE :
+			search.setCP(null);
+			break;
+		}
 		dao.save(search);
 		return json(model, search);
 	}
