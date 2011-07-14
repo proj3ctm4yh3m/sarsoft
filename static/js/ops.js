@@ -132,38 +132,16 @@ org.sarsoft.controller.ResourceMapController = function(emap) {
 
 	var controls = this.emap.controls2;
 	controls.appendChild(document.createTextNode(" "));
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="200";
-	dlg.style.top="100px";
-	dlg.style.left="100px";
-	dlg.style.width="350px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Leave Map View"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
-	var d = document.createElement("div");
-	d.innerHTML = "Leave the map view and return to the main resources page?";
-	bd.appendChild(d);
-	var dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
-	var buttons = [ { text : "Leave", handler: function() {
-		dialog.hide();
-		window.location = "/app/resource/";
-	}, isDefault: true}, {text : "Cancel", handler : function() { dialog.hide(); }}];
-	dialog.cfg.queueProperty("buttons", buttons);
-	dialog.render(document.body);
-	dialog.hide();
-
+	var leaveDlg = org.sarsoft.view.CreateSimpleDialog("Leave Map View", "Leave the map view and return to the main resources page?", "Leave", "Cancel", function() {
+		window.location = "/app/resource/";		
+	});
 	var goback = document.createElement("img");
 	goback.src="/static/images/home.png";
 	goback.style.cursor = "pointer";
 	goback.style.verticalAlign="middle";
 	goback.title = "Back to main resources page";
 	GEvent.addDomListener(goback, "click", function() {
-		dialog.show();
+		leaveDlg.show();
 	});
 	controls.appendChild(goback);
 	controls.appendChild(document.createTextNode(" | "));
