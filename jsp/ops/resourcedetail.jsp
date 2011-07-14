@@ -73,6 +73,14 @@ You can delete ${resource.name}, but this action cannot be undone.
 
 <script>
 org.sarsoft.Loader.queue(function() {
-  rvmc = new org.sarsoft.controller.ResourceViewMapController(document.getElementById('mapview'), ${resource.id});
+  var map = new org.sarsoft.EnhancedGMap().createMap(document.getElementById('mapview'));
+  var fmap = new org.sarsoft.FixedGMap(map);
+
+  mapController = new org.sarsoft.MapController(fmap);
+  rvmc = new org.sarsoft.controller.ResourceViewMapController(${resource.id}, mapController);
+  waypointController = new org.sarsoft.controller.SearchWaypointMapController(mapController);
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(mapController);
+  configWidget.loadConfig();
+  
 });
 </script>
