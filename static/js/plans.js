@@ -158,8 +158,24 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	var that = this;
 	this.container = container;
 	this.mapConfig = mapConfig;
-	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
+	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.controller.message("Server Communication Error"); });
+	
+	this.div = document.createElement("div");
+	this.container.appendChild(this.div);
+	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
+	this.fmap = new org.sarsoft.FixedGMap(map);
+	this.mapController = new org.sarsoft.MapController(this.fmap);
+
+	var waypointController = new org.sarsoft.controller.SearchWaypointMapController(this.mapController);
+	if(mapConfig == null) {
+		var configWidget = new org.sarsoft.view.PersistedConfigWidget(this.mapController);
+		configWidget.loadConfig();
+	} else {
+		this.mapController.emap.setConfig(mapConfig);
+	}
+
 	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
+
 }
 
 org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCallback = function(assignment) {
@@ -177,11 +193,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	trackConfig.fill = false;
 	trackConfig.color = "#FF8800";
 	trackConfig.opacity = 100;
-
-	this.div = document.createElement("div");
-	this.container.appendChild(this.div);
-	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
-	this.fmap = new org.sarsoft.FixedGMap(map);
+	
 	var info = document.createElement("div");
 	info.style.zIndex=2000;
 	info.className="printonly";
@@ -190,35 +202,11 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	info.style.left="0px";
 	info.style.backgroundColor="white";
 	info.innerHTML = "Assignment " + assignment.id;
-	map.getContainer().appendChild(info);
+	this.fmap.map.getContainer().appendChild(info);
 	
-	var searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
-	searchDAO.load(function(config) {
-			try {
-				if(that.mapConfig == null) that.mapConfig = YAHOO.lang.JSON.parse(config.value);
-				that.fmap.setConfig(that.mapConfig);
-			} catch (e) {}
-			var bb = that.assignment.boundingBox;
-			that.setSize("7in","8.8in");
-			that.fmap.map.setCenter(that.fmap.map.getCenter(), that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-	}, "mapConfig");
-	
-	searchDAO.load(function(lkp) {
-		if(lkp.value != null) {
-			that.fmap.addWaypoint(lkp.value, {color: "#FF0000"}, "LKP", "LKP");
-		}
-	}, "lkp");
-	searchDAO.load(function(pls) {
-		if(pls.value != null) {
-			that.fmap.addWaypoint(pls.value, {color: "#FF0000"}, "PLS", "PLS");
-		}
-	}, "pls");
-	searchDAO.load(function(cp) {
-		if(cp.value != null) {
-			var icon = org.sarsoft.MapUtil.createIcon(15, "/static/images/cp.png");
-			that.fmap.addWaypoint(cp.value, {icon: icon}, "CP", "CP");
-		}
-	}, "cp");
+	var bb = this.assignment.boundingBox;
+	this.fmap.map.setCenter(that.fmap.map.getCenter(), that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+	this.setSize("7in","8.8in");
 
 	this.assignmentDAO.getWays(function(ways) {
 		for(var i = 0; i < ways.length; i++) {
@@ -240,7 +228,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype.setSize = function
 	this.fmap.map.checkResize();
 	var bb = this.assignment.boundingBox;
 	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-	this.fmap.map.setCenter(center);
+	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 }
 
 org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, ways, defaultConfig) {
@@ -257,31 +245,28 @@ org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, w
 	config.opacity = (defaultConfig.opacity == null) ? 100 : defaultConfig.opacity;
 	this.baseConfig = config;
 
-
 	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
 	this.fmap = new org.sarsoft.FixedGMap(map);
+
+	this.mapController = new org.sarsoft.MapController(this.fmap);
+	var waypointController = new org.sarsoft.controller.SearchWaypointMapController(this.mapController);
+	var configWidget = new org.sarsoft.view.PersistedConfigWidget(this.mapController);
+	configWidget.loadConfig();
 
 	var bb = assignment.boundingBox;
 	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
 
-	var searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
-	searchDAO.load(function(config) {
-		try {
-			var mapConfig = YAHOO.lang.JSON.parse(config.value);
-			that.fmap.setConfig(mapConfig);
-		} catch (e) {}
-		that.fmap.map.setCenter(center, that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-	}, "mapConfig");
+	this.mapController.setCenter(center, map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))), 100);
 
 	for(var i = 0; i < this.ways.length; i++) {
 		var way = this.ways[i];
 		way.waypoints = way.zoomAdjustedWaypoints;
-		that.fmap.addWay(way, config, (way.type == "ROUTE") ? null : way.name);
+		this.fmap.addWay(way, config, (way.type == "ROUTE") ? null : way.name);
 	}
 
 	for(var i = 0; i < this.assignment.waypoints.length; i++) {
 		var waypoint = this.assignment.waypoints[i];
-		that.fmap.addWaypoint(waypoint, config, waypoint.name, waypoint.name);
+		this.fmap.addWaypoint(waypoint, config, waypoint.name, waypoint.name);
 	}
 }
 
@@ -354,120 +339,112 @@ org.sarsoft.view.OperationalPeriodForm = function() {
 
 org.sarsoft.view.OperationalPeriodForm.prototype = new org.sarsoft.view.EntityForm();
 
-org.sarsoft.view.OperationalPeriodMapSetupDlg = function(handler) {
+org.sarsoft.view.MapSetupWidget = function(controller) {
 	var that = this;
-	this.handler = handler;
-	var fields1 = [
-		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","GROUND","DOG","MOUNTED","OHV"]},
-		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
-		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
-		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"},
-		{ name : "showtracks", label: "Show Tracks", type : "boolean"}
-	];
-	var fields2 = [
-	       		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","NONE","GROUND","DOG","MOUNTED","OHV"]},
-	       		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
-	       		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
-	       		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"},
-	       		{ name : "showtracks", label: "Show Tracks", type : "boolean"}
-	       	];
-	this.pastEntityForm = new org.sarsoft.view.EntityForm(fields2);
-	this.presentEntityForm = new org.sarsoft.view.EntityForm(fields1);
-	this.mapForm = new org.sarsoft.view.EntityForm([{name : "rangerings", label: "Range Rings", type: "string"},{name : "showLocations", label: "Show Locations", type: "boolean"},{name : "labeltw", label: "Label Tracks & Waypoints", type: "boolean"}]);
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="2500";
-	dlg.style.top="100px";
-	dlg.style.left="100px";
-	dlg.style.width="500px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Map Setup"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
+	this.controller = controller;
 
-	var ops = document.createElement("div");
-	bd.appendChild(ops);
-	ops.style.width="100%";
-	var present = document.createElement("div");
-	present.style.width="240px";
-	present.style.float="left";
-	present.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>This OP:</span><br/>";
-	ops.appendChild(present);
-	var past = document.createElement("div");
-	past.style.width="240px";
-	past.style.float="right";
-	past.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>Previous OPs:</span><br/>";
-	ops.appendChild(past);
+	this._body = document.createElement("div");
+	var style = {position : "absolute", zIndex : "2500", top : "100px", width : "500px"};
+	this._dialog = org.sarsoft.view.CreateBlankDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
 	
-	var map = document.createElement("div");
-	map.style.paddingTop="5px";
-	map.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>Map:</span><br/>";
-	bd.appendChild(map);
-	this.pastEntityForm.create(past);
-	this.presentEntityForm.create(present);
-	this.mapForm.create(map);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "500px"});
-	var buttons = [ { text : "Update", handler: function() {
-		that.dialog.hide();
-		var obj = new Object();
-		obj.past = that.pastEntityForm.read();
-		obj.present = that.presentEntityForm.read();
-		obj.map = that.mapForm.read();
-		that.pastEntityForm.write(new Object());
-		that.presentEntityForm.write(new Object());
-		that.mapForm.write(new Object());
-		handler(obj);
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this._rendered = false;
-	this.dialog.render(document.body);
-	this.dialog.hide();
-}
-
-org.sarsoft.view.OperationalPeriodMapSetupDlg.prototype.show = function(obj) {
-	if(obj != null) {
-		this.pastEntityForm.write(obj.past);
-		this.presentEntityForm.write(obj.present);
-		this.mapForm.write(obj.map);
-	}
-	this.dialog.show();
-}
-
-org.sarsoft.view.PlansTreeView = function(container) {
-	var that = this;
-	this.periodDAO = new org.sarsoft.OperationalPeriodDAO();
-	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
-
-	this.tree = new YAHOO.widget.TreeView(container);
-	this.tree.setDynamicLoad(function(node, fnLoadComplete) { that._load(node, fnLoadComplete); });
-	var root = this.tree.getRoot();
-
-	this.periodDAO.loadAll(function(periods) {
-		for(var i = 0; i < periods.length; i++) {
-			var tmp = new YAHOO.widget.TextNode(periods[i].description, root, false);
-			tmp.ssType = "period";
-			tmp.ssId = periods[i].id;
-		}
-		that.tree.draw();
+	var setup = document.createElement("img");
+	setup.src="/static/images/config.png";
+	setup.style.cursor = "pointer";
+	setup.style.verticalAlign="middle";
+	setup.title = "Map Setup";
+	GEvent.addDomListener(setup, "click", function() {
+		that.showDlg();
 	});
+	controller.addMenuItem(setup, 12);
+
 }
 
-org.sarsoft.view.PlansTreeView.prototype._load = function(node, fnLoadComplete) {
-	var that = this;
-	if(node.ssType == "period") {
-		this.periodDAO.loadAssignments(function(assignments) {
-			for(var i = 0; i < assignments.length; i++) {
-				var tmp = new YAHOO.widget.TextNode(assignments[i].name, node, false);
-				tmp.ssType = "assignment";
-				tmp.ssId = assignments[i].id;
-				tmp.isLeaf = true;
-			}
-			fnLoadComplete();
-		}, node.ssId);
+org.sarsoft.view.MapSetupWidget.prototype.showDlg = function() {
+	var blocks = new Array();
+	if(this._container != null) this._body.removeChild(this._container);
+	this._container = document.createElement("div");
+	this._body.appendChild(this._container);
+
+	for(var key in this.controller.registered) {
+		if(this.controller.registered[key].getSetupBlock != null) {
+			var block = this.controller.registered[key].getSetupBlock();
+			while(blocks[block.order] != null) block.order++;
+			blocks[block.order] = block;
+		}
 	}
+	
+	for(var i = 0; i < blocks.length; i++) {
+		if(blocks[i] != null) {
+			this._container.appendChild(blocks[i].node);
+		}
+	}
+	this._dialog.show();
+	this.blocks = blocks;
+}
+
+org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
+	for(var i = 0; i < this.blocks.length; i++) {
+		if(this.blocks[i] != null) {
+			this.blocks[i].handler();
+		}
+	}
+	this.blocks = null;
+}
+
+org.sarsoft.view.PersistedConfigWidget = function(controller, persist) {
+	var that = this;
+	this.controller = controller;
+	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.controller.message("Server Communication Error!"); });
+
+	if(persist) {
+		var saveDlg = org.sarsoft.view.CreateSimpleDialog("Save Map Background", "This will make the map base and overlay layers, plus the range ring settings, the default for all maps on this search.", "Save", "Cancel", function() {
+			that.saveConfig();
+		});
+		var save = document.createElement("img");
+		save.src="/static/images/save.png";
+		save.style.cursor = "pointer";
+		save.style.verticalAlign="middle";
+		save.title = "Make this the default search map (base, overlay and range rings)";
+		GEvent.addDomListener(save, "click", function() {
+			saveDlg.show();
+		});
+		
+		controller.addMenuItem(save, 20);
+	}
+}
+
+
+org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
+	var that = this;
+	this.searchDAO.load(function(config) {
+		try {
+			var config = YAHOO.lang.JSON.parse(config.value);
+			that.controller.emap.getConfig(config);
+			for(var key in that.controller.registered) {
+				var val = that.controller.registered[key];
+				if(val != null && val.getConfig != null) {
+					val.getConfig(config);
+				}
+				that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
+			}
+		} catch (e) {}
+	}, "mapConfig");
+}
+
+org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function() {
+	var that = this;
+	this.searchDAO.load(function(config) {
+		try {
+			var config = YAHOO.lang.JSON.parse(config.value);
+			that.controller.emap.setConfig(config);
+			for(var key in that.controller.registered) {
+				var val = that.controller.registered[key];
+				if(val != null && val.setConfig != null) {
+					val.setConfig(config);
+				}
+			}
+		} catch (e) {}
+	}, "mapConfig");
 }
 
 org.sarsoft.OperationalPeriodMapInfoControl = function(controller) {	
@@ -509,51 +486,11 @@ org.sarsoft.OperationalPeriodMapInfoControl.prototype.initialize = function(map)
 	// place these in the overlaydropdownmapcontrol
 	var controls = this.controller.emap.controls1;
 	controls.appendChild(document.createTextNode(" "));
-	var setup = document.createElement("img");
-	setup.src="/static/images/config.png";
-	setup.style.cursor = "pointer";
-	setup.style.verticalAlign="middle";
-	setup.title = "Map Setup";
-	GEvent.addDomListener(setup, "click", function() {
-		that.controller.setupDlg.show(that.controller._mapsetup);		
-	});
-	controls.appendChild(setup);
 	controls.appendChild(document.createTextNode(" "));
 
 	var controls = this.controller.emap.controls2;	
 	controls.appendChild(document.createTextNode(" "));
 	
-	
-	var saveDlg = org.sarsoft.view.CreateSimpleDialog("Save Map Background", "This will make the map base and overlay layers, plus the range ring settings, the default for all maps on this search.", "Save", "Cancel", function() {
-		var config = that.controller.emap.getConfig();
-		config.rangerings = that.controller._mapsetup.map.rangerings;
-		that.controller.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});
-	});
-	var save = document.createElement("img");
-	save.src="/static/images/save.png";
-	save.style.cursor = "pointer";
-	save.style.verticalAlign="middle";
-	save.title = "Make this the default search map (base, overlay and range rings)";
-	GEvent.addDomListener(save, "click", function() {
-		saveDlg.show();
-	});
-	controls.appendChild(save);
-	controls.appendChild(document.createTextNode(" "));
-
-	var leaveDlg = org.sarsoft.view.CreateSimpleDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.controller.period.id + "?", "Leave", "Cancel", function() {
-		window.location = "/app/operationalperiod/" + that.controller.period.id;		
-	});
-	var goback = document.createElement("img");
-	goback.src="/static/images/home.png";
-	goback.style.cursor = "pointer";
-	goback.style.verticalAlign="middle";
-	goback.title = "Back to operational period " + this.controller.period.id;
-	GEvent.addDomListener(goback, "click", function() {
-		leaveDlg.show();
-	});
-	controls.appendChild(goback);
-	controls.appendChild(document.createTextNode(" | "));
-
 	return this.div;
 }
 
@@ -593,19 +530,107 @@ org.sarsoft.OperationalPeriodMapInfoControl.prototype.redraw = function() {
 	this.msg.innerHTML = html;
 }
 
+org.sarsoft.controller.SearchWaypointMapController = function(controller) {
+	var that = this;
+	this.waypoints = new Object();
+	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.controller.message("Server Communication Error"); });
+	this.controller = controller;
+	this.controller.register("org.sarsoft.controller.SearchWaypointMapController", this);
+	this.controller.addContextMenuItems([
+		{text : "Set LKP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("LKP", data.point); }},
+		{text : "Set PLS here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("PLS", data.point); }},
+		{text : "Set CP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("CP", data.point); }},
+	]);
+	this.rangerings = "500,1000,1500";
 
-org.sarsoft.controller.OperationalPeriodMapController = function(emap, operationalperiod) {
+	this.searchDAO.load(function(config) {
+			if(config.value != null) {
+				that.place("LKP", config.value);
+				that.controller.setCenter(new GLatLng(config.value.lat, config.value.lng), 14, 1);
+			}
+		}, "lkp");
+	that.searchDAO.load(function(pls) {
+		if(pls.value != null) {
+			that.place("PLS", pls.value);
+		}
+	}, "pls");
+	that.searchDAO.load(function(cp) {
+		if(cp.value != null) {
+			that.place("CP", cp.value);
+		}
+	}, "cp");
+
+}
+
+org.sarsoft.controller.SearchWaypointMapController.prototype.setConfig = function(config) {
+	this.rangerings = config.rangerings;
+	if(this.waypoints["LKP"] != null) this.place("LKP", this.waypoints["LKP"]);
+}
+
+org.sarsoft.controller.SearchWaypointMapController.prototype.getConfig = function(config) {
+	if(config == null) config = new Object();
+	config.rangerings = this.rangerings;
+	return config;
+}
+
+org.sarsoft.controller.SearchWaypointMapController.prototype.set = function(type, point) {
+	var wpt = this.controller.emap.map.fromContainerPixelToLatLng(new GPoint(point.x, point.y));
+	wpt = {lat: wpt.lat(), lng: wpt.lng()};
+	this.searchDAO.save(type.toLowerCase(), { value: wpt });
+	wpt.id = type;
+	this.place(type, wpt);
+}
+
+org.sarsoft.controller.SearchWaypointMapController.prototype.place = function(type, wpt) {
+	if(this.waypoints[type] != null) this.controller.emap.removeWaypoint(this.waypoints[type]);
+	this.waypoints[type] = wpt;
+	if(type == "CP") {
+		var icon = org.sarsoft.MapUtil.createIcon(15, "/static/images/cp.png");
+		this.controller.emap.addWaypoint(wpt, {icon: icon}, type, type);
+	} else {
+		this.controller.emap.addWaypoint(wpt, {color: "#FF0000"}, type, type);
+	}
+	if(type == "LKP") {
+		this.controller.emap.removeRangeRings();
+		if(this.rangerings != null) {
+			var radii = this.rangerings.split(",");
+			for(var i = 0; i < radii.length; i++) {
+				this.controller.emap.addRangeRing(wpt, radii[i], 36);
+			}
+		}
+	}
+}
+
+org.sarsoft.controller.SearchWaypointMapController.prototype.getSetupBlock = function() {
+	var that = this;
+	if(this._mapForm == null) {
+		this._mapForm = new org.sarsoft.view.EntityForm([{name : "rangerings", label: "Range Rings", type: "string"}]);
+		var node = document.createElement("div");
+		this._mapForm.create(node);
+		this._setupBlock = {order : 5, node : node, handler : function() {
+			var obj = that._mapForm.read();
+			that.rangerings = obj.rangerings;
+			if(that.waypoints["LKP"] != null) that.place("LKP", that.waypoints["LKP"]);
+		}};
+	}
+
+	this._mapForm.write({rangerings : this.rangerings});
+	return this._setupBlock;
+}
+
+
+org.sarsoft.controller.OperationalPeriodMapController = function(emap, operationalperiod, controller) {
 	var that = this;
 	this.emap = emap;
 	this.period = operationalperiod;
+	this.controller = controller;
+	this.controller.register("org.sarsoft.controller.OperationalPeriodMapController", this);
 	this.mapInfoControl = new org.sarsoft.OperationalPeriodMapInfoControl(this);
 	this.emap.map.addControl(this.mapInfoControl);
-	this.searchDAO = new org.sarsoft.SearchDAO(function() { that._handleServerError(); });
-	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that._handleServerError(); });
-	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that._handleServerError(); });
-	this.periodDAO = new org.sarsoft.OperationalPeriodDAO(function() { that._handleServerError(); });
+	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.controller.message("Server Communication Error"); });
+	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.controller.message("Server Communication Error"); });
+	this.periodDAO = new org.sarsoft.OperationalPeriodDAO(function() { that.controller.message("Server Communication Error"); });
 	this.assignments = new Object();
-	this.resources = new Object();
 	this._assignmentAttrs = new Object();
 	this.showOtherPeriods = true;
 	this._mapsetup = {
@@ -614,81 +639,50 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		map : { showLocations: true }
 		};
 
-	this.contextMenu = new org.sarsoft.view.ContextMenu();
-	this.contextMenu.setItems([
+	this.controller.addContextMenuItems([
 		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.original = null; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
-		{text : "Set LKP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setLkp(data.point); }},
-		{text : "Set PLS here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setPls(data.point); }},
-		{text : "Set CP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.setCP(data.point); }},
-		{text : "Edit Assignment Bounds", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.edit(data.subject) }},
-		{text : "View Assignment Details", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable"); }, handler : function(data) { window.open('/app/assignment/' + data.subject.id); }},
-		{text : "Delete Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable") && obj.status == "DRAFT"; }, handler : function(data) { that.assignmentDAO.del(data.subject.id); that.removeAssignment(data.subject); }},
-		{text : "Clone Assignment", applicable : function(obj) { return obj != null && !that.getAssignmentAttr(obj, "inedit") && that.getAssignmentAttr(obj, "clickable")}, handler : function(data) { that.newAssignmentDlg.point = null; that.newAssignmentDlg.original = data.subject;
-			that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: data.subject.resourceType, unresponsivePOD: data.subject.unresponsivePOD, responsivePOD: data.subject.responsivePOD, cluePOD: data.subject.cluePOD, timeAllocated: data.subject.timeAllocated, details: data.subject.details}); }},
-		{text : "Save Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.save(data.subject) }},
-		{text : "Discard Changes", applicable : function(obj) { return obj != null && that.getAssignmentAttr(obj, "inedit"); }, handler: function(data) { that.discard(data.subject) }}
+		{text : "Edit Assignment Bounds", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.edit(that._getAssignmentFromWay(data.subject)) }},
+		{text : "View Assignment Details", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { window.open('/app/assignment/' + that._getAssignmentFromWay(data.subject).id); }},
+		{text : "Delete Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.assignmentDAO.del(assignment.id); that.removeAssignment(assignment); }},
+		{text : "Clone Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable")}, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.newAssignmentDlg.point = null; that.newAssignmentDlg.original = assignment;
+			that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: assignment.resourceType, unresponsivePOD: assignment.unresponsivePOD, responsivePOD: assignment.responsivePOD, cluePOD: assignment.cluePOD, timeAllocated: assignment.timeAllocated, details: assignment.details}); }},
+		{text : "Save Changes", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && that.getAssignmentAttr(assignment, "inedit"); }, handler: function(data) { that.save(that._getAssignmentFromWay(data.subject)) }},
+		{text : "Discard Changes", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && that.getAssignmentAttr(assignment, "inedit"); }, handler: function(data) { that.discard(that._getAssignmentFromWay(data.subject)) }}
 		]);
-
-	emap.addListener("singlerightclick", function(point, way) {
-		that.contextMenu.show(point, that._getAssignmentFromWay(way));
+	
+	var leaveDlg = org.sarsoft.view.CreateSimpleDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.period.id + "?", "Leave", "Cancel", function() {
+		window.location = "/app/operationalperiod/" + that.period.id;		
 	});
+	var goback = document.createElement("img");
+	goback.src="/static/images/home.png";
+	goback.style.cursor = "pointer";
+	goback.style.verticalAlign="middle";
+	goback.title = "Back to operational period " + this.period.id;
+	GEvent.addDomListener(goback, "click", function() {
+		leaveDlg.show();
+	});
+	this.controller.addMenuItem(goback, 30);
+	this.controller.addMenuItem(document.createTextNode(" | "), 31);
 
-	this.isCenterSet=false;
 	this.periodDAO.load(function(period) {
-		that.searchDAO.load(function(config) {
-				that._mapsetup.map.labeltw = false;
-				if(config.value == null) {
-					that._mapsetup.map.rangerings = "500,1000,1500";
-				} else try {
-					var mapConfig = YAHOO.lang.JSON.parse(config.value);
-					that._mapsetup.map.rangerings = mapConfig.rangerings;
-					that.emap.setConfig(mapConfig);
-				} catch (e) {}
-				if(that.lkp != null) that.placeLkp(that.lkp);
-				var bb = period.boundingBox;
-				if(bb.length == 0) {
-					that.periodDAO.loadAll(function(periods) {
-						for(var i = periods.length; i >= 0; i--) {
-							if(periods[i] != null && periods[i].boundingBox.length > 0 && bb.length == 0) {
-								bb = periods[i].boundingBox;
-								var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-								that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-								that.isCenterSet=true;
-							}
+			var bb = period.boundingBox;
+			if(bb.length == 0) {
+				that.periodDAO.loadAll(function(periods) {
+					for(var i = periods.length; i >= 0; i--) {
+						if(periods[i] != null && periods[i].boundingBox.length > 0 && bb.length == 0) {
+							bb = periods[i].boundingBox;
+							var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
+							that.controller.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))), 1);
 						}
-					});
-				} else {
-					var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-					that.emap.map.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
-					that.isCenterSet=true;
-				}
-				that.mapInfoControl.redraw();				
-		}, "mapConfig");
-		that.searchDAO.load(function(config) {
-			if(config.value != null) {
-				that.lkp = config.value;
-				that.placeLkp(config.value);
-				if(that.isCenterSet==false) {
-					that.emap.map.setCenter(new GLatLng(that.lkp.lat, that.lkp.lng), 14);
-				}
-				}
-		}, "lkp");
-		that.searchDAO.load(function(pls) {
-			if(pls.value != null) {
-				that.pls = pls.value;
-				that.placePls(pls.value);
+					}
+				});
+			} else {
+				var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
+				that.controller.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))), 20);
 			}
-		}, "pls");
-		that.searchDAO.load(function(cp) {
-			if(cp.value != null) {
-				that.cp = cp.value;
-				that.placeCP(cp.value);
-			}
-		}, "cp");
 	}, that.period.id);
 
-	var handler = function(assignment) {
-		var mapconfig = that.emap.getConfig();
+	this.newAssignmentDlg = new org.sarsoft.view.EntityCreateDialog("Create Assignment", new org.sarsoft.view.SearchAssignmentForm(), function(assignment) {
 		var way = { name: assignment.name, polygon: assignment.polygon };
 		assignment.ways = [way];
 		if(that.newAssignmentDlg.point != null) {
@@ -707,38 +701,22 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		}
 		that.assignmentDAO.create(function(obj) {
 			that.addAssignment(obj);
-		}, assignment);
-	}
-
-	var setupHandler = function(obj) {
-		that._mapsetup = obj;
-		that._handleSetupChange();
-	}
-
-	this.newAssignmentDlg = new org.sarsoft.view.EntityCreateDialog("Create Assignment", new org.sarsoft.view.SearchAssignmentForm(), handler);
-	this.setupDlg = new org.sarsoft.view.OperationalPeriodMapSetupDlg(setupHandler);
+		}, assignment);		
+	});
 
 	this.assignmentDAO.loadAll(function(assignments) {
 		for(var i = 0; i < assignments.length; i++) {
 			that.addAssignment(assignments[i]);
 		}
-		that.resourceDAO.loadAll(function(resources) {
-			that.refreshResourceData(resources);
-		});
-		that.resourceDAO.mark();
 	});
 
 	this.assignmentDAO.mark();
 
-	this.emap._infomessage("Operational Period " + this.period.id + ".  Right click to create/edit assignments.", 30000);
+	this.controller.message("Operational Period " + this.period.id + ".  Right click to create/edit assignments.", 30000);
 
 }
 
 org.sarsoft.controller.OperationalPeriodMapController._idx = 0;
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype._handleServerError = function() {
-	this.emap._infomessage("Server Error");
-}
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFromWay = function(way) {
 	if(way == null) return null;
@@ -758,8 +736,8 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._handleSetupChan
 		}
 		this.addAssignment(assignment);
 	}
-	this.placeLkp(this.lkp);
-	this.reprocessResourceData();
+//	this.placeLkp(this.lkp);
+//	this.reprocessResourceData();
 	this.mapInfoControl.redraw();
 }
 
@@ -778,10 +756,6 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function
 		that.assignmentDAO.mark();
 	});
 
-	this.resourceDAO.loadSince(function(resources) {
-		that.refreshResourceData(resources);
-		that.resourceDAO.mark();
-	});
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.save = function(assignment) {
@@ -807,56 +781,6 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.edit = function(
 	this.setAssignmentAttr(assignment, "inedit", true);
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.setLkp = function(lkp) {
-	var lkp = this.emap.map.fromContainerPixelToLatLng(new GPoint(lkp.x, lkp.y));
-	lkp = {lat: lkp.lat(), lng: lkp.lng()};
-	this.searchDAO.save("lkp", { value: lkp});
-	lkp.id = "lkp";
-	this.placeLkp(lkp);
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.setPls = function(pls) {
-	var pls = this.emap.map.fromContainerPixelToLatLng(new GPoint(pls.x, pls.y));
-	pls = {lat: pls.lat(), lng: pls.lng()};
-	this.searchDAO.save("pls", { value: pls});
-	pls.id = "pls";
-	this.placePls(pls);
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.setCP = function(cp) {
-	var cp = this.emap.map.fromContainerPixelToLatLng(new GPoint(cp.x, cp.y));
-	cp = {lat: cp.lat(), lng: cp.lng()};
-	this.searchDAO.save("cp", { value: cp});
-	cp.id = "cp";
-	this.placeCP(cp);
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.placeLkp = function(lkp) {
-	if(this.lkp != null) this.emap.removeWaypoint(this.lkp);
-	this.lkp = lkp;
-	this.emap.addWaypoint(lkp, {color: "#FF0000"}, "LKP", "LKP");
-	this.emap.removeRangeRings();
-	if(this._mapsetup.map.rangerings != null) {
-		var radii = this._mapsetup.map.rangerings.split(",");
-		for(var i = 0; i < radii.length; i++) {
-			this.emap.addRangeRing(lkp, radii[i], 36);
-		}
-	}
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.placePls = function(pls) {
-	if(this.pls != null) this.emap.removeWaypoint(this.pls);
-	this.pls = pls;
-	this.emap.addWaypoint(pls, {color: "#FF0000"}, "PLS", "PLS");
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.placeCP = function(cp) {
-	if(this.cp != null) this.emap.removeWaypoint(this.cp);
-	this.cp = cp;
-	var icon = org.sarsoft.MapUtil.createIcon(15, "/static/images/cp.png");
-	this.emap.addWaypoint(cp, {icon: icon}, "CP", "CP");
-}
-
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setAssignmentAttr = function(assignment, key, value) {
 	if(assignment == null) return null;
 	if(typeof this._assignmentAttrs[assignment.id] == "undefined") {
@@ -878,68 +802,23 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.removeAssignment
 	delete this.assignments[assignment.id];
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = function(resource) {
-	if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].position);
-	if(resource.position == null) return;
-	this.resources[resource.id] = resource;
-	if(!this._mapsetup.map.showLocations) return; // need lines above this in case the user re-enables resources
-
-	var config = new Object();	
-	var date = new Date(1*resource.position.time);
-	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-	var tooltip = resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds());
-	var label = resource.name;
+org.sarsoft.controller.OperationalPeriodMapController.prototype.getColorForAssignmentId = function(id) {
+	var assignment = this.assignments[id];
+	if(assignment == null) return "#000000";
+	var setup = (assignment.operationalPeriodId == this.period.id) ? this._mapsetup.present : this._mapsetup.past;
 	
-	if(resource.assignmentId != null && this.assignments[resource.assignmentId] != null && this.assignments[resource.assignmentId].operationalPeriodId == this.period.id) {
-		var assignment = this.assignments[resource.assignmentId];
-		var setup = this._mapsetup.present;
-		if(setup.colorby == "Disabled") {
-			config.color ="#000000";
-		} else if(setup.colorby == "Assignment Number") {
-			config.color = org.sarsoft.Constants.colorsById[assignment.id%org.sarsoft.Constants.colorsById.length];
-		} else if(setup.colorby == "Resource Type") {
-			config.color = org.sarsoft.Constants.colorsByResourceType[assignment.resourceType];
-		} else if(setup.colorby == "POD") {
-			config.color = org.sarsoft.Constants.colorsByProbability[assignment.responsivePOD];
-		} else if(setup.colorby == "Assignment Status") {
-			config.color = org.sarsoft.Constants.colorsByStatus[assignment.status];
-		}
-		tooltip = resource.assignmentId + "-" + tooltip;
-		label = resource.assignmentId + "-" + label;
-	} else {
-		config.color = "#000000";
-	}
-	
-	this.emap.addWaypoint(resource.position, config, tooltip, (this._mapsetup.map.labeltw == true) ? label : null);
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.refreshResourceData = function(resources) {
-	var that = this;
-
-	var timestamp = this.resourceDAO._timestamp;
-	for(var i = 0; i < resources.length; i++) {
-		this.showResource(resources[i]);
+	if(setup.colorby == "Disabled") {
+		return "#000000";
+	} else if(setup.colorby == "Assignment Number") {
+		return org.sarsoft.Constants.colorsById[assignment.id%org.sarsoft.Constants.colorsById.length];
+	} else if(setup.colorby == "Resource Type") {
+		return org.sarsoft.Constants.colorsByResourceType[assignment.resourceType];
+	} else if(setup.colorby == "POD") {
+		return org.sarsoft.Constants.colorsByProbability[assignment.responsivePOD];
+	} else if(setup.colorby == "Assignment Status") {
+		return org.sarsoft.Constants.colorsByStatus[assignment.status];
 	}
 
-	for(var key in this.resources) {
-		var resource = this.resources[key];
-		if(timestamp - (1*resource.position.time) > 1800000) {
-			this.emap.removeWaypoint(resource.position);
-			delete this.resources[key];
-		}
-	}
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.reprocessResourceData = function() {
-	if(!this._mapsetup.map.showLocations) {
-		for(var key in this.resources) {
-			this.emap.removeWaypoint(this.resources[key].position);
-		}
-	} else {
-		for(var key in this.resources) {
-			this.showResource(this.resources[key]);
-		}
-	}
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = function(assignment) {
@@ -958,21 +837,10 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 
 		if(setup.show != "ALL ASSIGNMENTS" && setup.show != assignment.resourceType) return;
 
+		config.color = this.getColorForAssignmentId(assignment.id);
 		config.fill = setup.fill;
 		config.opacity = setup.opacity;
 		config.showtracks = setup.showtracks;
-
-		if(setup.colorby == "Disabled") {
-			config.color ="#000000";
-		} else if(setup.colorby == "Assignment Number") {
-			config.color = org.sarsoft.Constants.colorsById[assignment.id%org.sarsoft.Constants.colorsById.length];
-		} else if(setup.colorby == "Resource Type") {
-			config.color = org.sarsoft.Constants.colorsByResourceType[assignment.resourceType];
-		} else if(setup.colorby == "POD") {
-			config.color = org.sarsoft.Constants.colorsByProbability[assignment.responsivePOD];
-		} else if(setup.colorby == "Assignment Status") {
-			config.color = org.sarsoft.Constants.colorsByStatus[assignment.status];
-		}
 
 		this.setAssignmentAttr(assignment, "clickable", config.clickable);
 
@@ -1012,6 +880,51 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		}
 	}
 }
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.getSetupBlock = function() {
+	var that = this;
+	if(this._setupForm1 == null) {
+		this._setupForm1 = new org.sarsoft.view.EntityForm([
+       		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","GROUND","DOG","MOUNTED","OHV"]},
+       		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
+       		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
+       		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"},
+       		{ name : "showtracks", label: "Show Tracks", type : "boolean"}
+       	]);
+		this._setupForm2 = new org.sarsoft.view.EntityForm([
+	   		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","NONE","GROUND","DOG","MOUNTED","OHV"]},
+	   		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
+	   		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
+	   		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"},
+	   		{ name : "showtracks", label: "Show Tracks", type : "boolean"}
+	   	]);
+		var node = document.createElement("div");
+       	node.style.width="100%";
+       	var present = document.createElement("div");
+       	present.style.width="240px";
+       	present.style.float="left";
+       	present.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>This OP:</span><br/>";
+       	node.appendChild(present);
+       	var past = document.createElement("div");
+       	past.style.width="240px";
+       	past.style.float="right";
+       	past.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>Previous OPs:</span><br/>";
+       	node.appendChild(past);
+		
+		this._setupForm1.create(present);
+		this._setupForm2.create(past);
+		this._setupBlock = {order : 1, node : node, handler : function() {
+			that._mapsetup.present = that._setupForm1.read();
+			that._mapsetup.past = that._setupForm2.read();
+			that._handleSetupChange();
+		}};
+	}
+
+	this._setupForm1.write(this._mapsetup.present);
+	this._setupForm2.write(this._mapsetup.past);
+	return this._setupBlock;
+}
+
 
 org.sarsoft.view.BulkGPXDlg = function(id) {
 	var that = this;

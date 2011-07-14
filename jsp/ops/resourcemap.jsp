@@ -13,8 +13,14 @@ org.sarsoft.Loader.queue(function() {
   egm = new org.sarsoft.EnhancedGMap();
   map = egm.createMap(document.getElementById('map_canvas'));
   emap = new org.sarsoft.EditableGMap(map, true);
-  resourceController = new org.sarsoft.controller.ResourceMapController(emap);
-  setInterval("resourceController.timer()", 10000);
+  
+  mapController = new org.sarsoft.MapController(emap);
+  waypointController = new org.sarsoft.controller.SearchWaypointMapController(mapController);
+  resourceController = new org.sarsoft.controller.ResourceLocationMapController(mapController);
+  callsignController = new org.sarsoft.controller.CallsignMapController(mapController);
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(mapController);
+  configWidget.loadConfig();
+  setInterval("mapController.timer()", 10000);
 });
 }
 </script>
