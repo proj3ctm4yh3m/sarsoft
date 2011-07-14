@@ -198,10 +198,10 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.refresh = functio
 
 	for(var key in this.resources) {
 		var resource = this.resources[key];
-//		if(timestamp - (1*resource.position.time) > 1800000) {
-//			this.controller.emap.removeWaypoint(resource.position);
-//			delete this.resources[key];
-//		}
+		if(timestamp - (1*resource.position.time) > 1800000) {
+			this.controller.emap.removeWaypoint(resource.position);
+			delete this.resources[key];
+		}
 	}
 }
 
@@ -295,26 +295,23 @@ org.sarsoft.controller.CallsignMapController.prototype.expireCallsigns = functio
 	for(var key in this.callsigns) {
 		var callsign = this.callsigns[key];
 		if(callsign.position != null && timestamp - (1*callsign.position.time) > 400000) {
-			this.addCallsign(callsign, true);
+			this.controller.emap.removeWaypoint(callsign.position);
+			delete this.callsigns[key];
 		}
 	}
 }
 
-
-org.sarsoft.controller.CallsignMapController.prototype.addCallsign = function(callsign, expireCheck) {
+org.sarsoft.controller.CallsignMapController.prototype.addCallsign = function(callsign) {
 	if(this.callsigns[callsign.name] != null) this.controller.emap.removeWaypoint(this.callsigns[callsign.name].position);
 	if(callsign.position == null) return;
-	if(expireCheck != true) {
-		this.callsigns[callsign.name] = callsign;
-		callsign.position.id = this._callsignId;
-		this._callsignId--;
-	}
+	this.callsigns[callsign.name] = callsign;
+	callsign.position.id = this._callsignId;
+	this._callsignId--;
 	var config = new Object();
 	if(!this.showCallsigns) return;
 
 	var timestamp = this.callsignDAO._timestamp;
-	config.color = "#FFCC00";
-	if(timestamp - (1*callsign.position.time) > 400000) config.color = "#000000";
+	config.color = "#000000";
 
 	var date = new Date(1*callsign.position.time);
 	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
