@@ -355,7 +355,7 @@ org.sarsoft.view.MapSetupWidget = function(controller) {
 	GEvent.addDomListener(setup, "click", function() {
 		that.showDlg();
 	});
-	controller.addMenuItem(setup, 12);
+	controller.addMenuItem(setup, 25);
 
 }
 
@@ -409,7 +409,7 @@ org.sarsoft.view.PersistedConfigWidget = function(controller, persist) {
 			saveDlg.show();
 		});
 		
-		controller.addMenuItem(save, 20);
+		controller.addMenuItem(save, 34);
 	}
 }
 
@@ -417,33 +417,29 @@ org.sarsoft.view.PersistedConfigWidget = function(controller, persist) {
 org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 	var that = this;
 	this.searchDAO.load(function(config) {
-		try {
-			var config = YAHOO.lang.JSON.parse(config.value);
-			that.controller.emap.getConfig(config);
-			for(var key in that.controller.registered) {
-				var val = that.controller.registered[key];
-				if(val != null && val.getConfig != null) {
-					val.getConfig(config);
-				}
-				that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
+		var config = YAHOO.lang.JSON.parse(config.value);
+		that.controller.emap.getConfig(config);
+		for(var key in that.controller.registered) {
+			var val = that.controller.registered[key];
+			if(val != null && val.getConfig != null) {
+				val.getConfig(config);
 			}
-		} catch (e) {}
+			that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
+		}
 	}, "mapConfig");
 }
 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function() {
 	var that = this;
 	this.searchDAO.load(function(config) {
-		try {
-			var config = YAHOO.lang.JSON.parse(config.value);
-			that.controller.emap.setConfig(config);
-			for(var key in that.controller.registered) {
-				var val = that.controller.registered[key];
-				if(val != null && val.setConfig != null) {
-					val.setConfig(config);
-				}
+		var config = YAHOO.lang.JSON.parse(config.value);
+		that.controller.emap.setConfig(config);
+		for(var key in that.controller.registered) {
+			var val = that.controller.registered[key];
+			if(val != null && val.setConfig != null) {
+				val.setConfig(config);
 			}
-		} catch (e) {}
+		}
 	}, "mapConfig");
 }
 
@@ -483,14 +479,6 @@ org.sarsoft.OperationalPeriodMapInfoControl.prototype.initialize = function(map)
 	
 	map.getContainer().appendChild(this.div);
 	
-	// place these in the overlaydropdownmapcontrol
-	var controls = this.controller.emap.controls1;
-	controls.appendChild(document.createTextNode(" "));
-	controls.appendChild(document.createTextNode(" "));
-
-	var controls = this.controller.emap.controls2;	
-	controls.appendChild(document.createTextNode(" "));
-	
 	return this.div;
 }
 
@@ -511,22 +499,12 @@ org.sarsoft.OperationalPeriodMapInfoControl.prototype.minmax = function() {
 org.sarsoft.OperationalPeriodMapInfoControl.prototype.redraw = function() {
 	var setup = this.controller._mapsetup;
 	var html = "";
-	if(setup.map.rangerings != null && setup.map.rangerings.length > 0) {
-		html += "Range Rings at " + setup.map.rangerings + "m";
+	if(setup.rangerings != null && setup.rangerings.length > 0) {
+		html += "Range Rings at " + setup.rangerings + "m";
 	}
 	
 	html += " This OP: " + setup.present.show;
-	if(setup.present.showtracks) {
-		html += " w/ tracks";
-	} else {
-		html += " <span style='text-decoration: line-through'>no tracks</span>";
-	}
 	html += " Prev OP: " + setup.past.show;
-	if(setup.past.showtracks) {
-		html += " w/ tracks";
-	} else {
-		html += " <span style='text-decoration: line-through'>no tracks</span>";
-	}
 	this.msg.innerHTML = html;
 }
 
@@ -563,13 +541,15 @@ org.sarsoft.controller.SearchWaypointMapController = function(controller) {
 }
 
 org.sarsoft.controller.SearchWaypointMapController.prototype.setConfig = function(config) {
-	this.rangerings = config.rangerings;
+	if(config.SearchWaypointMapController == null) return;
+	this.rangerings = config.SearchWaypointMapController.rangerings;
 	if(this.waypoints["LKP"] != null) this.place("LKP", this.waypoints["LKP"]);
 }
 
 org.sarsoft.controller.SearchWaypointMapController.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
-	config.rangerings = this.rangerings;
+	if(config.SearchWaypointMapController == null) config.SearchWaypointMapController = new Object();
+	config.SearchWaypointMapController.rangerings = this.rangerings;
 	return config;
 }
 
@@ -634,9 +614,10 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this._assignmentAttrs = new Object();
 	this.showOtherPeriods = true;
 	this._mapsetup = {
-		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50, showtracks : true },
-		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 35, opacity : 100, showtracks : true},
-		map : { showLocations: true }
+		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50},
+		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 35, opacity : 100},
+		showtracks : true,
+		showlabels : true
 		};
 
 	this.controller.addContextMenuItems([
@@ -661,8 +642,29 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	GEvent.addDomListener(goback, "click", function() {
 		leaveDlg.show();
 	});
-	this.controller.addMenuItem(goback, 30);
-	this.controller.addMenuItem(document.createTextNode(" | "), 31);
+	this.controller.addMenuItem(goback, 40);
+	
+	var showTracks = document.createElement("span");
+	showTracks.innerHTML="TRK";
+	showTracks.style.cursor = "pointer";
+	showTracks.title = "Show/Hide tracks and waypoints";
+	GEvent.addDomListener(showTracks, "click", function() {
+		that._mapsetup.showtracks = !that._mapsetup.showtracks;
+		that.handleSetupChange();
+	});
+	this.controller.addMenuItem(showTracks, 15);
+	this.showTracks = showTracks;
+
+	var showLabels = document.createElement("span");
+	showLabels.innerHTML="LBL";
+	showLabels.style.cursor = "pointer";
+	showLabels.title = "Show/Hide assignment labels";
+	GEvent.addDomListener(showLabels, "click", function() {
+		that._mapsetup.showlabels = !that._mapsetup.showlabels;
+		that.handleSetupChange();
+	});
+	this.controller.addMenuItem(showLabels, 17);
+	this.showLabels = showLabels;
 
 	this.periodDAO.load(function(period) {
 			var bb = period.boundingBox;
@@ -718,6 +720,22 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 
 org.sarsoft.controller.OperationalPeriodMapController._idx = 0;
 
+org.sarsoft.controller.OperationalPeriodMapController.prototype.setConfig = function(config) {
+	if(config.OperationalPeriodMapController == null) return;
+	this._mapsetup.showtracks = config.OperationalPeriodMapController.showtracks;
+	this._mapsetup.showlabels = config.OperationalPeriodMapController.showlabels;
+	this.handleSetupChange();
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.getConfig = function(config) {
+	if(config == null) config = new Object();
+	if(config.OperationalPeriodMapController == null) config.OperationalPeriodMapController = new Object();
+	config.OperationalPeriodMapController.showtracks = this._mapsetup.showtracks;
+	config.OperationalPeriodMapController.showlabels = this._mapsetup.showlabels;
+	return config;
+}
+
+
 org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFromWay = function(way) {
 	if(way == null) return null;
 	for(var key1 in this.assignments) {
@@ -728,7 +746,19 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFr
 	return null;
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype._handleSetupChange = function() {
+org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChange = function() {
+	if(this._mapsetup.showtracks) {
+		this.showTracks.innerHTML = "TRK";
+	} else {
+		this.showTracks.innerHTML = "<span style='text-decoration: line-through'>TRK</span>";		
+	}
+	if(this._mapsetup.showlabels) {
+		this.showLabels.innerHTML = "LBL";
+	} else {
+		this.showLabels.innerHTML = "<span style='text-decoration: line-through'>LBL</span>";
+	}
+	
+
 	for(var id in this.assignments) {
 		var assignment = this.assignments[id];
 		for(var i = 0; i < assignment.ways.length; i++) {
@@ -840,7 +870,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 		config.color = this.getColorForAssignmentId(assignment.id);
 		config.fill = setup.fill;
 		config.opacity = setup.opacity;
-		config.showtracks = setup.showtracks;
+		config.showtracks = this._mapsetup.showtracks;
 
 		this.setAssignmentAttr(assignment, "clickable", config.clickable);
 
@@ -869,14 +899,14 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		way.waypoints = way.zoomAdjustedWaypoints;
 		way.displayMessage = "Assignment " + assignment.id + ": " + assignment.status + " " + assignment.formattedSize + " " + assignment.timeAllocated + "hr " + assignment.resourceType + ".  <a href='/app/assignment/" + assignment.id + "' target='_new'>Details</a>";
 		var label = null;
-		if(this._mapsetup.map.labeltw) label = way.name;
+		if(this._mapsetup.showlabels) label = way.name;
 		if(way.type == "ROUTE") label = assignment.id
 		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config, label);
 	}
 	if(config.clickable) {
 		for(var i = 0; i < assignment.waypoints.length; i++) {
 			var wpt = assignment.waypoints[i];
-			this.emap.addWaypoint(wpt, config, wpt.name, (this._mapsetup.map.labeltw == true) ? wpt.name : null);
+			this.emap.addWaypoint(wpt, config, wpt.name, (this._mapsetup.showlabels == true) ? wpt.name : null);
 		}
 	}
 }
@@ -888,15 +918,13 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getSetupBlock = 
        		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","GROUND","DOG","MOUNTED","OHV"]},
        		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
        		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
-       		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"},
-       		{ name : "showtracks", label: "Show Tracks", type : "boolean"}
+       		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"}
        	]);
 		this._setupForm2 = new org.sarsoft.view.EntityForm([
 	   		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","NONE","GROUND","DOG","MOUNTED","OHV"]},
 	   		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
 	   		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
-	   		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"},
-	   		{ name : "showtracks", label: "Show Tracks", type : "boolean"}
+	   		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"}
 	   	]);
 		var node = document.createElement("div");
        	node.style.width="100%";
@@ -916,7 +944,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getSetupBlock = 
 		this._setupBlock = {order : 1, node : node, handler : function() {
 			that._mapsetup.present = that._setupForm1.read();
 			that._mapsetup.past = that._setupForm2.read();
-			that._handleSetupChange();
+			that.handleSetupChange();
 		}};
 	}
 

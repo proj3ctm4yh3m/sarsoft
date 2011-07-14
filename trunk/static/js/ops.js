@@ -75,6 +75,17 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	this.controller.addContextMenuItems([
      		{text : "View Resource Details", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/resource/' + that.getResourceIdFromWpt(data.subject)); }}
      		]);
+	
+	var showHide = document.createElement("span");
+	showHide.innerHTML="LOC";
+	showHide.style.cursor = "pointer";
+	showHide.title = "Show/Hide Resource Locations";
+	GEvent.addDomListener(showHide, "click", function() {
+		that.showLocations = !that.showLocations;
+		that.handleSetupChange();
+	});
+	this.controller.addMenuItem(showHide, 18);
+	this.showHide = showHide;
 
 	that.resourceDAO.loadAll(function(resources) {
 		var n = -180;
@@ -97,6 +108,19 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	});		
 	this.resourceDAO.mark();
 	
+}
+
+org.sarsoft.controller.ResourceLocationMapController.prototype.setConfig = function(config) {
+	if(config.ResourceLocationMapController == null || config.ResourceLocationMapController.showLocations == null) return;
+	this.showLocations = config.ResourceLocationMapController.showLocations;
+	this.handleSetupChange();
+}
+
+org.sarsoft.controller.ResourceLocationMapController.prototype.getConfig = function(config) {
+	if(config == null) config = new Object();
+	if(config.ResourceLocationMapController == null) config.ResourceLocationMapController = new Object();
+	config.ResourceLocationMapController.showLocations = this.showLocations;
+	return config;
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.getResourceIdFromWpt = function(wpt) {
@@ -132,7 +156,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 		config.color = "#FF0000";
 	}
 	
-	if(resource.assignmentId != null) {
+	if(resource.assignmentId != null && resource.assignmentId > 0) {
 		tooltip = resource.assignmentId + "-" + tooltip;
 		label = resource.assignmentId + "-" + label;
 	}
@@ -158,6 +182,11 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.refresh = functio
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange = function() {
+	if(this.showLocations) {
+		this.showHide.innerHTML = "LOC";
+	} else {
+		this.showHide.innerHTML = "<span style='text-decoration: line-through'>LOC</span>";
+	}
 	if(!this.showLocations) {
 		for(var key in this.resources) {
 			this.controller.emap.removeWaypoint(this.resources[key].position);
@@ -169,24 +198,6 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange
 	}
 }
 
-org.sarsoft.controller.ResourceLocationMapController.prototype.getSetupBlock = function() {
-	var that = this;
-	if(this._setupForm == null) {
-		this._setupForm = new org.sarsoft.view.EntityForm([{name : "showLocations", label: "Show Locations", type: "boolean"}]);
-		var node = document.createElement("div");
-		this._setupForm.create(node);
-		this._setupBlock = {order : 6, node : node, handler : function() {
-			var obj = that._setupForm.read();
-			that.showLocations = obj.showLocations;
-			that.handleSetupChange();
-		}};
-	}
-
-	this._setupForm.write({showLocations : this.showLocations});
-	return this._setupBlock;
-}
-
-
 org.sarsoft.controller.CallsignMapController = function(controller) {
 	var that = this;
 	this.callsignDAO = new org.sarsoft.ResourceDAO(function() { that.controller.message("Server Communication Error!"); }, "/rest/callsign");
@@ -197,20 +208,15 @@ org.sarsoft.controller.CallsignMapController = function(controller) {
 	this.controller.register("org.sarsoft.controller.CallsignMapController", this);
 
 	var showHide = document.createElement("span");
-	showHide.innerHTML="CALL";
+	showHide.innerHTML="CLL";
 	showHide.style.cursor = "pointer";
 	showHide.title = "Show/Hide Nearby Callsigns";
 	GEvent.addDomListener(showHide, "click", function() {
-		if(that.showCallsigns) {
-			that.showCallsigns = false;
-			showHide.innerHTML = "<span style='text-decoration: line-through'>CALL</span>";
-		} else {
-			that.showCallsigns = true;
-			showHide.innerHTML = "CALL";
-		}
+		that.showCallsigns = !that.showCallsigns;
 		that.handleSetupChange();
 	});
-	this.controller.addMenuItem(showHide, 25);
+	this.controller.addMenuItem(showHide, 19);
+	this.showHide = showHide;
 	
 	this.callsignDAO.mark();
 	this.callsignDAO.loadAll(function(callsigns) {
@@ -224,7 +230,25 @@ org.sarsoft.controller.CallsignMapController = function(controller) {
 
 org.sarsoft.controller.CallsignMapController._idx = 0;
 
+org.sarsoft.controller.CallsignMapController.prototype.setConfig = function(config) {
+	if(config.CallsignMapController == null) return;
+	this.showCallsigns = config.CallsignMapController.showCallsigns;
+	this.handleSetupChange();
+}
+
+org.sarsoft.controller.CallsignMapController.prototype.getConfig = function(config) {
+	if(config == null) config = new Object();
+	if(config.CallsignMapController == null) config.CallsignMapController = new Object();
+	config.CallsignMapController.showCallsigns = this.showCallsigns;
+	return config;
+}
+
 org.sarsoft.controller.CallsignMapController.prototype.handleSetupChange = function() {
+	if(this.showCallsigns) {
+		this.showHide.innerHTML = "CLL";
+	} else {
+		this.showHide.innerHTML = "<span style='text-decoration: line-through'>CLL</span>";
+	}
 	for(var cs in this.callsigns) {
 		var callsign = this.callsigns[cs];
 		this.addCallsign(callsign);

@@ -343,14 +343,14 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 				that._drawUTMGrid(true);
 			});
 			extras.appendChild(this._UTMToggle);
-			extras.appendChild(document.createTextNode(" | "));
-
-			this.controls1 = document.createElement("span");
-			extras.appendChild(this.controls1);
+			extras.appendChild(document.createTextNode(" "));
+			var n = document.createTextNode(" | ");
+			n.menuOrder = 20;
+			extras.appendChild(n);
 
 			this.pageSizeDlg = new org.sarsoft.view.MapSizeDlg(this.map);
 			var pagesetup = document.createElement("img");
-			pagesetup.menuOrder=20;
+			pagesetup.menuOrder=30;
 			pagesetup.src="/static/images/print.png";
 			pagesetup.style.cursor="pointer";
 			pagesetup.style.verticalAlign="middle";
@@ -360,8 +360,9 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 			});
 			extras.appendChild(document.createTextNode(" "));
 			extras.appendChild(pagesetup);
-			this.controls2 = document.createElement("span");
-			extras.appendChild(this.controls2);
+			var n = document.createTextNode(" | ");
+			n.menuOrder = 100;
+			extras.appendChild(n);
 		}
 		
 	}
@@ -372,11 +373,21 @@ org.sarsoft.FixedGMap.prototype.getConfig = function(config) {
 	config.base = this.map.getCurrentMapType().getName();
 	config.overlay = this.map._sarsoft_overlay_name;
 	config.opacity = this.map._sarsoft_overlay_opacity;
+	config.utm = this._showUTM;
 	return config;
 }
 
 org.sarsoft.FixedGMap.prototype.setConfig = function(config) {
 	this.setMapLayers(config.base, config.overlay, config.opacity);
+	if(config.utm != null) {
+		this._showUTM = config.utm;
+		if(this._showUTM) {
+			this._UTMToggle.innerHTML = "UTM";
+		} else {
+			this._UTMToggle.innerHTML = "<span style='text-decoration: line-through'>UTM</span>";
+		}
+		this._drawUTMGrid(true);
+	}
 }
 
 org.sarsoft.FixedGMap.prototype.setMapLayers = function(baseName, overlayName, opacity) {
