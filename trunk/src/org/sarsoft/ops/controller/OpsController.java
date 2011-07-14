@@ -332,6 +332,7 @@ public class OpsController extends JSONBaseController {
 					m.put("callsign", callsign);
 					m.put("name", callsign);
 					m.put("position", csmap.get(callsign));
+					m.put("lastFix", csmap.get(callsign).getTime());
 					cslist.add(m);
 				}
 			}

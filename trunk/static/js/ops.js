@@ -13,7 +13,7 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete) {
 		{ key : "callsign", label : "Callsign"},
 		{ key : "spotId", label: "SPOT ID"},
 		{ key : "position", label : "Position", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
-		{ key : "position", label : "Last Update", formatter : function(cell, record, column, data) { if (data == null) return; cell.innerHTML = new Date(1*data.time).toUTCString(); }, sortable : true}
+		{ key : "lastFix", label : "Last Update", formatter : function(cell, record, column, data) { if (data == null) return; cell.innerHTML = new Date(1*data).toUTCString(); }, sortable : true}
 	];
 	if(onDelete == null) {
 		coldefs.splice(0,1);

@@ -94,6 +94,13 @@ public class Resource extends SarModelObject {
 	}
 	
 	@JSONSerializable
+	@Transient
+	public Date getLastFix() {
+		if(position != null) return position.getTime();
+		return null;
+	}
+	
+	@JSONSerializable
 	public String getCallsign() {
 		return callsign;
 	}

@@ -540,7 +540,7 @@ org.sarsoft.FixedGMap.prototype._addOverlay = function(way, config, label) {
 			}
 		}
 		if(label != null) {
-			labelOverlay = new ELabel(new GLatLng(labelwpt.lat, labelwpt.lng), label);
+			labelOverlay = new ELabel(new GLatLng(labelwpt.lat, labelwpt.lng), label, "width: 6em");
 			this.map.addOverlay(labelOverlay);
 		}
 	}
@@ -606,7 +606,7 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
 	if(label != null) {
-		labelOverlay = new ELabel(gll, label, null, new GSize(4, -4));
+		labelOverlay = new ELabel(gll, label, "width: 6em", new GSize(4, -4));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
 	}

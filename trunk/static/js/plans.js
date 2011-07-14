@@ -739,14 +739,13 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		for(var i = 0; i < assignments.length; i++) {
 			that.addAssignment(assignments[i]);
 		}
-	});
-
-	this.resourceDAO.loadAll(function(resources) {
-		that.refreshResourceData(resources);
+		that.resourceDAO.loadAll(function(resources) {
+			that.refreshResourceData(resources);
+		});
+		that.resourceDAO.mark();
 	});
 
 	this.assignmentDAO.mark();
-	this.resourceDAO.mark();
 
 	this.emap._infomessage("Operational Period " + this.period.id + ".  Right click to create/edit assignments.", 30000);
 
@@ -897,15 +896,20 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.removeAssignment
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = function(resource) {
-	if(resource.assignmentId == null) return;
-	var assignment = this.assignments[resource.assignmentId];
-	if(assignment != null && assignment.operationalPeriodId == this.period.id) {
-		if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].position);
-		if(resource.position == null) return;
-		this.resources[resource.id] = resource;
-		if(!this._mapsetup.map.showLocations) return; // need lines above this in case the user re-enables resources
+	if(this.resources[resource.id] != null) this.emap.removeWaypoint(this.resources[resource.id].position);
+	if(resource.position == null) return;
+	this.resources[resource.id] = resource;
+	if(!this._mapsetup.map.showLocations) return; // need lines above this in case the user re-enables resources
+
+	var config = new Object();	
+	var date = new Date(1*resource.position.time);
+	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
+	var tooltip = resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds());
+	var label = resource.name;
+	
+	if(resource.assignmentId != null && this.assignments[resource.assignmentId] != null && this.assignments[resource.assignmentId].operationalPeriodId == this.period.id) {
+		var assignment = this.assignments[resource.assignmentId];
 		var setup = this._mapsetup.present;
-		var config = new Object();
 		if(setup.colorby == "Disabled") {
 			config.color ="#000000";
 		} else if(setup.colorby == "Assignment Number") {
@@ -917,10 +921,13 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.showResource = f
 		} else if(setup.colorby == "Assignment Status") {
 			config.color = org.sarsoft.Constants.colorsByStatus[assignment.status];
 		}
-		var date = new Date(1*resource.position.time);
-		var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-		this.emap.addWaypoint(resource.position, config, resource.assignmentId + "-" + resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), (this._mapsetup.map.labeltw == true) ? resource.assignmentId + "-" + resource.name : null);
+		tooltip = resource.assignmentId + "-" + tooltip;
+		label = resource.assignmentId + "-" + label;
+	} else {
+		config.color = "#000000";
 	}
+	
+	this.emap.addWaypoint(resource.position, config, tooltip, (this._mapsetup.map.labeltw == true) ? label : null);
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.refreshResourceData = function(resources) {
