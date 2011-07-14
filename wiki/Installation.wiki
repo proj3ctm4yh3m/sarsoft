@@ -99,6 +99,16 @@ sarsoft.map.background.usgs.template=http://terraservice.net/ogcmap6.ashx?versio
 
 Note that Sarsoft does not know how to directly speak WMS and requires you to supply a template with most of the information filled in except for the left, bottom, right and top coordinates and a tilesize parameter.
 
+If you use the Google Maps viewer Sarsoft's maps will automatically pick up on Google's background layers.  However, they will be missing from a few non-map locations, like the bulk print dialog.  To fix this, you can add them as follows:
+
+{{{
+sarsoft.map.background.Map.name=Map
+sarsoft.map.background.Map.type=NATIVE
+sarsoft.map.background.Map.template=G_NORMAL_MAP
+}}}
+
+You must use the map names as they appear in the Sarsoft layer control, and use the corresponding gmap2 constants (Map->G_NORMAL_MAP, Terrain->G_PHYSICAL_MAP, Satellite->G_SATELLITE_MAP).
+
 === Serving Map Imagery Locally ===
 
 Sarsoft allows you to store map background tiles locally and serve them up when no internet connection is available.  To do so, the tiles *must* be named using the zoom/x/y.png convention.  First, create a new map background as described above, using
