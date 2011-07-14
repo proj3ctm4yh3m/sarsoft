@@ -365,13 +365,11 @@ org.sarsoft.view.EntityCreateDialog.prototype.show = function(obj) {
 	this.dialog.show();
 }
 
-org.sarsoft.view.CreateSimpleDialog = function(title, bodytext, yes, no, handler) {
+org.sarsoft.view.CreateBlankDialog = function(title, bodynode, yes, no, handler, style) {
 	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="200";
-	dlg.style.top="100px";
-	dlg.style.left="100px";
-	dlg.style.width="350px";
+	for(var key in style) {
+		dlg.style[key] = style[key];
+	}
 	var hd = document.createElement("div");
 	hd.appendChild(document.createTextNode(title));
 	hd.className = "hd";
@@ -379,10 +377,8 @@ org.sarsoft.view.CreateSimpleDialog = function(title, bodytext, yes, no, handler
 	var bd = document.createElement("div");
 	bd.className = "bd";
 	dlg.appendChild(bd);
-	var d = document.createElement("div");
-	d.innerHTML = bodytext;
-	bd.appendChild(d);
-	var dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
+	bd.appendChild(bodynode);
+	var dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: (style.width == null) ? "350px" : style.width});
 	var buttons = [ { text : yes, handler: function() {
 		dialog.hide();
 		handler();
@@ -391,6 +387,13 @@ org.sarsoft.view.CreateSimpleDialog = function(title, bodytext, yes, no, handler
 	dialog.render(document.body);
 	dialog.hide();
 	return dialog;
+}
+
+org.sarsoft.view.CreateSimpleDialog = function(title, bodytext, yes, no, handler) {
+	style = {zIndex : "200", top : "100px", left : "100px", width: "350px"};
+	var d = document.createElement("div");
+	d.innerHTML = bodytext;
+	return org.sarsoft.view.CreateBlankDialog(title, d, yes, no, handler, style);
 }
 
 if(org.sarsoft.yuiloaded == true) org.sarsoft.Loader.execute();

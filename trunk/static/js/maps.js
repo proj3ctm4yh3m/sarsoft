@@ -328,6 +328,7 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 		if(showtools && this.map._overlaydropdownmapcontrol != null) {
 			var extras = this.map._overlaydropdownmapcontrol.extras;
 			this._UTMToggle = document.createElement("a");
+			this._UTMToggle.menuOrder=10;
 			this._UTMToggle.title = "Enable/disable UTM gridlines";
 			this._UTMToggle.style.cursor="pointer";
 			this._UTMToggle.innerHTML = "UTM";
@@ -349,6 +350,7 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 
 			this.pageSizeDlg = new org.sarsoft.view.MapSizeDlg(this.map);
 			var pagesetup = document.createElement("img");
+			pagesetup.menuOrder=20;
 			pagesetup.src="/static/images/print.png";
 			pagesetup.style.cursor="pointer";
 			pagesetup.style.verticalAlign="middle";
@@ -365,8 +367,8 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 	}
 }
 
-org.sarsoft.FixedGMap.prototype.getConfig = function() {
-	var config = new Object();
+org.sarsoft.FixedGMap.prototype.getConfig = function(config) {
+	if(config == null) config = new Object();
 	config.base = this.map.getCurrentMapType().getName();
 	config.overlay = this.map._sarsoft_overlay_name;
 	config.opacity = this.map._sarsoft_overlay_opacity;
@@ -757,6 +759,63 @@ org.sarsoft.EditableGMap.prototype.discard = function(id) {
 org.sarsoft.EditableGMap.prototype.addListener = function(event, handler) {
 	if(typeof this._handlers[event] == "undefined") this._handlers[event] = new Array();
 	this._handlers[event].push(handler);
+}
+
+org.sarsoft.MapController = function(emap) {
+	var that = this;
+	this.emap = emap;
+	this._contextMenu = new org.sarsoft.view.ContextMenu();
+	this._menuItems = [];
+	this._setCenterPrecedence = -1;
+	this.registered = new Object();
+	
+	if(emap.addListener != null) emap.addListener("singlerightclick", function(point, obj) {
+		that._contextMenu.setItems(that._menuItems)
+		that._contextMenu.show(point, obj);
+	});
+}
+
+org.sarsoft.MapController.prototype.addContextMenuItems = function(items) {
+	this._menuItems = this._menuItems.concat(items);
+}
+
+org.sarsoft.MapController.prototype.setCenter = function(center, zoom, precedence) {
+	if(precedence == null || precedence < 0) precedence = 0;
+	if(precedence <= this._setCenterPrecedence) return;
+	
+	this.emap.map.setCenter(center, zoom);
+	this._setCenterPrecedence = precedence;
+}
+
+org.sarsoft.MapController.prototype.message = function(msg, delay) {
+	this.emap._infomessage(msg, delay);
+}
+
+org.sarsoft.MapController.prototype.register = function(type, controller) {
+	this.registered[type] = controller;
+}
+
+org.sarsoft.MapController.prototype.addMenuItem = function(item, order) {
+	if(order == null) order = 10000;
+	item.menuOrder = order;
+	var extras = this.emap.map._overlaydropdownmapcontrol.extras;
+	for(var i = 0; i < extras.childNodes.length; i++) {
+		if(extras.childNodes[i] != null && extras.childNodes[i].menuOrder != null && extras.childNodes[i].menuOrder > order) {
+			var n = extras.childNodes[i];
+			extras.insertBefore(item, n);
+			extras.insertBefore(document.createTextNode(" "), n);
+			return;
+		}
+	}
+	extras.appendChild(item);
+	extras.appendChild(document.createTextNode(" "));
+}
+
+org.sarsoft.MapController.prototype.timer = function() {
+	for(var key in this.registered) {
+		var val = this.registered[key];
+		if(val.timer != null) val.timer();
+	}
 }
 
 function UTM(e, n, zone) {
