@@ -109,12 +109,14 @@ public abstract class JSONBaseController {
 			for(String name : names) {
 				MapSource source = new MapSource();
 				source.setName(getProperty("sarsoft.map.background." + name + ".name"));
-				source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
-				source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
-				source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
-				source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
 				source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
 				source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
+				if(source.getType() != MapSource.Type.NATIVE) {
+					source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
+					source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
+					source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
+					source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
+				}
 				mapSources.add(source);
 			}
 			mapSources = Collections.unmodifiableList(mapSources);
