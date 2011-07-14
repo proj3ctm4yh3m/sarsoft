@@ -58,6 +58,27 @@ org.sarsoft.Loader.queue(function() {
   	rtable.table.addRows(rows);
   });
   
+  
+  function resourceListTimer() {
+    dao.loadSince(function(resources) {
+		var sortedBy = rtable.table.get("sortedBy");
+		rtable.table.set("sortedBy", null);
+		var rs = rtable.table.getRecordSet();
+		for(var i = 0; i < resources.length; i++) {
+			for(var j = 0; j < rs.getLength(); j++) {
+				if(rs.getRecord(j).getData().id == resources[i].id) {
+					rtable.table.deleteRow(j);
+				}
+			}
+			rtable.table.addRow(resources[i]);
+		}
+		if(sortedBy != null) rtable.table.sortColumn(sortedBy.column, sortedBy.dir);
+	});
+	dao.mark();
+  }
+  dao.mark();
+  setInterval(resourceListTimer, 15000);
+  
   ctable = new org.sarsoft.view.ResourceTable(function() {});
   ctable.create(document.getElementById("callsigns"));
   cdao = new org.sarsoft.ResourceDAO(function() {}, "/rest/callsign");
@@ -65,6 +86,28 @@ org.sarsoft.Loader.queue(function() {
 	 ctable.table.showTableMessage("<i>No Callsigns Found</i>");
 	 ctable.table.addRows(rows);
   });
+  
+  
+  function callsignListTimer() {
+    cdao.loadSince(function(callsigns) {
+		var sortedBy = ctable.table.get("sortedBy");
+		ctable.table.set("sortedBy", null);
+		var rs = ctable.table.getRecordSet();
+		for(var i = 0; i < callsigns.length; i++) {
+			for(var j = 0; j < rs.getLength(); j++) {
+				if(rs.getRecord(j).getData().callsign == callsigns[i].callsign) {
+					ctable.table.deleteRow(j);
+				}
+			}
+			ctable.table.addRow(callsigns[i]);
+		}
+		if(sortedBy != null) ctable.table.sortColumn(sortedBy.column, sortedBy.dir);
+	});
+	cdao.mark();
+  }
+  cdao.mark();
+  setInterval(callsignListTimer, 15000);
+  
   
   uploadDlg = new org.sarsoft.view.ResourceImportDlg();
 });
