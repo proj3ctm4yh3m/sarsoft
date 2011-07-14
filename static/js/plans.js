@@ -397,14 +397,14 @@ org.sarsoft.view.PersistedConfigWidget = function(controller, persist) {
 	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.controller.message("Server Communication Error!"); });
 
 	if(persist) {
-		var saveDlg = org.sarsoft.view.CreateSimpleDialog("Save Map Background", "This will make the map base and overlay layers, plus the range ring settings, the default for all maps on this search.", "Save", "Cancel", function() {
+		var saveDlg = org.sarsoft.view.CreateSimpleDialog("Save Map Settings", "This will make the map layers, range rings, assignment coloring and track/location visibility the default for all maps on this search.", "Save", "Cancel", function() {
 			that.saveConfig();
 		});
 		var save = document.createElement("img");
 		save.src="/static/images/save.png";
 		save.style.cursor = "pointer";
 		save.style.verticalAlign="middle";
-		save.title = "Make this the default search map (base, overlay and range rings)";
+		save.title = "Make this the default search map.";
 		GEvent.addDomListener(save, "click", function() {
 			saveDlg.show();
 		});
@@ -652,7 +652,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	var showTracks = document.createElement("span");
 	showTracks.innerHTML="TRK";
 	showTracks.style.cursor = "pointer";
-	showTracks.title = "Show/Hide tracks and waypoints";
+	showTracks.title = "Show/Hide Tracks and Waypoints";
 	GEvent.addDomListener(showTracks, "click", function() {
 		that._mapsetup.showtracks = !that._mapsetup.showtracks;
 		that.handleSetupChange();
@@ -663,7 +663,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	var showLabels = document.createElement("span");
 	showLabels.innerHTML="LBL";
 	showLabels.style.cursor = "pointer";
-	showLabels.title = "Show/Hide assignment labels";
+	showLabels.title = "Show/Hide Assignment Labels";
 	GEvent.addDomListener(showLabels, "click", function() {
 		that._mapsetup.showlabels = !that._mapsetup.showlabels;
 		that.handleSetupChange();
@@ -729,6 +729,8 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.setConfig = func
 	if(config.OperationalPeriodMapController == null) return;
 	this._mapsetup.showtracks = config.OperationalPeriodMapController.showtracks;
 	this._mapsetup.showlabels = config.OperationalPeriodMapController.showlabels;
+	if(config.OperationalPeriodMapController.present != null) this._mapsetup.present = config.OperationalPeriodMapController.present;
+	if(config.OperationalPeriodMapController.past != null) this._mapsetup.past = config.OperationalPeriodMapController.past;
 	this.handleSetupChange();
 }
 
@@ -737,6 +739,8 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getConfig = func
 	if(config.OperationalPeriodMapController == null) config.OperationalPeriodMapController = new Object();
 	config.OperationalPeriodMapController.showtracks = this._mapsetup.showtracks;
 	config.OperationalPeriodMapController.showlabels = this._mapsetup.showlabels;
+	config.OperationalPeriodMapController.present = this._mapsetup.present;
+	config.OperationalPeriodMapController.past = this._mapsetup.past;
 	return config;
 }
 
@@ -905,7 +909,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		way.displayMessage = "Assignment " + assignment.id + ": " + assignment.status + " " + assignment.formattedSize + " " + assignment.timeAllocated + "hr " + assignment.resourceType + ".  <a href='/app/assignment/" + assignment.id + "' target='_new'>Details</a>";
 		var label = null;
 		if(this._mapsetup.showlabels) label = way.name;
-		if(way.type == "ROUTE") label = assignment.id
+		if(way.type == "ROUTE" && this._mapsetup.showlabels) label = assignment.id
 		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config, label);
 	}
 	if(config.clickable) {
