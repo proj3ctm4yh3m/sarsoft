@@ -365,4 +365,32 @@ org.sarsoft.view.EntityCreateDialog.prototype.show = function(obj) {
 	this.dialog.show();
 }
 
+org.sarsoft.view.CreateSimpleDialog = function(title, bodytext, yes, no, handler) {
+	var dlg = document.createElement("div");
+	dlg.style.position="absolute";
+	dlg.style.zIndex="200";
+	dlg.style.top="100px";
+	dlg.style.left="100px";
+	dlg.style.width="350px";
+	var hd = document.createElement("div");
+	hd.appendChild(document.createTextNode(title));
+	hd.className = "hd";
+	dlg.appendChild(hd);
+	var bd = document.createElement("div");
+	bd.className = "bd";
+	dlg.appendChild(bd);
+	var d = document.createElement("div");
+	d.innerHTML = bodytext;
+	bd.appendChild(d);
+	var dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
+	var buttons = [ { text : yes, handler: function() {
+		dialog.hide();
+		handler();
+	}, isDefault: true}, {text : no, handler : function() { dialog.hide(); }}];
+	dialog.cfg.queueProperty("buttons", buttons);
+	dialog.render(document.body);
+	dialog.hide();
+	return dialog;
+}
+
 if(org.sarsoft.yuiloaded == true) org.sarsoft.Loader.execute();
