@@ -383,9 +383,4 @@ public class OpsController extends JSONBaseController {
 		return json(model, dao.loadSince(Resource.class, new Date(date)));
 	}
 
-	@RequestMapping(value="/app/resource/map", method = RequestMethod.GET)
-	public String plansEditor(Model model) {
-		return app(model, "/ops/resourcemap");
-	}
-
 }

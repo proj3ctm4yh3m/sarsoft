@@ -4,7 +4,6 @@
 <h2>All Resources</h2>
 
 <ul>
-  <li><a href="/app/resource/map">Switch to a map view</a> of all resources and nearby callsigns.</li>
   <li>Create new resource:&nbsp;<a href="javascript:showNewResourceForm()">Manually</a>&nbsp;|&nbsp;<a href="javascript:uploadDlg.dialog.show()">From CSV</a>
   <li>Export to <a href="/app/resource?format=CSV">CSV</a>.
 </ul>
