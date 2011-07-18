@@ -10,6 +10,7 @@ import org.openid4java.discovery.Identifier;
 import org.sarsoft.admin.util.OIDConsumer;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.model.UserAccount;
+import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.controller.OpsController;
 import org.sarsoft.plans.model.OperationalPeriod;
@@ -112,6 +113,8 @@ public class AdminController extends JSONBaseController {
 		if(user != null) account = (UserAccount) dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
 		String op1name = request.getParameter("op1name");
+		String lat = request.getParameter("lat");
+		String lng = request.getParameter("lng");
 		String password = request.getParameter("password");
 		boolean visible = "public".equalsIgnoreCase(request.getParameter("public"));
 		if(password != null && password.length() > 0) {
@@ -150,7 +153,13 @@ public class AdminController extends JSONBaseController {
 		period.setDescription((op1name != null && op1name.length() > 0) ? op1name : "first operational period");
 		period.setId(1L);
 		dao.save(period);
-
+		
+		if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
+			Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
+			search.setLkp(lkp);
+			dao.save(search);
+		}
+		
 		return homePage(model);
 	}
 
