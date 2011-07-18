@@ -62,6 +62,12 @@ textarea.entityform {
 	height: 150px
 }
 
+.hint {
+	color: #666666;
+	text-decoration: italic;
+	font-size: smaller
+}
+
 .printonly {
 	display: none;
 }

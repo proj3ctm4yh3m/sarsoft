@@ -44,10 +44,10 @@ Log in using your:
 </ul>
 <br/>
 <p>
-<form action="/app/setsearch" method="post">
+<form action="/app/setsearch" method="post" id="newsearch">
 <b>Create a new search</b><br/>
 <table border="0">
-<tr><td>Search Name:</td><td><input type="text" size="15" name="name"/></td></tr>
+<tr><td>Search Name:</td><td><input type="text" size="15" name="name" id="name"/></td></tr>
 <tr><td>Name of first operational period:</td><td><input type="text" size="15" name="op1name"/></td></tr>
 <c:if test="${hosted eq true}">
 <tr><td>Public?</td><td><input type="checkbox" name="public" checked="checked" value="public"/></td></tr>
@@ -61,9 +61,57 @@ they will have the ability to make any changes you can.  You can restrict access
 or by preventing the public from accessing it even if they do know your search's unique ID.
 </div>
 </c:if>
-<input type="submit" value="Create Search"/>
+
+<div style="padding-top: 15px">If known, enter the location of your search in UTM, Lat/Lng, or as an address:</div>
+<table border="0">
+<tr><td valign="top">UTM</td><td><input type="text" size="2" name="utm_zone" id="utm_zone"/><span class="hint">zone</span>&nbsp;<input type="text" size="9" name="utm_e" id="utm_e"/><span class="hint">E</span>&nbsp;<input type="text" size="9" name="utm_n" id="utm_n"/><span class="hint">N</span></td></tr>
+<tr><td valign="top">Lat/Lng</td><td><input type="text" size="8" name="lat" id="lat"/>,&nbsp;<input type="text" size="8" name="lng" id="lng"/><br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span></td></tr>
+<tr id="address_tr"><td valign="top">Address</td><td><input type="text" size="16" name="address" id="address"/><br/><span class="hint">e.g. 'Truckee, CA'.  Requires a working internet connection.</span></td></tr>
+</table>
+
 </form>
+<div style="padding-top: 15px">
+<button onclick="createSearch()">Create Search</button>
+</div>
 </p>
+
+<script>
+if(typeof GClientGeocoder == 'undefined') {
+	document.getElementById('address_tr').style.display = "none";
+}
+
+function createSearch() {
+	var searchname = document.getElementById('name').value;
+	if(searchname == null || searchname.length == 0) {
+		alert('Please enter a name for this search.');
+		return;
+	}
+	var zone = document.getElementById('utm_zone').value;
+	if(zone != null && zone.length > 0) {
+		if(zone.length > 2) zone = zone.substring(0, 2);
+		var e = document.getElementById('utm_e').value;
+		var n = document.getElementById('utm_n').value;
+		var gll = GeoUtil.UTMToGLatLng({e: e, n: n, zone: zone});
+		document.getElementById('lat').value = gll.lat();
+		document.getElementById('lng').value = gll.lng();
+	}
+	var addr = document.getElementById('address').value;
+	if(addr != null && addr.length > 0 && typeof GClientGeocoder != 'undefined') {
+		var gcg = new GClientGeocoder();
+		gcg.getLatLng(addr, function(gll) {
+			if(gll == null) {
+				alert('unable to geocode address "' + addr + '".');
+			} else {
+				document.getElementById('lat').value = gll.lat();
+				document.getElementById('lng').value = gll.lng();
+				document.forms["newsearch"].submit();
+			}
+		});
+	} else {
+		document.forms["newsearch"].submit();
+	}
+}
+</script>
 
 </c:otherwise>
 </c:choose>
