@@ -115,13 +115,6 @@ public class AdminController extends JSONBaseController {
 		String op1name = request.getParameter("op1name");
 		String lat = request.getParameter("lat");
 		String lng = request.getParameter("lng");
-		String password = request.getParameter("password");
-		boolean visible = "public".equalsIgnoreCase(request.getParameter("public"));
-		if(password != null && password.length() > 0) {
-			password = hash(password);
-		} else {
-			password = null;
-		}
 		if(!isHosted() && dao.getByAttr(Search.class, "name", name) != null) {
 			return setAppDataSchema(model, name, request);
 		}
@@ -129,9 +122,6 @@ public class AdminController extends JSONBaseController {
 		search.setName(name);
 		search.setDescription(name);
 		if(getProperty("sarsoft.map.datum") != null) search.setDatum(getProperty("sarsoft.map.datum"));
-		if(password != null && password.length() > 0) {
-			search.setPassword(password);
-		}
 		if(account != null) {
 			search.setAccount(account);
 			Object obj = new Object();
@@ -143,7 +133,7 @@ public class AdminController extends JSONBaseController {
 				obj = dao.getByPk(Search.class, searchname);
 			}
 			search.setName(searchname);
-			search.setVisible(visible);
+			search.setVisible(false);
 		}
 		dao.save(search);
 		request.getSession().setAttribute("search", search.getName());

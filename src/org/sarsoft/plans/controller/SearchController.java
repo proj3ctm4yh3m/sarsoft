@@ -207,7 +207,7 @@ public class SearchController extends JSONBaseController {
 			dao.save(search);
 		}
 		search.setVisible("public".equalsIgnoreCase(request.getParameter("public")));
-		if(request.getParameter("pasword") != null && request.getParameter("password").length() > 0) {
+		if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
 			search.setPassword(hash(request.getParameter("password")));
 		}
 		search.setDatum(request.getParameter("datum"));

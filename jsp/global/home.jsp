@@ -17,7 +17,7 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
 looking for ${search.description}?  <a href="/app/setsearch">Work on a different search</a>.
 
 <c:if test="${account ne null}">
-<br/>Logged in as ${account.email}.  <a href="/app/logout">Logout</a><br/>
+<br/><br/>Logged in as ${account.email}.  <a href="/app/logout">Logout</a><br/>
 </c:if>
 
 <h4>Plans</h4>

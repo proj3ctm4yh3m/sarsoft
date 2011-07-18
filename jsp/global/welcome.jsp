@@ -49,18 +49,7 @@ Log in using your:
 <table border="0">
 <tr><td>Search Name:</td><td><input type="text" size="15" name="name" id="name"/></td></tr>
 <tr><td>Name of first operational period:</td><td><input type="text" size="15" name="op1name"/></td></tr>
-<c:if test="${hosted eq true}">
-<tr><td>Public?</td><td><input type="checkbox" name="public" checked="checked" value="public"/></td></tr>
-<tr><td>Password:</td><td><input type="text" size="15" name="password"/></td></tr>
-</c:if>
 </table>
-<c:if test="${hosted eq true}">
-<div style="width: 400px">
-Other users will only be able to access your search if you supply them with a unique code.  However, with this code,
-they will have the ability to make any changes you can.  You can restrict access by password-protecting the search,
-or by preventing the public from accessing it even if they do know your search's unique ID.
-</div>
-</c:if>
 
 <div style="padding-top: 15px">If known, enter the location of your search in UTM, Lat/Lng, or as an address:</div>
 <table border="0">
