@@ -443,71 +443,6 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function() {
 	}, "mapConfig");
 }
 
-org.sarsoft.OperationalPeriodMapInfoControl = function(controller) {	
-	this.controller = controller;
-}
-
-org.sarsoft.OperationalPeriodMapInfoControl.prototype = new GControl();
-org.sarsoft.OperationalPeriodMapInfoControl.prototype.printable = function() { return false; }
-org.sarsoft.OperationalPeriodMapInfoControl.prototype.selectable = function() { return false; }
-org.sarsoft.OperationalPeriodMapInfoControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_BOTTOM_RIGHT, new GSize(0, 0)); }
-
-org.sarsoft.OperationalPeriodMapInfoControl.prototype.initialize = function(map) {
-	var that = this;
-	this.minimized = false;
-	this.div = document.createElement("div");
-
-	this.ctrl = document.createElement("span");
-	this.ctrl.style.background = "white";
-	this.ctrl.style.border = "1px 0px 0px 1px solid black";
-	this.min = document.createElement("img");
-	this.min.style.cursor = "pointer";
-	this.min.style.width="12px";
-	this.min.style.height="12px";
-	this.min.src = "/static/images/right.png";
-	GEvent.addDomListener(this.min, "click", function() {
-		that.minmax();
-	});
-	this.ctrl.appendChild(this.min);
-		
-	this.msg = document.createElement("span");
-	this.msg.style.background = "white";
-	this.msg.style.border = "1px 0px 0px 0px solid black";
-	
-	this.div.appendChild(this.ctrl);
-	this.div.appendChild(this.msg);
-	
-	map.getContainer().appendChild(this.div);
-	
-	return this.div;
-}
-
-org.sarsoft.OperationalPeriodMapInfoControl.prototype.minmax = function() {
-	if(this.minimized) {
-		this.ctrl.style.paddingRight = "0";
-		this.msg.style.display = "inline";
-		this.min.src = "/static/images/right.png";
-		this.minimized = false;
-	} else {
-		this.ctrl.style.paddingRight = "1em";
-		this.msg.style.display = "none";
-		this.min.src = "/static/images/left.png";
-		this.minimized = true;
-	}
-}
-
-org.sarsoft.OperationalPeriodMapInfoControl.prototype.redraw = function() {
-	var setup = this.controller._mapsetup;
-	var html = "";
-	if(setup.rangerings != null && setup.rangerings.length > 0) {
-		html += "Range Rings at " + setup.rangerings + "m";
-	}
-	
-	html += " This OP: " + setup.present.show;
-	html += " Prev OP: " + setup.past.show;
-	this.msg.innerHTML = html;
-}
-
 org.sarsoft.controller.SearchWaypointMapController = function(controller) {
 	var that = this;
 	this.waypoints = new Object();
@@ -583,6 +518,7 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.place = function(ty
 				this.controller.emap.addRangeRing(wpt, radii[i], 36);
 			}
 		}
+		this.controller.setMapInfo("org.sarsoft.controller.SearchWaypointMapController", 10, "Range Rings at " + this.rangerings + "m.");
 	}
 }
 
@@ -610,8 +546,6 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.period = operationalperiod;
 	this.controller = controller;
 	this.controller.register("org.sarsoft.controller.OperationalPeriodMapController", this);
-	this.mapInfoControl = new org.sarsoft.OperationalPeriodMapInfoControl(this);
-	this.emap.map.addControl(this.mapInfoControl);
 	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.controller.message("Server Communication Error"); });
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.controller.message("Server Communication Error"); });
 	this.periodDAO = new org.sarsoft.OperationalPeriodDAO(function() { that.controller.message("Server Communication Error"); });
@@ -777,7 +711,10 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChang
 	}
 //	this.placeLkp(this.lkp);
 //	this.reprocessResourceData();
-	this.mapInfoControl.redraw();
+	var info = "This OP: " + this._mapsetup.present.show;
+	info += " Prev OP: " + this._mapsetup.past.show;
+
+	this.controller.setMapInfo("org.sarsoft.controller.OperationalPeriodMapController", 20, info);
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function() {

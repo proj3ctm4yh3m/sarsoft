@@ -209,21 +209,21 @@ org.sarsoft.GAlphaTileLayerWrapper.prototype.isPng = function() { return this.ti
 org.sarsoft.GAlphaTileLayerWrapper.prototype.getOpacity = function() { return this.opacity; }
 org.sarsoft.GAlphaTileLayerWrapper.prototype.getCopyright = function(bounds, zoom) { return this.tileLayer.getCopyright(bounds, zoom) };
 
-org.sarsoft.MapInfoControl = function() {	
+org.sarsoft.MapMessageControl = function() {	
 }
 
-org.sarsoft.MapInfoControl.prototype = new GControl();
-org.sarsoft.MapInfoControl.prototype.printable = function() { return false; }
-org.sarsoft.MapInfoControl.prototype.selectable = function() { return false; }
-org.sarsoft.MapInfoControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(70, 0)); }
+org.sarsoft.MapMessageControl.prototype = new GControl();
+org.sarsoft.MapMessageControl.prototype.printable = function() { return false; }
+org.sarsoft.MapMessageControl.prototype.selectable = function() { return false; }
+org.sarsoft.MapMessageControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(70, 0)); }
 
-org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
+org.sarsoft.MapMessageControl.prototype.initialize = function(map) {
 	this.div = document.createElement("div");
 	map.getContainer().appendChild(this.div);
 	return this.div;
 }
 
-org.sarsoft.MapInfoControl.prototype.redraw = function(str, delay) {
+org.sarsoft.MapMessageControl.prototype.redraw = function(str, delay) {
 	if(delay == null) delay = 10000;
 	var that = this;
 	if(this.timeout != null) clearTimeout(this.timeout);
@@ -231,7 +231,7 @@ org.sarsoft.MapInfoControl.prototype.redraw = function(str, delay) {
 	this.timeout = setTimeout(function() {that.clear();}, delay);
 }
 
-org.sarsoft.MapInfoControl.prototype.clear = function() {
+org.sarsoft.MapMessageControl.prototype.clear = function() {
 	this.div.innerHTML = "";
 	this.timeout = null;
 }
@@ -321,8 +321,8 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 		datum.style.backgroundColor="white";
 		datum.innerHTML = org.sarsoft.map.datum;
 		map.getContainer().appendChild(datum);
-		this.mapInfoControl = new org.sarsoft.MapInfoControl();
-		this.map.addControl(this.mapInfoControl);
+		this.mapMessageControl = new org.sarsoft.MapMessageControl();
+		this.map.addControl(this.mapMessageControl);
 		
 		this._showUTM = true;
 		if(showtools && this.map._overlaydropdownmapcontrol != null) {
@@ -695,7 +695,7 @@ org.sarsoft.EditableGMap.prototype._positionMessage = function(message) {
 	this._infopos.innerHTML = message;
 }
 org.sarsoft.EditableGMap.prototype._infomessage = function(message, timeout) {
-	this.mapInfoControl.redraw(message, timeout);
+	this.mapMessageControl.redraw(message, timeout);
 }
 
 org.sarsoft.EditableGMap.prototype._addOverlay = function(way, config, label) {
@@ -772,6 +772,62 @@ org.sarsoft.EditableGMap.prototype.addListener = function(event, handler) {
 	this._handlers[event].push(handler);
 }
 
+org.sarsoft.MapInfoControl = function() {
+}
+
+org.sarsoft.MapInfoControl.prototype = new GControl();
+org.sarsoft.MapInfoControl.prototype.printable = function() { return false; }
+org.sarsoft.MapInfoControl.prototype.selectable = function() { return false; }
+org.sarsoft.MapInfoControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_BOTTOM_RIGHT, new GSize(0, 0)); }
+
+org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
+	var that = this;
+	this.minimized = false;
+	this.div = document.createElement("div");
+
+	this.ctrl = document.createElement("span");
+	this.ctrl.style.background = "white";
+	this.ctrl.style.border = "1px 0px 0px 1px solid black";
+	this.min = document.createElement("img");
+	this.min.style.cursor = "pointer";
+	this.min.style.width="12px";
+	this.min.style.height="12px";
+	this.min.src = "/static/images/right.png";
+	GEvent.addDomListener(this.min, "click", function() {
+		that.minmax();
+	});
+	this.ctrl.appendChild(this.min);
+		
+	this.msg = document.createElement("span");
+	this.msg.style.background = "white";
+	this.msg.style.border = "1px 0px 0px 0px solid black";
+	
+	this.div.appendChild(this.ctrl);
+	this.div.appendChild(this.msg);
+	
+	map.getContainer().appendChild(this.div);
+	
+	return this.div;
+}
+
+org.sarsoft.MapInfoControl.prototype.minmax = function() {
+	if(this.minimized) {
+		this.ctrl.style.paddingRight = "0";
+		this.msg.style.display = "inline";
+		this.min.src = "/static/images/right.png";
+		this.minimized = false;
+	} else {
+		this.ctrl.style.paddingRight = "1em";
+		this.msg.style.display = "none";
+		this.min.src = "/static/images/left.png";
+		this.minimized = true;
+	}
+}
+
+org.sarsoft.MapInfoControl.prototype.setMessage = function(message) {
+	this.msg.innerHTML = message;
+}
+
 org.sarsoft.MapController = function(emap) {
 	var that = this;
 	this.emap = emap;
@@ -779,6 +835,7 @@ org.sarsoft.MapController = function(emap) {
 	this._menuItems = [];
 	this._setCenterPrecedence = -1;
 	this.registered = new Object();
+	this._mapInfoMessages = new Object();
 	
 	if(emap.addListener != null) emap.addListener("singlerightclick", function(point, obj) {
 		that._contextMenu.setItems(that._menuItems)
@@ -827,6 +884,31 @@ org.sarsoft.MapController.prototype.timer = function() {
 		var val = this.registered[key];
 		if(val.timer != null) val.timer();
 	}
+}
+
+org.sarsoft.MapController.prototype.setMapInfo = function(classname, order, message) {
+	if(this._mapInfoControl == null) {
+		this._mapInfoControl = new org.sarsoft.MapInfoControl();
+		this.emap.map.addControl(this._mapInfoControl);
+	}
+	
+	this._mapInfoMessages[classname] = { order: order, message : message};
+
+	var messages = new Array();
+	for(var key in this._mapInfoMessages) {
+		var val = this._mapInfoMessages[key];
+		var order = val.order;
+		var message = val.message;
+		while(messages[order] != null) order++;
+		messages[order] = message;
+	}
+	
+	var info = "";
+	for(var i = 0; i < messages.length; i++) {
+		if(messages[i] != null) info = info + "  " + messages[i];
+	}
+	
+	this._mapInfoControl.setMessage(info);
 }
 
 function UTM(e, n, zone) {
