@@ -431,8 +431,9 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function() {
 	var that = this;
-	this.searchDAO.load(function(config) {
-		var config = YAHOO.lang.JSON.parse(config.value);
+	this.searchDAO.load(function(cfg) {
+		var config = YAHOO.lang.JSON.parse(cfg.value);
+		if(config == null) config = {};
 		that.controller.emap.setConfig(config);
 		for(var key in that.controller.registered) {
 			var val = that.controller.registered[key];
@@ -487,7 +488,6 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.setConfig = functio
 }
 
 org.sarsoft.controller.SearchWaypointMapController.prototype.getConfig = function(config) {
-	if(config == null) config = new Object();
 	if(config.SearchWaypointMapController == null) config.SearchWaypointMapController = new Object();
 	config.SearchWaypointMapController.rangerings = this.rangerings;
 	return config;

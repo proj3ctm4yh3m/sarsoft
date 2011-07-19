@@ -116,9 +116,11 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 		var s = 180;
 		var e = -180;
 		var w = 180;
+		var total = 0;
 		for(var i = 0; i < resources.length; i++) {
 			var resource = resources[i];
 			if(resource.position != null) {
+				total++;
 				n = Math.max(n, resource.position.lat);
 				s = Math.min(s, resource.position.lat);
 				e = Math.max(e, resource.position.lng);
@@ -126,7 +128,7 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 			}
 		}
 		var center = new GLatLng((n + s) / 2, (e + w) / 2);
-		that.controller.setCenter(center, that.controller.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))), 3);
+		if(total > 1) that.controller.setCenter(center, that.controller.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))), 4);
 
 		that.refresh(resources);
 	});		
