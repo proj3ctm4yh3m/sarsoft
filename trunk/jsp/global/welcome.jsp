@@ -10,7 +10,7 @@
 <c:otherwise>
 <h2>Welcome to Sarsoft!</h2>
 ${welcomeMessage}
-<br/>
+<c:if test="${fn:length(welcomeMessage) gt 0}"><br/></c:if>
 </c:otherwise>
 </c:choose>
 <c:if test="${message ne null}">
@@ -19,9 +19,11 @@ ${welcomeMessage}
 <c:choose>
 <c:when test="${hosted eq true and account eq null}">
 
-<p><b>This version of sarsoft is hosted.</b><br/>
-In order to maintain privacy and security, you must log in to create new searches.  If someone else has
-created a search that you want to view, you can get a direct-access URL from them.
+<p><b>This server is connected to the Internet</b>.  In order to keep sensitive information private and 
+prevent miscreants from vandalizing your data, you must log in to create new searches.
+</p>
+<p>
+Once you create a search, you can share it with others using a secret URL; they will not need to log in.
 </p>
 <p>
 Log in using your:
@@ -34,9 +36,21 @@ Log in using your:
 </c:when>
 <c:otherwise>
 
-<p>Before you get started, you need to select a search.  You can choose from one of the existing searches below, or create your own.</p>
+
+<p>Before you get started, you need to select a search to work on.  You can choose from the list of 
+<c:choose>
+ <c:when test="${hosted eq true}">searches created by your account</c:when>
+ <c:otherwise>all searches on this server</c:otherwise>
+</c:choose>
+below, or create a new one.
 </p>
-<b>Select an existing search</b><br/>
+
+<b>
+<c:choose>
+ <c:when test="${hosted eq true}">Searches Created By Your Account</c:when>
+ <c:otherwise>All Searches On This Server</c:otherwise>
+</c:choose>
+</b><br/>
 <ul>
 <c:forEach var="srch" items="${searches}">
 <li><a href="javascript:window.location='/app/setsearch/${srch.name}'">${srch.description}</a></li>

@@ -12,13 +12,19 @@ gpxdlg = new org.sarsoft.view.BulkGPXDlg();
 </script>
 
 <h2>Sarsoft Home Page - ${search.description}</h2>
-This is Sarsoft's initial landing page.  If you're unsure what to do, you probably want to click on the <a href="/app/operationalperiod/${lastperiod.id}/map">Map</a> link
-to start creating assignments or the <a href="/app/operationalperiod/${lastperiod.id}">List</a> link to edit existing assignments and print maps and ICS forms.  Not 
-looking for ${search.description}?  <a href="/app/setsearch">Work on a different search</a>.
+<ul>
+ <li>Lost?  You probably want to click on the <a href="/app/operationalperiod/${lastperiod.id}/map">Map</a> link
+to start creating assignments or the <a href="/app/operationalperiod/${lastperiod.id}">List</a> link to edit existing assignments and print maps and ICS forms.</li>
+<c:if test="${hosted eq true and search.visible}">
+ <li>Invite others to work on this search by sharing this URL with them: <a href="${server}app/setsearch/${search.name}">${server}app/setsearch/${search.name}</a>.
+</c:if>
+ <li> Not looking for ${search.description}?  <a href="/app/setsearch">Work on a different search</a>.</li>
 
 <c:if test="${account ne null}">
-<br/><br/>Logged in as ${account.email}.  <a href="/app/logout">Logout</a><br/>
+<li>Logged in as ${account.email}.  <a href="/app/logout">Logout</a></li>
 </c:if>
+</ul>
+
 
 <h4>Plans</h4>
 <ul>
