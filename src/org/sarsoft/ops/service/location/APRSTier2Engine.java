@@ -52,10 +52,13 @@ public class APRSTier2Engine extends APRSEngine {
 		try {
 			if(createTransaction) beginTransaction();
 			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
-			if(search.getLkp() != null) {
-				String lat = Double.toString(search.getLkp().getLat());
+			Waypoint wpt = search.getPls();
+			if(search.getCP() != null) wpt = search.getCP();
+			if(search.getLkp() != null) wpt = search.getLkp();
+			if(wpt != null) {
+				String lat = Double.toString(wpt.getLat());
 				if(lat.length() > 10) lat = lat.substring(0, 10);
-				String lng = Double.toString(search.getLkp().getLng());
+				String lng = Double.toString(wpt.getLng());
 				if(lng.length() > 10) lng = lng.substring(0, 10);
 				filter += " r/" + lat + "/" + lng + "/30";
 			}
