@@ -378,6 +378,7 @@ org.sarsoft.FixedGMap.prototype.getConfig = function(config) {
 }
 
 org.sarsoft.FixedGMap.prototype.setConfig = function(config) {
+	if(config == null) return;
 	this.setMapLayers(config.base, config.overlay, config.opacity);
 	if(config.utm != null) {
 		this._showUTM = config.utm;
