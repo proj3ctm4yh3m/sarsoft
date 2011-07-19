@@ -201,6 +201,22 @@ public class OpsController extends JSONBaseController {
 			assignment.addResource(resource);
 			dao.save(assignment);
 		}
+		
+		if(engines != null && engines.aprsLocal != null) {
+			Waypoint wpt = engines.aprsLocal.getCallsigns().get(callsign);
+			if(wpt != null) {
+				resource.setPosition(wpt);
+				dao.save(resource);
+			}
+		}
+		if(engines != null && engines.aprst2 != null) {
+			Waypoint wpt = engines.aprst2.getCallsigns().get(callsign);
+			if(wpt != null) {
+				resource.setPosition(wpt);
+				dao.save(resource);
+			}
+		}
+		
 		String redirect = request.getParameter("redirect");
 		if(redirect != null && redirect.length() > 0) return "redirect:" + redirect;
 		return "redirect:/app/resource/" + resource.getId();
