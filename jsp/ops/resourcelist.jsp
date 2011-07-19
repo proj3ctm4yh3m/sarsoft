@@ -11,13 +11,14 @@
 <div id="newresource" style="display: none">
 <form method="POST" action="/app/resource/new" name="newResource">
 <table border="0">
-<tr><td>Name:</td><td><input type="text" name="name" size="10" value="${resource.name}"/></td></tr>
+<tr><td>Name:</td><td><input type="text" id="new_name" name="name" size="10" value="${resource.name}"/></td></tr>
 <tr><td>Type:</td><td><select name="type"><option value="PERSON">PERSON</option><option value="EQUIPMENT">EQUIPMENT</option></select></td></tr>
 <tr><td>Agency:</td><td><input type="text" name="agency" value="${resource.agency}" size="10"/></td></tr>
-<tr><td>Callsign:</td><td><input type="text" name="callsign" value="${resource.callsign}" size="10"/></td></tr>
+<tr><td>Callsign:</td><td><input type="text" id="new_callsign" name="callsign" value="${resource.callsign}" size="10"/></td></tr>
 <tr><td>SPOT Id:</td><td><input type="text" name="spotId" size="10" value="${resource.spotId}"/></td></tr>
 <tr><td>SPOT Password:</td><td><input type="text" name="spotPassword" size="10" value="${resource.spotPassword}"></td></tr>
 </table>
+<input type="hidden" name="redirect" value="/app/resource"/>
 <a href="javascript:hideNewResourceForm()">Cancel</button>&nbsp;&nbsp;<a href="javascript:document.forms['newResource'].submit()">Create</a>
 </form>
 </div>
@@ -78,7 +79,11 @@ org.sarsoft.Loader.queue(function() {
   dao.mark();
   setInterval(resourceListTimer, 15000);
   
-  ctable = new org.sarsoft.view.ResourceTable(function() {});
+  ctable = new org.sarsoft.view.ResourceTable(function(resource) {
+	  document.getElementById("new_name").value = resource.callsign;
+	  document.getElementById("new_callsign").value = resource.callsign;
+	  showNewResourceForm();
+  });
   ctable.create(document.getElementById("callsigns"));
   cdao = new org.sarsoft.ResourceDAO(function() {}, "/rest/callsign");
   cdao.loadAll(function(rows) {
