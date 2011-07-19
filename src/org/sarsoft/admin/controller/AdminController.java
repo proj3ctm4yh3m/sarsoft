@@ -58,6 +58,7 @@ public class AdminController extends JSONBaseController {
 		model.addAttribute("periods", periods);
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
 		model.addAttribute("imageUploadEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled")));
+		model.addAttribute("server", RuntimeProperties.getServerUrl());
 		opsController.checkLocators();
 		return app(model, "Pages.Home");
 	}
@@ -133,7 +134,7 @@ public class AdminController extends JSONBaseController {
 				obj = dao.getByPk(Search.class, searchname);
 			}
 			search.setName(searchname);
-			search.setVisible(false);
+			search.setVisible(true);
 		}
 		dao.save(search);
 		request.getSession().setAttribute("search", search.getName());
