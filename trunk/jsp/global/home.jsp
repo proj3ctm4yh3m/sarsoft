@@ -35,6 +35,7 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
  </c:forEach>
  </select>
  <a href="javascript:gotoAssignment()">GO</a></li>
+ <li><a href="/app/clue">Clue Log</a></li>
  <li><a href="/app/operationalperiod">Other Operational Periods</a></li>
 </ul>
 <h4>Operations</h4>

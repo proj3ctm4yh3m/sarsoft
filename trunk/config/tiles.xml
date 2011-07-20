@@ -19,12 +19,21 @@
 		<put-attribute name="content" value="/plans/oplist.jsp"/>
 		<put-attribute name="app" value="plans"/>
 	</definition>
-
 	<definition name="OperationalPeriod.Detail" extends="App.Base">
 		<put-attribute name="content" value="/plans/opdetail.jsp"/>
 		<put-attribute name="app" value="plans"/>
 	</definition>
 
+	<definition name="Clue.List" extends="App.Base">
+		<put-attribute name="content" value="/plans/cluelist.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	<definition name="Clue.Detail" extends="App.Base">
+		<put-attribute name="content" value="/plans/cluedetail.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	
+	
 	<definition name="Resource.List" extends="App.Base">
 		<put-attribute name="content" value="/ops/resourcelist.jsp"/>
 		<put-attribute name="app" value="ops"/>

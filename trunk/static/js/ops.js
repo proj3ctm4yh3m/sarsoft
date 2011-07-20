@@ -159,8 +159,8 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.timer = function(
 	var that = this;
 	this.resourceDAO.loadSince(function(resources) {
 		that.refresh(resources);
-		that.resourceDAO.mark();
 	});
+	that.resourceDAO.mark();
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = function(resource) {
