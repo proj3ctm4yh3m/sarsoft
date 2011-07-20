@@ -128,7 +128,8 @@ Base&nbsp;<select name="map${num}f" id="map${num}f">
   </c:forEach>
 </select>
 ,&nbsp;&nbsp;Opacity&nbsp;
-<input type="text" id="map${num}o" name="map${num}o" value="0" size="2"> percent<br/>
+<input type="text" id="map${num}o" name="map${num}o" value="0" size="2"> percent
+,&nbsp;&nbsp;<input type="checkbox" name="map${num}prev" id="map${num}prev"}>Show Previous Efforts</input><br/>
 </c:forEach>
 
 <br/>
@@ -233,6 +234,7 @@ if(data.length == 0) {
     if(document.getElementById("printmap" + i).checked) {
 		url = url + "&map" + i + "f=" + document.getElementById("map" + i + "f").value + "&map" + i + "b=" + document.getElementById("map" + i + "b").value +
 			"&map" + i + "o=" + document.getElementById("map" + i + "o").value;
+		if(document.getElementById("map" + i + "prev").checked) url = url + "&map" + i + "prev=true";
 	}
   	}
   	window.location=url;

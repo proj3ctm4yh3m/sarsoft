@@ -23,7 +23,7 @@ org.sarsoft.Loader.queue(function() {
   <c:forEach var="assignment" items="${assignments}" varStatus="status">
     controllers[${status.index}] = new Array();
     <c:forEach var="mapConfig" items="${mapConfigs}" varStatus="status2">
-      controllers[${status.index}][${status2.index}] = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps${status.index}_${status2.index}"), ${assignment.id}, {base: "${mapConfig.base}", overlay: "${mapConfig.overlay}", opacity: ${mapConfig.opacity/100}});
+      controllers[${status.index}][${status2.index}] = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps${status.index}_${status2.index}"), ${assignment.id}, {base: "${mapConfig.base}", overlay: "${mapConfig.overlay}", opacity: ${mapConfig.opacity/100}}, ${previousEfforts[status2.index]});
     </c:forEach>
   </c:forEach>
 });
@@ -87,10 +87,9 @@ TABLE.comms TD,TH {
 
 <div class="noprint">
 <c:if test="${fn:length(rejected) gt 0}">
-<div style="font-weight: bold; color: red">NOTE: The following assignments will not print because they are still in a draft state:<br/>
-<br/>
+<div style="font-weight: bold; color: red">NOTE: The following assignments will not print because they are still in a draft state: &nbsp;
 <c:forEach var="reject" items="${rejected}">
-${reject.id}<br/>
+${reject.id},&nbsp;
 </c:forEach>
 </div>
 </c:if>

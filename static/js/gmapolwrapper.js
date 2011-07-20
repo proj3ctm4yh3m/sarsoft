@@ -137,6 +137,21 @@ function GLatLngBounds(sw, ne) {
 GLatLngBounds.prototype.getSouthWest = function() { return this._sw;}
 GLatLngBounds.prototype.getNorthEast = function() { return this._ne;}
 
+GLatLngBounds.prototype.intersects = function(other) {
+	var utm_sw = GeoUtil.GlatLngToUTM(this._sw);
+	var utm_ne = GeoUtil.GlatLngToUTM(this._ne, utm_sw.zone);
+	
+	var other_sw = GeoUtil.GLatLngToUTM(other.getSouthWest(), utm_sw.zone);
+	var other_sw = GeoUtil.GLatLngToUTM(other.getNorthEast(), utm_sw.zone);
+	
+	var intersects = true;
+	if(!((other_ne.n <= utm_ne.n && other_ne.n >= utm_sw.s) || (other_sw.s <= utm_ne.n && other_sw.s >= utm_sw.s))) intersects = false;
+	if(!((other_ne.e >= utm_ne.e && other_ne.e <= utm_sw.w) || (other_sw.w >= utm_ne.e && other_sw.w <= utm_sw.w))) intersects = false;
+	
+	return intersects;
+}
+
+
 function GMap2(node) {
 	var that = this;
 	this.ol = new Object();

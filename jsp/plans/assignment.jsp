@@ -63,7 +63,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 
 <ul>
 <c:choose>
- <c:when test="${assignment.status == draft}">
+ <c:when test="${assignment.status eq draft}">
  	<li><a href="javascript:finalizeDlg.show()">Prepare Assignment</a> (this will allow you to print it)</li>
  </c:when>
  <c:otherwise>
