@@ -62,23 +62,26 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
   You can:<br/>
 
 <ul>
-<c:choose>
- <c:when test="${assignment.status eq draft}">
- 	<li><a href="javascript:finalizeDlg.show()">Prepare Assignment</a> (this will allow you to print it)</li>
- </c:when>
- <c:otherwise>
+ <c:if test="${assignment.status eq draft}">
+ 	<li><a href="javascript:finalizeDlg.show()">Prepare Assignment</a> (allows you to print maps/forms)</li>
+ </c:if>
+ <c:if test="${assignment.status eq prepared}">
     <li>Print <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Maps</a> or <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=forms">SAR 104 Forms</a></li>
- </c:otherwise>
-</c:choose>
-<c:if test="${assignment.status == prepared or assignment.status == completed}">
+ </c:if>
+ <c:if test="${assignment.status eq completed}">
+    <li>Print <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Debrief Map</a>.</li>
+ </c:if>
+ <c:if test="${assignment.status eq prepared or asignment.status eq completed}">
     <li><a href="javascript:transition('start')">Start Assignment</a></li>
-</c:if>
-<c:if test="${assignment.status ==  inprogress}">
-	<li><a href="javascript:transition('stop')">Finish Assignment</a></li>
-</c:if>
+ </c:if>
+ <c:if test="${assignment.status eq  inprogress}">
+	<li><a href="javascript:transition('stop')">Finish Assignment</a> (allows you to print debrief maps)</li>
+ </c:if>
 
 <li>Export to: <a href="javascript:document.forms['togarmin'].submit()">Garmin GPS</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=kml">KML</a></li>
+<c:if test="${assignment.status ne draft}">
 <li>Import tracks from: <a href="/app/fromgarmin?id=${assignment.id}">Garmin GPS</a>&nbsp;|&nbsp;<a href="javascript:gpxdlg.dialog.show()">GPX</a></li>
+</c:if>
 </ul>
 
 <div id="tabs" class="yui-navset">
