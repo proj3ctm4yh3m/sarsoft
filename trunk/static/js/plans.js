@@ -159,7 +159,7 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	this.container = container;
 	this.mapConfig = mapConfig;
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.mapController.message("Server Communication Error"); });
-	this.showPrevious = (showPreviousEfforts == null) ? true : showPreviousEfforts;
+	this.showPrevious = showPreviousEfforts;
 	this.previousEfforts = new Array();
 	
 	this.div = document.createElement("div");
@@ -176,21 +176,6 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 		this.mapController.emap.setConfig(mapConfig);
 	}
 	
-	var showHide = document.createElement("span");
-	if(this.showPrevious) {
-		showHide.innerHTML="PREV TRK";
-	} else {
-		showHide.innerHTML="<span style='text-decoration: line-through'>PREV TRK</span>"
-	}
-	showHide.style.cursor = "pointer";
-	showHide.title = "Show/Hide Previous Efforts in Search Area";
-	GEvent.addDomListener(showHide, "click", function() {
-		that.showPrevious = !that.showPrevious;
-		that.handleSetupChange();
-	});
-	this.mapController.addMenuItem(showHide, 19);
-	this.showHide = showHide;
-
 
 	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
 
@@ -229,6 +214,23 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	info.innerHTML = "Assignment " + assignment.id;
 	this.fmap.map.getContainer().appendChild(info);
 	
+	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED" ? false : true);
+	
+	var showHide = document.createElement("span");
+	if(this.showPrevious) {
+		showHide.innerHTML="PREV TRK";
+	} else {
+		showHide.innerHTML="<span style='text-decoration: line-through'>PREV TRK</span>"
+	}
+	showHide.style.cursor = "pointer";
+	showHide.title = "Show/Hide Previous Efforts in Search Area";
+	GEvent.addDomListener(showHide, "click", function() {
+		that.showPrevious = !that.showPrevious;
+		that.handleSetupChange();
+	});
+	this.mapController.addMenuItem(showHide, 19);
+	this.showHide = showHide;
+	
 	var bb = this.assignment.boundingBox;
 	this.fmap.map.setCenter(that.fmap.map.getCenter(), that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
 	this.setSize("7in","8.8in");
@@ -251,35 +253,33 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 		that.fmap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png") }, clue.id, clue.summary);
 	}
 	
-	if(assignment.status == "PREPARED") {
-		var bounds = new GLatLngBounds(new GLatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new GLatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
-		this.assignmentDAO.loadAll(function(assignments) {
-			for(var i = 0; i < assignments.length; i++) {
-				if(bounds.intersects(new GLatLngBounds(new GLatLng(assignments[i].boundingBox[0].lat, assignments[i].boundingBox[0].lng), new GLatLng(assignments[i].boundingBox[1].lat, assignments[i].boundingBox[1].lng)))) {
-					that.assignmentDAO.getWays(function(ways) {
-						for(var i = 0; i < ways.length; i++) {
-							var way = ways[i];
-							way.waypoints = way.zoomAdjustedWaypoints;
-							if(way.type == "TRACK") {
-								that.previousEfforts.push(way);
-								if(that.showPrevious) that.fmap.addWay(way, otherTrackConfig, null);
-							}
+	var bounds = new GLatLngBounds(new GLatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new GLatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
+	this.assignmentDAO.loadAll(function(assignments) {
+		for(var i = 0; i < assignments.length; i++) {
+			if(bounds.intersects(new GLatLngBounds(new GLatLng(assignments[i].boundingBox[0].lat, assignments[i].boundingBox[0].lng), new GLatLng(assignments[i].boundingBox[1].lat, assignments[i].boundingBox[1].lng)))) {
+				that.assignmentDAO.getWays(function(ways) {
+					for(var i = 0; i < ways.length; i++) {
+						var way = ways[i];
+						way.waypoints = way.zoomAdjustedWaypoints;
+						if(way.type == "TRACK") {
+							that.previousEfforts.push(way);
+							if(that.showPrevious) that.fmap.addWay(way, otherTrackConfig, null);
 						}
-					}, assignments[i], 10);
-				}
+					}
+				}, assignments[i], 10);
 			}
-		});
-	}
+		}
+	});
 }
 
 org.sarsoft.controller.AssignmentPrintMapController.prototype.handleSetupChange = function() {
 	if(this.showPrevious) {
-		this.showPrevious.innerHTML = "PREV TRK";
+		this.showHide.innerHTML = "PREV TRK";
 		for(var i = 0; i < this.previousEfforts.length; i++) {
 			this.fmap.addWay(this.previousEfforts[i], this.otherTrackConfig, null);
 		}
 	} else {
-		this.showPrevious.innerHTML = "<span style='text-decoration: line-through'>PREV TRK</span>";
+		this.showHide.innerHTML = "<span style='text-decoration: line-through'>PREV TRK</span>";
 		for(var i = 0; i < this.previousEfforts.length; i++) {
 			this.fmap.removeWay(this.previousEfforts[i], this.otherTrackConfig, null);
 		}
