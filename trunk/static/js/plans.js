@@ -211,10 +211,10 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	info.style.top="0px";
 	info.style.left="0px";
 	info.style.backgroundColor="white";
-	info.innerHTML = "Assignment " + assignment.id;
+	info.innerHTML = "Assignment " + assignment.id + ((assignment.status == "COMPLETED") ? " Debrief" : "");
 	this.fmap.map.getContainer().appendChild(info);
 	
-	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED" ? false : true);
+	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED") ? false : true;
 	
 	var showHide = document.createElement("span");
 	if(this.showPrevious) {
