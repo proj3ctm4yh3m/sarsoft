@@ -63,6 +63,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private Set<Resource> resources;
 	private String primaryFrequency;
 	private String secondaryFrequency;
+	private Set<Clue> clues = new HashSet<Clue>();
 
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
 
@@ -347,6 +348,28 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 			if(resource.getType() == Type.EQUIPMENT) equipment.add(resource);
 		}
 		return equipment;
+	}
+	
+	@OneToMany
+	@JSONSerializable
+	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@LazyCollection(LazyCollectionOption.FALSE)
+	public Set<Clue> getClues() {
+		return clues;
+	}
+	
+	public void setClues(Set<Clue> clues) {
+		this.clues = clues;
+	}
+	
+	public void addClue(Clue clue) {
+		this.clues.add(clue);
+		clue.setAssignment(this);
+	}
+	
+	public void removeClue(Clue clue) {
+		this.clues.remove(clue);
+		clue.setAssignment(null);
 	}
 
 	public String getPreparedBy() {

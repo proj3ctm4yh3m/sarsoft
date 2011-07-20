@@ -739,8 +739,8 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function
 //				throw("Assignment open for edit has been modified on the server");
 			}
 		}
-		that.assignmentDAO.mark();
 	});
+	that.assignmentDAO.mark();
 
 }
 
@@ -937,3 +937,163 @@ org.sarsoft.view.BulkGPXDlg = function(id) {
 	this.dialog.hide();
 }
 
+org.sarsoft.view.ClueTable = function(handler) {
+	var coldefs =[
+      { key : "id", label : "Clue #"},
+      { key : "summary", label : "Item Found"},
+      { key : "assignmentId", label : "Team"},
+	  { key : "position", label : "Location Found", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
+	];
+	if(handler == null) {
+		handler = function(clue) {
+			window.location = "/app/clue/" + clue.id;
+		}
+	}
+	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Clues"}, handler);
+}
+
+org.sarsoft.view.ClueTable.prototype = new org.sarsoft.view.EntityTable();
+
+org.sarsoft.ClueDAO = function(errorHandler, baseURL) {
+	if(typeof baseURL == "undefined") baseURL = "/rest/clue";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+}
+
+org.sarsoft.ClueDAO.prototype = new org.sarsoft.BaseDAO();
+
+org.sarsoft.controller.ClueViewMapController = function(id, controller) {
+	var that = this;
+	this.controller = controller;
+	this.clueDAO = new org.sarsoft.ClueDAO(function() { that._handleServerError(); });
+	this.clueDAO.load(function(obj) { that._loadClueCallback(obj); }, id);
+}
+
+org.sarsoft.controller.ClueViewMapController.prototype._loadClueCallback = function(clue) {
+	var that = this;
+	this.clue = clue;
+
+	var center = new GLatLng(clue.position.lat, clue.position.lng);
+	that.controller.setCenter(center, 13, 1000);
+	
+	var icon = org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png");
+	that.controller.emap.addWaypoint(clue.position, {icon: icon}, clue.id);
+}
+
+org.sarsoft.controller.ClueLocationMapController = function(controller) {
+	var that = this;
+	this.controller = controller;
+	this.controller.register("org.sarsoft.controller.ClueLocationMapController", this);
+	this.clueDAO = new org.sarsoft.ClueDAO(function () { that.controller.message("Server Communication Error"); });
+	this.clues = new Object();
+	this.showClues = true;
+	
+	this.controller.addContextMenuItems([
+     		{text : "View Clue Details", applicable : function(obj) { return obj != null && that.getClueIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/clue/' + that.getClueIdFromWpt(data.subject)); }}
+     		]);
+	
+	var showHide = document.createElement("span");
+	showHide.innerHTML="CLUE";
+	showHide.style.cursor = "pointer";
+	showHide.title = "Show/Hide Clues";
+	GEvent.addDomListener(showHide, "click", function() {
+		that.showClues = !that.showClues;
+		that.handleSetupChange();
+	});
+	this.controller.addMenuItem(showHide, 19);
+	this.showHide = showHide;
+
+	this.clueDAO.loadAll(function(clues) {
+		var n = -180;
+		var s = 180;
+		var e = -180;
+		var w = 180;
+		var total = 0;
+		for(var i = 0; i < clues.length; i++) {
+			var clue = clues[i];
+			if(clue.position != null) {
+				total++;
+				n = Math.max(n, clue.position.lat);
+				s = Math.min(s, clue.position.lat);
+				e = Math.max(e, clue.position.lng);
+				w = Math.min(w, clue.position.lng);
+			}
+		}
+		var center = new GLatLng((n + s) / 2, (e + w) / 2);
+		if(total > 1) that.controller.setCenter(center, that.controller.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))), 4);
+
+		that.refresh(clues);
+	});		
+	this.clueDAO.mark();
+	
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.setConfig = function(config) {
+	if(config.ClueLocationMapController == null || config.ClueLocationMapController.showClues == null) return;
+	this.showClues = config.ClueLocationMapController.showClues;
+	this.handleSetupChange();
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.getConfig = function(config) {
+	if(config == null) config = new Object();
+	if(config.ClueLocationMapController == null) config.ClueLocationMapController = new Object();
+	config.ClueLocationMapController.showClues = this.showClues;
+	return config;
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.getClueIdFromWpt = function(wpt) {
+	for(var key in this.clues) {
+		if(this.clues[key] != null && this.clues[key].position == wpt) return key;
+	}
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.timer = function() {
+	var that = this;
+	this.clueDAO.loadSince(function(clues) {
+		that.refresh(clues);
+	});
+	that.clueDAO.mark();
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.showClue = function(clue) {
+	if(this.clues[clue.id] != null) this.controller.emap.removeWaypoint(this.clues[clue.id].position);
+	if(clue.position == null) return;
+	this.clues[clue.id] = clue;
+	if(!this.showClues) return; // need lines above this in case the user re-enables clues
+
+	var config = new Object();	
+	var tooltip = clue.description;
+	
+	if(clue.assignmentId != null && clue.assignmentId > 0) {
+		tooltip = tooltip + " (Assignment " + clue.assignmentId + ")";
+	}
+	
+	var icon = org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png");
+	this.controller.emap.addWaypoint(clue.position, {icon: icon}, tooltip, clue.summary);
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.refresh = function(clues) {
+	var that = this;
+
+	var timestamp = this.clueDAO._timestamp;
+	for(var i = 0; i < clues.length; i++) {
+		this.showClue(clues[i]);
+	}
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.handleSetupChange = function() {
+	if(this.showClues) {
+		this.showHide.innerHTML = "CLUE";
+	} else {
+		this.showHide.innerHTML = "<span style='text-decoration: line-through'>CLUE</span>";
+	}
+	if(!this.showClues) {
+		for(var key in this.clues) {
+			this.controller.emap.removeWaypoint(this.clues[key].position);
+		}
+	} else {
+		for(var key in this.clues) {
+			this.showClue(this.clues[key]);
+		}
+	}
+}

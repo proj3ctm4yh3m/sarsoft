@@ -87,6 +87,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 		<li><a href="#map"><em>Map</em></a></li>
 		<li><a href="#tracks"><em>Tracks</em></a></li>
 		<li><a href="#operations"><em>Ops</em></a></li>
+		<li><a href="#clues"><em>Clues</em></a>
 	</ul>
 
 	<div class="yui-content">
@@ -212,6 +213,10 @@ SPOT Password:&nbsp;<input type="text" name="spotPassword" size="10" value="${re
 			</div>
 		</div>
 		</div>
+		
+		<div id="clues">
+			<div id="cluecontainer"></div>
+		</div>
 	</div>
 </div>
 
@@ -292,6 +297,9 @@ org.sarsoft.Loader.queue(function() {
 	});
 
     resourcetable.create(document.getElementById("attachedresourcecontainer"));
+    
+    cluetable = new org.sarsoft.view.ClueTable();
+    cluetable.create(document.getElementById("cluecontainer"));
 
 	assignmentDAO = new org.sarsoft.SearchAssignmentDAO();
 	assignmentDAO.load(function(obj) {
@@ -304,6 +312,10 @@ org.sarsoft.Loader.queue(function() {
 		if(_assignment.resources.length == 0) resourcetable.table.showTableMessage("<i>No Resources Attached</i>");
 		for(var i = 0; i < _assignment.resources.length; i++) {
 			resourcetable.table.addRow(_assignment.resources[i]);
+		}
+		if(_assignment.clues.length == 0) cluetable.table.showTableMessage("<i>No Clues Found</i>");
+		for(var i = 0; i < _assignment.clues.length; i++) {
+			cluetable.table.addRow(_assignment.clues[i]);
 		}
 		assignmentDAO.getWays(function(ways) {
 			avmc = new org.sarsoft.controller.AssignmentViewMapController(document.getElementById('mapview'), _assignment, ways, { color: "#FF0000" });

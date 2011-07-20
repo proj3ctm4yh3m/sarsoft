@@ -18,6 +18,7 @@ org.sarsoft.Loader.queue(function() {
   waypointController = new org.sarsoft.controller.SearchWaypointMapController(mapController);
   resourceController = new org.sarsoft.controller.ResourceLocationMapController(mapController);
   callsignController = new org.sarsoft.controller.CallsignMapController(mapController);
+  clueController = new org.sarsoft.controller.ClueLocationMapController(mapController);
   plansController.setupWidget = new org.sarsoft.view.MapSetupWidget(mapController);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(mapController, true);
   configWidget.loadConfig();

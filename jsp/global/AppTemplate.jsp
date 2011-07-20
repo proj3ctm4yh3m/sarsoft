@@ -46,6 +46,12 @@ ${mapjs}
  <c:when test="${resource ne null}">
  	&nbsp;:&nbsp;<a href="/app/resource/">Resources</a>&nbsp;:&nbsp;${resource.name}
  </c:when>
+ <c:when test="${clues ne null}">
+  &nbsp;:&nbspClue Log
+ </c:when>
+ <c:when test="${clue ne null}">
+ 	&nbsp;:&nbsp;<a href="/app/clue">Clue Log</a>&nbsp;:&nbsp;Clue ${clue.id}
+ </c:when>
 </c:choose>
 </div>
 <div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>SARSOFT&nbsp;<%= org.sarsoft.common.util.Constants.version %></div>
