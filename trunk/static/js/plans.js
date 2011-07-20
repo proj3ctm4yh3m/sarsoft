@@ -154,11 +154,13 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	this.dialog.hide();
 }
 
-org.sarsoft.controller.AssignmentPrintMapController = function(container, id, mapConfig) {
+org.sarsoft.controller.AssignmentPrintMapController = function(container, id, mapConfig, showPreviousEfforts) {
 	var that = this;
 	this.container = container;
 	this.mapConfig = mapConfig;
-	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.controller.message("Server Communication Error"); });
+	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.mapController.message("Server Communication Error"); });
+	this.showPrevious = (showPreviousEfforts == null) ? true : showPreviousEfforts;
+	this.previousEfforts = new Array();
 	
 	this.div = document.createElement("div");
 	this.container.appendChild(this.div);
@@ -173,6 +175,22 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	} else {
 		this.mapController.emap.setConfig(mapConfig);
 	}
+	
+	var showHide = document.createElement("span");
+	if(this.showPrevious) {
+		showHide.innerHTML="PREV TRK";
+	} else {
+		showHide.innerHTML="<span style='text-decoration: line-through'>PREV TRK</span>"
+	}
+	showHide.style.cursor = "pointer";
+	showHide.title = "Show/Hide Previous Efforts in Search Area";
+	GEvent.addDomListener(showHide, "click", function() {
+		that.showPrevious = !that.showPrevious;
+		that.handleSetupChange();
+	});
+	this.mapController.addMenuItem(showHide, 19);
+	this.showHide = showHide;
+
 
 	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
 
@@ -193,6 +211,13 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	trackConfig.fill = false;
 	trackConfig.color = "#FF8800";
 	trackConfig.opacity = 100;
+	
+	var otherTrackConfig = new Object();
+	otherTrackConfig.clickable = false;
+	otherTrackConfig.fill = false;
+	otherTrackConfig.color = "#000000";
+	otherTrackConfig.opacity = 80;
+	this.otherTrackConfig = otherTrackConfig;
 	
 	var info = document.createElement("div");
 	info.style.zIndex=2000;
@@ -219,6 +244,45 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	for(var i = 0; i < assignment.waypoints.length; i++) {
 		var wpt = assignment.waypoints[i];
 		that.fmap.addWaypoint(wpt, config, wpt.name, wpt.name);
+	}
+	
+	for(var i = 0; i < assignment.clues.length; i++) {
+		var clue = assignment.clues[i];
+		that.fmap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png") }, clue.id, clue.summary);
+	}
+	
+	if(assignment.status == "PREPARED") {
+		var bounds = new GLatLngBounds(new GLatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new GLatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
+		this.assignmentDAO.loadAll(function(assignments) {
+			for(var i = 0; i < assignments.length; i++) {
+				if(bounds.intersects(new GLatLngBounds(new GLatLng(assignments[i].boundingBox[0].lat, assignments[i].boundingBox[0].lng), new GLatLng(assignments[i].boundingBox[1].lat, assignments[i].boundingBox[1].lng)))) {
+					that.assignmentDAO.getWays(function(ways) {
+						for(var i = 0; i < ways.length; i++) {
+							var way = ways[i];
+							way.waypoints = way.zoomAdjustedWaypoints;
+							if(way.type == "TRACK") {
+								that.previousEfforts.push(way);
+								if(that.showPrevious) that.fmap.addWay(way, otherTrackConfig, null);
+							}
+						}
+					}, assignments[i], 10);
+				}
+			}
+		});
+	}
+}
+
+org.sarsoft.controller.AssignmentPrintMapController.prototype.handleSetupChange = function() {
+	if(this.showPrevious) {
+		this.showPrevious.innerHTML = "PREV TRK";
+		for(var i = 0; i < this.previousEfforts.length; i++) {
+			this.fmap.addWay(this.previousEfforts[i], this.otherTrackConfig, null);
+		}
+	} else {
+		this.showPrevious.innerHTML = "<span style='text-decoration: line-through'>PREV TRK</span>";
+		for(var i = 0; i < this.previousEfforts.length; i++) {
+			this.fmap.removeWay(this.previousEfforts[i], this.otherTrackConfig, null);
+		}
 	}
 }
 

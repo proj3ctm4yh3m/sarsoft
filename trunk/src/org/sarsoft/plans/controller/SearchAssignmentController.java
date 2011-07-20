@@ -83,10 +83,12 @@ public class SearchAssignmentController extends JSONBaseController {
 			model.addAttribute("rejected", rejected);
 
 			List<MapConfig> mapConfigs = new ArrayList<MapConfig>();
+			List<Boolean> showPreviousEfforts = new ArrayList<Boolean>();
 			for(int i = 1; i < 6; i++) {
 				String foreground = request.getParameter("map" + i + "f");
 				String background = request.getParameter("map" + i + "b");
 				String opacity = request.getParameter("map" + i + "o");
+				String previousEfforts = request.getParameter("map" + i + "prev");
 				if(foreground != null && foreground.length() > 0) {
 					MapConfig config = new MapConfig();
 					config.setBase(foreground);
@@ -97,9 +99,11 @@ public class SearchAssignmentController extends JSONBaseController {
 						config.setOpacity(0);
 					}
 					mapConfigs.add(config);
+					showPreviousEfforts.add(Boolean.valueOf(previousEfforts));
 				}
 			}
 			model.addAttribute("mapConfigs", mapConfigs);
+			model.addAttribute("previousEfforts", showPreviousEfforts);
 			return app(model, "Assignment.PrintBulk");
 		default :
 			return "error";
