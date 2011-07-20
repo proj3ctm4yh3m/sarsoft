@@ -310,6 +310,10 @@ public class SearchAssignmentController extends JSONBaseController {
 				dao.save(resource);
 			}
 			break;
+		case ROLLBACK :
+			if(assignment.getStatus() == SearchAssignment.Status.INPROGRESS) assignment.setStatus(SearchAssignment.Status.PREPARED);
+			if(assignment.getStatus() == SearchAssignment.Status.COMPLETED) assignment.setStatus(SearchAssignment.Status.INPROGRESS);
+			break;
 		case DELETE :
 			assignment.getOperationalPeriod().removeAssignment(assignment);
 			for(Resource resource : assignment.getResources()) {

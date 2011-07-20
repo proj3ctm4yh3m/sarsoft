@@ -70,12 +70,14 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
  </c:if>
  <c:if test="${assignment.status eq completed}">
     <li>Print <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Debrief Map</a>.</li>
+    <li><a href="javascript:transition('rollback')">Roll Back</a> to In Progress if this assignment was completed by mistake.</li>
  </c:if>
- <c:if test="${assignment.status eq prepared or assignment.status eq completed}">
+ <c:if test="${assignment.status eq prepared}">
     <li><a href="javascript:transition('start')">Start Assignment</a></li>
  </c:if>
  <c:if test="${assignment.status eq  inprogress}">
 	<li><a href="javascript:transition('stop')">Finish Assignment</a> (releases resources and allows you to print debrief map)</li>
+    <li><a href="javascript:transition('rollback')">Roll Back</a> to Prepared if this assignment was started by mistake.</li>
  </c:if>
 
 <li>Export to: <a href="javascript:document.forms['togarmin'].submit()">Garmin GPS</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=kml">KML</a></li>
