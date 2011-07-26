@@ -216,19 +216,12 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	
 	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED") ? false : true;
 	
-	var showHide = document.createElement("span");
-	if(this.showPrevious) {
-		showHide.innerHTML="PREV TRK";
-	} else {
-		showHide.innerHTML="<span style='text-decoration: line-through'>PREV TRK</span>"
-	}
-	showHide.style.cursor = "pointer";
-	showHide.title = "Show/Hide Previous Efforts in Search Area";
-	GEvent.addDomListener(showHide, "click", function() {
-		that.showPrevious = !that.showPrevious;
+	var showHide = new org.sarsoft.ToggleControl("PREV TRK", "Show/Hide Previous Efforts in Search Area", function(value) {
+		that.showPrevious = value;
 		that.handleSetupChange();
 	});
-	this.mapController.addMenuItem(showHide, 19);
+	showHide.setValue(this.showPrevious);
+	this.mapController.addMenuItem(showHide.node, 19);
 	this.showHide = showHide;
 	
 	var bb = this.assignment.boundingBox;
@@ -656,15 +649,11 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	});
 	this.controller.addMenuItem(goback, 40);
 	
-	var showTracks = document.createElement("span");
-	showTracks.innerHTML="TRK";
-	showTracks.style.cursor = "pointer";
-	showTracks.title = "Show/Hide Tracks and Waypoints";
-	GEvent.addDomListener(showTracks, "click", function() {
-		that._mapsetup.showtracks = !that._mapsetup.showtracks;
+	var showTracks = new org.sarsoft.ToggleControl("TRK", "Show/Hide Tracks and Waypoints", function(value) {
+		that._mapsetup.showtracks = value;
 		that.handleSetupChange();
 	});
-	this.controller.addMenuItem(showTracks, 15);
+	this.controller.addMenuItem(showTracks.node, 15);
 	this.showTracks = showTracks;
 
 	this.periodDAO.load(function(period) {
@@ -750,11 +739,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFr
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChange = function() {
-	if(this._mapsetup.showtracks) {
-		this.showTracks.innerHTML = "TRK";
-	} else {
-		this.showTracks.innerHTML = "<span style='text-decoration: line-through'>TRK</span>";		
-	}	
+	this.showTracks.setValue(this._mapsetup.showtracks);
 
 	for(var id in this.assignments) {
 		var assignment = this.assignments[id];
@@ -1036,16 +1021,12 @@ org.sarsoft.controller.ClueLocationMapController = function(controller) {
      		{text : "View Clue Details", applicable : function(obj) { return obj != null && that.getClueIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/clue/' + that.getClueIdFromWpt(data.subject)); }}
      		]);
 	
-	var showHide = document.createElement("span");
-	showHide.innerHTML="CLUE";
-	showHide.style.cursor = "pointer";
-	showHide.title = "Show/Hide Clues";
-	GEvent.addDomListener(showHide, "click", function() {
-		that.showClues = !that.showClues;
+	var showHide = new org.sarsoft.ToggleControl("CLUE", "Show/Hide Clues", function(value) {
+		that.showClues = value;
 		that.handleSetupChange();
 	});
-	this.controller.addMenuItem(showHide, 19);
 	this.showHide = showHide;
+	this.controller.addMenuItem(showHide.node, 19);
 
 	this.clueDAO.loadAll(function(clues) {
 		var n = -180;
@@ -1126,11 +1107,7 @@ org.sarsoft.controller.ClueLocationMapController.prototype.refresh = function(cl
 }
 
 org.sarsoft.controller.ClueLocationMapController.prototype.handleSetupChange = function() {
-	if(this.showClues) {
-		this.showHide.innerHTML = "CLUE";
-	} else {
-		this.showHide.innerHTML = "<span style='text-decoration: line-through'>CLUE</span>";
-	}
+	this.showHide.setValue(this.showClues);
 	if(!this.showClues) {
 		for(var key in this.clues) {
 			this.controller.emap.removeWaypoint(this.clues[key].position);

@@ -325,50 +325,27 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 		this.map.addControl(this.mapMessageControl);
 		
 		this._showUTM = true;
-		this._labels = "normal";
 		if(showtools && this.map._overlaydropdownmapcontrol != null) {
 			var extras = this.map._overlaydropdownmapcontrol.extras;
-			this._UTMToggle = document.createElement("a");
-			this._UTMToggle.menuOrder=10;
-			this._UTMToggle.title = "Enable/disable UTM gridlines";
-			this._UTMToggle.style.cursor="pointer";
-			this._UTMToggle.innerHTML = "UTM";
-			GEvent.addDomListener(this._UTMToggle, "click", function() {
-				if(that._showUTM) {
-					that._UTMToggle.innerHTML = "<span style='text-decoration: line-through'>UTM</span>";
-					that._showUTM = false;
-				} else {
-					that._UTMToggle.innerHTML = "UTM";
-					that._showUTM = true;
-				}
+			this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Enable/disable UTM gridlines", function(value) {
+				that._showUTM = value;
 				that._drawUTMGrid(true);
 			});
-			extras.appendChild(this._UTMToggle);
+			extras.appendChild(this._UTMToggle.node);
 			extras.appendChild(document.createTextNode(" "));
 			
-			this._labelToggle = document.createElement("a");
-			this._labelToggle.menuOrder=11;
-			this._labelToggle.title = "Toggle label display";
-			this._labelToggle.style.cursor = "pointer";
-			this._labelToggle.innerHTML = "LBL";
-			GEvent.addDomListener(this._labelToggle, "click", function() {
-				if(that._labels == "normal") {
-					that._labels = "backlit";
-					that._labelToggle.innerHTML = "<span style='color: white; background-color: red'>LBL</span>";
-				} else if(that._labels == "backlit") {
-					that._labels = "hidden";
-					that._labelToggle.innerHTML = "<span style='text-decoration: line-through'>LBL</span>";
-				} else {
-					that._labels = "normal";
-					that._labelToggle.innerHTML = "LBL";
-				}
+			this._labelToggle = new org.sarsoft.ToggleControl("LBL", "Toggle label display", function(value) {
 				var container = that.map.getContainer();
 				YAHOO.util.Dom.removeClass(container, "maplabelnormal");
 				YAHOO.util.Dom.removeClass(container, "maplabelbacklit");
 				YAHOO.util.Dom.removeClass(container, "maplabelhidden");
-				YAHOO.util.Dom.addClass(container, "maplabel" + that._labels);
-			});
-			extras.appendChild(this._labelToggle);
+				YAHOO.util.Dom.addClass(container, "maplabel" + value);
+				},
+				[{value : "normal", style : ""},
+				 {value : "backlit", style : "color: white; background-color: red"},
+				 {value : "hidden", style : "text-decoration: line-through"}]);
+			
+			extras.appendChild(this._labelToggle.node);
 			extras.appendChild(document.createTextNode(" "));
 
 			var n = document.createTextNode(" | ");

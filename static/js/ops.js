@@ -100,15 +100,11 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
      		{text : "View Resource Details", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/resource/' + that.getResourceIdFromWpt(data.subject)); }}
      		]);
 	
-	var showHide = document.createElement("span");
-	showHide.innerHTML="LOC";
-	showHide.style.cursor = "pointer";
-	showHide.title = "Show/Hide Resource Locations";
-	GEvent.addDomListener(showHide, "click", function() {
-		that.showLocations = !that.showLocations;
+	var showHide = new org.sarsoft.ToggleControl("LOC", "Show/Hide Resource Locations", function(value) {
+		that.showLocations = value;
 		that.handleSetupChange();
 	});
-	this.controller.addMenuItem(showHide, 18);
+	this.controller.addMenuItem(showHide.node, 18);
 	this.showHide = showHide;
 
 	that.resourceDAO.loadAll(function(resources) {
@@ -208,11 +204,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.refresh = functio
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange = function() {
-	if(this.showLocations) {
-		this.showHide.innerHTML = "LOC";
-	} else {
-		this.showHide.innerHTML = "<span style='text-decoration: line-through'>LOC</span>";
-	}
+	this.showHide.setValue(this.showLocations);
 	if(!this.showLocations) {
 		for(var key in this.resources) {
 			this.controller.emap.removeWaypoint(this.resources[key].position);
@@ -233,15 +225,11 @@ org.sarsoft.controller.CallsignMapController = function(controller) {
 	this.controller = controller;
 	this.controller.register("org.sarsoft.controller.CallsignMapController", this);
 
-	var showHide = document.createElement("span");
-	showHide.innerHTML="CLL";
-	showHide.style.cursor = "pointer";
-	showHide.title = "Show/Hide Nearby Callsigns";
-	GEvent.addDomListener(showHide, "click", function() {
-		that.showCallsigns = !that.showCallsigns;
+	var showHide = new org.sarsoft.ToggleControl("CLL", "Show/Hide Nearby Callsigns", function() {
+		that.showCallsigns = value;
 		that.handleSetupChange();
 	});
-	this.controller.addMenuItem(showHide, 19);
+	this.controller.addMenuItem(showHide.node, 19);
 	this.showHide = showHide;
 	
 	this.callsignDAO.mark();
@@ -270,11 +258,7 @@ org.sarsoft.controller.CallsignMapController.prototype.getConfig = function(conf
 }
 
 org.sarsoft.controller.CallsignMapController.prototype.handleSetupChange = function() {
-	if(this.showCallsigns) {
-		this.showHide.innerHTML = "CLL";
-	} else {
-		this.showHide.innerHTML = "<span style='text-decoration: line-through'>CLL</span>";
-	}
+	this.showHide.setValue(this.showCallsigns);
 	for(var cs in this.callsigns) {
 		var callsign = this.callsigns[cs];
 		this.addCallsign(callsign);
