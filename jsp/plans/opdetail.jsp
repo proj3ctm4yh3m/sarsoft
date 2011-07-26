@@ -162,20 +162,11 @@ org.sarsoft.Loader.queue(function() {
 function assignmentListTimer() {
 	if(document.getElementById('bulkupdate').style.display == "block" || document.getElementById('bulkprint').style.display == "block") return;
 	assignmentDAO.loadSince(function(assignments) {
-		var sortedBy = datatable.table.get("sortedBy");
-		datatable.table.set("sortedBy", null);
-		var rs = datatable.table.getRecordSet();
+		var records = new Array();
 		for(var i = 0; i < assignments.length; i++) {
-			if(assignments[i].operationalPeriodId==${period.id}) {
-				for(var j = 0; j < rs.getLength(); j++) {
-					if(rs.getRecord(j).getData().id == assignments[i].id) {
-						datatable.table.deleteRow(j);
-					}
-				}
-				datatable.table.addRow(assignments[i]);
-			}
+			if(assignments[i].operationalPeriodId==${period.id}) records.push(assignments[i]);
 		}
-		datatable.table.sortColumn(sortedBy.column, sortedBy.dir);
+		datatable.update(records);
 	});
 	assignmentDAO.mark();
 }

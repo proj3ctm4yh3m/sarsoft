@@ -48,18 +48,7 @@ org.sarsoft.Loader.queue(function() {
   
   function clueListTimer() {
     dao.loadSince(function(clues) {
-		var sortedBy = cluetable.table.get("sortedBy");
-		cluetable.table.set("sortedBy", null);
-		var rs = cluetable.table.getRecordSet();
-		for(var i = 0; i < clues.length; i++) {
-			for(var j = 0; j < rs.getLength(); j++) {
-				if(rs.getRecord(j).getData().id == clues[i].id) {
-					cluetable.table.deleteRow(j);
-				}
-			}
-			cluetable.table.addRow(clues[i]);
-		}
-		if(sortedBy != null) cluetable.table.sortColumn(sortedBy.column, sortedBy.dir);
+    	cluetable.update(clues);
 	});
 	dao.mark();
   }

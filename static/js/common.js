@@ -184,6 +184,21 @@ org.sarsoft.view.EntityTable.prototype.create = function(container) {
 	}
 }
 
+org.sarsoft.view.EntityTable.prototype.update = function(records) {
+	var sortedBy = this.table.get("sortedBy");
+	this.table.set("sortedBy", null);
+	var rs = this.table.getRecordSet();
+	for(var i = 0; i < records.length; i++) {
+		for(var j = 0; j < rs.getLength(); j++) {
+			if(rs.getRecord(j).getData().id == records[i].id) {
+				this.table.deleteRow(j);
+			}
+		}
+		this.table.addRow(records[i]);
+	}
+	this.table.sortColumn(sortedBy.column, sortedBy.dir);
+}
+
 org.sarsoft.view.EntityForm = function(fields) {
 	this.fields = fields;
 	this.elements = new Object();
