@@ -72,10 +72,23 @@ textarea.entityform {
 	display: none;
 }
 
+.maplabelnormal .maplabel {
+}
+
+.maplabelbacklit .maplabel {
+	background-color: white;
+}
+	
+.maplabelhidden .maplabel {
+	display: none;
+}
+
 @media print {
 	.noprint {
 		display: none;
 	}
 	.printonly {
 		display: block !important;
+	}
 }
+	

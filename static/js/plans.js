@@ -619,8 +619,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this._mapsetup = {
 		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50},
 		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 35, opacity : 100},
-		showtracks : true,
-		showlabels : true
+		showtracks : true
 		};
 
 	this.controller.addContextMenuItems([
@@ -667,17 +666,6 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	});
 	this.controller.addMenuItem(showTracks, 15);
 	this.showTracks = showTracks;
-
-	var showLabels = document.createElement("span");
-	showLabels.innerHTML="LBL";
-	showLabels.style.cursor = "pointer";
-	showLabels.title = "Show/Hide Assignment Labels";
-	GEvent.addDomListener(showLabels, "click", function() {
-		that._mapsetup.showlabels = !that._mapsetup.showlabels;
-		that.handleSetupChange();
-	});
-	this.controller.addMenuItem(showLabels, 17);
-	this.showLabels = showLabels;
 
 	this.periodDAO.load(function(period) {
 			var bb = period.boundingBox;
@@ -736,7 +724,6 @@ org.sarsoft.controller.OperationalPeriodMapController._idx = 0;
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setConfig = function(config) {
 	if(config.OperationalPeriodMapController == null) return;
 	this._mapsetup.showtracks = config.OperationalPeriodMapController.showtracks;
-	this._mapsetup.showlabels = config.OperationalPeriodMapController.showlabels;
 	if(config.OperationalPeriodMapController.present != null) this._mapsetup.present = config.OperationalPeriodMapController.present;
 	if(config.OperationalPeriodMapController.past != null) this._mapsetup.past = config.OperationalPeriodMapController.past;
 	this.handleSetupChange();
@@ -746,7 +733,6 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getConfig = func
 	if(config == null) config = new Object();
 	if(config.OperationalPeriodMapController == null) config.OperationalPeriodMapController = new Object();
 	config.OperationalPeriodMapController.showtracks = this._mapsetup.showtracks;
-	config.OperationalPeriodMapController.showlabels = this._mapsetup.showlabels;
 	config.OperationalPeriodMapController.present = this._mapsetup.present;
 	config.OperationalPeriodMapController.past = this._mapsetup.past;
 	return config;
@@ -768,13 +754,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChang
 		this.showTracks.innerHTML = "TRK";
 	} else {
 		this.showTracks.innerHTML = "<span style='text-decoration: line-through'>TRK</span>";		
-	}
-	if(this._mapsetup.showlabels) {
-		this.showLabels.innerHTML = "LBL";
-	} else {
-		this.showLabels.innerHTML = "<span style='text-decoration: line-through'>LBL</span>";
-	}
-	
+	}	
 
 	for(var id in this.assignments) {
 		var assignment = this.assignments[id];
@@ -919,14 +899,14 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		way.waypoints = way.zoomAdjustedWaypoints;
 		way.displayMessage = "Assignment " + assignment.id + ": " + assignment.status + " " + assignment.formattedSize + " " + assignment.timeAllocated + "hr " + assignment.resourceType + ".  <a href='/app/assignment/" + assignment.id + "' target='_new'>Details</a>";
 		var label = null;
-		if(this._mapsetup.showlabels) label = way.name;
-		if(way.type == "ROUTE" && this._mapsetup.showlabels) label = assignment.id
+		label = way.name;
+		if(way.type == "ROUTE") label = assignment.id
 		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config, label);
 	}
 	if(config.clickable) {
 		for(var i = 0; i < assignment.waypoints.length; i++) {
 			var wpt = assignment.waypoints[i];
-			this.emap.addWaypoint(wpt, config, wpt.name, (this._mapsetup.showlabels == true) ? wpt.name : null);
+			this.emap.addWaypoint(wpt, config, wpt.name, wpt.name);
 		}
 	}
 }

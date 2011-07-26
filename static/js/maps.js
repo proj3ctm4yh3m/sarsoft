@@ -325,6 +325,7 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 		this.map.addControl(this.mapMessageControl);
 		
 		this._showUTM = true;
+		this._labels = "normal";
 		if(showtools && this.map._overlaydropdownmapcontrol != null) {
 			var extras = this.map._overlaydropdownmapcontrol.extras;
 			this._UTMToggle = document.createElement("a");
@@ -344,6 +345,32 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 			});
 			extras.appendChild(this._UTMToggle);
 			extras.appendChild(document.createTextNode(" "));
+			
+			this._labelToggle = document.createElement("a");
+			this._labelToggle.menuOrder=11;
+			this._labelToggle.title = "Toggle label display";
+			this._labelToggle.style.cursor = "pointer";
+			this._labelToggle.innerHTML = "LBL";
+			GEvent.addDomListener(this._labelToggle, "click", function() {
+				if(that._labels == "normal") {
+					that._labels = "backlit";
+					that._labelToggle.innerHTML = "<span style='color: white; background-color: red'>LBL</span>";
+				} else if(that._labels == "backlit") {
+					that._labels = "hidden";
+					that._labelToggle.innerHTML = "<span style='text-decoration: line-through'>LBL</span>";
+				} else {
+					that._labels = "normal";
+					that._labelToggle.innerHTML = "LBL";
+				}
+				var container = that.map.getContainer();
+				YAHOO.util.Dom.removeClass(container, "maplabelnormal");
+				YAHOO.util.Dom.removeClass(container, "maplabelbacklit");
+				YAHOO.util.Dom.removeClass(container, "maplabelhidden");
+				YAHOO.util.Dom.addClass(container, "maplabel" + that._labels);
+			});
+			extras.appendChild(this._labelToggle);
+			extras.appendChild(document.createTextNode(" "));
+
 			var n = document.createTextNode(" | ");
 			n.menuOrder = 20;
 			extras.appendChild(n);
@@ -554,7 +581,7 @@ org.sarsoft.FixedGMap.prototype._addOverlay = function(way, config, label) {
 			}
 		}
 		if(label != null) {
-			labelOverlay = new ELabel(new GLatLng(labelwpt.lat, labelwpt.lng), label, "width: 6em");
+			labelOverlay = new ELabel(new GLatLng(labelwpt.lat, labelwpt.lng), "<span class='maplabel'>" + label + "</span>", "width: 6em");
 			this.map.addOverlay(labelOverlay);
 		}
 	}
@@ -620,7 +647,7 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
 	if(label != null) {
-		labelOverlay = new ELabel(gll, label, "width: 6em", new GSize(4, -4));
+		labelOverlay = new ELabel(gll, "<span class='maplabel'>" + label + "</span>", "width: 6em", new GSize(4, -4));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
 	}
