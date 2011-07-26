@@ -396,4 +396,39 @@ org.sarsoft.view.CreateSimpleDialog = function(title, bodytext, yes, no, handler
 	return org.sarsoft.view.CreateBlankDialog(title, d, yes, no, handler, style);
 }
 
+org.sarsoft.ToggleControl = function(label, tooltip, handler, states) {
+	var that = this;
+	if(states == null) states = [{value: true, style: ""}, {value: false, style: "text-decoration: line-through"}];
+	this.states = states;
+	this.state = states[0].value;
+	var toggle = document.createElement("a");
+	toggle.title = tooltip;
+	toggle.style.cursor = "pointer";
+	toggle.innerHTML = "<span style='" + states[0].style + "'>" + label + "</span>";
+	this.node = toggle;
+	this.label = label;
+
+	GEvent.addDomListener(toggle, "click", function() {
+		for(var i = 0; i < states.length; i++) {
+			if(states[i].value == that.state) {
+				var j = i+1;
+				if(j >= states.length) j = 0;
+				that.state = states[j].value;
+				toggle.innerHTML = "<span style='" + states[j].style + "'>" + label + "</span>";
+				handler(states[j].value);
+				return;
+			}
+		}
+	});
+}
+
+org.sarsoft.ToggleControl.prototype.setValue = function(value) {
+	for(var i = 0; i < this.states.length; i++) {
+		if(this.states[i].value == value) {
+			this.state = value;
+			this.node.innerHTML = "<span style='" + this.states[i].style + "'>" + this.label + "</span>";
+		}
+	}
+}
+
 if(org.sarsoft.yuiloaded == true) org.sarsoft.Loader.execute();
