@@ -313,14 +313,19 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 				that.utminitialized=true;
 			}
 		});
-		var datum = document.createElement("div");
-		datum.style.zIndex=2000;
-		datum.style.position="absolute";
-		datum.style.bottom="0px";
-		datum.style.left="0px";
-		datum.style.backgroundColor="white";
-		datum.innerHTML = org.sarsoft.map.datum;
-		map.getContainer().appendChild(datum);
+		
+		var datumControl = document.createElement("div");
+		datumControl.style.zIndex=2000;
+		datumControl.style.position="absolute";
+		datumControl.style.bottom="0px";
+		datumControl.style.left="0px";
+		datumControl.style.backgroundColor="white";
+		this.datumDisplay = document.createElement("span");
+		datumControl.appendChild(this.datumDisplay);
+		this.datumDisplay.innerHTML = org.sarsoft.map.datum;
+		this.datumControl = datumControl;
+		this.map.getContainer().appendChild(datumControl);
+				
 		this.mapMessageControl = new org.sarsoft.MapMessageControl();
 		this.map.addControl(this.mapMessageControl);
 		
@@ -370,6 +375,45 @@ org.sarsoft.FixedGMap = function(map, showtools) {
 		}
 		
 	}
+}
+
+org.sarsoft.FixedGMap.prototype.updateDatum = function() {
+	for(var key in this.markers) {
+		var m = this.markers[key];
+		this.addWaypoint(m.waypoint, m.config, m.tooltip, m.label);
+	}
+	this._drawUTMGrid(true);
+}
+
+org.sarsoft.FixedGMap.prototype.addDatumSwitch = function() {
+	var that = this;
+	if(this.datumSwitcher != null) return;
+	var datumSwitcher = document.createElement("a");
+	datumSwitcher.style.cursor="pointer";
+	datumSwitcher.innerHTML = "+";
+	this.datumControl.appendChild(datumSwitcher);
+	this.datumSwitcher = datumSwitcher;
+	
+	var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;		
+	var datumMenu = new YAHOO.widget.Menu(id, {hidedelay : 800, zIndex : "1000", context : [datumSwitcher, "bl", "tr"]});
+	var fn = function(d) {
+		return function() {
+			org.sarsoft.map.datum = d;
+			GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
+			that.datumDisplay.innerHTML = d;
+			that.updateDatum();
+		}
+	}
+	for(var datum in org.sarsoft.map.datums) {
+		datumMenu.addItem(new YAHOO.widget.MenuItem(datum,  { onclick : { fn : fn(datum) }}));
+	}
+	datumMenu.render(document.body);
+	
+	GEvent.addDomListener(datumSwitcher, "click", function() {
+		datumMenu.cfg.setProperty("context", [datumSwitcher, "bl", "tr"]);
+		datumMenu.show();
+	});
+
 }
 
 org.sarsoft.FixedGMap.prototype.getConfig = function(config) {
@@ -618,9 +662,10 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 	var id = waypoint.id;
 	var gll = new GLatLng(waypoint.lat, waypoint.lng);
 	var icon = (config.icon) ? config.icon : org.sarsoft.MapUtil.createFlatCircleIcon(12, config.color);
-	if(typeof tooltip == "undefined") tooltip = waypoint.name;
-	tooltip = tooltip +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(waypoint.lat, waypoint.lng))).toString() + ")";
-	var marker = new GMarker(gll, { title : tooltip, icon : icon});
+	var tt = tooltip;
+	if(typeof tt == "undefined") tt = waypoint.name;
+	tt = tt +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(waypoint.lat, waypoint.lng))).toString() + ")";
+	var marker = new GMarker(gll, { title : tt, icon : icon});
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
 	if(label != null) {
@@ -628,6 +673,7 @@ org.sarsoft.FixedGMap.prototype._addMarker = function(waypoint, config, tooltip,
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
 	}
+	this.markers[waypoint.id] = { waypoint: waypoint, marker: marker, config: config, tooltip : tooltip, label : label};
 	return marker;
 }
 
@@ -641,7 +687,7 @@ org.sarsoft.FixedGMap.prototype.removeWaypoint = function(waypoint) {
 
 org.sarsoft.FixedGMap.prototype.addWaypoint = function(waypoint, config, tooltip, label) {
 	this.removeWaypoint(waypoint);
-	this.markers[waypoint.id] = { waypoint: waypoint, marker: this._addMarker(waypoint, config, tooltip, label), config: config};
+	this._addMarker(waypoint, config, tooltip, label);
 }
 
 org.sarsoft.EditableGMap = function(map, showtools) {
