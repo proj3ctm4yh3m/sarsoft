@@ -61,18 +61,7 @@ org.sarsoft.Loader.queue(function() {
   
   function resourceListTimer() {
     dao.loadSince(function(resources) {
-		var sortedBy = rtable.table.get("sortedBy");
-		rtable.table.set("sortedBy", null);
-		var rs = rtable.table.getRecordSet();
-		for(var i = 0; i < resources.length; i++) {
-			for(var j = 0; j < rs.getLength(); j++) {
-				if(rs.getRecord(j).getData().id == resources[i].id) {
-					rtable.table.deleteRow(j);
-				}
-			}
-			rtable.table.addRow(resources[i]);
-		}
-		if(sortedBy != null) rtable.table.sortColumn(sortedBy.column, sortedBy.dir);
+    	rtable.update(resources);
 	});
 	dao.mark();
   }
@@ -94,18 +83,7 @@ org.sarsoft.Loader.queue(function() {
   
   function callsignListTimer() {
     cdao.loadSince(function(callsigns) {
-		var sortedBy = ctable.table.get("sortedBy");
-		ctable.table.set("sortedBy", null);
-		var rs = ctable.table.getRecordSet();
-		for(var i = 0; i < callsigns.length; i++) {
-			for(var j = 0; j < rs.getLength(); j++) {
-				if(rs.getRecord(j).getData().callsign == callsigns[i].callsign) {
-					ctable.table.deleteRow(j);
-				}
-			}
-			ctable.table.addRow(callsigns[i]);
-		}
-		if(sortedBy != null) ctable.table.sortColumn(sortedBy.column, sortedBy.dir);
+    	ctable.update(callsigns);
 	});
 	cdao.mark();
   }
