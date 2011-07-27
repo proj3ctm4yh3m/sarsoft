@@ -163,9 +163,11 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	this.previousEfforts = new Array();
 	
 	this.div = document.createElement("div");
+	this.div.style.width="7in";
+	this.div.style.height="8.8in";
 	this.container.appendChild(this.div);
 	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
-	this.fmap = new org.sarsoft.InteractiveMap(map);
+	this.fmap = new org.sarsoft.InteractiveMap(map, {standardControls : true});
 
 	var waypointController = new org.sarsoft.controller.SearchWaypointMapController(this.fmap);
 	if(mapConfig == null) {
@@ -175,7 +177,6 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 		this.fmap.setConfig(mapConfig);
 	}
 	
-
 	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
 
 }
@@ -225,7 +226,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	
 	var bb = this.assignment.boundingBox;
 	this.fmap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
-	this.setSize("7in","8.8in");
+
 
 	this.assignmentDAO.getWays(function(ways) {
 		for(var i = 0; i < ways.length; i++) {
@@ -277,14 +278,6 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype.handleSetupChange 
 			this.fmap.removeWay(this.previousEfforts[i], this.otherTrackConfig, null);
 		}
 	}
-}
-
-org.sarsoft.controller.AssignmentPrintMapController.prototype.setSize = function(width, height) {
-	this.div.style.width=width;
-	this.div.style.height=height;
-	this.fmap.map.checkResize();
-	var bb = this.assignment.boundingBox;
-	this.fmap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
 }
 
 org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, ways, defaultConfig) {

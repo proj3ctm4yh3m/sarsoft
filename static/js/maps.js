@@ -270,11 +270,13 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
 	var buttons = [ { text : "Update", handler: function() {
 		that.dialog.hide();
+		var center = that.map.getCenter();
 		var width = that.widthInput.value;
 		var height = that.heightInput.value;
 		that.map.getContainer().style.width=width;
 		that.map.getContainer().style.height=height;
 		that.map.checkResize();
+		that.map.setCenter(center);
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
 	this.dialog.cfg.queueProperty("buttons", buttons);
 	this._rendered = false;
@@ -572,6 +574,7 @@ org.sarsoft.MapLabelWidget.prototype.getConfig = function(config) {
 
 
 org.sarsoft.MapSizeWidget = function(imap) {
+	var that = this;
 	this.pageSizeDlg = new org.sarsoft.view.MapSizeDlg(imap.map);
 	var pagesetup = document.createElement("img");
 	pagesetup.src="/static/images/print.png";
