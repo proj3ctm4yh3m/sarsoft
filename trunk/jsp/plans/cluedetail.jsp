@@ -82,12 +82,11 @@ document.getElementById('utm_n').value = utm.n;
 org.sarsoft.Loader.queue(function() {
   
   var map = new org.sarsoft.EnhancedGMap().createMap(document.getElementById('mapview'));
-  var fmap = new org.sarsoft.FixedGMap(map);
+  var imap = new org.sarsoft.InteractiveMap(map);
 
-  mapController = new org.sarsoft.MapController(fmap);
-  cvmc = new org.sarsoft.controller.ClueViewMapController(${clue.id}, mapController);
-  waypointController = new org.sarsoft.controller.SearchWaypointMapController(mapController);
-  configWidget = new org.sarsoft.view.PersistedConfigWidget(mapController);
+  cvmc = new org.sarsoft.controller.ClueViewMapController(${clue.id}, imap);
+  waypointController = new org.sarsoft.controller.SearchWaypointMapController(imap);
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap);
   configWidget.loadConfig();
   
 });

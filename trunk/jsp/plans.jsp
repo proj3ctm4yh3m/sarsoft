@@ -12,18 +12,16 @@ function doload() {
 org.sarsoft.Loader.queue(function() {
   egm = new org.sarsoft.EnhancedGMap();
   map = egm.createMap(document.getElementById('map_canvas'));
-  emap = new org.sarsoft.EditableGMap(map, true);
-  emap.addDatumSwitch();
-  mapController = new org.sarsoft.MapController(emap);
-  plansController = new org.sarsoft.controller.OperationalPeriodMapController(emap, {id : ${period.id}}, mapController);
-  waypointController = new org.sarsoft.controller.SearchWaypointMapController(mapController);
-  resourceController = new org.sarsoft.controller.ResourceLocationMapController(mapController);
-  callsignController = new org.sarsoft.controller.CallsignMapController(mapController);
-  clueController = new org.sarsoft.controller.ClueLocationMapController(mapController);
-  plansController.setupWidget = new org.sarsoft.view.MapSetupWidget(mapController);
-  configWidget = new org.sarsoft.view.PersistedConfigWidget(mapController, true);
+  imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatums : true});
+  plansController = new org.sarsoft.controller.OperationalPeriodMapController(imap, {id : ${period.id}});
+  waypointController = new org.sarsoft.controller.SearchWaypointMapController(imap);
+  resourceController = new org.sarsoft.controller.ResourceLocationMapController(imap);
+  callsignController = new org.sarsoft.controller.CallsignMapController(imap);
+  clueController = new org.sarsoft.controller.ClueLocationMapController(imap);
+  plansController.setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, true);
   configWidget.loadConfig();
-  setInterval("mapController.timer()", 10000);
+  setInterval("imap.timer()", 10000);
 });
 }
 </script>
