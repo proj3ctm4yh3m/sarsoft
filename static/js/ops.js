@@ -65,9 +65,9 @@ org.sarsoft.view.ResourceImportDlg = function(id) {
 }
 
 
-org.sarsoft.controller.ResourceViewMapController = function(id, controller) {
+org.sarsoft.controller.ResourceViewMapController = function(id, imap) {
 	var that = this;
-	this.controller = controller;
+	this.imap = imap;
 	this.resourceDAO = new org.sarsoft.ResourceDAO(function() { that._handleServerError(); });
 	this.resourceDAO.load(function(obj) { that._loadResourceCallback(obj); }, id);
 }
@@ -83,20 +83,20 @@ org.sarsoft.controller.ResourceViewMapController.prototype._loadResourceCallback
 	config.opacity = 100;
 
 	var center = new GLatLng(resource.position.lat, resource.position.lng);
-	that.controller.setCenter(center, 13, 1000);
-	that.controller.emap.addWaypoint(resource.position, config, resource.name);
+	that.imap.setCenter(center, 13, 1000);
+	that.imap.addWaypoint(resource.position, config, resource.name);
 }
 
 
 org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	var that = this;
-	this.controller = controller;
-	this.controller.register("org.sarsoft.controller.ResourceLocationMapController", this);
-	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that.controller.message("Server Communication Error"); });
+	this.imap = imap;
+	this.imap.register("org.sarsoft.controller.ResourceLocationMapController", this);
+	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that.imap.message("Server Communication Error"); });
 	this.resources = new Object();
 	this.showLocations = true;
 	
-	this.controller.addContextMenuItems([
+	this.imap.addContextMenuItems([
      		{text : "View Resource Details", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/resource/' + that.getResourceIdFromWpt(data.subject)); }}
      		]);
 	
@@ -104,7 +104,7 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 		that.showLocations = value;
 		that.handleSetupChange();
 	});
-	this.controller.addMenuItem(showHide.node, 18);
+	this.imap.addMenuItem(showHide.node, 18);
 	this.showHide = showHide;
 
 	that.resourceDAO.loadAll(function(resources) {
@@ -124,7 +124,7 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 			}
 		}
 		var center = new GLatLng((n + s) / 2, (e + w) / 2);
-		if(total > 1) that.controller.setCenter(center, that.controller.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))), 4);
+		if(total > 1) that.imap.setCenter(center, that.imap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))), 4);
 
 		that.refresh(resources);
 	});		
@@ -160,7 +160,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.timer = function(
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = function(resource) {
-	if(this.resources[resource.id] != null) this.controller.emap.removeWaypoint(this.resources[resource.id].position);
+	if(this.resources[resource.id] != null) this.imap.removeWaypoint(this.resources[resource.id].position);
 	if(resource.position == null) return;
 	this.resources[resource.id] = resource;
 	if(!this.showLocations) return; // need lines above this in case the user re-enables resources
@@ -171,7 +171,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 	var tooltip = resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds());
 	var label = resource.name;
 	
-	var opmc = this.controller.registered["org.sarsoft.controller.OperationalPeriodMapController"];
+	var opmc = this.imap.registered["org.sarsoft.controller.OperationalPeriodMapController"];
 	if(opmc != null) {
 		config.color = opmc.getColorForAssignmentId(resource.assignmentId);
 	} else {
@@ -183,7 +183,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 		label = resource.assignmentId + "-" + label;
 	}
 	
-	this.controller.emap.addWaypoint(resource.position, config, tooltip, label);
+	this.imap.addWaypoint(resource.position, config, tooltip, label);
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.refresh = function(resources) {
@@ -197,7 +197,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.refresh = functio
 	for(var key in this.resources) {
 		var resource = this.resources[key];
 		if(timestamp - (1*resource.position.time) > 1800000) {
-			this.controller.emap.removeWaypoint(resource.position);
+			this.imap.removeWaypoint(resource.position);
 			delete this.resources[key];
 		}
 	}
@@ -207,7 +207,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange
 	this.showHide.setValue(this.showLocations);
 	if(!this.showLocations) {
 		for(var key in this.resources) {
-			this.controller.emap.removeWaypoint(this.resources[key].position);
+			this.imap.removeWaypoint(this.resources[key].position);
 		}
 	} else {
 		for(var key in this.resources) {
@@ -216,20 +216,20 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange
 	}
 }
 
-org.sarsoft.controller.CallsignMapController = function(controller) {
+org.sarsoft.controller.CallsignMapController = function(imap) {
 	var that = this;
-	this.callsignDAO = new org.sarsoft.ResourceDAO(function() { that.controller.message("Server Communication Error!"); }, "/rest/callsign");
+	this.callsignDAO = new org.sarsoft.ResourceDAO(function() { that.imap.message("Server Communication Error!"); }, "/rest/callsign");
 	this.showCallsigns = true;
 	this.callsigns = new Object();
 	this._callsignId = -1;
-	this.controller = controller;
-	this.controller.register("org.sarsoft.controller.CallsignMapController", this);
+	this.imap = imap;
+	this.imap.register("org.sarsoft.controller.CallsignMapController", this);
 
-	var showHide = new org.sarsoft.ToggleControl("CLL", "Show/Hide Nearby Callsigns", function() {
+	var showHide = new org.sarsoft.ToggleControl("CLL", "Show/Hide Nearby Callsigns", function(value) {
 		that.showCallsigns = value;
 		that.handleSetupChange();
 	});
-	this.controller.addMenuItem(showHide.node, 19);
+	this.imap.addMenuItem(showHide.node, 19);
 	this.showHide = showHide;
 	
 	this.callsignDAO.mark();
@@ -281,14 +281,14 @@ org.sarsoft.controller.CallsignMapController.prototype.expireCallsigns = functio
 	for(var key in this.callsigns) {
 		var callsign = this.callsigns[key];
 		if(callsign.position != null && timestamp - (1*callsign.position.time) > 400000) {
-			this.controller.emap.removeWaypoint(callsign.position);
+			this.imap.removeWaypoint(callsign.position);
 			delete this.callsigns[key];
 		}
 	}
 }
 
 org.sarsoft.controller.CallsignMapController.prototype.addCallsign = function(callsign) {
-	if(this.callsigns[callsign.name] != null) this.controller.emap.removeWaypoint(this.callsigns[callsign.name].position);
+	if(this.callsigns[callsign.name] != null) this.imap.removeWaypoint(this.callsigns[callsign.name].position);
 	if(callsign.position == null) return;
 	this.callsigns[callsign.name] = callsign;
 	callsign.position.id = this._callsignId;
@@ -301,5 +301,5 @@ org.sarsoft.controller.CallsignMapController.prototype.addCallsign = function(ca
 
 	var date = new Date(1*callsign.position.time);
 	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-	this.controller.emap.addWaypoint(callsign.position, config, callsign.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), callsign.name);
+	this.imap.addWaypoint(callsign.position, config, callsign.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), callsign.name);
 }
