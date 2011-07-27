@@ -224,7 +224,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	this.showHide = showHide;
 	
 	var bb = this.assignment.boundingBox;
-	this.fmap.map.setCenter(that.fmap.map.getCenter(), that.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+	this.fmap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
 	this.setSize("7in","8.8in");
 
 	this.assignmentDAO.getWays(function(ways) {
@@ -243,6 +243,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	for(var i = 0; i < assignment.clues.length; i++) {
 		var clue = assignment.clues[i];
 		that.fmap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png") }, clue.id, clue.summary);
+		that.fmap.growMap(new GLatLng(clue.position.lat, clue.position.lng));
 	}
 	
 	var bounds = new GLatLngBounds(new GLatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new GLatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
@@ -283,8 +284,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype.setSize = function
 	this.div.style.height=height;
 	this.fmap.map.checkResize();
 	var bb = this.assignment.boundingBox;
-	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+	this.fmap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
 }
 
 org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, ways, defaultConfig) {
@@ -309,9 +309,8 @@ org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, w
 	configWidget.loadConfig();
 
 	var bb = assignment.boundingBox;
-	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
 
-	this.fmap.setCenter(center, map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))), 100);
+	this.fmap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
 
 	for(var i = 0; i < this.ways.length; i++) {
 		var way = this.ways[i];
@@ -354,8 +353,7 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.highlight = functio
 	this.addWay(way, config);
 
 	var bb = way.boundingBox;
-	var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-	this.fmap.map.setCenter(center, this.fmap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))));
+	this.fmap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
 
 	this.highlightedWay = way;
 }
@@ -380,8 +378,7 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.highlightWaypoint =
 	this.addWaypoint(waypoint, config);
 	this.highlightedWaypoint = waypoint;
 
-	var center = new GLatLng(waypoint.lat, waypoint.lng);
-	this.fmap.map.setCenter(center);
+	this.fmap.setCenter(new GLatLng(waypoint.lat, waypoint.lng));
 }
 
 org.sarsoft.view.OperationalPeriodForm = function() {
@@ -518,19 +515,19 @@ org.sarsoft.controller.SearchWaypointMapController = function(imap) {
 	this.searchDAO.load(function(lkp) {
 			if(lkp.value != null) {
 				that.place("LKP", lkp.value);
-				that.imap.setCenter(new GLatLng(lkp.value.lat, lkp.value.lng), 14, 3);
+				that.imap.growInitialMap(new GLatLng(lkp.value.lat, lkp.value.lng));
 			}
 		}, "lkp");
 	that.searchDAO.load(function(pls) {
 		if(pls.value != null) {
 			that.place("PLS", pls.value);
-			that.imap.setCenter(new GLatLng(pls.value.lat, pls.value.lng), 14, 2);
+			that.imap.growInitialMap(new GLatLng(pls.value.lat, pls.value.lng));
 		}
 	}, "pls");
 	that.searchDAO.load(function(cp) {
 		if(cp.value != null) {
 			that.place("CP", cp.value);
-			that.imap.setCenter(new GLatLng(cp.value.lat, cp.value.lng), 14, 1);
+			that.imap.growInitialMap(new GLatLng(cp.value.lat, cp.value.lng));
 		}
 	}, "cp");
 
@@ -660,14 +657,14 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 					for(var i = periods.length; i >= 0; i--) {
 						if(periods[i] != null && periods[i].boundingBox.length > 0 && bb.length == 0) {
 							bb = periods[i].boundingBox;
-							var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-							that.emap.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))), 1);
+							that.imap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
+							that.imap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
 						}
 					}
 				});
 			} else {
-				var center = new GLatLng((bb[0].lat + bb[1].lat) / 2, (bb[0].lng + bb[1].lng) / 2);
-				that.emap.setCenter(center, that.emap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng))), 20);
+				that.imap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
+				that.imap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
 			}
 	}, that.period.id);
 
@@ -999,8 +996,7 @@ org.sarsoft.controller.ClueViewMapController.prototype._loadClueCallback = funct
 	var that = this;
 	this.clue = clue;
 
-	var center = new GLatLng(clue.position.lat, clue.position.lng);
-	that.imap.setCenter(center, 13, 1000);
+	that.imap.setCenter(new GLatLng(clue.position.lat, clue.position.lng), 13);
 	
 	var icon = org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png");
 	that.imap.addWaypoint(clue.position, {icon: icon}, clue.id);
@@ -1041,8 +1037,10 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 				w = Math.min(w, clue.position.lng);
 			}
 		}
-		var center = new GLatLng((n + s) / 2, (e + w) / 2);
-		if(total > 1) that.imap.setCenter(center, that.imap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))), 4);
+		if(total > 1) {
+			that.imap.growInitialMap(new GLatLng(s, w));
+			that.imap.growInitialMap(new GLatLng(n, e));
+		}
 
 		that.refresh(clues);
 	});		
