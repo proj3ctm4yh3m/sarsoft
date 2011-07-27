@@ -82,8 +82,7 @@ org.sarsoft.controller.ResourceViewMapController.prototype._loadResourceCallback
 	config.color = "#FF0000";
 	config.opacity = 100;
 
-	var center = new GLatLng(resource.position.lat, resource.position.lng);
-	that.imap.setCenter(center, 13, 1000);
+	that.imap.setCenter(new GLatLng(resource.position.lat, resource.position.lng), 13);
 	that.imap.addWaypoint(resource.position, config, resource.name);
 }
 
@@ -123,8 +122,10 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 				w = Math.min(w, resource.position.lng);
 			}
 		}
-		var center = new GLatLng((n + s) / 2, (e + w) / 2);
-		if(total > 1) that.imap.setCenter(center, that.imap.map.getBoundsZoomLevel(new GLatLngBounds(new GLatLng(s, w), new GLatLng(n, e))), 4);
+		if(total > 1) {
+			that.imap.growInitialMap(new GLatLng(s, w));
+			that.imap.growInitialMap(new GLatLng(n, e));
+		}
 
 		that.refresh(resources);
 	});		

@@ -597,7 +597,6 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
 	this._menuItems = [];
-	this._setCenterPrecedence = -1;
 	this.registered = new Object();
 	this._mapInfoMessages = new Object();
 	
@@ -883,12 +882,32 @@ org.sarsoft.InteractiveMap.prototype.addContextMenuItems = function(items) {
 	this._menuItems = this._menuItems.concat(items);
 }
 
-org.sarsoft.InteractiveMap.prototype.setCenter = function(center, zoom, precedence) {
-	if(precedence == null || precedence < 0) precedence = 0;
-	if(precedence <= this._setCenterPrecedence) return;
-	
+org.sarsoft.InteractiveMap.prototype.setBounds = function(bounds) {
+	this.map.setCenter(bounds.getCenter(), this.map.getBoundsZoomLevel(bounds));
+	this._boundsInitialized = true;
+}
+
+org.sarsoft.InteractiveMap.prototype.growMap = function(gll) {
+	var bounds = this.map.getBounds();
+	bounds.extend(gll);
+	this.map.setCenter(bounds.getCenter(), this.map.getBoundsZoomLevel(bounds));
+}
+
+org.sarsoft.InteractiveMap.prototype.setCenter = function(center, zoom) {
 	this.map.setCenter(center, zoom);
-	this._setCenterPrecedence = precedence;
+	this._boundsInitialized = true;
+}
+
+org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
+	if(this._boundsInitialized) return;
+	if(typeof this._boundsInitialized == "undefined") {
+		this._boundsInitialized = false;
+		this.map.setCenter(gll, 15);
+	} else {
+		var bounds = this.map.getBounds();
+		bounds.extend(gll);
+		this.map.setCenter(bounds.getCenter(), this.map.getBoundsZoomLevel(bounds));
+	}
 }
 
 org.sarsoft.InteractiveMap.prototype.message = function(msg, delay) {

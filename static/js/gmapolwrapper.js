@@ -151,6 +151,16 @@ GLatLngBounds.prototype.intersects = function(other) {
 	return intersects;
 }
 
+GLatLngBounds.prototype.extend = function(gll) {
+	if(gll.lat() < this._sw.lat()) this._sw = new GLatLng(gll.lat(), this._sw.lng());
+	if(gll.lng() < this._sw.lng()) this._sw = new GLatLng(this._sw.lat(), gll.lng());
+	if(gll.lat() > this._ne.lat()) this._ne = new GLatLng(gll.lat(), this._ne.lng());
+	if(gll.lng() > this._ne.lng()) this._ne = new GLatLng(this._ne.lat(), gll.lng());
+}
+
+GLatLngBounds.prototype.getCenter = function() {
+	return new GLatLng((this.getSouthWest().lat() + this.getNorthEast().lat()) / 2, (this.getSouthWest().lng() + this.getNorthEast().lng()) / 2);
+}
 
 function GMap2(node) {
 	var that = this;
