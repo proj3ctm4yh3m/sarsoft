@@ -22,22 +22,15 @@ org.sarsoft.Loader.queue(function() {
   controller = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps"), ${assignment.id});
 });
 }
-
-function setSize() {
-  controller.setSize(document.getElementById("width").value, document.getElementById("height").value);
-}
-
 </script>
 <style type="text/css" media="print">
 .noprint { display: none; }
 </style>
 </head>
-<body onload="doload()">
+<body onload="doload()" class="yui-skin-sam">
 
 <div class="noprint">
-Width: <input type="text" size="2" id="width" value="8in"/><br/>
-Height: <input type="text" size="2" id="height" value="10in"/><br/>
-<button onclick="setSize()">Adjust</button>
+Click on the page size control in the top right toolbar.
 </div>
 <div id="maps">
 </div>
