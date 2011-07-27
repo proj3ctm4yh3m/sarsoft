@@ -151,7 +151,7 @@ org.sarsoft.Loader.queue(function() {
     if(rows == null || rows.length == 0) {
     	datatable.table.showTableMessage("<i>No Assignments Found</i>");
     } else {
-	  	datatable.table.addRows(rows);
+	  	datatable.update(rows);
 	}
   }, ${period.id});
   

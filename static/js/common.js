@@ -173,6 +173,11 @@ org.sarsoft.view.EntityTable.prototype.create = function(container) {
 	this.container = container;
 	this.table = new YAHOO.widget.DataTable(container, this.coldefs, this.datasource, this.config);
 	this.table.showTableMessage('<i>Loading Data . . .</i>');
+	if(this.coldefs[0].sortable) {
+		this.table.sortColumn(this.table.getColumn(this.coldefs[0].key), YAHOO.widget.DataTable.CLASS_ASC);
+	} else if(this.coldefs[1].sortable) {
+		this.table.sortColumn(this.table.getColumn(this.coldefs[1].key), YAHOO.widget.DataTable.CLASS_ASC);
+	}
 	if(this.clickhandler != null) {
 		YAHOO.util.Dom.addClass(this.table.getTableEl(), 'clickableyuitable');
 		this.table.subscribe("rowMouseoverEvent", this.table.onEventHighlightRow);
@@ -196,7 +201,7 @@ org.sarsoft.view.EntityTable.prototype.update = function(records) {
 		}
 		this.table.addRow(records[i]);
 	}
-	this.table.sortColumn(sortedBy.column, sortedBy.dir);
+	if(sortedBy != null) this.table.sortColumn(sortedBy.column, sortedBy.dir);
 }
 
 org.sarsoft.view.EntityForm = function(fields) {

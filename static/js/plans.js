@@ -75,13 +75,17 @@ org.sarsoft.view.OperationalPeriodTable = function() {
 org.sarsoft.view.OperationalPeriodTable.prototype = new org.sarsoft.view.EntityTable();
 
 org.sarsoft.view.SearchAssignmentTable = function() {
+	var status = { "DRAFT" : 0, "PREPARED" : 1, "INPROGRESS" : 2, "COMPLETED" : 3};
+	var pod = {"LOW" : 0, "MEDIUM" : 1, "HIGH" : 2};
 	var coldefs = [
 		{ key : "id", label : "Number", sortable: true},
 		{ key : "resourceType", label : "Resource Type", sortable: true},
-		{ key : "status", label : "Status", sortable: true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByStatus) },
+		{ key : "status", label : "Status", sortable: true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByStatus), sortOptions: {sortFunction: function(a, b, desc) { 
+			return YAHOO.util.Sort.compare(status[a.getData("status")], status[b.getData("status")], desc); 
+			}} },
 		{ key : "formattedSize", label : "Size", sortable: true},
 		{ key : "timeAllocated", label : "Time Allocated", sortable : true},
-		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByProbability) },
+		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByProbability), sortOptions : {sortFunction: function(a, b, desc) { return YAHOO.util.Sort.compare(pod[a.getData("responsivePOD")], pod[b.getData("responsivePOD")], desc)}}},
 		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { cell.style.overflow="hidden"; cell.style.maxHeight="1em"; cell.style.maxWidth="40em"; cell.innerHTML = data;}}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Search Assignments" }, function(assignment) {
