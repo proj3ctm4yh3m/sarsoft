@@ -247,8 +247,10 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	
 	for(var i = 0; i < assignment.clues.length; i++) {
 		var clue = assignment.clues[i];
-		that.fmap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png") }, clue.id, clue.summary);
-		that.fmap.growMap(new GLatLng(clue.position.lat, clue.position.lng));
+		if(clue.position != null) {
+			that.fmap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createIcon(16, "/static/images/clue.png") }, clue.id, clue.summary);
+			that.fmap.growMap(new GLatLng(clue.position.lat, clue.position.lng));
+		}
 	}
 	
 	var bounds = new GLatLngBounds(new GLatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new GLatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
