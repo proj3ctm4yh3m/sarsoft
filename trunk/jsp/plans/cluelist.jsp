@@ -1,10 +1,12 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page import="org.sarsoft.plans.model.Clue"%>
 
 <h2>Clue Log</h2>
 
 <ul>
  <li><a href="javascript:showNewClueForm()">Report New Clue</a></li>
+ <li><a href="/app/clue?format=PRINT">Print</a> a clue log</li>
 </ul>
 
 <div id="newclue" style="display: none">
@@ -19,6 +21,13 @@
    <option value="${assignment.id}">${assignment.id}</option>
   </c:forEach>
  </select>
+</td></tr>
+<tr><td valign="top">Instructions:</td><td>
+  <select name="instructions">
+  <c:forEach var="disposition" items="<%= Clue.Disposition.values() %>">
+   <option value="${disposition}">${disposition}</option>
+  </c:forEach>
+  </select>
 </td></tr>
 <tr><td valign="top">Location:</td><td><textarea rows="3" cols="40" name="location"></textarea><br/><span class="hint">Descriptive location, e.g. "in storm drain"</span></td></tr>
 <tr><td valign="top">UTM:</td><td><input type="text" size="2" name="utm_zone" id="utm_zone"/><span class="hint">zone</span>&nbsp;<input type="text" size="9" name="utm_e" id="utm_e"/><span class="hint">E</span>&nbsp;<input type="text" size="9" name="utm_n" id="utm_n"/><span class="hint">N</span></td></tr>

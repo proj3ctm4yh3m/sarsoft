@@ -963,6 +963,7 @@ org.sarsoft.view.ClueTable = function(handler) {
       { key : "summary", label : "Item Found"},
       { key : "assignmentId", label : "Team"},
 	  { key : "position", label : "Location Found", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
+	  { key : "instructions", label: "Instructions"}
 	];
 	if(handler == null) {
 		handler = function(clue) {

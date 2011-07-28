@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.Clue;
@@ -22,9 +23,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ClueController extends JSONBaseController {
 
 	@RequestMapping(value="/app/clue", method = RequestMethod.GET)
-	public String getClueList(Model model) {
+	public String getClueList(Model model, @RequestParam(value="format", required=false) Format format) {
 		model.addAttribute("clues", dao.loadAll(Clue.class));
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
+		if(format == Format.PRINT) return app(model, "Clue.Log");
 		return app(model, "Clue.List");
 	}
 	
@@ -34,6 +36,7 @@ public class ClueController extends JSONBaseController {
 			@RequestParam(value="summary", required=true) String summary,
 			@RequestParam(value="location", required=false) String location,
 			@RequestParam(value="assignmentid", required=false) Long assignmentId,
+			@RequestParam(value="instructions", required=false) Clue.Disposition instructions,
 			@RequestParam(value="lat", required=false) Double lat,
 			@RequestParam(value="lng", required=false) Double lng) {
 		
@@ -48,6 +51,7 @@ public class ClueController extends JSONBaseController {
 		clue.setId(maxId+1);
 		clue.setDescription(description);
 		clue.setSummary(summary);
+		clue.setInstructions(instructions);
 		clue.setLocation(location);
 		
 		if(lat != null && lng != null && lat != 0) {
@@ -92,6 +96,7 @@ public class ClueController extends JSONBaseController {
 			@RequestParam(value="description", required=false) String description,
 			@RequestParam(value="summary", required=true) String summary,
 			@RequestParam(value="location", required=false) String location,
+			@RequestParam(value="instructions", required=false) Clue.Disposition instructions,
 			@RequestParam(value="assignmentid", required=false) Long assignmentId) {
 		Clue clue = (Clue) dao.load(Clue.class, clueid);
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action")) == Action.DELETE) {
@@ -101,12 +106,13 @@ public class ClueController extends JSONBaseController {
 				dao.save(assignment);
 			}
 			dao.delete(clue);
-			return getClueList(model);
+			return getClueList(model, Format.WEB);
 		}
 		
 		clue.setDescription(description);
 		clue.setSummary(summary);
 		clue.setLocation(location);
+		clue.setInstructions(instructions);
 		if((clue.getAssignment() != null && assignmentId != clue.getAssignment().getId())) {
 			SearchAssignment assignment = clue.getAssignment();
 			assignment.removeClue(clue);

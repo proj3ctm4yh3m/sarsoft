@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page import="org.sarsoft.plans.model.Clue"%>
 
 <h2>Clue ${clue.id}: ${clue.summary}</h2>
 
@@ -16,6 +17,13 @@
   <option value="">--</option>
   <c:forEach var="assignment" items="${assignments}">
    <option value="${assignment.id}"<c:if test="${assignment.id eq clue.assignmentId}"> selected="selected"</c:if>>${assignment.id}</option>
+  </c:forEach>
+ </select>
+</td></tr>
+<tr><td valign="top">Instructions:</td><td>
+<select name="instructions">
+  <c:forEach var="disposition" items="<%= Clue.Disposition.values() %>">
+   <option value="${disposition}"<c:if test="${disposition eq clue.instructions}"> selected="selected"</c:if>>${disposition}</option>
   </c:forEach>
  </select>
 </td></tr>

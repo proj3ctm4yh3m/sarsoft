@@ -28,6 +28,10 @@
 		<put-attribute name="content" value="/plans/cluelist.jsp"/>
 		<put-attribute name="app" value="plans"/>
 	</definition>
+	<definition name="Clue.Log" extends="App.Base">
+		<put-attribute name="content" value="/plans/cluelog.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
 	<definition name="Clue.Detail" extends="App.Base">
 		<put-attribute name="content" value="/plans/cluedetail.jsp"/>
 		<put-attribute name="app" value="plans"/>
