@@ -55,7 +55,7 @@ org.sarsoft.Loader.queue(function() {
   dao.loadAll(function(rows) {
   	rtable.table.showTableMessage("<i>No Resources Found</i>");
 
-  	rtable.table.addRows(rows);
+  	rtable.update(rows);
   });
   
   
@@ -77,7 +77,7 @@ org.sarsoft.Loader.queue(function() {
   cdao = new org.sarsoft.ResourceDAO(function() {}, "/rest/callsign");
   cdao.loadAll(function(rows) {
 	 ctable.table.showTableMessage("<i>No Callsigns Found</i>");
-	 ctable.table.addRows(rows);
+	 ctable.update(rows);
   });
   
   

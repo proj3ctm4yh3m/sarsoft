@@ -1,5 +1,6 @@
 package org.sarsoft.ops.model;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Entity;
@@ -95,8 +96,8 @@ public class Resource extends SarModelObject {
 	
 	@JSONSerializable
 	@Transient
-	public Date getLastFix() {
-		if(position != null) return position.getTime();
+	public String getLastFix() {
+		if(position != null) return new SimpleDateFormat("M/d/y HH:mm").format(position.getTime());
 		return null;
 	}
 	
