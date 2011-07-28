@@ -19,6 +19,10 @@ import org.sarsoft.common.model.Waypoint;
 @Entity
 public class Clue extends SarModelObject implements IPreSave {
 	
+	public enum Disposition {
+		COLLECT,MARK,IGNORE
+	}
+
 	private String description;
 	private String summary;
 	private String location;
@@ -26,6 +30,7 @@ public class Clue extends SarModelObject implements IPreSave {
 	private Date found;
 	private Date updated;
 	private SearchAssignment assignment;
+	private Disposition instructions;
 	
 	public static Clue createFromJSON(JSONObject json) {
 		return (Clue) JSONObject.toBean(json, Clue.class);
@@ -103,5 +108,14 @@ public class Clue extends SarModelObject implements IPreSave {
 	
 	public void setAssignment(SearchAssignment assignment) {
 		this.assignment = assignment;
+	}
+	
+	@JSONSerializable
+	public Disposition getInstructions() {
+		return instructions;
+	}
+	
+	public void setInstructions(Disposition instructions) {
+		this.instructions = instructions;
 	}
 }
