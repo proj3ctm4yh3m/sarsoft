@@ -654,14 +654,14 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 					for(var i = periods.length; i >= 0; i--) {
 						if(periods[i] != null && periods[i].boundingBox.length > 0 && bb.length == 0) {
 							bb = periods[i].boundingBox;
-							that.imap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
-							that.imap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
+							that.emap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
+							that.emap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
 						}
 					}
 				});
 			} else {
-				that.imap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
-				that.imap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
+				that.emap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
+				that.emap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
 			}
 	}, that.period.id);
 

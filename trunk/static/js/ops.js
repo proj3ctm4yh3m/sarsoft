@@ -13,7 +13,7 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete) {
 		{ key : "callsign", label : "Callsign"},
 		{ key : "spotId", label: "SPOT ID"},
 		{ key : "position", label : "Position", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
-		{ key : "lastFix", label : "Last Update", formatter : function(cell, record, column, data) { if (data == null) return; cell.innerHTML = new Date(1*data).toUTCString(); }, sortable : true}
+		{ key : "lastFix", label : "Last Update", sortable : true }
 	];
 	if(onDelete == null) {
 		coldefs.splice(0,1);
@@ -167,9 +167,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 	if(!this.showLocations) return; // need lines above this in case the user re-enables resources
 
 	var config = new Object();	
-	var date = new Date(1*resource.position.time);
-	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-	var tooltip = resource.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds());
+	var tooltip = resource.name + " " + resource.lastFix;
 	var label = resource.name;
 	
 	var opmc = this.imap.registered["org.sarsoft.controller.OperationalPeriodMapController"];
@@ -180,10 +178,14 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 	}
 	
 	if(resource.assignmentId != null && resource.assignmentId > 0) {
-		tooltip = resource.assignmentId + "-" + tooltip;
-		label = resource.assignmentId + "-" + label;
+		label = resource.assignmentId + ":" + label;
 	}
 	
+	var timestamp = this.resourceDAO._timestamp;
+	if(timestamp - (1*resource.position.time) > 1800000 && (resource.assignmentId == null || resource.assignmentId == "")) return;
+	if(timestamp - (1*resource.position.time) > 900000) {
+		config = { icon : org.sarsoft.MapUtil.createIcon(15, "/static/images/warning.png")}
+	}
 	this.imap.addWaypoint(resource.position, config, tooltip, label);
 }
 
@@ -195,13 +197,6 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.refresh = functio
 		this.showResource(resources[i]);
 	}
 
-	for(var key in this.resources) {
-		var resource = this.resources[key];
-		if(timestamp - (1*resource.position.time) > 1800000) {
-			this.imap.removeWaypoint(resource.position);
-			delete this.resources[key];
-		}
-	}
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange = function() {
@@ -300,7 +295,5 @@ org.sarsoft.controller.CallsignMapController.prototype.addCallsign = function(ca
 	var timestamp = this.callsignDAO._timestamp;
 	config.color = "#000000";
 
-	var date = new Date(1*callsign.position.time);
-	var pad2 = function(num) { return (num < 10 ? '0' : '') + num; };
-	this.imap.addWaypoint(callsign.position, config, callsign.name + " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds()), callsign.name);
+	this.imap.addWaypoint(callsign.position, config, callsign.name, callsign.name);
 }
