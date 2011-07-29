@@ -38,7 +38,8 @@ public class ClueController extends JSONBaseController {
 			@RequestParam(value="assignmentid", required=false) Long assignmentId,
 			@RequestParam(value="instructions", required=false) Clue.Disposition instructions,
 			@RequestParam(value="lat", required=false) Double lat,
-			@RequestParam(value="lng", required=false) Double lng) {
+			@RequestParam(value="lng", required=false) Double lng,
+			@RequestParam(value="wptid", required=false) Long wptid) {
 		
 		long maxId = 0L;
 		@SuppressWarnings("unchecked")
@@ -64,10 +65,15 @@ public class ClueController extends JSONBaseController {
 			SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
 			if(assignment != null) {
 				assignment.addClue(clue);
+				if(wptid != null) {
+					Waypoint wpt = (Waypoint) dao.load(Waypoint.class, wptid);
+					if(wpt != null && assignment.getWaypoints().contains(wpt)) assignment.getWaypoints().remove(wpt);
+				}
 				dao.save(assignment);
 			}
 		}
 
+		if(wptid != null) return getClue(model, "app", clue.getId());
 		return "redirect:/app/clue";
 	}
 	

@@ -179,8 +179,15 @@ you can see how it relates to neighboring assignments.</i></div>
 				</div>
 				<div id="attachedwptcontainer">
 				</div>
-				<div style="display: none" id="wpt2clue">
-				<a href="/" id="wpt2cluelink">Turn selected waypoint into a clue.</a>
+				<div style="display: none" id="wpt2cluediv">
+				<form style="display: none" action="/app/clue/new" method="POST" name="wpt2clue">
+				<input type="hidden" name="lat" id="wpt2clue_lat"/>
+				<input type="hidden" name="lng" id="wpt2clue_lng"/>
+				<input type="hidden" name="summary" id="wpt2clue_summary"/>
+				<input type="hidden" name="assignmentid" id="wpt2clue_assignmentid" value="${assignment.id}"/>
+				<input type="hidden" name="wptid" id="wpt2clue_wptid"/>
+				</form>
+				<a href="javascript:document.forms['wpt2clue'].submit()">Turn selected waypoint into a clue.</a>
 				</div>
 				<div style="padding-top: 10px">
 				<i>Clean Up Track Data:</i><br/>Remove all trackpoints and waypoints:
@@ -295,8 +302,11 @@ org.sarsoft.Loader.queue(function() {
 
     wpttable = new org.sarsoft.view.WaypointTable(function(waypoint) { 
     	avtc.highlightWaypoint(waypoint);
-    	document.getElementById("wpt2clue").style.display="block";
-    	document.getElementById("wpt2cluelink").href="/app/foo";
+    	document.getElementById("wpt2cluediv").style.display="block";
+    	document.getElementById("wpt2clue_summary").value=waypoint.name;
+    	document.getElementById("wpt2clue_lat").value=waypoint.lat;
+    	document.getElementById("wpt2clue_lng").value=waypoint.lng;
+    	document.getElementById("wpt2clue_wptid").value=waypoint.id;
     }, function(record) {
     	var waypoint = record.getData();
     	var idx = 100;

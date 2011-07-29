@@ -55,6 +55,7 @@ You can delete Clue ${clue.id}, but this action cannot be undone.
 
 <br/>
 <br/>
+<c:if test="${clue.assignment ne null}"><a href="/app/assignment/${clue.assignment.id}">Return to assignment ${clue.assignment.id}</a><br/></c:if>
 <a href="/app/clue">Return to Clue Log</a><br/>
 
 </div>
