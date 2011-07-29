@@ -19,16 +19,16 @@ org.sarsoft.SearchAssignmentDAO.prototype.createWay = function(handler, assignme
 	this._doPost("/" + assignment.id + "/way", handler, route);
 }
 
-org.sarsoft.SearchAssignmentDAO.prototype.deleteWay = function(assignment, idx, way) {
-	this._doPost("/" + assignment.id + "/way/" + idx + "?action=delete", function() {}, way);
+org.sarsoft.SearchAssignmentDAO.prototype.deleteWay = function(handler, assignment, idx, way) {
+	this._doPost("/" + assignment.id + "/way/" + idx + "?action=delete", handler, way);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.saveWaypoints = function(assignment, idx, waypoints) {
 	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", function() {}, waypoints);
 }
 
-org.sarsoft.SearchAssignmentDAO.prototype.deleteWaypoint = function(assignment, idx, wpt) {
-	this._doPost("/" + assignment.id + "/wpt/" + idx + "?action=delete", function() {}, wpt);
+org.sarsoft.SearchAssignmentDAO.prototype.deleteWaypoint = function(handler, assignment, idx, wpt) {
+	this._doPost("/" + assignment.id + "/wpt/" + idx + "?action=delete", handler, wpt);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.createWaysFromGpx = function(handler, id, obj, type) {
@@ -611,7 +611,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.emap.addContextMenuItems([
 		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.original = null; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
 		{text : "Edit Assignment Bounds", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.edit(that._getAssignmentFromWay(data.subject)) }},
-		{text : "View Assignment Details", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { window.open('/app/assignment/' + that._getAssignmentFromWay(data.subject).id); }},
+		{text : "View Assignment Details", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); if(assignment == null) assignment = that._getAssignmentFromWaypoint(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); if(assignment == null) assignment = that._getAssignmentFromWaypoint(data.subject); window.open('/app/assignment/' + assignment.id); }},
 		{text : "Delete Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return obj != null && obj.type != "TRACK" && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.assignmentDAO.del(assignment.id); that.removeAssignment(assignment); }},
 		{text : "Clone Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return obj != null && obj.type != "TRACK" && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable")}, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.newAssignmentDlg.point = null; that.newAssignmentDlg.original = assignment;
 			that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: assignment.resourceType, unresponsivePOD: assignment.unresponsivePOD, responsivePOD: assignment.responsivePOD, cluePOD: assignment.cluePOD, timeAllocated: assignment.timeAllocated, details: assignment.details}); }},
@@ -621,9 +621,21 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 			for(var i = 0; i < assignment.ways.length; i++) {
 				if(assignment.ways[i].id == data.subject.id) idx = i;
 			}
-			that.assignmentDAO.deleteWay(assignment, idx, data.subject);
-			assignment.ways.splice(idx, 1);
-			that.emap.removeWay(data.subject);
+			that.assignmentDAO.deleteWay(function() {
+				assignment.ways.splice(idx, 1);
+				that.emap.removeWay(data.subject);				
+			}, assignment, idx, data.subject);
+		}},
+		{text : "Delete Waypoint", applicable : function(obj) { var assignment = that._getAssignmentFromWaypoint(obj); return obj != null && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { 
+			var assignment = that._getAssignmentFromWaypoint(data.subject);
+			var idx = 100;
+			for(var i = 0; i < assignment.waypoints.length; i++) {
+				if(assignment.waypoints[i].id == data.subject.id) idx = i;
+			}
+			if(idx != 100) that.assignmentDAO.deleteWaypoint(function() {
+				assignment.waypoints.splice(idx, 1);
+				that.emap.removeWaypoint(data.subject);				
+			}, assignment, idx, data.subject);
 		}},
 		{text : "Save Changes", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && that.getAssignmentAttr(assignment, "inedit"); }, handler: function(data) { that.save(that._getAssignmentFromWay(data.subject)) }},
 		{text : "Discard Changes", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && that.getAssignmentAttr(assignment, "inedit"); }, handler: function(data) { that.discard(that._getAssignmentFromWay(data.subject)) }}
@@ -727,6 +739,16 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFr
 	for(var key1 in this.assignments) {
 		for(var key2 = 0; key2 < this.assignments[key1].ways.length; key2++) {
 			if(this.assignments[key1].ways[key2].id == way.id) return this.assignments[key1];
+		}
+	}
+	return null;
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFromWaypoint = function(wpt) {
+	if(wpt == null) return null;
+	for(var key1 in this.assignments) {
+		for(var key2 = 0; key2 < this.assignments[key1].waypoints.length; key2++) {
+			if(this.assignments[key1].waypoints[key2].id == wpt.id) return this.assignments[key1];
 		}
 	}
 	return null;
@@ -882,7 +904,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		if(way.type == "ROUTE") label = assignment.id
 		if(way.type == "ROUTE" || config.showtracks) this.emap.addWay(way, config, label);
 	}
-	if(config.clickable) {
+	if(config.clickable && config.showtracks) {
 		for(var i = 0; i < assignment.waypoints.length; i++) {
 			var wpt = assignment.waypoints[i];
 			this.emap.addWaypoint(wpt, config, wpt.name, wpt.name);

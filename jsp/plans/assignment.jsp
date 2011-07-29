@@ -294,7 +294,7 @@ org.sarsoft.Loader.queue(function() {
     	for(var i = 0; i < _assignment.ways.length; i++) {
     		if(_assignment.ways[i].id == way.id) idx = i;
     	}
-    	assignmentDAO.deleteWay(_assignment, idx, way);
+    	if(idx != 100) assignmentDAO.deleteWay(function() {}, _assignment, idx, way);
     	_assignment.ways.splice(idx, 1);
     	tracktable.table.deleteRow(record);
 	});
@@ -313,9 +313,10 @@ org.sarsoft.Loader.queue(function() {
     	for(var i = 0; i < _assignment.waypoints.length; i++) {
     		if(_assignment.waypoints[i].id == waypoint.id) idx = i;
     	}
-    	assignmentDAO.deleteWaypoint(_assignment, idx, waypoint);
+    	if(idx != 100) assignmentDAO.deleteWaypoint(function() {}, _assignment, idx, waypoint);
     	_assignment.waypoints.splice(idx, 1);
     	wpttable.table.deleteRow(record);
+
 	});
     wpttable.create(document.getElementById("attachedwptcontainer"));
 
