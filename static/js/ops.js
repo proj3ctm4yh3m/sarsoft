@@ -94,6 +94,7 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	this.resourceDAO = new org.sarsoft.ResourceDAO(function () { that.imap.message("Server Communication Error"); });
 	this.resources = new Object();
 	this.showLocations = true;
+	this.refreshCount=0;
 	
 	this.imap.addContextMenuItems([
      		{text : "View Resource Details", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/resource/' + that.getResourceIdFromWpt(data.subject)); }}
@@ -114,6 +115,7 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 		var total = 0;
 		for(var i = 0; i < resources.length; i++) {
 			var resource = resources[i];
+			that.showResource(resource);
 			if(resource.position != null) {
 				total++;
 				n = Math.max(n, resource.position.lat);
@@ -127,7 +129,6 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 			that.imap.growInitialMap(new GLatLng(n, e));
 		}
 
-		that.refresh(resources);
 	});		
 	this.resourceDAO.mark();
 	
@@ -155,7 +156,14 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.getResourceIdFrom
 org.sarsoft.controller.ResourceLocationMapController.prototype.timer = function() {
 	var that = this;
 	this.resourceDAO.loadSince(function(resources) {
-		that.refresh(resources);
+		for(var i = 0; i < resources.length; i++) {
+			that.showResource(resources[i]);
+		}
+		that.refreshCount++;
+		if(that.refreshCount > 6) {
+			that.refreshCount = 0;
+			that.handleSetupChange();
+		}
 	});
 	that.resourceDAO.mark();
 }
@@ -187,16 +195,6 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 		config = { icon : org.sarsoft.MapUtil.createIcon(15, "/static/images/warning.png")}
 	}
 	this.imap.addWaypoint(resource.position, config, tooltip, label);
-}
-
-org.sarsoft.controller.ResourceLocationMapController.prototype.refresh = function(resources) {
-	var that = this;
-
-	var timestamp = this.resourceDAO._timestamp;
-	for(var i = 0; i < resources.length; i++) {
-		this.showResource(resources[i]);
-	}
-
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange = function() {

@@ -97,7 +97,7 @@ public class Resource extends SarModelObject {
 	@JSONSerializable
 	@Transient
 	public String getLastFix() {
-		if(position != null) return new SimpleDateFormat("M/d/y HH:mm").format(position.getTime());
+		if(position != null && position.getTime() != null) return new SimpleDateFormat("M/d/y HH:mm").format(position.getTime());
 		return null;
 	}
 	

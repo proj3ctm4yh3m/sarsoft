@@ -254,4 +254,10 @@ public class Waypoint extends SarModelObject {
     	}
     	return false;
     }
+    
+    public Waypoint clone() {
+    	Waypoint wpt = new Waypoint(getLat(), getLng());
+    	wpt.setTime(getTime());
+    	return wpt;
+    }
 }

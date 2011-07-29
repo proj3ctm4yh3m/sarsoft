@@ -319,6 +319,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 			return function() {
 				org.sarsoft.map.datum = d;
 				GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
+				datumMenu.hide();
 				that.datumDisplay.innerHTML = d;
 				that.updateDatum();
 			}
@@ -512,7 +513,6 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 	var that = this;
 	this.map = map;
 	
-
 	var div = document.createElement("div");
 	div.style.backgroundColor="white";
 	div.style.fontWeight="bold";
@@ -533,6 +533,7 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 		div.innerHTML = message;
 	});	
 
+	map.getContainer().appendChild(div);
 	return div;
 }
 
@@ -721,7 +722,7 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 			}
 		}
 		if(label != null) {
-			labelOverlay = new ELabel(new GLatLng(labelwpt.lat, labelwpt.lng), "<span class='maplabel'>" + label + "</span>", "width: 6em");
+			labelOverlay = new ELabel(new GLatLng(labelwpt.lat, labelwpt.lng), "<span class='maplabel'>" + label + "</span>", "width: 8em");
 			this.map.addOverlay(labelOverlay);
 		}
 	}
@@ -795,7 +796,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	this.map.addOverlay(marker);
 	marker.id = waypoint.id;
 	if(label != null) {
-		labelOverlay = new ELabel(gll, "<span class='maplabel'>" + label + "</span>", "width: 6em", new GSize(4, -4));
+		labelOverlay = new ELabel(gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", new GSize(4, -4));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
 	}

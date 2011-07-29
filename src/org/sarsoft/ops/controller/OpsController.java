@@ -1,5 +1,6 @@
 package org.sarsoft.ops.controller;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import org.sarsoft.ops.service.location.SpotLocationEngine;
 import org.sarsoft.ops.service.location.AsyncTransactionalEngine.Status;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.controller.SearchAssignmentController;
+import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -298,6 +300,19 @@ public class OpsController extends JSONBaseController {
 		return "redirect:/app/resource/" + id;
 	}
 	
+	@RequestMapping(value="/app/resource/{resourceid}/position", method = RequestMethod.POST)
+	public String updateResourceLocation(Model model, @PathVariable("resourceid") long resourceid,
+			@RequestParam(value="lat", required=true) Double lat,
+			@RequestParam(value="lng", required=true) Double lng) {
+		
+		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		Waypoint wpt = new Waypoint(lat, lng);
+		wpt.setTime(new Date());
+		resource.setPosition(wpt);
+		dao.save(resource);
+		return "redirect:/app/resource/" + resourceid;
+	}
+	
 	@RequestMapping(value="/app/resource", method = RequestMethod.GET)
 	public String getAppResources(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
@@ -345,10 +360,11 @@ public class OpsController extends JSONBaseController {
 				Waypoint wpt = csmap.get(callsign);
 				if(wpt != null && wpt.getTime().getTime() > date) {
 					Map m = new HashMap();
+					m.put("id", callsign);
 					m.put("callsign", callsign);
 					m.put("name", callsign);
 					m.put("position", csmap.get(callsign));
-					m.put("lastFix", csmap.get(callsign).getTime());
+					m.put("lastFix", new SimpleDateFormat("M/d/y HH:mm").format(csmap.get(callsign).getTime()));
 					cslist.add(m);
 				}
 			}

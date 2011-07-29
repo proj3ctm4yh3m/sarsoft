@@ -181,22 +181,49 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/app/assignment/{assignmentId}/cleantracks", method = RequestMethod.POST)
 	public String cleanTracks(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
-		long radius = Math.abs(Long.parseLong(request.getParameter("radius"))*1000);
 		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
-		Waypoint center = null;
-		double assignmentRadius = 0;
-
-		// compute the center of the assignment and the maximum distance to the edge of the bounding box
-		for(Way way : assignment.getWays()) {
-			if(way.getType() == WayType.ROUTE) {
-				Waypoint[] bounds = way.getBoundingBox();
-				if(center == null)
-					center = new Waypoint((bounds[0].getLat() + bounds[1].getLat()) / 2, (bounds[0].getLng() + bounds[1].getLng()) / 2);
-				assignmentRadius = Math.max(assignmentRadius, Math.max(center.distanceFrom(bounds[0]), center.distanceFrom(bounds[1])));
+		if(request.getParameter("radius") != null && request.getParameter("radius").length() > 0) {
+			long radius = Math.abs(Long.parseLong(request.getParameter("radius"))*1000);
+			Waypoint center = null;
+			double assignmentRadius = 0;
+	
+			// compute the center of the assignment and the maximum distance to the edge of the bounding box
+			for(Way way : assignment.getWays()) {
+				if(way.getType() == WayType.ROUTE) {
+					Waypoint[] bounds = way.getBoundingBox();
+					if(center == null)
+						center = new Waypoint((bounds[0].getLat() + bounds[1].getLat()) / 2, (bounds[0].getLng() + bounds[1].getLng()) / 2);
+					assignmentRadius = Math.max(assignmentRadius, Math.max(center.distanceFrom(bounds[0]), center.distanceFrom(bounds[1])));
+				}
 			}
-		}
+	
+			if(center != null) {
+				Iterator<Way> ways = assignment.getWays().iterator();
+				while(ways.hasNext()) {
+					Way way = ways.next();
+					// clean trackpoints, deleting entire tracks if necessary
+					if(way.getType() == WayType.TRACK) {
+						Iterator<Waypoint> wpts = way.getWaypoints().iterator();
+						while(wpts.hasNext()) {
+							Waypoint wpt = wpts.next();
+							if(wpt.distanceFrom(center) > radius + assignmentRadius)
+								wpts.remove();
+						}
+						if(way.getWaypoints().size() == 0) ways.remove();
+					}
+				}
+				Iterator<Waypoint> waypoints = assignment.getWaypoints().iterator();
+				while(waypoints.hasNext()) {
+					// clean stray waypoints
+					Waypoint waypoint = waypoints.next();
+					if(waypoint.distanceFrom(center) > radius + assignmentRadius)
+						waypoints.remove();
+				}
+			}
+		} else {
+			double time = Math.abs(Double.parseDouble(request.getParameter("time")));
+			Date cutoff = new Date(System.currentTimeMillis() - (long) (time*60*60*1000));
 
-		if(center != null) {
 			Iterator<Way> ways = assignment.getWays().iterator();
 			while(ways.hasNext()) {
 				Way way = ways.next();
@@ -205,8 +232,7 @@ public class SearchAssignmentController extends JSONBaseController {
 					Iterator<Waypoint> wpts = way.getWaypoints().iterator();
 					while(wpts.hasNext()) {
 						Waypoint wpt = wpts.next();
-						if(wpt.distanceFrom(center) > radius + assignmentRadius)
-							wpts.remove();
+						if(wpt.getTime() != null && cutoff.after(wpt.getTime())) wpts.remove();
 					}
 					if(way.getWaypoints().size() == 0) ways.remove();
 				}
@@ -215,11 +241,9 @@ public class SearchAssignmentController extends JSONBaseController {
 			while(waypoints.hasNext()) {
 				// clean stray waypoints
 				Waypoint waypoint = waypoints.next();
-				if(waypoint.distanceFrom(center) > radius + assignmentRadius)
-					waypoints.remove();
+				if(waypoint.getTime() != null && cutoff.after(waypoint.getTime())) waypoints.remove();
 			}
 		}
-
 		dao.save(assignment);
 		return getAssignment(model, assignmentId, request);
 	}

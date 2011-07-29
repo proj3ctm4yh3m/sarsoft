@@ -179,13 +179,22 @@ you can see how it relates to neighboring assignments.</i></div>
 				</div>
 				<div id="attachedwptcontainer">
 				</div>
+				<div style="display: none" id="wpt2clue">
+				<a href="/" id="wpt2cluelink">Turn selected waypoint into a clue.</a>
+				</div>
+				<div style="padding-top: 10px">
+				<i>Clean Up Track Data:</i><br/>Remove all trackpoints and waypoints:
+				<ul>
+				<li><form name="cleanuptracksbydistance" method="POST" action="/app/assignment/${assignment.id}/cleantracks#tracks">
+				more than <input name="radius" type="text" size="5" value="15"/>&nbsp;km from assignment.&nbsp;&nbsp;<input type="submit" value="GO"/>				
+				</form></li>
+				<li><form name="cleanuptracksbytime" method="POST" action="/app/assignment/${assignment.id}/cleantracks#tracks">
+				older than <input name="time" type="text" size="3" value="24"/>&nbsp;hours.&nbsp;&nbsp;<input type="submit" value="GO"/>				
+				</form></li>
+				</ul>
+				</div>			
 			</div>
 			<div id="trackmapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
-			</div>
-			<div style="float: left; margin-left: 20px">
-			<form name="cleanuptracks" method="POST" action="/app/assignment/${assignment.id}/cleantracks#tracks">
-			<i>Clean Up Track Data:</i><br/>Remove all trackpoints waypoints more than<br/><input name="radius" type="text" size="5" value="15"/>&nbsp;km from assignment.&nbsp;&nbsp;<input type="submit" value="GO"/>
-			</form>
 			</div>
 		</div>
 
@@ -284,7 +293,11 @@ org.sarsoft.Loader.queue(function() {
 	});
     tracktable.create(document.getElementById("attachedtrackscontainer"));
 
-    wpttable = new org.sarsoft.view.WaypointTable(function(waypoint) { avtc.highlightWaypoint(waypoint);}, function(record) {
+    wpttable = new org.sarsoft.view.WaypointTable(function(waypoint) { 
+    	avtc.highlightWaypoint(waypoint);
+    	document.getElementById("wpt2clue").style.display="block";
+    	document.getElementById("wpt2cluelink").href="/app/foo";
+    }, function(record) {
     	var waypoint = record.getData();
     	var idx = 100;
     	for(var i = 0; i < _assignment.waypoints.length; i++) {
