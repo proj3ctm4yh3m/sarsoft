@@ -693,6 +693,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		for(var i = 0; i < assignments.length; i++) {
 			that.addAssignment(assignments[i]);
 		}
+		if(that.emap.registered["org.sarsoft.controller.ResourceLocationMapController"]) that.emap.registered["org.sarsoft.controller.ResourceLocationMapController"].handleSetupChange();
 	});
 
 	this.assignmentDAO.mark();

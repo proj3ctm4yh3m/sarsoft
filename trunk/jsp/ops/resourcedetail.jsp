@@ -49,6 +49,18 @@ ${resource.name}'s location is unknown.
 
 <br/>
 <br/>
+
+Current Location:<br/>
+<input type="text" size="2" name="utm_zone" id="utm_zone"/><span class="hint">zone</span>&nbsp;<input type="text" size="9" name="utm_e" id="utm_e"/><span class="hint">E</span>&nbsp;<input type="text" size="9" name="utm_n" id="utm_n"/><span class="hint">N</span>
+<button onclick="updateLocation()">Update Location</button>
+
+<form method="POST" action="/app/resource/${resource.id}/position" name="updatePosition">
+<input type="hidden" name="lat" id="lat"/>
+<input type="hidden" name="lng" id="lng"/>
+</form>
+<br/>
+<br/>
+
 You can delete ${resource.name}, but this action cannot be undone.
 <form method="POST" action="/app/resource/${resource.id}">
 <input type="hidden" name="action" value="DELETE"/>
@@ -80,6 +92,27 @@ org.sarsoft.Loader.queue(function() {
   waypointController = new org.sarsoft.controller.SearchWaypointMapController(imap);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap);
   configWidget.loadConfig();
-  
 });
+
+function updateLocation() {
+	var zone = document.getElementById('utm_zone').value;
+	if(zone != null && zone.length > 0) {
+		if(zone.length > 2) zone = zone.substring(0, 2);
+		var e = document.getElementById('utm_e').value;
+		var n = document.getElementById('utm_n').value;
+		var gll = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: e, n: n, zone: zone}));
+		document.getElementById('lat').value = gll.lat();
+		document.getElementById('lng').value = gll.lng();
+	}
+	document.forms["updatePosition"].submit();
+}
+
+<c:if test="${resource.position ne null}">
+
+var utm = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(${resource.position.lat}, ${resource.position.lng})));
+document.getElementById('utm_zone').value = utm.zone;
+document.getElementById('utm_e').value = utm.e;
+document.getElementById('utm_n').value = utm.n;
+
+</c:if>
 </script>
