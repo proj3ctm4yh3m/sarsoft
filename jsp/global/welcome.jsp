@@ -65,23 +65,24 @@ below, or create a new one.
 <tr><td>Name of first operational period:</td><td><input type="text" size="15" name="op1name"/></td></tr>
 </table>
 
-<div style="padding-top: 15px">If known, enter the location of your search in UTM, Lat/Lng, or as an address:</div>
-<table border="0">
-<tr><td valign="top">UTM</td><td><input type="text" size="2" name="utm_zone" id="utm_zone"/><span class="hint">zone</span>&nbsp;<input type="text" size="9" name="utm_e" id="utm_e"/><span class="hint">E</span>&nbsp;<input type="text" size="9" name="utm_n" id="utm_n"/><span class="hint">N</span></td></tr>
-<tr><td valign="top">Lat/Lng</td><td><input type="text" size="8" name="lat" id="lat"/>,&nbsp;<input type="text" size="8" name="lng" id="lng"/><br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span></td></tr>
-<tr id="address_tr"><td valign="top">Address</td><td><input type="text" size="16" name="address" id="address"/><br/><span class="hint">e.g. 'Truckee, CA'.  Requires a working internet connection.</span></td></tr>
-</table>
-
+<input type="hidden" id="lat" name="lat"/>
+<input type="hidden" id="lng" name="lng"/>
 </form>
+
+<div style="padding-top: 15px">If known, enter the location of your search in UTM, Lat/Lng, or as an address:</div>
+<div id="searchlocation">
+</div>
+
 <div style="padding-top: 15px">
 <button onclick="createSearch()">Create Search</button>
 </div>
 </p>
 
 <script>
-if(typeof GClientGeocoder == 'undefined') {
-	document.getElementById('address_tr').style.display = "none";
-}
+org.sarsoft.Loader.queue(function() {
+	locform = new org.sarsoft.LocationEntryForm();
+	locform.create(document.getElementById('searchlocation'));
+});
 
 function createSearch() {
 	var searchname = document.getElementById('name').value;
@@ -89,30 +90,13 @@ function createSearch() {
 		alert('Please enter a name for this search.');
 		return;
 	}
-	var zone = document.getElementById('utm_zone').value;
-	if(zone != null && zone.length > 0) {
-		if(zone.length > 2) zone = zone.substring(0, 2);
-		var e = document.getElementById('utm_e').value;
-		var n = document.getElementById('utm_n').value;
-		var gll = GeoUtil.UTMToGLatLng({e: e, n: n, zone: zone});
-		document.getElementById('lat').value = gll.lat();
-		document.getElementById('lng').value = gll.lng();
-	}
-	var addr = document.getElementById('address').value;
-	if(addr != null && addr.length > 0 && typeof GClientGeocoder != 'undefined') {
-		var gcg = new GClientGeocoder();
-		gcg.getLatLng(addr, function(gll) {
-			if(gll == null) {
-				alert('unable to geocode address "' + addr + '".');
-			} else {
-				document.getElementById('lat').value = gll.lat();
-				document.getElementById('lng').value = gll.lng();
-				document.forms["newsearch"].submit();
-			}
-		});
-	} else {
+	locform.read(function(gll) {
+		if(gll != null) {
+			document.getElementById('lat').value = gll.lat();
+			document.getElementById('lng').value = gll.lng();
+		}
 		document.forms["newsearch"].submit();
-	}
+	});
 }
 </script>
 

@@ -21,7 +21,7 @@ Not currently on assignment.
 <c:when test="${resource.position ne null}">
 Latest position: <span id="latestposition"></span> at ${resource.lastFix}
 <script>
-document.getElementById('latestposition').innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(${resource.position.lat}, ${resource.position.lng}))).toString();
+document.getElementById('latestposition').innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(${resource.position.lat}, ${resource.position.lng}))).toHTMLString();
 </script>
 </c:when>
 <c:otherwise>

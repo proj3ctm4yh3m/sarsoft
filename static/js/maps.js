@@ -528,10 +528,10 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 		var n1 = n.substring(0, n.length-3);
 		var n2 = n.substring(n.length-3, n.length);
 
-		var message = utm.zone + " " + e1 + "<span style=\"font-size: smaller\">" + e2 + "</span>E " + n1 + "<span style=\"font-size: smaller\">" + n2 + "</span>N<br/>";
+		var message = utm.toHTMLString() + "<br/>";
 		message = message + GeoUtil.formatDDMMHH(latlng.lat()) + ", " + GeoUtil.formatDDMMHH(latlng.lng());
 		div.innerHTML = message;
-	});	
+	});
 
 	map.getContainer().appendChild(div);
 	return div;
@@ -588,6 +588,84 @@ org.sarsoft.MapSizeWidget = function(imap) {
 	imap.addMenuItem(pagesetup, 30);
 }
 
+org.sarsoft.MapFindWidget = function(imap) {
+	var that = this;
+	var that = this;
+	this.imap = imap;
+	
+	var dlg = document.createElement("div");
+	dlg.style.position="absolute";
+	dlg.style.zIndex="200";
+	dlg.style.top="100px";
+	dlg.style.left="100px";
+	dlg.style.width="450px";
+	var hd = document.createElement("div");
+	hd.appendChild(document.createTextNode("Find"));
+	hd.className = "hd";
+	dlg.appendChild(hd);
+	var bd = document.createElement("div");
+	bd.className = "bd";
+	dlg.appendChild(bd);
+	var d = document.createElement("div");
+	bd.appendChild(d);
+	this.bd = bd;
+	
+	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
+	this.locationEntryForm.create(d);
+	
+	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "450px"});
+	var buttons = [ { text : "Find", handler: function() {
+		that.dialog.hide();
+		var entry = that.locationEntryForm.read(function(gll) { that.imap.map.setCenter(gll, 14);});
+		if(!entry) that.checkBlocks();
+	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
+	this.dialog.cfg.queueProperty("buttons", buttons);
+	this.dialog.render(document.body);
+	this.dialog.hide();
+
+	var find = document.createElement("img");
+	find.src="/static/images/find.png";
+	find.style.cursor="pointer";
+	find.style.verticalAlign="middle";
+	find.title = "Find a coordinate";
+	GEvent.addDomListener(find, "click", function() {
+		that.locationEntryForm.clear();
+		that.initializeDlg();
+		that.dialog.show();
+	});
+	imap.addMenuItem(find, 26);
+}
+
+org.sarsoft.MapFindWidget.prototype.initializeDlg = function() {
+	var blocks = new Array();
+	if(this._container != null) this.bd.removeChild(this._container);
+	this._container = document.createElement("div");
+	this.bd.appendChild(this._container);
+
+	for(var key in this.imap.registered) {
+		if(this.imap.registered[key].getFindBlock != null) {
+			var block = this.imap.registered[key].getFindBlock();
+			while(blocks[block.order] != null) block.order++;
+			blocks[block.order] = block;
+		}
+	}
+	
+	for(var i = 0; i < blocks.length; i++) {
+		if(blocks[i] != null) {
+			this._container.appendChild(blocks[i].node);
+		}
+	}
+	this.blocks = blocks;
+}
+
+org.sarsoft.MapFindWidget.prototype.checkBlocks = function() {
+	for(var i = 0; i < this.blocks.length; i++) {
+		if(this.blocks[i] != null) {
+			if(this.blocks[i].handler()) return;
+		}
+	}
+}
+
 
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
@@ -633,6 +711,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options.standardControls) {
 		this.map.addControl(new org.sarsoft.UTMGridControl(this));
 		var sc = new org.sarsoft.MapSizeWidget(this);
+		var fc = new org.sarsoft.MapFindWidget(this);
 		var lc = new org.sarsoft.MapLabelWidget(this);
 		this.addMenuItem(document.createTextNode(" | "), 20);
 		this.addMenuItem(document.createTextNode(" | "), 100);
@@ -1027,6 +1106,141 @@ org.sarsoft.MapInfoControl.prototype.setMessage = function(message) {
 	this.msg.innerHTML = message;
 }
 
+org.sarsoft.UTMEditForm = function() {	
+}
+
+org.sarsoft.UTMEditForm.prototype.create = function(container) {
+	this.zone = document.createElement("input");
+	this.zone.type="text";
+	this.zone.size=2;
+	container.appendChild(this.zone);
+	var label = document.createElement("span");
+	label.className="hint";
+	label.innerHTML = "zone";
+	container.appendChild(label);
+	container.appendChild(document.createTextNode(" "));
+	
+	this.e = document.createElement("input");
+	this.e.type="text";
+	this.e.size=9;
+	container.appendChild(this.e);
+	label = document.createElement("span");
+	label.className="hint";
+	label.innerHTML = "E";
+	container.appendChild(label);
+	container.appendChild(document.createTextNode(" "));
+
+	this.n = document.createElement("input");
+	this.n.type="text";
+	this.n.size=9;
+	container.appendChild(this.n);
+	label = document.createElement("span");
+	label.className="hint";
+	label.innerHTML = "N";
+	container.appendChild(label);
+}
+
+org.sarsoft.UTMEditForm.prototype.write = function(utm) {
+	if(utm == null) utm = {zone : null, e: null, n : null};
+	this.zone.value = utm.zone;
+	this.e.value = utm.e;
+	this.n.value = utm.n;
+}
+
+org.sarsoft.UTMEditForm.prototype.read = function() {
+	var zone = this.zone.value;	
+	if(zone == null || zone.length == 0) return null;
+	if(zone.length > 2) zone = zone.substring(0, 2);
+	return new UTM(this.e.value*1, this.n.value*1, zone*1);
+}
+
+org.sarsoft.LocationEntryForm = function() {
+}
+
+org.sarsoft.LocationEntryForm.prototype.create = function(container) {
+	var table = document.createElement("table");
+	table.border=0;
+	var tr = document.createElement("tr");
+	var td = document.createElement("td");
+	td.vAlign="top";
+	td.innerHTML = "UTM";
+	tr.appendChild(td);
+	td = document.createElement("td");
+	this.utmcontainer = td;
+	tr.appendChild(td);
+	table.appendChild(tr);
+	this.utmform = new org.sarsoft.UTMEditForm();
+	this.utmform.create(this.utmcontainer);
+	
+	tr = document.createElement("tr");
+	td = document.createElement("td");
+	td.vAlign="top";
+	td.innerHTML = "Lat/Lng";
+	tr.appendChild(td);
+	td = document.createElement("td");
+	this.lat = document.createElement("input");
+	this.lat.type="text";
+	this.lat.size="8";
+	td.appendChild(this.lat);
+	td.appendChild(document.createTextNode(", "));
+	this.lng = document.createElement("input");
+	this.lng.type="text";
+	this.lng.size="9";
+	td.appendChild(this.lng);
+	td.appendChild(document.createElement("br"));
+	var span = document.createElement("span");
+	span.className="hint";
+	span.innerHTML="WGS84 decimal degrees, e.g. 39.3422, -120.2036";
+	td.appendChild(span);
+	tr.appendChild(td);
+	table.appendChild(tr);
+	
+	tr = document.createElement("tr");
+	td = document.createElement("td");
+	td.vAlign="top";
+	td.innerHTML = "Address";
+	tr.appendChild(td);
+	td = document.createElement("td");
+	this.address = document.createElement("input");
+	this.address.type="text";
+	this.address.size="16";
+	td.appendChild(this.address);
+	td.appendChild(document.createElement("br"));
+	span = document.createElement("span");
+	span.className="hint";
+	span.innerHTML="e.g. 'Truckee, CA'.  Requires a working internet connection.";
+	td.appendChild(span);
+	tr.appendChild(td);
+	if(typeof GClientGeocoder == 'undefined') {
+		tr.style.display = "none";
+	}
+	table.appendChild(tr);
+	
+	container.appendChild(table);
+}
+
+org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
+	var utm = this.utmform.read();
+	var addr = this.address.value;
+	if(utm != null) {
+		callback(GeoUtil.UTMToGLatLng(utm));
+	} else if(addr != null && addr.length > 0 && typeof GClientGeocoder != 'undefined') {
+		var gcg = new GClientGeocoder();
+		gcg.getLatLng(addr, callback);
+	} else if(this.lat.value != null && this.lat.value.length > 0 && this.lng.value != null && this.lng.value.length > 0) {
+		callback(new GLatLng(this.lat.value, this.lng.value));
+	} else {
+		return false;
+	}
+	return true;
+}
+
+org.sarsoft.LocationEntryForm.prototype.clear = function() {
+	this.utmform.write(null);
+	this.address.value=null;
+	this.lat.value=null;
+	this.lng.value=null;
+}
 
 function UTM(e, n, zone) {
 	this.e = Math.round(e);
@@ -1042,6 +1256,17 @@ UTM.prototype.distanceFrom = function(other) {
 
 UTM.prototype.toString = function() {
 	return this.zone + " " + Math.round(this.e) + "E  " + Math.round(this.n) + "N";
+}
+
+UTM.prototype.toHTMLString = function() {
+	var e = "" + Math.round(this.e);
+	var n = "" + Math.round(this.n);
+	var e1 = e.substring(0, e.length-3);
+	var e2 = e.substring(e.length-3, e.length);
+	var n1 = n.substring(0, n.length-3);
+	var n2 = n.substring(n.length-3, n.length);
+
+	return this.zone + " " + e1 + "<span style=\"font-size: smaller\">" + e2 + "E</span> " + n1 + "<span style=\"font-size: smaller\">" + n2 + "N</span>";
 }
 
 GeoUtil = new Object();

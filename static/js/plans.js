@@ -395,7 +395,7 @@ org.sarsoft.view.MapSetupWidget = function(imap) {
 	this.imap = imap;
 
 	this._body = document.createElement("div");
-	var style = {position : "absolute", zIndex : "2500", top : "100px", width : "500px"};
+	var style = {position : "absolute", zIndex : "2500", top : "100px", left : "100px", width : "500px"};
 	this._dialog = org.sarsoft.view.CreateBlankDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
 	
 	var setup = document.createElement("img");
@@ -852,36 +852,42 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getColorForAssig
 
 }
 
+org.sarsoft.controller.OperationalPeriodMapController.prototype.isAssignmentVisible = function(assignment) {
+	if(assignment.operationalPeriodId > this.period.id) return false;
+	if(assignment.operationalPeriodId < this.period.id && !this.showOtherPeriods) return false;
+	var setup = this._mapsetup.past;
+	if(assignment.operationalPeriodId == this.period.id) {
+		setup = this._mapsetup.present;
+	}
+	if(setup.show != "ALL ASSIGNMENTS" && setup.show != assignment.resourceType) return false;
+	return true;
+}
+
 org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = function(assignment) {
 	var that = this;
 	this.assignments[assignment.id] = assignment;
-	if(assignment.operationalPeriodId <= this.period.id) {
-		var config = new Object();
-		var setup = this._mapsetup.past;
-		config.clickable = false;
-		if(assignment.operationalPeriodId == this.period.id) {
-			setup = this._mapsetup.present;
-			config.clickable = true;
-		} else {
-			if(!this.showOtherPeriods) return;
-		}
-
-		if(setup.show != "ALL ASSIGNMENTS" && setup.show != assignment.resourceType) return;
-
-		config.color = this.getColorForAssignmentId(assignment.id);
-		config.fill = setup.fill;
-		config.opacity = setup.opacity;
-		config.showtracks = this._mapsetup.showtracks;
-
-		this.setAssignmentAttr(assignment, "clickable", config.clickable);
-
-		if(config.clickable) {
-			this._addAssignmentCallback(config, assignment.ways, assignment);
-			this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); }, assignment, 10);
-		} else {
-			this._addAssignmentCallback(config, assignment.ways, assignment);
-		}
+	if(!this.isAssignmentVisible(assignment)) return;
+	var config = new Object();
+	var setup = this._mapsetup.past;
+	config.clickable = false;
+	if(assignment.operationalPeriodId == this.period.id) {
+		setup = this._mapsetup.present;
+		config.clickable = true;
 	}
+
+	config.color = this.getColorForAssignmentId(assignment.id);
+	config.fill = setup.fill;
+	config.opacity = setup.opacity;
+	config.showtracks = this._mapsetup.showtracks;
+
+	this.setAssignmentAttr(assignment, "clickable", config.clickable);
+
+	if(config.clickable) {
+		this._addAssignmentCallback(config, assignment.ways, assignment);
+		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); }, assignment, 10);
+	} else {
+		this._addAssignmentCallback(config, assignment.ways, assignment);
+		}
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype._refreshAssignmentCallback = function(config, ways, assignment) {
@@ -954,6 +960,36 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getSetupBlock = 
 	return this._setupBlock;
 }
 
+org.sarsoft.controller.OperationalPeriodMapController.prototype.getFindBlock = function() {
+	var that = this;
+	var node = document.createElement("div");
+	node.appendChild(document.createTextNode("Assignment: "));
+	var select = document.createElement("select");
+	node.appendChild(select);
+	var opt = document.createElement("option");
+	opt.appendChild(document.createTextNode("--"));
+	opt.value = "--";
+	select.appendChild(opt);
+	for(var id in this.assignments) {
+		if(this.isAssignmentVisible(this.assignments[id])) {
+			opt = document.createElement("option");
+			opt.appendChild(document.createTextNode(id));
+			opt.value=id;
+			select.appendChild(opt);
+		}
+	}
+	this._findBlock = {order : 5, node : node, handler : function() {
+		var id = select.options[select.selectedIndex].value;
+		if(id != "--") {
+			var bb = that.assignments[id].boundingBox;
+			that.emap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
+			return true;
+		}
+		return false;
+	}};
+
+	return this._findBlock;
+}
 
 org.sarsoft.view.BulkGPXDlg = function(id) {
 	var that = this;

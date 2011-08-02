@@ -197,6 +197,12 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 	this.imap.addWaypoint(resource.position, config, tooltip, label);
 }
 
+org.sarsoft.controller.ResourceLocationMapController.prototype.isResourceVisible = function(resource) {
+	var timestamp = this.resourceDAO._timestamp;
+	if(timestamp - (1*resource.position.time) > 1800000 && (resource.assignmentId == null || resource.assignmentId == "")) return false;
+	return true;
+}
+
 org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange = function() {
 	this.showHide.setValue(this.showLocations);
 	if(!this.showLocations) {
@@ -209,6 +215,38 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange
 		}
 	}
 }
+
+org.sarsoft.controller.ResourceLocationMapController.prototype.getFindBlock = function() {
+	var that = this;
+	var node = document.createElement("div");
+	node.appendChild(document.createTextNode("Resource: "));
+	var select = document.createElement("select");
+	node.appendChild(select);
+	var opt = document.createElement("option");
+	opt.appendChild(document.createTextNode("--"));
+	opt.value = "--";
+	select.appendChild(opt);
+	for(var id in this.resources) {
+		if(this.isResourceVisible(this.resources[id])) {
+			opt = document.createElement("option");
+			opt.appendChild(document.createTextNode(this.resources[id].name));
+			opt.value=id;
+			select.appendChild(opt);
+		}
+	}
+	this._findBlock = {order : 5, node : node, handler : function() {
+		var id = select.options[select.selectedIndex].value;
+		if(id != "--") {
+			var wpt = that.resources[id].position;
+			that.imap.map.setCenter(new GLatLng(wpt.lat, wpt.lng), 14);
+			return true;
+		}
+		return false;
+	}};
+
+	return this._findBlock;
+}
+
 
 org.sarsoft.controller.CallsignMapController = function(imap) {
 	var that = this;
