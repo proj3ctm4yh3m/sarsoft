@@ -310,6 +310,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 		var datumSwitcher = document.createElement("a");
 		datumSwitcher.style.cursor="pointer";
 		datumSwitcher.innerHTML = "+";
+		datumSwitcher.className="noprint";
 		this.datumControl.appendChild(datumSwitcher);
 		this.datumSwitcher = datumSwitcher;
 		
