@@ -21,7 +21,7 @@ GEvent.trigger = function(obj, event, param1, param2, param3, param4, param5) {
 GEvent.addDomListener = function(obj, event, handler) {
 	if(obj.addEventListener) {
 		obj.addEventListener(event, handler, false);
-	} else if(obj.attachEevent) {
+	} else if(obj.attachEvent) {
 		obj.attachEvent("on" + event, handler);
 	}
 }
@@ -127,39 +127,6 @@ GScaleControl.prototype = new GControl();
 function GSize(width, height) {
 	this.width = width;
 	this.height = height;
-}
-
-function GLatLngBounds(sw, ne) {
-	this._sw = sw;
-	this._ne = ne;
-}
-
-GLatLngBounds.prototype.getSouthWest = function() { return this._sw;}
-GLatLngBounds.prototype.getNorthEast = function() { return this._ne;}
-
-GLatLngBounds.prototype.intersects = function(other) {
-	var utm_sw = GeoUtil.GlatLngToUTM(this._sw);
-	var utm_ne = GeoUtil.GlatLngToUTM(this._ne, utm_sw.zone);
-	
-	var other_sw = GeoUtil.GLatLngToUTM(other.getSouthWest(), utm_sw.zone);
-	var other_sw = GeoUtil.GLatLngToUTM(other.getNorthEast(), utm_sw.zone);
-	
-	var intersects = true;
-	if(!((other_ne.n <= utm_ne.n && other_ne.n >= utm_sw.s) || (other_sw.s <= utm_ne.n && other_sw.s >= utm_sw.s))) intersects = false;
-	if(!((other_ne.e >= utm_ne.e && other_ne.e <= utm_sw.w) || (other_sw.w >= utm_ne.e && other_sw.w <= utm_sw.w))) intersects = false;
-	
-	return intersects;
-}
-
-GLatLngBounds.prototype.extend = function(gll) {
-	if(gll.lat() < this._sw.lat()) this._sw = new GLatLng(gll.lat(), this._sw.lng());
-	if(gll.lng() < this._sw.lng()) this._sw = new GLatLng(this._sw.lat(), gll.lng());
-	if(gll.lat() > this._ne.lat()) this._ne = new GLatLng(gll.lat(), this._ne.lng());
-	if(gll.lng() > this._ne.lng()) this._ne = new GLatLng(this._ne.lat(), gll.lng());
-}
-
-GLatLngBounds.prototype.getCenter = function() {
-	return new GLatLng((this.getSouthWest().lat() + this.getNorthEast().lat()) / 2, (this.getSouthWest().lng() + this.getNorthEast().lng()) / 2);
 }
 
 function GMap2(node) {
@@ -405,11 +372,11 @@ GMap2.prototype.removeOverlay = function(overlay) {
 	}
 }
 
-GMap2.prototype.getBoundsZoomLevel = function(bounds) {
+GMap2.prototype.getBoundsZoomLevel = function(bounds, closest) {
 	var olb = new OpenLayers.Bounds();
 	olb.extend(GLatLng.toLonLat(bounds.getSouthWest()));
 	olb.extend(GLatLng.toLonLat(bounds.getNorthEast()));
-	return this.ol.map.getZoomForExtent(olb, false);
+	return this.ol.map.getZoomForExtent(olb, (closest == true) ? true : false);
 }
 
 GMap2.prototype.setCenter = function(center, zoom, type) {
@@ -474,16 +441,36 @@ GLatLng.toLonLat = function(gll) {
 }
 
 function GLatLngBounds(sw, ne) {
-	this.sw = sw;
-	this.ne = ne;
+	this._sw = sw;
+	this._ne = ne;
 }
 
-GLatLngBounds.prototype.getSouthWest = function() {
-	return this.sw;
+GLatLngBounds.prototype.getSouthWest = function() { return this._sw;}
+GLatLngBounds.prototype.getNorthEast = function() { return this._ne;}
+
+GLatLngBounds.prototype.intersects = function(other) {
+	var utm_sw = GeoUtil.GlatLngToUTM(this._sw);
+	var utm_ne = GeoUtil.GlatLngToUTM(this._ne, utm_sw.zone);
+	
+	var other_sw = GeoUtil.GLatLngToUTM(other.getSouthWest(), utm_sw.zone);
+	var other_sw = GeoUtil.GLatLngToUTM(other.getNorthEast(), utm_sw.zone);
+	
+	var intersects = true;
+	if(!((other_ne.n <= utm_ne.n && other_ne.n >= utm_sw.s) || (other_sw.s <= utm_ne.n && other_sw.s >= utm_sw.s))) intersects = false;
+	if(!((other_ne.e >= utm_ne.e && other_ne.e <= utm_sw.w) || (other_sw.w >= utm_ne.e && other_sw.w <= utm_sw.w))) intersects = false;
+	
+	return intersects;
 }
 
-GLatLngBounds.prototype.getNorthEast = function() {
-	return this.ne;
+GLatLngBounds.prototype.extend = function(gll) {
+	if(gll.lat() < this._sw.lat()) this._sw = new GLatLng(gll.lat(), this._sw.lng());
+	if(gll.lng() < this._sw.lng()) this._sw = new GLatLng(this._sw.lat(), gll.lng());
+	if(gll.lat() > this._ne.lat()) this._ne = new GLatLng(gll.lat(), this._ne.lng());
+	if(gll.lng() > this._ne.lng()) this._ne = new GLatLng(this._ne.lat(), gll.lng());
+}
+
+GLatLngBounds.prototype.getCenter = function() {
+	return new GLatLng((this.getSouthWest().lat() + this.getNorthEast().lat()) / 2, (this.getSouthWest().lng() + this.getNorthEast().lng()) / 2);
 }
 
 G_DEFAULT_ICON = 1;
