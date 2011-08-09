@@ -29,12 +29,14 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
 <h4>Plans</h4>
 <ul>
  <li>Current Operational Period (${lastperiod.id}): &nbsp;<a href="/app/operationalperiod/${lastperiod.id}/map">Map</a>&nbsp;|&nbsp;<a href="/app/operationalperiod/${lastperiod.id}">List</a></li>
+ <c:if test="${fn:length(assignments) gt 0}">
  <li>Jump to assignment&nbsp;&nbsp;&nbsp;<select id="assignmentid">
  <c:forEach var="assignment" items="${assignments}">
  <option value="${assignment.id}">${assignment.id}</option>
  </c:forEach>
  </select>
  <a href="javascript:gotoAssignment()">GO</a></li>
+ </c:if>
  <li><a href="/app/operationalperiod">Other Operational Periods</a></li>
 </ul>
 <h4>Operations</h4>

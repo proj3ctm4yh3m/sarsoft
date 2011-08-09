@@ -467,8 +467,11 @@ org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
 
 org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 	var that = this;
-	this.searchDAO.load(function(config) {
-		var config = YAHOO.lang.JSON.parse(config.value);
+	this.searchDAO.load(function(cfg) {
+		var config = {};
+		if(cfg.value != null) {
+			config = YAHOO.lang.JSON.parse(cfg.value);			
+		}
 		that.imap.getConfig(config);
 		for(var key in that.imap.registered) {
 			var val = that.imap.registered[key];
@@ -483,8 +486,10 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function() {
 	var that = this;
 	this.searchDAO.load(function(cfg) {
-		var config = YAHOO.lang.JSON.parse(cfg.value);
-		if(config == null) config = {};
+		var config = {};
+		if(cfg.value != null) {
+			config = YAHOO.lang.JSON.parse(cfg.value);			
+		}
 		that.imap.setConfig(config);
 		for(var key in that.imap.registered) {
 			var val = that.imap.registered[key];

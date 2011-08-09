@@ -28,7 +28,7 @@ function finalize() {
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
-			window.location.reload();
+			window.location='/app/assignment/${assignment.id}'
 		}, failure : function(response) {
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
@@ -51,7 +51,7 @@ function transition(state) {
 <div style="width: 30em; position: absolute; right: 25px; top: 10px; text-align: right">
    <c:forEach var="status" varStatus="loopStatus" items="<%= org.sarsoft.plans.model.SearchAssignment.Status.values() %>">
      <c:if test="${loopStatus.index gt 0}">-</c:if>
-     <c:choose><c:when test="${assignment.status eq status}"><span style="color: black">${status}</span></c:when><c:otherwise><span style="color: #CCCCCC">${status}</c:otherwise></c:choose>
+     <c:choose><c:when test="${assignment.status eq status}"><span style="color: black">${status}</span></c:when><c:otherwise><span style="color: #CCCCCC">${status}</span></c:otherwise></c:choose>
    </c:forEach>
 
 </div>

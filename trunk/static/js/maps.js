@@ -990,7 +990,7 @@ org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
 	} else {
 		var bounds = this.map.getBounds();
 		bounds.extend(gll);
-		this.map.setCenter(bounds.getCenter(), this.map.getBoundsZoomLevel(bounds));
+		this.map.setCenter(bounds.getCenter(), this.map.getBoundsZoomLevel(bounds, true));
 	}
 }
 
@@ -1004,7 +1004,12 @@ org.sarsoft.InteractiveMap.prototype.register = function(type, controller) {
 
 org.sarsoft.InteractiveMap.prototype.addMenuItem = function(item, order) {
 	if(order == null) order = 10000;
-	item.menuOrder = order;
+	try { item.menuOrder = order; } catch (e) {
+		var span = document.createElement("span");
+		span.appendChild(item);
+		span.menuOrder=order;
+		item=span;
+	}
 	var extras = this.map._overlaydropdownmapcontrol.extras;
 	for(var i = 0; i < extras.childNodes.length; i++) {
 		if(extras.childNodes[i] != null && extras.childNodes[i].menuOrder != null && extras.childNodes[i].menuOrder > order) {
@@ -1066,7 +1071,8 @@ org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
 
 	this.ctrl = document.createElement("span");
 	this.ctrl.style.background = "white";
-	this.ctrl.style.border = "1px 0px 0px 1px solid black";
+	this.ctrl.style.borderTop = "1px solid black";
+	this.ctrl.style.borderLeft = "1px solid black";
 	this.min = document.createElement("img");
 	this.min.style.cursor = "pointer";
 	this.min.style.width="12px";
@@ -1079,7 +1085,7 @@ org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
 		
 	this.msg = document.createElement("span");
 	this.msg.style.background = "white";
-	this.msg.style.border = "1px 0px 0px 0px solid black";
+	this.msg.style.borderTop = "1px solid black";
 	
 	this.div.appendChild(this.ctrl);
 	this.div.appendChild(this.msg);
@@ -1161,6 +1167,8 @@ org.sarsoft.LocationEntryForm = function() {
 org.sarsoft.LocationEntryForm.prototype.create = function(container) {
 	var table = document.createElement("table");
 	table.border=0;
+	var tbody = document.createElement("tbody");
+	table.appendChild(tbody);
 	var tr = document.createElement("tr");
 	var td = document.createElement("td");
 	td.vAlign="top";
@@ -1169,7 +1177,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container) {
 	td = document.createElement("td");
 	this.utmcontainer = td;
 	tr.appendChild(td);
-	table.appendChild(tr);
+	tbody.appendChild(tr);
 	this.utmform = new org.sarsoft.UTMEditForm();
 	this.utmform.create(this.utmcontainer);
 	
@@ -1194,7 +1202,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container) {
 	span.innerHTML="WGS84 decimal degrees, e.g. 39.3422, -120.2036";
 	td.appendChild(span);
 	tr.appendChild(td);
-	table.appendChild(tr);
+	tbody.appendChild(tr);
 	
 	tr = document.createElement("tr");
 	td = document.createElement("td");
@@ -1215,7 +1223,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container) {
 	if(typeof GClientGeocoder == 'undefined') {
 		tr.style.display = "none";
 	}
-	table.appendChild(tr);
+	tbody.appendChild(tr);
 	
 	container.appendChild(table);
 }
