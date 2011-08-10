@@ -1,0 +1,71 @@
+#summary User guide for the sarsoft map viewer
+
+One of Sarsoft's core elements is a map viewer based on Google Maps and OpenLayers code, with enhancements that include datums, UTM gridlines and a consistent UI for page-specific features.
+
+= Viewer Controls =
+
+The operational period map view shows this in action:
+
+<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/mapview.png"/>
+
+Starting at the top left are a series of *toggles* for setting the visibility of map elements/layers.  Although they normally switch between ON (normal text) and OFF (strikethrough text), some toggles allow other states, e.g. the label toggle which is "backlit" in the above picture.  The UTM toggle controls UTM gridlines and the LBL toggle affects the display of map labels; the other toggles are for page-specific features.
+
+After the toggles are a set of *icons*; these normally bring up a dialog when clicked.  The find and page size icons are part of the base map; the others are page-specific features.
+
+Further right of the toggles is the *map background control*.  This allows you to select a base map, an overlay layer, and the overlay's opacity (0-100).  Overlays allow you to combine layers and create useful visualizations; to disable the overlay, either make it the same as the base layer or set the opacity at 0.  Some useful examples of overlays include:
+
+  * Applying relief shading to topo or satellite layers.
+  * Overlaying local trails or scanned park brochures onto a base map.
+  * Blending topo and satellite layers 50/50 to help match features between the two maps.
+
+Below the GO button that switches map layers is a *cursor position* readout in both UTM and DDMM.HH coordinates.
+
+At the bottom right of the map is a *map info* bar.  This shows static information about the map: distances between range rings, which assignments are being shown, etc.
+
+The datum is displayed at the bottom left.  If a plus sign (+) is present after the datum, you can click on it to switch the map's datum *for this page only*.  To permanently change the search's datum, go to the home page and click "Search Admin".
+
+= Actions =
+
+Many mapping programs allow you to take actions by changing the cursor's mode, e.g. selecting 'line draw' mode to draw new routes and tracks or 'profile' mode to get an elevation profile.  Similar to the Google Maps viewer on which it is based, Sarsoft instead allows users to take action by clicking and right-clicking on objects or the map background.
+
+<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/mapview2.png"/>
+
+Because the user is hovering over an object (in this case, an assignment), a *message bar* has temporarily appeared at the top left of the screen; in larger browser windows, this will float left so as not to overlap with other map controls.
+
+The user has also right-clicked on the assignment in order to bring up a context menu.  This menu changes depending on the object clicked on; clicking on the background brings up options such as "New Search Assignment" and "Place LKP here".
+
+= Common Controls =
+
+Because they are linked to page-specific functionality, some of the following controls will not appear on all map pages.  However, they are presented here in once place for reference.
+
+== Toggles ==
+
+Toggles are shown as abbreviations.  They are:
+
+ * *UTM* Blue UTM gridlines at 100m, 1k or 10k intervals, depending on scale.
+ * *LBL* Labels can be hidden, normal (black text, clear background) or backlit (black text, white background) for better readability.
+ * *TRK* Track and waypoint visibility.  This affects uploaded assignment tracks, not assignment segments that were drawn in sarsoft.
+ * *LOC* Resource locations.  Only resources attached to an assignment or updated in the last 30 minutes will be shown.  Resources with a last position update older than 15 minutes are shown as a warning icon.
+ * *CLL* Sarsoft will automatically pick up on nearby APRS callsigns, and can display them so you know who is in your search area, or can find teams when you don't know their callsign.
+ * *CLUE* Show or hide clues that have been uploaded to Sarsoft.
+ * *PREV TRK* When printing an assignment, you can choose to display tracks from previous operational periods so that search teams know who has been through the area.
+
+== Icons ==
+
+ The *Map Setup* icon allows you to control how assignments are displayed on the map.  For both the current and previous operational periods, you can choose to filter assignments by type, how assignments should be colored (map coloring, by POD, by status, etc.), and how strongly polygon assignments should be colored.  You can also control range ringe sizes (in meters) around the LKP.
+
+<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/mapsetup.png"/>
+
+The *Find* icon allows you to center the map on a new location using UTM, decimal Lat/Long, a street address (when using the Google Maps viewer), an assignment number or a resource name.  If you are trying to find an assignment, the map will be zoomed to fit all of that assignment's tracks and waypoints; if someone uploaded an old GPS waypoint from 500 miles away, the map will center on a very large area until the waypoint is deleted. 
+
+<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/mapfind.png"/>
+
+The *Page Size* icon allows you to modify the map's size for printing; you should set your page size (specifying units! in or cm) to your paper size *minus a margin, typically .5in to .7in on each side*.  HTML printing behavior can vary widely from browser to browser; when you print an individual assignment, Sarsoft is conservative about the amount of space it uses in order to ensure compatibility over a wide range of printers and browsers.  If you want to take the operational period map view and dump it to a 30x40 plotter, it's worth taking an extra minute to get things dialed.  Some things to keep in mind:
+
+ * Check whether your browser has a "scale to fit" option.  This allows you to be less precise choosing the width and height, as your browser will grow or shrink the map to fit the page.
+
+ * Run through multiple print preview cycles in order to get the dimensions dialed.  If your browser isn't scaling the page to fit, being a fraction of an inch over the page size (minus margins) can cause the browser to spit out a second, mostly blank 30x40 sheet.  It can also cause the UTM easting labels to get cropped off the page.
+
+The *Save* icon saves the map configuration for use on all future map views.  Assignments are automatically saved as you work on them; this has no affect on assignment data.  Configurations saved include the map background, status of the toggle controls and the values of the map setup dialog.
+
+The *Home* icon exits the map view and takes you to the operational period detail page.
