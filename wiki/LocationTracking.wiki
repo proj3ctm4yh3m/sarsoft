@@ -67,7 +67,7 @@ Note that as with SPOT, these connections are established on a per-search basis,
 
 High-level web langauges and low-level device I/O tend not to mix well, so interfacing with a TNC may require some experimentation.  The large variety of equipment also complicates my testing efforts, so feedback and bug reports are appreciated.  I'm happy to add more devices to Sarsoft's default configuration based on what people are using in the field.
 
-Ultimately, Sarsoft requires you to point it at a file handle that will pass it NMEA strings or plain-text APRS traffic like what goes over the APRS-IS network (i.e. *not* KISS mode raw binary packets).  Any APRS device capable of sending waypoints to a GPS over a serial link should suffice for the former; I've found the Argent Data OpenTracker USB to be a good fit for the latter as the USB interface saves you from having to manually configure serial port settings.
+Ultimately, Sarsoft requires you to point it at a file handle that will pass it NMEA strings or plain-text TNC traffic like what goes over the APRS-IS network (i.e. *not* KISS mode raw binary packets).  Any APRS device capable of sending waypoints to a GPS over a serial link should suffice for the former; I've found the Argent Data OpenTracker USB to be a good fit for the latter as the USB interface saves you from having to manually configure serial port settings.
 
 Enabling local APRS montoring is easy:
 
