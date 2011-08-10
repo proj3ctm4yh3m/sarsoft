@@ -35,6 +35,10 @@ Wireless connections: Clients - WiFi Router, Server - External WiFi Network, if 
 
 You want to establish a private network where sarsoft will always appear as a fixed IP address, but clients will still be able to access an external internet connection if available.  This is best accomplished using two wireless radios (either two routers, or one router and the server's wifi), with one set to operate in bridge mode.  Using the server's radio as the bridge removes the need to customize the router's configuration.
 
+=== Offline Operation ===
+
+To use Sarsoft without an internet connection, you need at least one base map layer for the areas in which you'll be searching.  You can use the [CreatingMaps Creating Maps] page as a guide for creating your own maps; if you are a SAR team located in California, contact Matt Jacobs, Bay Area Mountain Rescue / San Mateo (or use the google code  project administrator email link) to get premade topo and aerial maps for the state.
+
 == Application Map ==
 
 Sarsoft pages tend to be either lists of objects (operational periods, assignments, resources) or detailed views of those objects.  One big exception is the *operational period map view*; all assignment segmenting is done on this page.  The diagram below lays out the most commonly used pages:
