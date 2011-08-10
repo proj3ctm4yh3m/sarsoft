@@ -15,7 +15,7 @@
 		<xsl:call-template name="GpxToRoute"/>
 		</e>
 	</xsl:for-each>
-	<xsl:for-each select="gpx:wpt[string(gpx:name | gpx0:name)!='lkp' and string(gpx:name | gpx0:name)!='pls' and string(gpx:name | gpx0:name)!='cp']">
+	<xsl:for-each select="gpx:wpt[string(gpx:name | gpx0:name)!='lkp' and string(gpx:name | gpx0:name)!='pls' and string(gpx:name | gpx0:name)!='cp' and not(starts-with(gpx:name | gpx0:name, 'CLUE'))]">
 		<e class="object">
 		<xsl:call-template name="GpxToWaypoint"/>
 		</e>
@@ -36,6 +36,15 @@
 	<xsl:call-template name="GpxToWaypoint"/>
 </cp>
 </xsl:for-each>
+<xsl:if test="count(gpx:wpt[starts-with(gpx:name | gpx0:name, 'CLUE')]) &gt; 0">
+<clues class="array">
+<xsl:for-each select="gpx:wpt[starts-with(gpx:name | gpx0:name, 'CLUE')]">
+	<e class="object">
+	<xsl:call-template name="GpxToWaypoint"/>
+	</e>
+</xsl:for-each>
+</clues>
+</xsl:if>
 </o>
 </xsl:template>
 

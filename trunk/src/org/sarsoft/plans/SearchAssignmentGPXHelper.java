@@ -20,6 +20,8 @@ import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.plans.model.Clue;
+import org.sarsoft.plans.model.Clue.Disposition;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Probability;
 import org.sarsoft.plans.model.Search;
@@ -38,6 +40,7 @@ public class SearchAssignmentGPXHelper {
 		m.put("lkp", Waypoint.class);
 		m.put("pls", Waypoint.class);
 		m.put("cp", Waypoint.class);
+		m.put("clues", Map.class);
 		m.put("ways", Map.class);
 		m.put("assignments", Map.class);
 		searchClassHints = Collections.unmodifiableMap(m);
@@ -50,6 +53,25 @@ public class SearchAssignmentGPXHelper {
 		if(search.getLkp() != null) modified.put("lkp", search.getLkp());
 		if(search.getPls() != null) modified.put("pls", search.getPls());
 		if(search.getCP() != null) modified.put("cp", search.getCP());
+
+		List<Map<String, Object>> modifiedClues = new ArrayList<Map<String, Object>>();
+		List<Clue> clues = (List<Clue>) dao.loadAll(Clue.class);
+		for(Clue clue : clues) {
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("id", clue.getId());
+			map.put("position", clue.getPosition());
+			Map<String, String> attrs = new HashMap<String, String>();
+			if(clue.getAssignmentId() != null) attrs.put("assignmentid", clue.getAssignmentId());
+			attrs.put("description", clue.getDescription());
+			attrs.put("location", clue.getLocation());
+			attrs.put("summary", clue.getSummary());
+			if(clue.getFound() != null) attrs.put("found", Long.toString(clue.getFound().getTime()));
+			if(clue.getInstructions() != null) attrs.put("instructions", clue.getInstructions().toString());
+			if(clue.getUpdated() != null) attrs.put("updated", Long.toString(clue.getUpdated().getTime()));
+			map.put("desc", encodeAttrs(attrs));
+			modifiedClues.add(map);
+		}
+		modified.put("clues", modifiedClues);
 		
 		Map<String, String> attrs = new HashMap<String, String>();
 		attrs.put("mapConfig", search.getMapConfig());
@@ -97,6 +119,43 @@ public class SearchAssignmentGPXHelper {
 			assignmentArray[i] = mapobj;
 		}
 		updateAssignmentsAndWays(assignmentArray, dao);
+		
+		if(m.containsKey("clues")) {
+			List clues = (List) m.get("clues");
+			for(Object clueobj : clues) {
+				Map map = (Map) clueobj;
+				String name = (String) map.get("name");
+				Long id = Long.parseLong(name.substring(4));
+				Clue clue = (Clue) dao.load(Clue.class, id);
+				if(clue == null) {
+					clue = new Clue();
+					clue.setId(id);
+					dao.save(clue);
+				}
+
+				Waypoint wpt = new Waypoint();
+				wpt.setLat((Double) map.get("lat"));
+				wpt.setLng((Double) map.get("lng"));
+				clue.setPosition(wpt);
+				Map<String, String> clueAttrs = decodeAttrs((String) map.get("desc"));
+				if(clueAttrs.containsKey("assignmentid") && clueAttrs.get("assignmentid") != null) {
+					SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, Long.parseLong(clueAttrs.get("assignmentid")));
+					if(assignment != null) {
+						assignment.addClue(clue);
+						dao.save(assignment);
+					}
+				}
+				if(clueAttrs.containsKey("description")) clue.setDescription(clueAttrs.get("description"));
+				if(clueAttrs.containsKey("location")) clue.setLocation(clueAttrs.get("location"));
+				if(clueAttrs.containsKey("summary")) clue.setSummary(clueAttrs.get("summary"));
+				if(clueAttrs.containsKey("found")) clue.setFound(new Date(Long.parseLong(clueAttrs.get("found"))));
+				if(clueAttrs.containsKey("instructions")) clue.setInstructions(Disposition.valueOf(clueAttrs.get("instructions")));
+				if(clueAttrs.containsKey("updated")) clue.setUpdated(new Date(Long.parseLong(clueAttrs.get("updated"))));
+				
+				dao.save(clue);
+			}
+		}
+		
 		
 	}
 
