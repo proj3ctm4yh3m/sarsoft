@@ -90,13 +90,13 @@ function createSearch() {
 		alert('Please enter a name for this search.');
 		return;
 	}
-	locform.read(function(gll) {
+	if(!locform.read(function(gll) {
 		if(gll != null) {
 			document.getElementById('lat').value = gll.lat();
 			document.getElementById('lng').value = gll.lng();
 		}
 		document.forms["newsearch"].submit();
-	});
+	})) document.forms["newsearch"].submit();
 }
 </script>
 

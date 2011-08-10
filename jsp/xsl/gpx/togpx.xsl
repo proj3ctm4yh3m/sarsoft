@@ -42,7 +42,17 @@
 			<xsl:with-param name="name" select="'cp'"/>
 		</xsl:call-template>
 	</xsl:for-each>
-
+	<xsl:for-each select="json:clues/json:e">
+		<xsl:variable name="id" select="json:id"/>
+		<xsl:message>ID is <xsl:value-of select="json:id"/></xsl:message>
+		<xsl:variable name="desc" select="json:desc"/>
+		<xsl:for-each select="json:position">
+			<xsl:call-template name="WaypointToWpt">
+				<xsl:with-param name="name" select="concat('CLUE', $id)"/>
+				<xsl:with-param name="desc" select="$desc"/>
+			</xsl:call-template>
+		</xsl:for-each>
+	</xsl:for-each>
 </xsl:template>
 <xsl:template name="SearchToGpx">
 	<metadata>
