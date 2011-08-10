@@ -22,7 +22,7 @@ Sarsoft is created with these design goals as overriding concerns:
 
 == Data Model ==
 
-If you have prior search planning experience, the terminology sarsoft uses should be familiar.  Each *search* is comprised of distinct time periods called *operational periods*, which typically correspond to changes in the overhead team, searchers, etc.  For each operational period, the *plans* section writes a number of *search assignments*, which are assigned to personnel by the *operations* section.  Sarsoft additionally tracks *resources*, which can be either people or equipment, using [http://en.wikipedia.org/wiki/Automatic_Packet_Reporting_System APRS] or SPOT beacons.  When teams complete their assignments, they download *tracks* and *waypoints* for future use by the overhead team.
+If you have prior search planning experience, the terminology sarsoft uses should be familiar.  Each *search* is comprised of distinct time periods called *operational periods*, which typically correspond to changes in the overhead team, searchers, etc.  For each operational period, the *plans* section writes a number of *search assignments*, the boundaries of which are called *segments*, and which might be represented by *routes* in topo software.  Assignments are handed off to the *operations* section, which staffs them with searchers.  Sarsoft additionally tracks *resources*, which can be either people or equipment, using [http://en.wikipedia.org/wiki/Automatic_Packet_Reporting_System APRS] or SPOT beacons.  When teams complete their assignments, they download *tracks* and *waypoints* for future use by the overhead team.
 
 == Deployment ==
 
@@ -52,7 +52,8 @@ Sarsoft provides all the features you need to write plans and manage tracks on a
 = Further Reading =
 
  * [Installation Intalling] and configuring Sarsoft.
- * [WritingPlans Creating] and printing individual search assignments.
- * [GeorefImagery Uploading and aligning] images, such as a park trails map.
- * [PrintingLargeMaps Printing large maps] for posting at the CP.
+ * Understanding Sarsoft's [MapViewer Map Viewer] and how it works with [datums different datums].
+ * [Changelist Changelist].  See what's new in the latest version.
+ * [GeorefImagery Uploading and aligning] map images, or for the more advanced user, [CreatingMaps Creating your own base maps].
+ * [LocationTracking Tracking Locations] through APRS.
  * [BulkOperations Bulk Updating and Printing] assignments.
