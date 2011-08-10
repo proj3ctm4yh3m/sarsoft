@@ -51,7 +51,7 @@ Sarsoft provides all the features you need to write plans and manage tracks on a
 
 = Further Reading =
 
- * [Installation Intalling] and configuring Sarsoft.
+ * [Installation Installing] and configuring Sarsoft.
  * Understanding Sarsoft's [MapViewer Map Viewer] and how it works with [datums different datums].
  * [Changelist Changelist].  See what's new in the latest version.
  * [GeorefImagery Uploading and aligning] map images, or for the more advanced user, [CreatingMaps Creating your own base maps].
