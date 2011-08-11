@@ -60,7 +60,7 @@ public class APRSTier2Engine extends APRSEngine {
 				if(lat.length() > 10) lat = lat.substring(0, 10);
 				String lng = Double.toString(wpt.getLng());
 				if(lng.length() > 10) lng = lng.substring(0, 10);
-				filter += " r/" + lat + "/" + lng + "/30";
+				filter += " r/" + lat + "/" + lng + "/20";
 			}
 			
 			boolean b = false;
