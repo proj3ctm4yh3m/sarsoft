@@ -11,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.sarsoft.admin.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
@@ -55,6 +56,8 @@ public class OpsController extends JSONBaseController {
 	}
 	private static Map<String, EngineList> locationEngines = new HashMap<String, EngineList>();
 
+	private Logger logger = Logger.getLogger(OpsController.class);
+	
 	@Autowired
 	SearchAssignmentController searchAssignmentController;
 	
@@ -236,35 +239,44 @@ public class OpsController extends JSONBaseController {
 		if(csv != null) {
 			long maxId = 0L;
 			List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
-			for(Resource resource : resources) {
-				maxId = Math.max(maxId, resource.getId());
+			for(Resource r : resources) {
+				maxId = Math.max(maxId, r.getId());
 			}
+			maxId++;
 			String[] rows = csv.split("\n");
 			for(String row : rows) {
-				String[] cols = row.split(",");
-				String name = cols[NAME];
-				String callsign = cols[CALLSIGN];
-				if("callsign".equalsIgnoreCase(callsign) || "name".equalsIgnoreCase(name)) continue;
-				Resource resource = (Resource) dao.getByAttr(Resource.class, "callsign", callsign);
-				if(resource != null) {
-					if(cols.length > SPOT_ID)
-						if(resource.getSpotId() == null) resource.setSpotId(cols[SPOT_ID]);
-					if(cols.length > SPOT_PASSWORD)
-						if(resource.getSpotPassword() == null) resource.setSpotPassword(cols[SPOT_PASSWORD]);
-				} else {
-					resource = new Resource();
-					resource.setId(maxId);
-					maxId++;
-					resource.setType(Type.valueOf(cols[TYPE]));
-					resource.setAgency(cols[AGENCY]);
-					resource.setName(name);
-					resource.setCallsign(callsign);
-					if(cols.length > SPOT_ID)
-						resource.setSpotId(cols[SPOT_ID]);
-					if(cols.length > SPOT_PASSWORD)
-						resource.setSpotPassword(cols[SPOT_PASSWORD]);
+				try {
+					String[] cols = row.split(",");
+					for(int i = 0; i < cols.length; i++) {
+						if(cols[i] != null && cols[i].length() > 2 && cols[i].startsWith("\"") && cols[i].endsWith("\""))
+							cols[i] = cols[i].substring(1, cols[i].length()-1);
+					}
+					String name = cols[NAME];
+					String callsign = cols[CALLSIGN];
+					if("callsign".equalsIgnoreCase(callsign) || "name".equalsIgnoreCase(name)) continue;
+					Resource resource = (Resource) dao.getByAttr(Resource.class, "callsign", callsign);
+					if(resource != null) {
+						if(cols.length > SPOT_ID)
+							if(resource.getSpotId() == null) resource.setSpotId(cols[SPOT_ID]);
+						if(cols.length > SPOT_PASSWORD)
+							if(resource.getSpotPassword() == null) resource.setSpotPassword(cols[SPOT_PASSWORD]);
+					} else {
+						resource = new Resource();
+						resource.setId(maxId);
+						maxId++;
+						resource.setType(Type.valueOf(cols[TYPE]));
+						resource.setAgency(cols[AGENCY]);
+						resource.setName(name);
+						resource.setCallsign(callsign);
+						if(cols.length > SPOT_ID)
+							resource.setSpotId(cols[SPOT_ID]);
+						if(cols.length > SPOT_PASSWORD)
+							resource.setSpotPassword(cols[SPOT_PASSWORD]);
+					}
+					dao.save(resource);
+				} catch (Exception e) {
+					logger.warn(e);
 				}
-				dao.save(resource);
 			}
 		}
 		return "redirect:/app/resource/";
