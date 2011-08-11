@@ -3,13 +3,9 @@
 Sarsoft is a web-based plans writing and track logging tool for volunteer Search and Rescue teams.  Despite being a web app, Sarsoft does *not require an internet connection*; as long as you supply base maps, you can hook it up to a wireless router and host your own network in the middle of nowhere.  If you do have an internet connection, Sarsoft will automatically cache map data in order to reduce bandwidth needs.
 
 Sarsoft is created with these design goals as overriding concerns:
-
  * Simple deployment, with minimal setup/configuration required
-
  * Able to function in offline or bandwidth-constrained environments
-
  * Intuitive to users with search overhead training
-
  * Translates to paper
 
 = Why You Should Use Sarsoft =
@@ -56,13 +52,8 @@ Sarsoft provides all the features you need to write plans and manage tracks on a
 = Further Reading =
 
  * [Installation Installing] and configuring Sarsoft.
-
  * Understanding Sarsoft's [MapViewer Map Viewer] and how it works with [datums different datums].
-
  * [Changelist Changelist].  See what's new in the latest version.
-
  * [GeorefImagery Uploading and aligning] map images, or for the more advanced user, [CreatingMaps Creating your own base maps].
-
  * [LocationTracking Tracking Locations] through APRS.
-
  * [BulkOperations Bulk Updating and Printing] assignments.
