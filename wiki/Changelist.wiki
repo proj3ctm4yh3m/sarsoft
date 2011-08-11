@@ -1,5 +1,23 @@
 #summary Changelist and migration instructions
 
+= Version 0.6 =
+
+==Major changes for 0.6==
+ * Major overhaul of map UI to move functionality out of the right-click menu and onto the screen
+ * Added support for clue logging and mapping.
+ * New find widget allows map to center on UTM, Lat/Long, text location, assignment or resource.
+
+==Minor changes for 0.6==
+ * Support for compressed and Mic-E APRS position reports
+ * Real-time updates to resource and callsign lists
+ * Integrated resources into the main map page, eliminated resource map page
+ * Support for bulk printing of Google map layers
+ * Able to specify LKP when search is created
+ * Improving the set of actions available on the assignment detail page based on assignment state.
+
+==Migration instructions for 0.6==
+No data migration is required when moving from 0.5 to 0.6, however, you should back any searches up to .gpx just in case.
+
 = Version 0.5 =
 
 ==Major changes for 0.5==
