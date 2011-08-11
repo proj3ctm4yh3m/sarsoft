@@ -22,7 +22,7 @@ As you manipulate map data, you'll have to be aware of which spatial reference s
 If you're lucky, your map data will come as either a MrSID or GeoTIFF file which has already been aligned with real-world coordinates.  If not, you'll have to pick several points on the map, find their real-world coordinates, and convert your ordinary image into a GeoTIFF.  Assuming your real-world coordinates are in WGS84, you would take four x,y pixel coordinates that are mapped to a lat/lng and georeference the image by running:
 
 {{{
-gdal_translate -t_srs EPSG:4326 -gcp x1 y1 lat1 lng1 -gcp x2 y2 lat2 lng2 -gcp x3 y3 lat3 lng3 -gcp x4 y5 lat5 lng4 -of GTiff your_file.ext map.tif
+gdal_translate -a_srs EPSG:4326 -gcp x1 y1 lat1 lng1 -gcp x2 y2 lat2 lng2 -gcp x3 y3 lat3 lng3 -gcp x4 y5 lat5 lng4 -of GTiff your_file.ext map.tif
 }}}
 
 == Building a VRT ==
