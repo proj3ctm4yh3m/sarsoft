@@ -272,11 +272,12 @@ GMap2.prototype.setMapType = function(type) {
 		}	
 		this.ol.currentMapType = null;
 	}
+	// set map type before adding layers so that it's available to event listeners
+	this.ol.currentMapType = type;
 	for(var i = 0; i < type.getTileLayers().length; i++) {
 		type.getTileLayers()[i].ol.layer.numZoomLevels = type.getTileLayers()[i].maxResolution();
 		this.ol.map.addLayer(type.getTileLayers()[i].ol.layer);
 	}
-	this.ol.currentMapType = type;
 }
 
 GMap2.prototype.getCurrentMapType = function() {

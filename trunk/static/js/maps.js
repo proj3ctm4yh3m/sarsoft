@@ -155,7 +155,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity) {
-		this.opacityInput.value=opacity*100;
+		this.opacityInput.value=Math.round(opacity*100);
 		for(var i = 0; i < this.types.length; i++) {
 			if(this.types[i] == base) this.typeSelect.value = i;
 			if(this.types[i] == overlay) this.overlaySelect.value = i;
@@ -322,7 +322,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 				GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
 				datumMenu.hide();
 				that.datumDisplay.innerHTML = d;
-				that.updateDatum();
+				that.imap.updateDatum();
 			}
 		}
 		for(var datum in org.sarsoft.map.datums) {
@@ -727,7 +727,7 @@ org.sarsoft.InteractiveMap.prototype.updateDatum = function() {
 		var m = this.markers[key];
 		this.addWaypoint(m.waypoint, m.config, m.tooltip, m.label);
 	}
-	this._drawUTMGrid(true);
+	if(this.registered["org.sarsoft.UTMGridControl"] != null) this.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
 }
 
 

@@ -11,18 +11,17 @@ ${mapjs}
 
 markers = new Array();
 
-org.sarsoft.EnhancedGMap.prototype.saveMap = function() {
-	var center = this.map.getCenter();
-	var hash = "center=" + center.lat() + "," + center.lng() + "&zoom=" + map.getZoom();
-	var config = emap.getConfig();
+saveMap = function() {
+	var center = imap.map.getCenter();
+	var hash = "center=" + Math.round(center.lat()*100000)/100000 + "," + Math.round(center.lng()*100000)/100000 + "&zoom=" + map.getZoom();
+	var config = imap.getConfig();
 	hash = hash + "&base=" + config.base;
 	if(config.overlay != null) hash = hash + "&overlay=" + config.overlay;
 	if(config.opacity != null) hash = hash + "&opacity=" + config.opacity;
 	var markerData = new Array();
 	for(var i = 0; i < markers.length; i++) {
 		if(markers[i] != null) {
-			var marker = markers[i];
-			markerData.push({ title : marker.getTitle(), lat: marker.getLatLng().lat(), lng: marker.getLatLng().lng() });
+			markerData.push(markers[i]);
 		}
 	}
 	if(markerData.length > 0) {
@@ -30,17 +29,17 @@ org.sarsoft.EnhancedGMap.prototype.saveMap = function() {
 	}
 	ignorehash=true;
 	window.location.hash=hash;
-	this.lasthash=window.location.hash
+	lasthash=window.location.hash
 	ignorehash=false;
 }
 
-org.sarsoft.EnhancedGMap.prototype.loadMap = function() {
+loadMap = function() {
 	ignorehash=true;
-	this.lasthash = window.location.hash;
-	var hash = this.lasthash.slice(1);
+	lasthash = window.location.hash;
+	var hash = lasthash.slice(1);
 	var props = hash.split("&");
 	for(var i = 0; i < markers.length; i++) {
-		this.map.removeOverlay(markers[i]);
+		imap.removeWaypoint(markers[i]);
 	}
 	markers = new Array();
 	var mdata = new Array();
@@ -51,7 +50,7 @@ org.sarsoft.EnhancedGMap.prototype.loadMap = function() {
 			var latlng = prop[1].split(",");
 			map.setCenter(new GLatLng(latlng[0], latlng[1]));
 		}
-		if(prop[0] == "zoom") this.map.setZoom(1*prop[1]);
+		if(prop[0] == "zoom") imap.map.setZoom(1*prop[1]);
 		if(prop[0] == "base") config.base = prop[1];
 		if(prop[0] == "overlay") config.overlay = prop[1];
 		if(prop[0] == "opacity") config.opacity = prop[1];
@@ -59,37 +58,76 @@ org.sarsoft.EnhancedGMap.prototype.loadMap = function() {
 	}
 	if(config.overlay == null) config.overlay = config.base;
 	if(config.opacity == null) config.opacity = 0;
-	if(config.base != null) emap.setConfig(config);
+	if(config.base != null) imap.setConfig(config);
 	for(var i = 0; i < mdata.length; i++) {
 		var marker = mdata[i];
-		this.addMarker(new GLatLng(marker.lat, marker.lng), marker.title);
+		createMarker(new GLatLng(marker.lat, marker.lng), marker.name);
 	}
 
 	ignorehash=false;
 }
 
+markers = new Array();
+createMarker = function(latlng, label) {
+	var wpt = {lat : Math.round(latlng.lat()*100000)/100000, lng : Math.round(latlng.lng()*100000)/100000, name : label};
+	wpt.id = markers.length;
+	imap.addWaypoint(wpt, {color: "#FF0000"}, label, label);
+	markers.push(wpt);
+	saveMap();
+}
+
+removeMarker = function(marker) {
+	imap.removeWaypoint(marker);
+	for(var i = 0; i < markers.length; i++) {
+		if(this.markers[i] == marker) {
+			delete this.markers[i];
+			saveMap();
+			return;
+		}
+	}
+}
+
 function doload() {
 org.sarsoft.Loader.queue(function() {
-  egm = new org.sarsoft.EnhancedGMap();
-  map = egm.createMap(document.getElementById('map_canvas'));
-  emap = new org.sarsoft.EditableGMap(map);
+
+	egm = new org.sarsoft.EnhancedGMap();
+	map = egm.createMap(document.getElementById('map_canvas'));
+	imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
+
+	newMarkerDialog = new YAHOO.widget.Dialog("newMarkerDlg", {zIndex: "2000"});
+	var buttons = [ { text : "Create", handler: function() {
+			newMarkerDialog.hide();
+			createMarker(imap.map.fromContainerPixelToLatLng(newMarkerDialog._point), document.getElementById('newMarkerLabel').value);
+			document.getElementById('newMarkerLabel').value="";
+		}, isDefault: true}, {text : "Cancel", handler : function() { that.newMarkerDialog.hide(); }}];
+	newMarkerDialog.cfg.queueProperty("buttons", buttons);
+	newMarkerDialog.render(document.body);
+	newMarkerDialog.hide();
+
+	imap.addContextMenuItems([
+                    	{text : "New Marker", applicable : function(obj) { return obj == null }, handler : function(data) { newMarkerDialog.moveTo(data.point.x, data.point.y); newMarkerDialog._point = data.point; newMarkerDialog.show(); }},
+                    	{text : "Delete Marker", applicable : function(obj) { return obj != null; }, handler : function(data) { removeMarker(data.subject); }}
+                	]);
+
 	GEvent.addListener(map, "moveend", function() {
-		if(!ignorehash) egm.saveMap();
+		if(!ignorehash) saveMap();
 		});
 	GEvent.addListener(map, "zoomend", function() {
-		if(!ignorehash) egm.saveMap();
+		if(!ignorehash) saveMap();
 	});
 	GEvent.addDomListener(map._overlaydropdownmapcontrol._go, "click", function() {
-		egm.saveMap();
+		saveMap();
 	});
   
+	checkhashupdate();
 });
 }
 
 ignorehash = false;
+lasthash = "";
 function checkhashupdate() {
-	if(egm.lasthash != window.location.hash) {
-		egm.loadMap();
+	if(lasthash != window.location.hash) {
+		loadMap();
 	}
 }
 window.setInterval("checkhashupdate()", 500);
@@ -98,7 +136,14 @@ window.setInterval("checkhashupdate()", 500);
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
-<div id="map_canvas" style="width: 100%; height: 100%"></div>
+<div id="map_canvas" style="width: 100%; height: 100%">
+</div>
+<div id="newMarkerDlg">
+    <div class="hd">New Marker</div>
+    <div class="bd">
+            <label for="newMarkerLabel">Label:</label><input type="text" name="newMarkerLabel" id="newMarkerLabel" />
+    </div>
+	</div>
 
 </body>
 </html>
