@@ -941,13 +941,15 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getSetupBlock = 
 		var node = document.createElement("div");
        	node.style.width="100%";
        	var present = document.createElement("div");
-       	present.style.width="240px";
-       	present.style.float="left";
+       	present.style.width="235px";
+       	present.style.cssFloat="left";
+       	present.style.styleFloat="left";
        	present.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>This OP:</span><br/>";
        	node.appendChild(present);
        	var past = document.createElement("div");
-       	past.style.width="240px";
-       	past.style.float="right";
+       	past.style.width="235px";
+       	past.style.cssFloat="right";
+       	past.style.styleFloat="right";
        	past.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>Previous OPs:</span><br/>";
        	node.appendChild(past);
 		
