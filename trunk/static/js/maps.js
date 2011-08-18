@@ -1245,10 +1245,10 @@ org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
 }
 
 org.sarsoft.LocationEntryForm.prototype.clear = function() {
-	this.utmform.write(null);
-	this.address.value=null;
-	this.lat.value=null;
-	this.lng.value=null;
+	this.utmform.write({zone : "", e : "", n : ""});
+	this.address.value="";
+	this.lat.value="";
+	this.lng.value="";
 }
 
 function UTM(e, n, zone) {
