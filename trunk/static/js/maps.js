@@ -348,8 +348,10 @@ org.sarsoft.UTMGridControl = function(imap) {
 			this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Enable/disable UTM gridlines", function(value) {
 				that._showUTM = value;
 				that._drawUTMGrid(true);
-			});
-			imap.addMenuItem(this._UTMToggle.node, 10);		
+			}, [{value : true, style : ""},
+			 {value : "tickmark", style : "color: white; background-color: red"},
+			 {value : false, style : "text-decoration: line-through"}]);
+			imap.addMenuItem(this._UTMToggle.node, 10);
 			imap.register("org.sarsoft.UTMGridControl", this);
 	}
 }
@@ -412,7 +414,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	}
 	this.text = new Array();
 	
-	if(!this._showUTM) return;
+	if(this._showUTM == false) return;
 	
 	var bounds = this.map.getBounds();
 	var span = bounds.getSouthWest().distanceFrom(bounds.getNorthEast());
@@ -421,6 +423,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	var pxspan = Math.sqrt(Math.pow(px1.x-px2.x, 2) + Math.pow(px1.y-px2.y, 2));
 	scale = span/pxspan;
 	var spacing = 100;
+	if(this._showUTM != true) spacing = 1000;
 	if(scale > 2) spacing = 1000;
 	if(scale > 20) spacing = 10000;
 	if(scale > 200) spacing = 100000;
@@ -430,6 +433,34 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	if(ne.zone - sw.zone > 1) return;
 	this._drawUTMGridForZone(sw.zone, spacing, false);
 	if(sw.zone != ne.zone)  this._drawUTMGridForZone(ne.zone, spacing, true);
+}
+
+org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm, primary, zone) {
+	var vertices = new Array();
+	var start_ll = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng(start_utm));
+	var end_ll = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng(end_utm));
+	
+	if(start_ll.lng() > end_ll.lng()) {
+		var tmp = start_ll;
+		start_ll = end_ll;
+		end_ll = tmp;
+		tmp = start_utm;
+		start_utm = end_utm;
+		end_utm = tmp;
+	}
+	
+	if(zone != null && start_ll.lng() < GeoUtil.getWestBorder(zone)) {
+		start_ll = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(start_ll.lat(), GeoUtil.getWestBorder(zone)), zone).e, n: start_utm.n, zone: zone}));
+	}
+	if(zone != null && end_ll.lng() > GeoUtil.getEastBorder(zone)) {
+		end_ll = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(end_ll.lat(), GeoUtil.getEastBorder(zone)), zone).e, n: end_utm.n, zone: zone}));
+	}
+	vertices.push(start_ll);
+	vertices.push(end_ll);
+	
+	var overlay = new GPolyline(vertices, "#0000FF", primary? 0.8 : 0.4, primary ? 100 : 75);
+	this.utmgridlines.push(overlay);
+	this.map.addOverlay(overlay);
 }
 
 org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacing, right) {
@@ -450,14 +481,19 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getNorthEast()).x;
 	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	while(easting < ne.e) {
-		var vertices = new Array();
-		vertices.push(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone})));
-		vertices.push(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: ne.n, zone: zone})));
+		var start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
 
-		if(west < vertices[0].lng() && vertices[0].lng() < east) {
-			var overlay = new GPolyline(vertices, "#0000FF", 1, (easting % 1000 == 0) ? 1 : 0.4);
-			this.utmgridlines.push(overlay);
-			this.map.addOverlay(overlay);
+		if(west < start.lng() && start.lng() < east) {
+			if(this._showUTM == true) {
+				this._drawGridLine(new UTM(easting, sw.n, zone), new UTM(easting, ne.n, zone), (easting % 100 == 0));
+			} else {
+				var northing = Math.round(sw.n / spacing) * spacing;
+				while(northing < ne.n) {
+					this._drawGridLine(new UTM(easting, northing-(spacing/10), zone), new UTM(easting, northing+(spacing/10), zone), true);
+					this._drawGridLine(new UTM(easting-(spacing/10), northing, zone), new UTM(easting+(spacing/10), northing, zone), true);
+					northing = northing + spacing;
+				}
+			}
 
 			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: screenSW.n, zone: zone}))).x;
 			if(0 < offset && offset < pxmax && easting % 1000 == 0) {
@@ -469,30 +505,16 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 		}
 		easting = easting + spacing;
 	}
+
 	var northing = Math.round(sw.n / spacing) * spacing;
 	while(northing < ne.n) {
-		var vertices = new Array();
-		var start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: sw.e, n: northing, zone: zone}));
-		if(start.lng() < west) {
-			start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(start.lat(), west), zone).e, n: northing, zone: zone}));
+		if(this._showUTM == true) {
+			this._drawGridLine(new UTM(sw.e, northing, zone), new UTM(ne.e, northing, zone), (northing % 1000 == 0), zone);
 		}
-		vertices.push(start);
-		var end = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: ne.e, n: northing, zone: zone}));
-		if(end.lng() > east) {
-			end = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: GeoUtil.GLatLngToUTM(new GLatLng(end.lat(), east), zone).e, n: northing, zone: zone}));
-		}
-		vertices.push(end);
-
-		var overlay = new GPolyline(vertices, "#0000FF", 1, (northing % 1000 == 0) ? 1 : 0.4);
-		this.utmgridlines.push(overlay);
-		this.map.addOverlay(overlay);
 
 		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: screenSW.e, n: northing, zone: zone}))).y;
-		if(0 < offset && offset < pymax && northing % 1000 == 0) {
+		if(0 < offset && offset < pymax && northing % 1000 == 0 && !right) {
 			var point = new GPoint(0, offset);
-			if(right) {
-				point = new GPoint(this.map.getSize().width-50, this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: screenNE.e, n: northing, zone: zone}))).y);
-			}
 			var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(northing), null, null, new GSize(0,-0.5));
 			this.map.addOverlay(label);
 			this.text.push(label);
