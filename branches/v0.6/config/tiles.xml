@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition name="error" template="/global/error.jsp"/>
+
+	<definition name="App.Base" template="/global/AppTemplate.jsp">
+		<put-attribute name="breadcrumb" value="/plans/breadcrumb.jsp"/>
+		<put-attribute name="app" value=""/>
+	</definition>
+	<definition name="Assignment.Details" extends="App.Base">
+		<put-attribute name="content" value="/plans/assignment.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	<definition name="Assignment.PrintForms" template="/plans/assignment-print.jsp"/>
+	<definition name="Assignment.PrintMaps" template="/plans/assignment-printmaps.jsp"/>
+	<definition name="Assignment.PrintBulk" template="/plans/assignment-printbulk.jsp"/>
+
+	<definition name="OperationalPeriod.List" extends="App.Base">
+		<put-attribute name="content" value="/plans/oplist.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	<definition name="OperationalPeriod.Detail" extends="App.Base">
+		<put-attribute name="content" value="/plans/opdetail.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+
+	<definition name="Clue.List" extends="App.Base">
+		<put-attribute name="content" value="/plans/cluelist.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	<definition name="Clue.Log" extends="App.Base">
+		<put-attribute name="content" value="/plans/cluelog.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	<definition name="Clue.Detail" extends="App.Base">
+		<put-attribute name="content" value="/plans/cluedetail.jsp"/>
+		<put-attribute name="app" value="plans"/>
+	</definition>
+	
+	
+	<definition name="Resource.List" extends="App.Base">
+		<put-attribute name="content" value="/ops/resourcelist.jsp"/>
+		<put-attribute name="app" value="ops"/>
+	</definition>
+
+	<definition name="Resource.Detail" extends="App.Base">
+		<put-attribute name="content" value="/ops/resourcedetail.jsp"/>
+		<put-attribute name="app" value="ops"/>
+	</definition>
+	
+	<definition name="Location.Status" extends="App.Base">
+		<put-attribute name="content" value="/ops/locationstatus.jsp"/>
+		<put-attribute name="app" value="ops"/>
+	</definition>
+
+	<definition name="Pages.Search" extends="App.Base">
+		<put-attribute name="content" value="/admin/search.jsp"/>
+		<put-attribute name="app" value="admin"/>
+	</definition>
+	<definition name="Pages.Home" extends="App.Base">
+		<put-attribute name="content" value="/global/home.jsp"/>
+	</definition>
+	<definition name="Pages.Welcome" extends="App.Base">
+		<put-attribute name="content" value="/global/welcome.jsp"/>
+	</definition>
+	<definition name="Pages.Password" extends="App.Base">
+		<put-attribute name="content" value="/global/password.jsp"/>
+	</definition>
+	<definition name="Pages.Admin" extends="App.Base">
+		<put-attribute name="content" value="/admin/admin.jsp"/>
+		<put-attribute name="app" value="admin"/>
+	</definition>
+	
+	<definition name="GeoRefImageList" extends="App.Base">
+		<put-attribute name="content" value="/imagery/georefimagelist.jsp"/>
+	</definition>
+
+</tiles-definitions>
