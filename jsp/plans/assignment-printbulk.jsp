@@ -23,7 +23,7 @@ org.sarsoft.Loader.queue(function() {
   <c:forEach var="assignment" items="${assignments}" varStatus="status">
     controllers[${status.index}] = new Array();
     <c:forEach var="mapConfig" items="${mapConfigs}" varStatus="status2">
-      controllers[${status.index}][${status2.index}] = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps${status.index}_${status2.index}"), ${assignment.id}, {base: "${mapConfig.base}", overlay: "${mapConfig.overlay}", opacity: ${mapConfig.opacity/100}}, ${previousEfforts[status2.index]});
+      controllers[${status.index}][${status2.index}] = new org.sarsoft.controller.AssignmentPrintMapController(document.getElementById("maps${status.index}_${status2.index}"), ${assignment.id}, {base: "${mapConfig.base}", overlay: "${mapConfig.overlay}", opacity: ${mapConfig.opacity/100}<c:if test="${fn:length(mapConfig.alphaOverlays) gt 0}">, alphaOverlays: "${mapConfig.alphaOverlays}"</c:if>}, ${previousEfforts[status2.index]});
     </c:forEach>
   </c:forEach>
 });

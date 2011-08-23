@@ -2,6 +2,12 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 
+<c:set var="hasAlphaOverlays" value="${false}"/>
+<c:forEach var="source" items="${mapSources}">
+<c:if test="${source.alphaOverlay}"><c:set var="hasAlphaOverlays" value="${true}"/></c:if>
+</c:forEach>
+
+
 <h2>Operational Period ${period.id}: ${period.description}</h2>
 
 <c:set var="area" value="${period.area*10}"/>
@@ -109,6 +115,9 @@ you can not clear fields through bulk update.</p>
 
 <p>Print multiple assignments at once.  Use shift+click and ctrl+click to select assignments from the list, and choose the forms/maps you wish to print.</p>
 
+<form name="assignmentprint" action="/app/assignment" method="get">
+<input type="hidden" name="bulkIds" id="printBulkIds" value=""/>
+<input type="hidden" name="format" value="PRINT"/>
 <input type="checkbox" name="print104" id="print104">Print SAR 104 forms</input><br/><br/>
 
 <c:forEach var="num" items='<%= new Integer[] {1,2,3,4,5} %>' varStatus='status'>
@@ -126,11 +135,23 @@ Base&nbsp;<select name="map${num}f" id="map${num}f">
   <c:forEach var="image" items="${geoRefImages}">
   <option value="${image.name}">${image.name}</option>
   </c:forEach>
-</select>
-,&nbsp;&nbsp;Opacity&nbsp;
-<input type="text" id="map${num}o" name="map${num}o" value="0" size="2"> percent
+</select>@
+<input type="text" id="map${num}o" name="map${num}o" value="0" size="2"> % opacity
+<c:if test="${hasAlphaOverlays}">
+,&nbsp;&nbsp;<input type="checkbox" onchange="javascript:setAO('map${num}alpha', this.checked)">Include Overlays</input>
+</c:if>
 ,&nbsp;&nbsp;<input type="checkbox" name="map${num}prev" id="map${num}prev"}>Show Previous Efforts</input><br/>
+<c:if test="${hasAlphaOverlays}">
+<div style="display: none; padding-left: 50px" id="map${num}alpha">
+Additional Overlays:&nbsp;
+<c:forEach var="source" items="${mapSources}">
+<c:if test="${source.alphaOverlay}"><input type="checkbox" name="map${num}alpha_${source.name}" id="map${num}alpha_${source.name}">${source.name}</input>&nbsp;</c:if>
 </c:forEach>
+</div>
+</c:if>
+
+</c:forEach>
+</form>
 
 <br/>
  <a style="left: 20px" href="javascript:submitbulkprint()">Print</a>
@@ -210,6 +231,17 @@ function hidebulkprint() {
   document.getElementById('bulkprint').style.display="none";
 }
 
+function setAO(id, state) {
+	if(state) {
+		document.getElementById(id).style.display="block";
+	} else {
+		document.getElementById(id).style.display="none";
+<c:forEach var="overlay" items="${alphaOverlays}">
+		document.getElementById(id + '_' + ${overlay.name}).checked=false;
+</c:forEach>
+	}
+}
+
 function submitbulkprint() {
 var data = datatable.getSelectedData();
 if(data.length == 0) {
@@ -219,16 +251,18 @@ if(data.length == 0) {
 	for(var i = 0; i < data.length; i++) {
 		value = value + data[i].id + ",";
 	}
-	var url = "/app/assignment?format=print&bulkIds=" + value;
-	url = url + "&print104=" + document.getElementById('print104').checked;
-	for(var i = 1; i < 6; i++) {
-    if(document.getElementById("printmap" + i).checked) {
-		url = url + "&map" + i + "f=" + document.getElementById("map" + i + "f").value + "&map" + i + "b=" + document.getElementById("map" + i + "b").value +
-			"&map" + i + "o=" + document.getElementById("map" + i + "o").value;
-		if(document.getElementById("map" + i + "prev").checked) url = url + "&map" + i + "prev=true";
-	}
-  	}
-  	window.location=url;
+	document.getElementById('printBulkIds').value=value;
+//	var url = "/app/assignment?format=print&bulkIds=" + value;
+//	url = url + "&print104=" + document.getElementById('print104').checked;
+//	for(var i = 1; i < 6; i++) {
+//    if(document.getElementById("printmap" + i).checked) {
+//		url = url + "&map" + i + "f=" + document.getElementById("map" + i + "f").value + "&map" + i + "b=" + document.getElementById("map" + i + "b").value +
+//			"&map" + i + "o=" + document.getElementById("map" + i + "o").value;
+//		if(document.getElementById("map" + i + "prev").checked) url = url + "&map" + i + "prev=true";
+//	}
+// 	}
+//  	window.location=url;
+document.forms['assignmentprint'].submit();
 }
 }
 

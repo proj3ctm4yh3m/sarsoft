@@ -18,6 +18,7 @@ saveMap = function() {
 	hash = hash + "&base=" + config.base;
 	if(config.overlay != null) hash = hash + "&overlay=" + config.overlay;
 	if(config.opacity != null) hash = hash + "&opacity=" + config.opacity;
+	if(config.alphaOverlays != null) hash = hash + "&alphaOverlays=" + config.alphaOverlays;
 	var markerData = new Array();
 	for(var i = 0; i < markers.length; i++) {
 		if(markers[i] != null) {
@@ -54,6 +55,7 @@ loadMap = function() {
 		if(prop[0] == "base") config.base = prop[1];
 		if(prop[0] == "overlay") config.overlay = prop[1];
 		if(prop[0] == "opacity") config.opacity = prop[1];
+		if(prop[0] == "alphaOverlays") config.alphaOverlays = prop[1];
 		if(prop[0] == "markers") mdata = YAHOO.lang.JSON.parse(decodeURIComponent(prop[1]));
 	}
 	if(config.overlay == null) config.overlay = config.base;

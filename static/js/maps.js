@@ -139,6 +139,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		var tps = document.createElement("span");
 		tps.style.cursor="pointer";
 		tps.innerHTML="+";
+		this.alphaOverlayPlus = tps;
 		tPlus.appendChild(tps);
 			
 		var tDiv = document.createElement("div");
@@ -186,6 +187,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	map.getContainer().appendChild(div);
 	
 	GEvent.addDomListener(go, "click", function() {
+		tDiv.style.visibility="hidden";
 		var base = that.types[that.typeSelect.value];
 		var overlay = that.types[that.overlaySelect.value];
 		var opacity = that.opacityInput.value;
@@ -207,6 +209,12 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		for(var i = 0; i < this.types.length; i++) {
 			if(this.types[i] == base) this.typeSelect.value = i;
 			if(this.types[i] == overlay) this.overlaySelect.value = i;
+		}
+		if(alphaOverlays != null) for(var i = 0; i < this.alphaOverlayTypes.length; i++) {
+			this.alphaOverlayBoxes[i].checked=false;
+			for(var j = 0; j < alphaOverlays.length; j++) {
+				if(this.alphaOverlayTypes[i] == alphaOverlays[j]) this.alphaOverlayBoxes[i].checked=true;
+			}
 		}
 		if(overlay.getMaximumResolution != null && base.getMaximumResolution() > overlay.getMaximumResolution() && !overlay._alphaOverlay) {
 			// google maps doesn't seem to check the overlays' min and max resolutions
@@ -238,11 +246,18 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			}
 		}
 		if(alphaOverlays != null) {
+			var anames = "";
 			for(var i = 0; i < alphaOverlays.length; i++) {
 				var layer = new GTileLayerOverlay(alphaOverlays[i].getTileLayers()[0]);
 				this._overlays[this._overlays.length] = layer;
 				this.map.addOverlay(layer)
+				anames = anames + alphaOverlays[i].getName();
+				if(i < alphaOverlays.length - 1) anames = anames + ",";
 			}
+			this.map._sarsoft_alpha_overlays=anames;
+			this.alphaOverlayPlus.innerHTML = "+" + alphaOverlays.length;
+		} else {
+			this.alphaOverlayPlus.innerHTML = "+";
 		}
 }
 
@@ -813,15 +828,16 @@ org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 	config.base = this.map.getCurrentMapType().getName();
 	config.overlay = this.map._sarsoft_overlay_name;
 	config.opacity = this.map._sarsoft_overlay_opacity;
+	if(this.map._sarsoft_alpha_overlays != null) config.alphaOverlays = this.map._sarsoft_alpha_overlays;
 	return config;
 }
 
 org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 	if(config == null) return;
-	this.setMapLayers(config.base, config.overlay, config.opacity);
+	this.setMapLayers(config.base, config.overlay, config.opacity, config.alphaOverlays);
 }
 
-org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayName, opacity) {
+org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayName, opacity, alphaOverlays) {
 	var types = this.map._overlaydropdownmapcontrol.types;
 	var base = null;
 	var overlay = null;
@@ -831,7 +847,16 @@ org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayNa
 		if(types[i].getName != null && types[i].getName() == overlayName) overlay = types[i];
 		if(types[i].name == overlayName) overlay = types[i];
 	}
-	if(base != null && overlay != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity);
+	var alphaTypes = new Array();
+	if(alphaOverlays != null) {
+		var names = alphaOverlays.split(",");
+		for (var i = 0; i < types.length; i++) {
+			for(var j = 0; j < names.length; j++) {
+				if(types[i].getName != null && names[j] == types[i].getName()) alphaTypes.push(types[i]);
+			}
+		}
+	}
+	if(base != null && overlay != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity, (alphaTypes.length > 0) ? alphaTypes : null);
 }
 
 

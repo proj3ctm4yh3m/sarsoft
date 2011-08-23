@@ -48,6 +48,7 @@ public abstract class JSONBaseController {
 	protected static String APP = "app";
 	
 	private List<MapSource> mapSources;
+	private List<MapSource> alphaOverlays;
 	private Properties properties;
 	
 	@Autowired
@@ -99,7 +100,6 @@ public abstract class JSONBaseController {
 		return properties.getProperty(name);
 	}
 
-	
 	protected List<MapSource> getMapSources() {
 		if(mapSources != null) return mapSources;
 		synchronized(this) {
@@ -124,7 +124,7 @@ public abstract class JSONBaseController {
 		}
 		return mapSources;
 	}
-
+	
 	protected String hash(String password) {
 		if(password == null) return null;
 		try {
