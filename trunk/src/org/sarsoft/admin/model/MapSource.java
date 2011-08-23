@@ -26,6 +26,7 @@ public class MapSource {
 	private int minresolution;
 	private int maxresolution;
 	private boolean png;
+	private boolean alphaOverlay;
 	private String template;
 
 	public static MapSource createFromJSON(JSONObject json) {
@@ -67,6 +68,13 @@ public class MapSource {
 	}
 	public void setPng(boolean png) {
 		this.png = png;
+	}
+	@JSONSerializable
+	public boolean isAlphaOverlay() {
+		return alphaOverlay;
+	}
+	public void setAlphaOverlay(boolean alphaOverlay) {
+		this.alphaOverlay = alphaOverlay;
 	}
 	@JSONSerializable
 	public String getTemplate() {
