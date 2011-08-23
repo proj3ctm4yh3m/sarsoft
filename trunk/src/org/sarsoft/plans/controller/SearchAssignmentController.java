@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -64,7 +65,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
 
 			String print104 = request.getParameter("print104");
-			model.addAttribute("print104", print104.length() > 0 ? Boolean.parseBoolean(print104) : false);
+			model.addAttribute("print104", "on".equalsIgnoreCase(print104));
 
 			String[] ids = request.getParameter("bulkIds").split(",");
 			Arrays.sort(ids);
@@ -85,6 +86,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			List<MapConfig> mapConfigs = new ArrayList<MapConfig>();
 			List<Boolean> showPreviousEfforts = new ArrayList<Boolean>();
 			for(int i = 1; i < 6; i++) {
+				if(!"on".equalsIgnoreCase(request.getParameter("printmap" + i))) continue;
 				String foreground = request.getParameter("map" + i + "f");
 				String background = request.getParameter("map" + i + "b");
 				String opacity = request.getParameter("map" + i + "o");
@@ -98,8 +100,16 @@ public class SearchAssignmentController extends JSONBaseController {
 					} catch (Exception e) {
 						config.setOpacity(0);
 					}
+					String alphaOverlays = "";
+					for(MapSource source : getMapSources()) {
+						System.out.println(source.getName() + " " + source.isAlphaOverlay() + " " + request.getParameter("map" + i + "alpha_" + source.getName()));
+						if(source.isAlphaOverlay()) {
+							if("on".equalsIgnoreCase(request.getParameter("map" + i + "alpha_" + source.getName()))) alphaOverlays = alphaOverlays + source.getName() + ",";
+						}
+					}
+					if(alphaOverlays.length() > 0) config.setAlphaOverlays(alphaOverlays.substring(0, alphaOverlays.length()-1));
 					mapConfigs.add(config);
-					showPreviousEfforts.add(Boolean.valueOf(previousEfforts));
+					showPreviousEfforts.add("on".equalsIgnoreCase(previousEfforts));
 				}
 			}
 			model.addAttribute("mapConfigs", mapConfigs);

@@ -14,6 +14,7 @@ public class MapConfig extends SarModelObject {
 
 	private String base;
 	private String overlay;
+	private String alphaOverlays;
 	private int opacity;
 
 	public static MapConfig createFromJSON(JSONObject json) {
@@ -40,6 +41,13 @@ public class MapConfig extends SarModelObject {
 	}
 	public void setOverlay(String overlay) {
 		this.overlay = overlay;
+	}
+	@JSONSerializable
+	public String getAlphaOverlays() {
+		return alphaOverlays;
+	}
+	public void setAlphaOverlays(String alphaOverlays) {
+		this.alphaOverlays = alphaOverlays;
 	}
 
 }
