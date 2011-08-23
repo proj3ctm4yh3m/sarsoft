@@ -116,6 +116,7 @@ public abstract class JSONBaseController {
 					source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
 					source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
 					source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
+					source.setAlphaOverlay(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".alphaOverlay")));
 				}
 				mapSources.add(source);
 			}

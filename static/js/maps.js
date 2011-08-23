@@ -6,7 +6,9 @@ if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = fu
 org.sarsoft.EnhancedGMap.prototype.createMapType = function(config) {
 	if(config.type == "NATIVE") return eval(config.template);
 	var layers = this.createTileLayers(config);
-    return new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "error w topo", tileSize: config.tilesize ? config.tilesize : 256 } );
+    var type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "error w topo", tileSize: config.tilesize ? config.tilesize : 256 } );
+    if(config.alphaOverlay) type._alphaOverlay = true;
+    return type;
 }
 
 org.sarsoft.EnhancedGMap.prototype.createTileLayers = function(config) {
@@ -105,9 +107,11 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var that = this;
 	var mapTypes = map.getMapTypes();
 	this.types = new Array();
+	var transparentTypes = new Array();
 	// georef images get added to this list; need to shallow cop
 	for(var i = 0; i < mapTypes.length; i++) {
 		this.types[i] = mapTypes[i];
+		if(this.types[i]._alphaOverlay) transparentTypes.push(this.types[i]);
 	}
 	this.typeSelect = this._createSelect(this.types);
 	this.overlaySelect = this._createSelect(this.types);
@@ -125,22 +129,62 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	this.opacityInput = document.createElement("input");
 	this.opacityInput.size=2;
 	this.opacityInput.value=0;
-
+	
+	var tPlus = null;
+	if(transparentTypes.length > 0) {
+		this.alphaOverlayBoxes = new Array();
+		this.alphaOverlayTypes = transparentTypes;
+		tPlus = document.createElement("span");
+		tPlus.style.position="relative";
+		var tps = document.createElement("span");
+		tps.style.cursor="pointer";
+		tps.innerHTML="+";
+		tPlus.appendChild(tps);
+			
+		var tDiv = document.createElement("div");
+		tDiv.style.visibility="hidden";
+		tDiv.style.backgroundColor="white";
+		tDiv.style.position="absolute";
+		tDiv.style.right="0";
+		tDiv.style.top="1.5em";
+		tDiv.style.width="10em";
+		for(var i = 0; i < transparentTypes.length; i++) {
+			var cb = document.createElement("input");
+			cb.type="checkbox";
+			cb.value=i;
+			cb.name = transparentTypes[i].getName();
+			this.alphaOverlayBoxes[i] = cb;
+			tDiv.appendChild(cb);
+			tDiv.appendChild(document.createTextNode(transparentTypes[i].getName()));
+			if(i < transparentTypes.length - 1) tDiv.appendChild(document.createElement("br"));
+		}
+		tPlus.appendChild(tDiv);
+		GEvent.addDomListener(tps, "click", function() {
+			if(tDiv.style.visibility=="hidden") {
+				tDiv.style.visibility="visible"
+			} else {
+				tDiv.style.visibility="hidden"
+			}
+			});
+	}
+	
 	var div = document.createElement("div");
 	div.style.color="red";
 	div.style.background="white";
 	div.style.fontWeight="bold";
+	div.style.zIndex=1;
 	div.appendChild(this.extras);
 	div.appendChild(document.createTextNode("base: "));
 	div.appendChild(this.typeSelect);
 	div.appendChild(document.createTextNode("overlay: "));
 	div.appendChild(this.overlaySelect);
 	div.appendChild(this.opacityInput);
+	if(tPlus != null) div.appendChild(tPlus);
 	var go = document.createElement("button");
 	go.appendChild(document.createTextNode("GO"));
 	div.appendChild(go);
 	map.getContainer().appendChild(div);
-
+	
 	GEvent.addDomListener(go, "click", function() {
 		var base = that.types[that.typeSelect.value];
 		var overlay = that.types[that.overlaySelect.value];
@@ -148,19 +192,23 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		if(opacity < 0) opacity = 0;
 		if(opacity > 100) opacity = 100;
 		opacity = opacity / 100;
-		that.updateMap(base, overlay, opacity);
+		var tt = new Array();
+		if(that.alphaOverlayBoxes != null) for(var i = 0; i < that.alphaOverlayBoxes.length; i++) {
+			if(that.alphaOverlayBoxes[i].checked) tt.push(that.alphaOverlayTypes[i]);
+		}
+		that.updateMap(base, overlay, opacity, tt.length > 0 ? tt : null);
 	});
 	this._go = go;
 	return div;
 }
 
-OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity) {
+OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
 		this.opacityInput.value=Math.round(opacity*100);
 		for(var i = 0; i < this.types.length; i++) {
 			if(this.types[i] == base) this.typeSelect.value = i;
 			if(this.types[i] == overlay) this.overlaySelect.value = i;
 		}
-		if(overlay.getMaximumResolution != null && base.getMaximumResolution() > overlay.getMaximumResolution()) {
+		if(overlay.getMaximumResolution != null && base.getMaximumResolution() > overlay.getMaximumResolution() && !overlay._alphaOverlay) {
 			// google maps doesn't seem to check the overlays' min and max resolutions
 			// null check overlay to handle georef'd imagery
 			var tmp = overlay;
@@ -187,6 +235,13 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity)
 				this.map.addOverlay(this._overlays[i]);
 				this.map._sarsoft_overlay_name = overlay.getName();
 				this.map._sarsoft_overlay_opacity = opacity;
+			}
+		}
+		if(alphaOverlays != null) {
+			for(var i = 0; i < alphaOverlays.length; i++) {
+				var layer = new GTileLayerOverlay(alphaOverlays[i].getTileLayers()[0]);
+				this._overlays[this._overlays.length] = layer;
+				this.map.addOverlay(layer)
 			}
 		}
 }
