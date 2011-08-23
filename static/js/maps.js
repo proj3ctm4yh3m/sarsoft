@@ -360,6 +360,24 @@ org.sarsoft.view.MapSizeDlg.prototype.show = function() {
 	this.dialog.show();
 }
 
+org.sarsoft.MapDeclinationWidget = function(imap) {
+	var that = this;
+	this.imap = imap;
+	GEvent.addListener(map, "moveend", function() { that.refresh(); });
+	GEvent.addListener(map, "zoomend", function(foo, bar) { that.refresh(); });
+}
+
+org.sarsoft.MapDeclinationWidget.prototype.refresh = function() {
+	var declination = GeoUtil.Declination.compute(this.imap.map.getCenter());
+	var dir = "E";
+	if(declination < 0) {
+		declination = declination*-1;
+		dir = "W";
+	}
+	declination = Math.round(declination);
+	this.imap.setMapInfo("org.sarsoft.MapDeclinationWidget", 1, "MN " + declination + "\u00B0 " + dir);
+}
+
 org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	var that = this;
 	this.imap = imap;
@@ -593,7 +611,6 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	}
 }
 
-
 org.sarsoft.PositionInfoControl = function() {
 }
 
@@ -613,7 +630,8 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 	div.className="noprint";
 
 	GEvent.addListener(map, "mousemove", function(latlng) {
-		var utm = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(latlng));
+		var datumll = GeoUtil.fromWGS84(latlng);
+		var utm = GeoUtil.GLatLngToUTM(datumll);
 		var e = "" + Math.round(utm.e);
 		var n = "" + Math.round(utm.n);
 		var e1 = e.substring(0, e.length-3);
@@ -622,7 +640,7 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 		var n2 = n.substring(n.length-3, n.length);
 
 		var message = utm.toHTMLString() + "<br/>";
-		message = message + GeoUtil.formatDDMMHH(latlng.lat()) + ", " + GeoUtil.formatDDMMHH(latlng.lng());
+		message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
 		div.innerHTML = message;
 	});
 
@@ -801,6 +819,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		this.map.addControl(new org.sarsoft.PositionInfoControl());
 	}
 	var dc = new org.sarsoft.MapDatumWidget(this, options.switchableDatum);
+	var mn = new org.sarsoft.MapDeclinationWidget(this);
 	if(options.standardControls) {
 		this.map.addControl(new org.sarsoft.UTMGridControl(this));
 		var sc = new org.sarsoft.MapSizeWidget(this);
@@ -1162,7 +1181,7 @@ org.sarsoft.MapInfoControl = function() {
 }
 
 org.sarsoft.MapInfoControl.prototype = new GControl();
-org.sarsoft.MapInfoControl.prototype.printable = function() { return false; }
+org.sarsoft.MapInfoControl.prototype.printable = function() { return true; }
 org.sarsoft.MapInfoControl.prototype.selectable = function() { return false; }
 org.sarsoft.MapInfoControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_BOTTOM_RIGHT, new GSize(0, 0)); }
 
@@ -1173,8 +1192,7 @@ org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
 
 	this.ctrl = document.createElement("span");
 	this.ctrl.style.background = "white";
-	this.ctrl.style.borderTop = "1px solid black";
-	this.ctrl.style.borderLeft = "1px solid black";
+	this.ctrl.className = "noprint";
 	this.min = document.createElement("img");
 	this.min.style.cursor = "pointer";
 	this.min.style.width="12px";
@@ -1187,7 +1205,6 @@ org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
 		
 	this.msg = document.createElement("span");
 	this.msg.style.background = "white";
-	this.msg.style.borderTop = "1px solid black";
 	
 	this.div.appendChild(this.ctrl);
 	this.div.appendChild(this.msg);
@@ -1608,6 +1625,203 @@ GeoUtil.UTMXYToLatLon = function(x, y, zone, southhemi, latlon) {
     GeoUtil.MapXYToLatLon (x, y, cmeridian, latlon);
     return;
 }
+
+
+GeoUtil.Declination = new Object();
+GeoUtil.Declination.G_COEFF = [
+	[0.0],
+	[-29496.6, -1586.3],
+	[-2396.6, 3026.1, 1668.6],
+	[1340.1, -2326.2, 1231.9, 634.0],
+	[912.6, 808.9, 166.7, -357.1, 89.4],
+	[-230.9, 357.2, 200.3, -141.1, -163.0, -7.8],
+	[72.8, 68.6, 76.0, -141.4, -22.8, 13.2, -77.9],
+	[80.5, -75.1, -4.7, 45.3, 13.9, 10.4, 1.7, 4.9],
+	[24.4, 8.1, -14.5, -5.6, -19.3, 11.5, 10.9, -14.1, -3.7],
+	[5.4, 9.4, 3.4, -5.2, 3.1, -12.4, -0.7, 8.4, -8.5, -10.1],
+	[-2.0, -6.3, 0.9, -1.1, -0.2, 2.5, -0.3, 2.2, 3.1, -1.0, -2.8],
+	[3.0, -1.5, -2.1, 1.7, -0.5, 0.5, -0.8, 0.4, 1.8, 0.1, 0.7, 3.8],
+	[-2.2, -0.2, 0.3, 1.0, -0.6, 0.9, -0.1, 0.5, -0.4, -0.4, 0.2, -0.8, 0.0]];
+
+GeoUtil.Declination.H_COEFF = [
+	[0.0],
+	[0.0, 4944.4],
+	[0.0, -2707.7, -576.1],
+	[0.0, -160.2, 251.9, -536.6],
+	[0.0, 286.4, -211.2, 164.3, -309.1],
+	[0.0, 44.6, 188.9, -118.2, 0.0, 100.9],
+	[0.0, -20.8, 44.1, 61.5, -66.3, 3.1, 55.0],
+	[0.0, -57.9, -21.1, 6.5, 24.9, 7.0, -27.7, -3.3],
+	[0.0, 11.0, -20.0, 11.9, -17.4, 16.7, 7.0, -10.8, 1.7],
+	[0.0, -20.5, 11.5, 12.8, -7.2, -7.4, 8.0, 2.1, -6.1, 7.0],
+	[0.0, 2.8, -0.1, 4.7, 4.4, -7.2, -1.0, -3.9, -2.0, -2.0, -8.3],
+	[0.0, 0.2, 1.7, -0.6, -1.8, 0.9, -0.4, -2.5, -1.3, -2.1, -1.9, -1.8],
+	[0.0, -0.9, 0.3, 2.1, -2.5, 0.5, 0.6, 0.0, 0.1, 0.3, -0.9, -0.2, 0.9]];
+
+GeoUtil.Declination.DELTA_G = [
+	[0.0],
+	[11.6, 16.5],
+	[-12.1, -4.4, 1.9],
+	[0.4, -4.1, -2.9, -7.7],
+	[-1.8, 2.3, -8.7, 4.6, -2.1],
+	[-1.0, 0.6, -1.8, -1.0, 0.9, 1.0],
+	[-0.2, -0.2, -0.1, 2.0, -1.7, -0.3, 1.7],
+	[0.1, -0.1, -0.6, 1.3, 0.4, 0.3, -0.7, 0.6],
+	[-0.1, 0.1, -0.6, 0.2, -0.2, 0.3, 0.3, -0.6, 0.2],
+	[0.0, -0.1, 0.0, 0.3, -0.4, -0.3, 0.1, -0.1, -0.4, -0.2],
+	[0.0, 0.0, -0.1, 0.2, 0.0, -0.1, -0.2, 0.0, -0.1, -0.2, -0.2],
+	[0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.1, 0.0],
+	[0.0, 0.0, 0.1, 0.1, -0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.1, 0.1]];
+
+GeoUtil.Declination.DELTA_H = [
+	[0.0],
+	[0.0, -25.9],
+	[0.0, -22.5, -11.8],
+	[0.0, 7.3, -3.9, -2.6],
+	[0.0, 1.1, 2.7, 3.9, -0.8],
+	[0.0, 0.4, 1.8, 1.2, 4.0, -0.6],
+	[0.0, -0.2, -2.1, -0.4, -0.6, 0.5, 0.9],
+	[0.0, 0.7, 0.3, -0.1, -0.1, -0.8, -0.3, 0.3],
+	[0.0, -0.1, 0.2, 0.4, 0.4, 0.1, -0.1, 0.4, 0.3],
+	[0.0, 0.0, -0.2, 0.0, -0.1, 0.1, 0.0, -0.2, 0.3, 0.2],
+	[0.0, 0.1, -0.1, 0.0, -0.1, -0.1, 0.0, -0.1, -0.2, 0.0, -0.1],
+	[0.0, 0.0, 0.1, 0.0, 0.1, 0.0, 0.1, 0.0, -0.1, -0.1, 0.0, -0.1],
+	[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]];
+
+
+GeoUtil.Declination.SCHMIDT_QUASI_NORM_FACTORS = function(maxN) {
+	var schmidtQuasiNorm = new Array();
+    schmidtQuasiNorm[0] = [1.0];
+    for (var n = 1; n <= maxN; n++) {
+        schmidtQuasiNorm[n] = new Array();
+        schmidtQuasiNorm[n][0] = schmidtQuasiNorm[n - 1][0] * (2 * n - 1) / n;
+        for (var m = 1; m <= n; m++) {
+        	schmidtQuasiNorm[n][m] = schmidtQuasiNorm[n][m - 1] * Math.sqrt((n - m + 1) * (m == 1 ? 2 : 1) / (n + m));
+        }
+    }
+    return schmidtQuasiNorm;
+}(13);
+
+GeoUtil.Declination.BASE_TIME = new Date(2010, 1, 1).getTime();
+
+
+GeoUtil.Declination.LegendreTable = function(maxN, theta) {
+	var mP = new Array();
+	var mPDeriv = new Array();
+	mP[0] = [1];
+	mPDeriv[0] = [0];
+	for(var n = 1; n <= maxN; n++) {
+		mP[n] = new Array();
+		mPDeriv[n] = new Array();
+		for(var m = 0; m <= n; m++) {
+			if(n == m) {
+				mP[n][m] = Math.sin(theta) * mP[n - 1][m - 1];
+                mPDeriv[n][m] = Math.cos(theta) * mP[n - 1][m - 1] + Math.sin(theta) * mPDeriv[n - 1][m - 1];
+            } else if (n == 1 || m == n - 1) {
+                mP[n][m] = Math.cos(theta) * mP[n - 1][m];
+                mPDeriv[n][m] = -1*Math.sin(theta) * mP[n - 1][m] + Math.cos(theta) * mPDeriv[n - 1][m];
+            } else {
+                var k = ((n - 1) * (n - 1) - m * m) / ((2 * n - 1) * (2 * n - 3));
+                mP[n][m] = Math.cos(theta) * mP[n - 1][m] - k * mP[n - 2][m];
+                mPDeriv[n][m] = -1*Math.sin(theta) * mP[n - 1][m] + Math.cos(theta) * mPDeriv[n - 1][m] - k * mPDeriv[n - 2][m];
+            }
+        }
+	}
+	var obj = new Object();
+	obj.mP = mP;
+	obj.mPDeriv = mPDeriv;
+	return obj;
+}
+
+GeoUtil.Declination.compute = function(gll) {
+	var lat = gll.lat();
+	var lng = gll.lng();
+	if(lat > 89.9) lat = 89.9;
+	if(lat < -89.9) lat = -89.9;
+	
+	var a2 = (org.sarsoft.map.datums["WGS84"].a/1000)*(org.sarsoft.map.datums["WGS84"].a/1000);
+	var b2 = (org.sarsoft.map.datums["WGS84"].b/1000)*(org.sarsoft.map.datums["WGS84"].b/1000);
+
+	var latr = GeoUtil.DegToRad(lat);
+    var clat = Math.cos(latr);
+    var slat = Math.sin(latr);
+    var tlat = slat / clat;
+
+	var latRad = Math.sqrt(a2 * clat * clat + b2 * slat * slat);
+	
+	var mLatRad = Math.atan(tlat * b2 / a2);
+	var mLngRad = GeoUtil.DegToRad(lng);
+	
+	var radius = Math.sqrt((a2 * a2 * clat * clat + b2 * b2 * slat * slat) / (a2 * clat * clat + b2 * slat * slat));
+
+	var legendre = GeoUtil.Declination.LegendreTable(13 - 1, (Math.PI / 2 - mLatRad));
+
+    var relativeRadiusPower = new Array();
+    relativeRadiusPower[0] = 1;
+    relativeRadiusPower[1] = 6371.2 / radius;
+    for (var i = 2; i < 15; ++i) {
+        relativeRadiusPower[i] = relativeRadiusPower[i - 1] * relativeRadiusPower[1];
+    }
+
+    var sinMLon = new Array();
+    var cosMLon = new Array();
+    sinMLon[0] = 0;
+    cosMLon[0] = 1;
+    sinMLon[1] = Math.sin(mLngRad);
+    cosMLon[1] = Math.cos(mLngRad);
+
+    for (var m = 2; m < 13; ++m) {
+        // Standard expansions for sin((m-x)*theta + x*theta) and
+        // cos((m-x)*theta + x*theta).
+        var x = m >> 1;
+        sinMLon[m] = sinMLon[m - x] * cosMLon[x] + cosMLon[m - x] * sinMLon[x];
+        cosMLon[m] = cosMLon[m - x] * cosMLon[x] - sinMLon[m - x] * sinMLon[x];
+    }
+
+    var inverseCosLatitude = 1 / Math.cos(mLatRad);
+    var yearsSinceBase = (new Date().getTime() - GeoUtil.Declination.BASE_TIME) / (365 * 24 * 60 * 60 * 1000);
+
+    // We now compute the magnetic field strength given the geocentric
+    // location. The magnetic field is the derivative of the potential
+    // function defined by the model. See NOAA Technical Report: The US/UK
+    // World Magnetic Model for 2010-2015 for the derivation.
+    var gcX = 0.0; // Geocentric northwards component.
+    var gcY = 0.0; // Geocentric eastwards component.
+    var gcZ = 0.0; // Geocentric downwards component.
+
+    for (var n = 1; n < 13; n++) {
+        for (var m = 0; m <= n; m++) {
+            // Adjust the coefficients for the current date.
+            var g = GeoUtil.Declination.G_COEFF[n][m] + yearsSinceBase * GeoUtil.Declination.DELTA_G[n][m];
+            var h = GeoUtil.Declination.H_COEFF[n][m] + yearsSinceBase * GeoUtil.Declination.DELTA_H[n][m];
+
+            // Negative derivative with respect to latitude, divided by
+            // radius.  This looks like the negation of the version in the
+            // NOAA Techincal report because that report used
+            // P_n^m(sin(theta)) and we use P_n^m(cos(90 - theta)), so the
+            // derivative with respect to theta is negated.
+            gcX += relativeRadiusPower[n + 2] * (g * cosMLon[m] + h * sinMLon[m]) * legendre.mPDeriv[n][m] * GeoUtil.Declination.SCHMIDT_QUASI_NORM_FACTORS[n][m];
+
+            // Negative derivative with respect to longitude, divided by
+            // radius.
+            gcY += relativeRadiusPower[n + 2] * m * (g * sinMLon[m] - h * cosMLon[m]) * legendre.mP[n][m] * GeoUtil.Declination.SCHMIDT_QUASI_NORM_FACTORS[n][m] * inverseCosLatitude;
+
+            // Negative derivative with respect to radius.
+            gcZ -= (n + 1) * relativeRadiusPower[n + 2] * (g * cosMLon[m] + h * sinMLon[m]) * legendre.mP[n][m] * GeoUtil.Declination.SCHMIDT_QUASI_NORM_FACTORS[n][m];
+        }
+    }
+
+    // Convert back to geodetic coordinates.  This is basically just a
+    // rotation around the Y-axis by the difference in latitudes between the
+    // geocentric frame and the geodetic frame.
+    var latDiffRad = GeoUtil.DegToRad(lat) - mLatRad;
+    var mX = (gcX * Math.cos(latDiffRad) + gcZ * Math.sin(latDiffRad));
+    var mY = gcY;
+    var mZ = (-gcX * Math.sin(latDiffRad) + gcZ * Math.cos(latDiffRad));
+    
+    return GeoUtil.RadToDeg(Math.atan2(mY, mX));
+}
+
 
 
 org.sarsoft.MapUtil = new Object();
