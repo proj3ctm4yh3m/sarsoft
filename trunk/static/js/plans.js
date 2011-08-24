@@ -574,7 +574,6 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.place = function(ty
 				this.imap.addRangeRing(wpt, radii[i], 36);
 			}
 		}
-		this.imap.setMapInfo("org.sarsoft.controller.SearchWaypointMapController", 10, "Range Rings at " + this.rangerings + "m.");
 	}
 }
 

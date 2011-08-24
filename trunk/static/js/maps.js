@@ -970,6 +970,11 @@ org.sarsoft.InteractiveMap.prototype.addRangeRing = function(center, radius, ver
 	var poly = new GPolyline(glls, "000000", 1, 1);
 	this.map.addOverlay(poly);
 	this.rangerings.push(poly);
+
+	var labelUTM = new UTM(centerUTM.e, 1*centerUTM.n + 1*radius, centerUTM.zone);
+	var label = new ELabel(GeoUtil.UTMToGLatLng(labelUTM), "<span class='maplabel'>" + radius + "m</span>", new GSize(-6, -4));
+	this.rangerings.push(label);
+	this.map.addOverlay(label);
 }
 
 org.sarsoft.InteractiveMap.prototype.removeRangeRings = function() {
