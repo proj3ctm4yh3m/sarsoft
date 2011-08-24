@@ -108,12 +108,17 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var mapTypes = map.getMapTypes();
 	this.types = new Array();
 	var transparentTypes = new Array();
+	var baseTypes = new Array();
 	// georef images get added to this list; need to shallow cop
 	for(var i = 0; i < mapTypes.length; i++) {
 		this.types[i] = mapTypes[i];
-		if(this.types[i]._alphaOverlay) transparentTypes.push(this.types[i]);
+		if(this.types[i]._alphaOverlay) {
+			transparentTypes.push(this.types[i]);
+		} else {
+			baseTypes.push(this.types[i]);
+		}
 	}
-	this.typeSelect = this._createSelect(this.types);
+	this.typeSelect = this._createSelect(baseTypes);
 	this.overlaySelect = this._createSelect(this.types);
 	for(var i = 0; i < map.geoRefImages.length; i++) {
 		var option = document.createElement("option");

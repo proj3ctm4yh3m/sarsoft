@@ -124,7 +124,7 @@ you can not clear fields through bulk update.</p>
 <input type="checkbox" name="printmap${num}" id="printmap${num}">Print this map:</input>
 Base&nbsp;<select name="map${num}f" id="map${num}f">
   <c:forEach var="source" items="${mapSources}">
-  <option value="${source.name}">${source.name}</option>
+<c:if test="${!source.alphaOverlay}">  <option value="${source.name}">${source.name}</option></c:if>
   </c:forEach>
 </select>
 ,&nbsp;&nbsp;Overlay&nbsp;
