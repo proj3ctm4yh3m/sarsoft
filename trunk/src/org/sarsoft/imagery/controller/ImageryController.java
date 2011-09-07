@@ -73,7 +73,7 @@ public class ImageryController extends JSONBaseController {
 		byte[] bytes = new byte[512];
 		int bytesRead;
 		response.setHeader("Cache-Control", "max-age=3600, public");
-
+		
 		try {
 			in = new FileInputStream(file);
 			out = response.getOutputStream();
@@ -81,7 +81,7 @@ public class ImageryController extends JSONBaseController {
 			    out.write(bytes, 0, bytesRead);
 			}
 		} catch (Exception e) {
-			logger.error("Error reading local tile " + file.getAbsolutePath(), e);
+			if(z > 2 && e.getClass() != java.net.SocketException.class) logger.error("Error reading local tile " + file.getAbsolutePath(), e);
 		} finally {
 			try { if(in != null) in.close(); } catch(Exception e) {
 				logger.error("Doubly bad error closing inputstream for local tile " + file.getAbsolutePath(), e);
