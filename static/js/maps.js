@@ -573,7 +573,7 @@ org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm
 	vertices.push(start_ll);
 	vertices.push(end_ll);
 	
-	var overlay = new GPolyline(vertices, "#0000FF", primary? 0.8 : 0.4, primary ? 100 : 75);
+	var overlay = new GPolyline(vertices, "#0000FF", primary ? 0.8 : 0.5, primary ? 1 : 0.7);
 	this.utmgridlines.push(overlay);
 	this.map.addOverlay(overlay);
 }
@@ -600,7 +600,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 
 		if(west < start.lng() && start.lng() < east) {
 			if(this._showUTM == true) {
-				this._drawGridLine(new UTM(easting, sw.n, zone), new UTM(easting, ne.n, zone), (easting % 100 == 0));
+				this._drawGridLine(new UTM(easting, sw.n, zone), new UTM(easting, ne.n, zone), (easting % 1000 == 0));
 			} else {
 				var northing = Math.round(sw.n / spacing) * spacing;
 				while(northing < ne.n) {
