@@ -95,7 +95,7 @@ to
 tilefilename = os.path.join(self.output, str(tz), str(tx), "%s.%s" % ((2**tz - 1) - ty, self.tileext))
 }}}
 
-to fix the base (most zoomed-in) level of tiles, and make the same change at lines 1329 and 1373 to fix tile numbering scheme when zoomed out.
+to fix the base (most zoomed-in) level of tiles, and make the same change at lines 1329 and 1373 (using tz+1) to fix tile numbering scheme when zoomed out.
 
 You should also modify the code that generates map viewers to reflect this numbering change.  For Google Maps, change line 1864 from
 
