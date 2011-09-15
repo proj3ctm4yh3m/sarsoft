@@ -28,6 +28,7 @@ public class MapSource {
 	private boolean png;
 	private boolean alphaOverlay;
 	private String template;
+	private String info;
 
 	public static MapSource createFromJSON(JSONObject json) {
 		return (MapSource) JSONObject.toBean(json, MapSource.class);
@@ -82,6 +83,13 @@ public class MapSource {
 	}
 	public void setTemplate(String template) {
 		this.template = template;
+	}
+	@JSONSerializable
+	public String getInfo() {
+		return info;
+	}
+	public void setInfo(String info) {
+		this.info = info;
 	}
 	@JSONSerializable
 	public Type getType() {

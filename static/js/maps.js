@@ -8,6 +8,7 @@ org.sarsoft.EnhancedGMap.prototype.createMapType = function(config) {
 	var layers = this.createTileLayers(config);
     var type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "error w topo", tileSize: config.tilesize ? config.tilesize : 256 } );
     if(config.alphaOverlay) type._alphaOverlay = true;
+    type._info = config.info;
     return type;
 }
 
@@ -249,7 +250,10 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			base = tmp;
 			opacity = 1-opacity;
 		}
+		var infoString = "";
 		this.map.setMapType(base);
+		if(base._info != null && base._info.length > 0) infoString += base._info + ". ";
+		if(overlay._info != null && overlay._info.length > 0 && base != overlay && opacity > 0) infoString += overlay._info + ". ";
 		if(typeof this._overlays != "undefined") {
 			for(var i = 0; i < this._overlays.length; i++) {
 				this.map.removeOverlay(this._overlays[i]);
@@ -278,6 +282,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 				this.map.addOverlay(layer)
 				anames = anames + alphaOverlays[i].getName();
 				if(i < alphaOverlays.length - 1) anames = anames + ",";
+				if(alphaOverlays[i]._info != null && alphaOverlays[i]._info.length > 0) infoString += alphaOverlays[i]._info + ". ";
 			}
 			this.map._sarsoft_alpha_overlays=anames;
 		}
@@ -287,6 +292,8 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			if(opacity > 0) extras++;
 			this.alphaOverlayPlus.innerHTML = "+" + ((extras == 0) ? "" : extras);
 		}
+		if(infoString.length > 0 && this.map._imap != null) this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, infoString);
+
 }
 
 org.sarsoft.GAlphaTileLayerWrapper = function(tileLayer, opacity) {
@@ -839,6 +846,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		}
 	});
 
+	this.map._imap = this;
 	this.mapMessageControl = new org.sarsoft.MapMessageControl();
 	this.map.addControl(this.mapMessageControl);
 	
