@@ -27,7 +27,7 @@ org.sarsoft.Loader.queue(function() {
 .noprint { display: none; }
 </style>
 </head>
-<body onload="doload()" class="yui-skin-sam">
+<body onload="doload()" class="yui-skin-sam" style="padding: 1px">
 
 <div class="noprint">
 Click on the page size control in the top right toolbar.

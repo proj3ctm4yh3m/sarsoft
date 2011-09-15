@@ -83,7 +83,7 @@ TABLE.comms TD,TH {
 }
 </style>
 </head>
-<body onload="doload()">
+<body onload="doload()" class="yui-skin-sam">
 
 <div class="noprint">
 <c:if test="${fn:length(rejected) gt 0}">
