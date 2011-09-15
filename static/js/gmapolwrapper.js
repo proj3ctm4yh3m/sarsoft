@@ -160,6 +160,8 @@ function GMap2(node) {
 	this.ol.map.addLayer(this.ol.vectorLayer);
 	this.ol.markerLayer = new OpenLayers.Layer.Markers("marker", {});
 	this.ol.map.addLayer(this.ol.markerLayer);
+	this.ol.map.setLayerIndex(this.ol.vectorLayer, 20);
+	this.ol.map.setLayerIndex(this.ol.markerLayer, 21);
 	
 	this.ol.map.setCenter(new OpenLayers.LonLat(0, 0), 1);
 	
@@ -344,7 +346,9 @@ GMap2.prototype.addOverlay = function(overlay) {
 		this.ol.currentMapType.ol.layers[0].ol.layer.numZoomLevels = Math.min(this.ol.currentMapType.ol.layers[0].maxResolution(), overlay.ol.layer.maxResolution())+1;
 		overlay.ol.layer.ol.layer.setOpacity(overlay.ol.layer.getOpacity());
 		this.ol.map.addLayer(overlay.ol.layer.ol.layer);
-		this.ol.map.raiseLayer(overlay.ol.layer.ol.layer, -100);
+		this.ol.map.setLayerIndex(this.ol.vectorLayer, 20);
+		this.ol.map.setLayerIndex(this.ol.markerLayer, 21);
+//		this.ol.map.raiseLayer(overlay.ol.layer.ol.layer, -100);
 	}
 }
 
@@ -450,17 +454,27 @@ GLatLngBounds.prototype.getSouthWest = function() { return this._sw;}
 GLatLngBounds.prototype.getNorthEast = function() { return this._ne;}
 
 GLatLngBounds.prototype.intersects = function(other) {
-	var utm_sw = GeoUtil.GlatLngToUTM(this._sw);
-	var utm_ne = GeoUtil.GlatLngToUTM(this._ne, utm_sw.zone);
+	var utm_sw = GeoUtil.GLatLngToUTM(this._sw);
+	var utm_ne = GeoUtil.GLatLngToUTM(this._ne, utm_sw.zone);
 	
 	var other_sw = GeoUtil.GLatLngToUTM(other.getSouthWest(), utm_sw.zone);
-	var other_sw = GeoUtil.GLatLngToUTM(other.getNorthEast(), utm_sw.zone);
+	var other_ne = GeoUtil.GLatLngToUTM(other.getNorthEast(), utm_sw.zone);
 	
-	var intersects = true;
+	if(this.containsLatLng(other.getSouthWest()) || this.containsLatLng(other.getNorthEast())) return true;
+	if(other.containsLatLng(this.getSouthWest()) || other.containsLatLng(this.getNorthEast())) return true;
+
 	if(!((other_ne.n <= utm_ne.n && other_ne.n >= utm_sw.s) || (other_sw.s <= utm_ne.n && other_sw.s >= utm_sw.s))) intersects = false;
 	if(!((other_ne.e >= utm_ne.e && other_ne.e <= utm_sw.w) || (other_sw.w >= utm_ne.e && other_sw.w <= utm_sw.w))) intersects = false;
 	
-	return intersects;
+}
+
+GLatLngBounds.prototype.containsLatLng = function(latlng) {
+	return ((this._sw.lat() < latlng.lat() && latlng.lat() < this._ne.lat()) &&
+	   (this._sw.lng() < latlng.lng() && latlng.lng() < this._ne.lng()));
+}
+
+GLatLngBounds.prototype.containsBounds = function(other) {
+	return (this.containsLatLng(other.getSouthWest()) && this.containsLatLng(other.getNorthEast()));
 }
 
 GLatLngBounds.prototype.extend = function(gll) {

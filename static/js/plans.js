@@ -256,7 +256,8 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	var bounds = new GLatLngBounds(new GLatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new GLatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
 	this.assignmentDAO.loadAll(function(assignments) {
 		for(var i = 0; i < assignments.length; i++) {
-			if(bounds.intersects(new GLatLngBounds(new GLatLng(assignments[i].boundingBox[0].lat, assignments[i].boundingBox[0].lng), new GLatLng(assignments[i].boundingBox[1].lat, assignments[i].boundingBox[1].lng)))) {
+			var abounds = new GLatLngBounds(new GLatLng(assignments[i].boundingBox[0].lat, assignments[i].boundingBox[0].lng), new GLatLng(assignments[i].boundingBox[1].lat, assignments[i].boundingBox[1].lng));
+			if(bounds.intersects(abounds) || bounds.contains(abounds) || abounds.contains(bounds)) {
 				that.assignmentDAO.getWays(function(ways) {
 					for(var i = 0; i < ways.length; i++) {
 						var way = ways[i];
