@@ -17,9 +17,13 @@ org.sarsoft.map._default.lat = ${defaultLat};
 org.sarsoft.map._default.lng = ${defaultLng};
 
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = function() {}
+<c:set var="first" value="${true}"/>
 org.sarsoft.EnhancedGMap.defaultMapTypes = [
 <c:forEach var="mapSource" items="${mapSources}" varStatus="status">
-	<c:if test="${status.index gt 0}">,</c:if>{name : "${mapSource.name}", type: "${mapSource.type}", copyright: "${mapSource.copyright}", minresolution: ${mapSource.minresolution}, maxresolution: ${mapSource.maxresolution}, png: ${mapSource.png}, alphaOverlay: ${mapSource.alphaOverlay}, template: <c:choose><c:when test="${mapSource.type eq tile and tileCacheEnabled eq true and fn:startsWith(mapSource.template, 'http')}">"/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png"</c:when><c:otherwise>"${mapSource.template}"</c:otherwise></c:choose>}
+	<c:if test="${not(mapSource.alphaOverlay)}"><c:choose><c:when test="${first eq true}"><c:set var="first" value="${false}"/></c:when><c:otherwise>,</c:otherwise></c:choose>{name : "${mapSource.name}", type: "${mapSource.type}", copyright: "${mapSource.copyright}", minresolution: ${mapSource.minresolution}, maxresolution: ${mapSource.maxresolution}, png: ${mapSource.png}, alphaOverlay: ${mapSource.alphaOverlay}, template: <c:choose><c:when test="${mapSource.type eq tile and tileCacheEnabled eq true and fn:startsWith(mapSource.template, 'http')}">"/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png"</c:when><c:otherwise>"${mapSource.template}"</c:otherwise></c:choose>}</c:if>
+</c:forEach>
+<c:forEach var="mapSource" items="${mapSources}" varStatus="status">
+	<c:if test="${mapSource.alphaOverlay}">,{name : "${mapSource.name}", type: "${mapSource.type}", copyright: "${mapSource.copyright}", minresolution: ${mapSource.minresolution}, maxresolution: ${mapSource.maxresolution}, png: ${mapSource.png}, alphaOverlay: ${mapSource.alphaOverlay}, template: <c:choose><c:when test="${mapSource.type eq tile and tileCacheEnabled eq true and fn:startsWith(mapSource.template, 'http')}">"/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png"</c:when><c:otherwise>"${mapSource.template}"</c:otherwise></c:choose>}</c:if>
 </c:forEach>
 ];
 
