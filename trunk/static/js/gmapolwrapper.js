@@ -297,7 +297,7 @@ GMap2.prototype.addControl = function(control) {
 	var i = this._controlObj.length;
 	this._controlObj[i] = control;
 	this._controlRef[i] = ref;
-    if(ref != null) ref.className += " noprint";
+    if(ref != null && !control.printable()) ref.className += " noprint";
 	var position = control.getDefaultPosition();
 	if(position != null) {
 		if(position.anchor == G_ANCHOR_TOP_RIGHT) {
