@@ -144,6 +144,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var tPlus = null;
 	var tDivOverlay = null;
 	var tDiv = null;
+	var div = document.createElement("div");
 	if(this.hasAlphaOverlays) {
 		this.alphaOverlayBoxes = new Array();
 		this.alphaOverlayTypes = transparentTypes;
@@ -179,18 +180,18 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		tPlus.appendChild(tDiv);
 		GEvent.addDomListener(tps, "click", function() {
 			if(tDiv.style.visibility=="hidden") {
-				tDiv.style.visibility="visible"
+				tDiv.style.visibility="visible";
+				div.style.zIndex="1001";
 			} else {
-				tDiv.style.visibility="hidden"
+				tDiv.style.visibility="hidden";
 			}
 			});
 	}
 	
-	var div = document.createElement("div");
 	div.style.color="red";
 	div.style.background="white";
 	div.style.fontWeight="bold";
-	div.style.zIndex=1;
+	div.style.zIndex="1001";
 	div.appendChild(this.extras);
 	div.appendChild(document.createTextNode("base: "));
 	div.appendChild(this.typeSelect);
