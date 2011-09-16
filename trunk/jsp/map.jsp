@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+<html xmlns="http://www.w3.org/TR/html4/loose.dtd">
 <head>
 ${mapjs}
 <script src="/static/js/yui.js"></script>
@@ -137,7 +138,7 @@ window.setInterval("checkhashupdate()", 500);
 <link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
 <link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
-<body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
+<body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="width: 100%; height: 100%">
 <div id="map_canvas" style="width: 100%; height: 100%">
 </div>
 <div id="newMarkerDlg">

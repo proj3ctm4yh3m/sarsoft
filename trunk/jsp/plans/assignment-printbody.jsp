@@ -7,9 +7,7 @@
 
 <c:forEach var="copy" items='<%= new String[][] {{"White Copy - Team", "#DDDDDD"}, {"Yellow Copy - Comms","yellow"}, {"Pink Copy - Ops","pink"}, {"Gold Copy - Plans","#DDAA22"}} %>' varStatus='status'>
 
- <c:if test="${status.index ne 0 or printPageBreak eq true}"><div class="page"></div></c:if>
- 
-<div style="height: 9in; font-size: 12pt; font-family: Times">
+<div style="font-size: 12pt; font-family: Times"<c:if test="${status.index ne 0 or printPageBreak eq true}"> class="page"</c:if>>
 <div style="width: 100%; height: 16pt; border-top: 2px solid ${copy[1]}; padding: 0px;">
 	<div style="width: 30%; float: left">${copy[0]}</div>
 	<div style="width: 69%; float: left; border-top: 12px solid ${copy[1]}"></div>
@@ -49,7 +47,7 @@
 	<div style="float: right">MAP(S) ATTACHED</div>
 </div>
 
-<div style="width: 100%; height: 72pt; border-bottom: 1px solid black">
+<div style="width: 100%; height: 70pt; border-bottom: 1px solid black">
 	<div class="lbox" style="width: 100%; text-align: left"><div class="label">7. PREVIOUS AND PRESENT SEARCH EFFORTS IN AREA</div>
 	<div>${assignment.previousEfforts}</div>
 	</div>
@@ -61,7 +59,7 @@
 	<div class="box" style="width: 64%"><div class="label">10. EXPECTED P.O.D.</div><span style="text-transform: capitalize; font-size: 80%">Responsive: ${fn:toLowerCase(assignment.responsivePOD)}&nbsp;&nbsp;&nbsp;Unresponsive: ${fn:toLowerCase(assignment.unresponsivePOD)}&nbsp;&nbsp;&nbsp;Clue: ${fn:toLowerCase(assignment.cluePOD)}</span></div>
 </div>
 
-<div style="width: 100%; height: 60pt; border-bottom: 1px solid black">
+<div style="width: 100%; height: 50pt; border-bottom: 1px solid black">
 	<div class="lbox" style="width: 100%; text-align: left"><div class="label">11. DROP OFF AND PICKUP INSTRUCTIONS</div>
 	<div>${assignment.transportation}</div>
 	</div>

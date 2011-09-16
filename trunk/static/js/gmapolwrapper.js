@@ -302,18 +302,18 @@ GMap2.prototype.addControl = function(control) {
 	if(position != null) {
 		if(position.anchor == G_ANCHOR_TOP_RIGHT) {
 			ref.style.position="absolute";
-			ref.style.right=position.offset.width;
-			ref.style.top=position.offset.height;
+			ref.style.right=position.offset.width + "px";
+			ref.style.top=position.offset.height + "px";
 			ref.style.zIndex=1000;
 		} else if(position.anchor == G_ANCHOR_TOP_LEFT) {
 			ref.style.position="absolute";
-			ref.style.left=position.offset.width;
-			ref.style.top=position.offset.height;
+			ref.style.left=position.offset.width + "px";
+			ref.style.top=position.offset.height + "px";
 			ref.style.zIndex=1000;
 		} else if(position.anchor == G_ANCHOR_BOTTOM_RIGHT) {
 			ref.style.position="absolute";
-			ref.style.right=position.offset.width;
-			ref.style.bottom=position.offset.height;
+			ref.style.right=position.offset.width + "px";
+			ref.style.bottom=position.offset.height + "px";
 			ref.style.zIndex=1000;
 		}
 	} 
