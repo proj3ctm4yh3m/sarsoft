@@ -292,7 +292,11 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			if(opacity > 0) extras++;
 			this.alphaOverlayPlus.innerHTML = "+" + ((extras == 0) ? "" : extras);
 		}
-		if(infoString.length > 0 && this.map._imap != null) this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, infoString);
+		if(infoString.length > 0 && this.map._imap != null)  {
+			this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, infoString);
+		} else {
+			this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, null);
+		}
 
 }
 
@@ -1198,7 +1202,11 @@ org.sarsoft.InteractiveMap.prototype.setMapInfo = function(classname, order, mes
 		this.map.addControl(this._mapInfoControl);
 	}
 	
-	this._mapInfoMessages[classname] = { order: order, message : message};
+	if(message == null) {
+		delete this._mapInfoMessages[classname];
+	} else {
+		this._mapInfoMessages[classname] = { order: order, message : message};
+	}
 
 	var messages = new Array();
 	for(var key in this._mapInfoMessages) {
