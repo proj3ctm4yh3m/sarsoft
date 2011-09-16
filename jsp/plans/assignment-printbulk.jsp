@@ -1,3 +1,5 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
@@ -37,6 +39,12 @@ org.sarsoft.Loader.queue(function() {
 }
 </style>
 <style tyle="text/css">
+@page {
+	size: 8.5in 11in;
+	margin: 0.25in;
+	border: 0pt;
+	padding: 0pt;
+}
 .box {
 	border-left: 1px solid black; float: left; height: 100%; overflow: hidden;
 	text-align: center;
@@ -74,14 +82,6 @@ TABLE.comms TD,TH {
 	font-weight: normal;
 }
 </style>
-<style type="text/css" media="print">
-@page {
-	size: 8.5in 11in;
-	margin: 0.5in;
-	border: 0pt;
-	padding: 0pt;
-}
-</style>
 </head>
 <body onload="doload()" class="yui-skin-sam">
 
@@ -113,7 +113,7 @@ ${assignment.id}: ${assignment.timeAllocated} hour, ${assignment.formattedSize} 
 <jsp:include page="assignment-printbody.jsp"/>
 </c:if>
 <c:forEach var="mapConfig" items="${mapConfigs}" varStatus="status2">
-<div id="maps${status.index}_${status2.index}" class="page">
+<div id="maps${status.index}_${status2.index}" class="page" style="width: 100%; height: 100%">
 </div>
 </c:forEach>
 </c:forEach>

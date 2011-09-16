@@ -160,16 +160,16 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 
 org.sarsoft.controller.AssignmentPrintMapController = function(container, id, mapConfig, showPreviousEfforts) {
 	var that = this;
-	this.container = container;
 	this.mapConfig = mapConfig;
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.fmap.message("Server Communication Error"); });
 	this.showPrevious = showPreviousEfforts;
 	this.previousEfforts = new Array();
 	
-	this.div = document.createElement("div");
-	this.div.style.width="7in";
-	this.div.style.height="8.8in";
-	this.container.appendChild(this.div);
+	this.div = container;
+	var height = "10.5in";
+	if(navigator.userAgent.indexOf("MSIE") > 0 || (navigator.userAgent.indexOf("Chrome") > 0 && typeof(GMap2.ol) != "undefined")) height = "8in";
+	this.div.style.width="8in";
+	this.div.style.height=height;
 	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
 	this.fmap = new org.sarsoft.InteractiveMap(map, {standardControls : true});
 
