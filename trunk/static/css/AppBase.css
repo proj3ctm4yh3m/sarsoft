@@ -97,5 +97,10 @@ textarea.entityform {
 	img.olTileImage {
 		position: absolute !important;
 	}
+	img.olAlphaImage {
+		position: absolute !important;
+	}
+	div.olAlphaImage {
+		position: absolute !important;
+	}
 }
-	
