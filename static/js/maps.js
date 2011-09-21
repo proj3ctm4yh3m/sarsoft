@@ -1007,7 +1007,7 @@ org.sarsoft.InteractiveMap.prototype.addRangeRing = function(center, radius, ver
 		var vertexUTM = new UTM(centerUTM.e + radius*Math.sin(i*2*Math.PI/vertices), centerUTM.n + radius*Math.cos(i*2*Math.PI/vertices), centerUTM.zone);
 		glls.push(GeoUtil.UTMToGLatLng(vertexUTM));
 	}
-	var poly = new GPolyline(glls, "000000", 1, 1);
+	var poly = new GPolyline(glls, "#000000", 1, 1);
 	this.map.addOverlay(poly);
 	this.rangerings.push(poly);
 
@@ -1934,10 +1934,12 @@ ELabel.prototype = new GOverlay();
 ELabel.prototype.initialize = function(map) {
   var div = document.createElement("div");
   div.style.position = "absolute";
-  div.innerHTML = '<div style="' + this.style + '">' + this.html + '</div>' ;
+  div.innerHTML = '<div style="' + this.style + '" class="olAlphaImage">' + this.html + '</div>' ;
   map.getPane(G_MAP_FLOAT_SHADOW_PANE).appendChild(div);
   this.map_ = map;
   this.div_ = div;
+  this.div2_ = div.childNodes[0];
+  this.div2_.style.position = "relative";
   if (this.hidden) {
     this.hide();
   }
@@ -1955,8 +1957,8 @@ ELabel.prototype.redraw = function(force) {
   var p = this.map_.fromLatLngToDivPixel(this.point);
   var h = parseInt(this.div_.clientHeight);
   var w = parseInt(this.div_.clientWidth);
-  this.div_.style.left = Math.round(p.x + this.pixelOffset.width + w * this.centerOffset.width) + "px";
-  this.div_.style.top = Math.round(p.y +this.pixelOffset.height + h * this.centerOffset.height) + "px";
+  this.div2_.style.left = Math.round(p.x + this.pixelOffset.width + w * this.centerOffset.width) + "px";
+  this.div2_.style.top = Math.round(p.y +this.pixelOffset.height + h * this.centerOffset.height) + "px";
 }
 
 ELabel.prototype.show = function() {

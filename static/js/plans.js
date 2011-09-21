@@ -167,7 +167,7 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	
 	this.div = container;
 	var height = "10.5in";
-	if(navigator.userAgent.indexOf("MSIE") > 0 || (navigator.userAgent.indexOf("Chrome") > 0 && typeof(GMap2.ol) != "undefined")) height = "8in";
+	if(navigator.userAgent.indexOf("MSIE") > 0 && typeof(GMap2.ol) == "undefined")) height = "8in";
 	this.div.style.width="8in";
 	this.div.style.height=height;
 	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
