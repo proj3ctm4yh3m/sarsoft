@@ -174,12 +174,8 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	this.fmap = new org.sarsoft.InteractiveMap(map, {standardControls : true});
 
 	var waypointController = new org.sarsoft.controller.SearchWaypointMapController(this.fmap);
-	if(mapConfig == null) {
-		var configWidget = new org.sarsoft.view.PersistedConfigWidget(this.fmap);
-		configWidget.loadConfig();
-	} else {
-		this.fmap.setConfig(mapConfig);
-	}
+	var configWidget = new org.sarsoft.view.PersistedConfigWidget(this.fmap);
+	configWidget.loadConfig(mapConfig);
 	
 	this.assignmentDAO.load(function(obj) { that._loadAssignmentCallback(obj); }, id);
 
@@ -484,12 +480,15 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 	}, "mapConfig");
 }
 
-org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function() {
+org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
 	var that = this;
 	this.searchDAO.load(function(cfg) {
 		var config = {};
 		if(cfg.value != null) {
 			config = YAHOO.lang.JSON.parse(cfg.value);			
+		}
+		if(typeof(overrides) != "undefined") for(var key in overrides) {
+			config[key] = overrides[key];
 		}
 		that.imap.setConfig(config);
 		for(var key in that.imap.registered) {
