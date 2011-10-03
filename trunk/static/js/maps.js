@@ -585,7 +585,7 @@ org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm
 	vertices.push(start_ll);
 	vertices.push(end_ll);
 	
-	var overlay = new GPolyline(vertices, "#0000FF", primary ? 0.8 : 0.5, primary ? 1 : 0.7);
+	var overlay = new GPolyline(vertices, "#0000FF", 1, primary ? 1 : 0.5);
 	this.utmgridlines.push(overlay);
 	this.map.addOverlay(overlay);
 }
