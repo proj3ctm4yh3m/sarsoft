@@ -353,21 +353,11 @@ org.sarsoft.view.EntityCreateDialog = function(title, entityform, handler) {
 	var that = this;
 	this.handler = handler;
 	this.entityform = entityform;
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="1000";
-	dlg.style.top="100px";
-	dlg.style.left="200px";
-	dlg.style.width="400px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode(title));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
+	var dlg = jQuery('<div style="position: absolute; z-index: 1000; top: 100px; left: 200px; width: 400px"></div>');
+	jQuery('<div class="hd">' + title + '</div>').appendTo(dlg);
+	var bd = jQuery('<div class="bd"></div>').appendTo(dlg)[0];
 	this.entityform.create(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "400px"});
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "1000", width: "400px"});
 	var buttons = [ { text : "Create", handler: function() {
 		that.dialog.hide();
 		var obj = that.entityform.read();

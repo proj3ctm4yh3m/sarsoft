@@ -86,7 +86,7 @@ org.sarsoft.view.SearchAssignmentTable = function() {
 		{ key : "formattedSize", label : "Size", sortable: true},
 		{ key : "timeAllocated", label : "Time Allocated", sortable : true},
 		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByProbability), sortOptions : {sortFunction: function(a, b, desc) { return YAHOO.util.Sort.compare(pod[a.getData("responsivePOD")], pod[b.getData("responsivePOD")], desc)}}},
-		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { cell.style.overflow="hidden"; cell.style.maxHeight="1em"; cell.style.maxWidth="40em"; cell.innerHTML = data;}}
+		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "40em"}); cell.innerHTML = data;}}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Search Assignments" }, function(assignment) {
 		window.location="/app/assignment/" + assignment.id;
@@ -135,21 +135,10 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	var that = this;
 	this.id = id;
 	var dao = new org.sarsoft.SearchAssignmentDAO();
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="2500";
-	dlg.style.top="200px";
-	dlg.style.left="200px";
-	dlg.style.width="420px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Upload GPX File"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/app/assignment/" + id + "/way'><input type='file' name='file'/><input type='hidden' name='format' value='gpx'/></form>";
-	dlg.appendChild(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "420px"});
+	var dlg = jQuery("<div/>", {style: "position: absolute; z-index: 2500; top: 200px; left: 200px; width: 420px"});
+	jQuery('<div class="hd">Upload GPX File</div>').appendTo(dlg);
+	jQuery('<div class="bd"><form method="post" enctype="multipart/form-data" name="gpxupload" action="/app/assignment/' + id + '/way"><input type="file" name="file"/><input type="hidden" name="format" value="gpx"/></form></div>').appendTo(dlg);
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "2500", width: "420px"});
 	var buttons = [ { text : "Import", handler: function() {
 		that.dialog.hide(); document.forms['gpxupload'].submit();
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
@@ -185,34 +174,12 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	var that = this;
 	this.assignment = assignment;
 
-	var config = new Object();
-	config.clickable = false;
-	config.fill = false;
-	config.color = "#FF0000";
-	config.opacity = 100;
-	
-	var trackConfig = new Object();
-	trackConfig.clickable = false;
-	trackConfig.fill = false;
-	trackConfig.color = "#FF8800";
-	trackConfig.opacity = 100;
-	
-	var otherTrackConfig = new Object();
-	otherTrackConfig.clickable = false;
-	otherTrackConfig.fill = false;
-	otherTrackConfig.color = "#000000";
-	otherTrackConfig.opacity = 80;
+	var config = {clickable : false, fill: false, color: "#FF0000", opacity: 100};	
+	var trackConfig = {clickable: false, fill: false, color: "#FF8800", opacity: 100};	
+	var otherTrackConfig = {clickable: false, fill: false, color: "#000000", opacity: 80};
 	this.otherTrackConfig = otherTrackConfig;
-	
-	var info = document.createElement("div");
-	info.style.zIndex=2000;
-	info.className="printonly";
-	info.style.position="absolute";
-	info.style.top="0px";
-	info.style.left="0px";
-	info.style.backgroundColor="white";
-	info.innerHTML = "Assignment " + assignment.id + ((assignment.status == "COMPLETED") ? " Debrief" : "");
-	this.fmap.map.getContainer().appendChild(info);
+
+	jQuery('<div class="printonly" style="z-index: 2000; position: absolute; top: 0px; left: 0px; background: white">Assignment ' + assignment.id + ((assignment.status == "COMPLETED") ? ' Debrief' : '') + '</div>').appendTo(this.fmap.map.getContainer());
 	
 	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED") ? false : true;
 	
@@ -341,12 +308,7 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.highlight = functio
 	this._dehighlight();
 	this._dehighlightWaypoint();
 	this.fmap.removeWay(way);
-	var config = new Object();
-	config.clickable = false;
-	config.fill = false;
-	config.color = "#FF0000";
-	config.opacity = 100;
-	this.addWay(way, config);
+	this.addWay(way, {clickable: false, fill: false, color: "#FF0000", opacity: 100});
 
 	var bb = way.boundingBox;
 	this.fmap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
@@ -366,12 +328,7 @@ org.sarsoft.controller.AssignmentViewMapController.prototype.highlightWaypoint =
 	this._dehighlight();
 	this._dehighlightWaypoint();
 	this.fmap.removeWaypoint(waypoint);
-	var config = new Object();
-	config.clickable = false;
-	config.fill = false;
-	config.color = "#FF0000";
-	config.opacity = 100;
-	this.addWaypoint(waypoint, config);
+	this.addWaypoint(waypoint, {clickable: false, fill: false, color: "#FF0000", opacity: 100});
 	this.highlightedWaypoint = waypoint;
 
 	this.fmap.setCenter(new GLatLng(waypoint.lat, waypoint.lng));
@@ -395,11 +352,7 @@ org.sarsoft.view.MapSetupWidget = function(imap) {
 	var style = {position : "absolute", zIndex : "2500", top : "100px", left : "100px", width : "500px"};
 	this._dialog = org.sarsoft.view.CreateBlankDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
 	
-	var setup = document.createElement("img");
-	setup.src="/static/images/config.png";
-	setup.style.cursor = "pointer";
-	setup.style.verticalAlign="middle";
-	setup.title = "Map Setup";
+	var setup = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Map Setup"/>')[0];
 	GEvent.addDomListener(setup, "click", function() {
 		that.showDlg();
 	});
@@ -448,11 +401,7 @@ org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
 		var saveDlg = org.sarsoft.view.CreateSimpleDialog("Save Map Settings", "This will make the map layers, range rings, assignment coloring and track/location visibility the default for all maps on this search.", "Save", "Cancel", function() {
 			that.saveConfig();
 		});
-		var save = document.createElement("img");
-		save.src="/static/images/save.png";
-		save.style.cursor = "pointer";
-		save.style.verticalAlign="middle";
-		save.title = "Make this the default search map.";
+		var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Make this the default search map."/>')[0];
 		GEvent.addDomListener(save, "click", function() {
 			saveDlg.show();
 		});
@@ -648,11 +597,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	var leaveDlg = org.sarsoft.view.CreateSimpleDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.period.id + "?", "Leave", "Cancel", function() {
 		window.location = "/app/operationalperiod/" + that.period.id;		
 	});
-	var goback = document.createElement("img");
-	goback.src="/static/images/home.png";
-	goback.style.cursor = "pointer";
-	goback.style.verticalAlign="middle";
-	goback.title = "Back to operational period " + this.period.id;
+	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Back to operational period ' + this.period.id + '"/>')[0];
 	GEvent.addDomListener(goback, "click", function() {
 		leaveDlg.show();
 	});
@@ -937,24 +882,13 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getSetupBlock = 
 	   		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
 	   		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"}
 	   	]);
-		var node = document.createElement("div");
-       	node.style.width="100%";
-       	var present = document.createElement("div");
-       	present.style.width="235px";
-       	present.style.cssFloat="left";
-       	present.style.styleFloat="left";
-       	present.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>This OP:</span><br/>";
-       	node.appendChild(present);
-       	var past = document.createElement("div");
-       	past.style.width="235px";
-       	past.style.cssFloat="right";
-       	past.style.styleFloat="right";
-       	past.innerHTML = "<span style='font-weight: bold; text-decoration: underline'>Previous OPs:</span><br/>";
-       	node.appendChild(past);
+		var node = jQuery('<div style="width: 100%"></div>');
+		var present = jQuery('<div style="width: 235px; float: left"><span style="font-weight: bold; text-decoration: underline">This OP:</span><br/></div>').appendTo(node)[0];
+		var past = jQuery('<div style="width: 235px; float: right"><span style="font-weight: bold; text-decoration: underline">Previous OPs:</span><br/></div>').appendTo(node)[0];
 		
 		this._setupForm1.create(present);
 		this._setupForm2.create(past);
-		this._setupBlock = {order : 1, node : node, handler : function() {
+		this._setupBlock = {order : 1, node : node[0], handler : function() {
 			that._mapsetup.present = that._setupForm1.read();
 			that._mapsetup.past = that._setupForm2.read();
 			that.handleSetupChange();
@@ -1001,21 +935,11 @@ org.sarsoft.view.BulkGPXDlg = function(id) {
 	var that = this;
 	this.id = id;
 	var dao = new org.sarsoft.OperationalPeriodDAO();
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="1000";
-	dlg.style.top="200px";
-	dlg.style.left="200px";
-	dlg.style.width="420px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Upload GPX File"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
-	bd.innerHTML="<form method='post' enctype='multipart/form-data' name='gpxupload' action='/rest/search'><input type='hidden' name'format' value='GPX'/><input type='file' name='file'/></form>";
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "420px"});
+	var dlg = jQuery('<div style="position: absolute; z-index: 1000; top: 200px; left: 200px; width: 420px"></div>');
+	jQuery('<div class="hd">Upload GPX File</div>').appendTo(dlg);
+	jQuery('<div class="bd"><form method="post" enctype="multipart/form-data" name="gpxupload" action="/rest/search"><input type="hidden" name="format" value="GPX"/><input type="file" name="file"/></form></div>').appendTo(dlg);
+
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "1000", width: "420px"});
 	var buttons = [ { text : "Import", handler: function() {
 		that.dialog.hide(); document.forms['gpxupload'].submit();
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
