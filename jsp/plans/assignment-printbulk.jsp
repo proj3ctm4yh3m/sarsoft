@@ -11,6 +11,7 @@
 <title>Sarsoft Map Printout</title>
 ${mapjs}
 <script src="/static/js/yui.js"></script>
+<script src="/static/js/jquery-1.6.4.js"></script>
 <script src="/app/constants.js"></script>
 <script src="/static/js/common.js"></script>
 <script src="/static/js/maps.js"></script>
