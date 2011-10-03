@@ -169,7 +169,7 @@ public class OpsController extends JSONBaseController {
 	public String checkLocations(Model model) {
 		APRSTier2Engine aprs = createAprst2();
 		SpotLocationEngine spot = createSpot();
-		for(Resource resource : (List<Resource>) dao.loadAll(Resource.class)) {
+		for(Resource resource : dao.loadAll(Resource.class)) {
 			aprs.checkAprsFi(resource);
 			spot.checkSpot(resource);
 		}			
@@ -182,7 +182,7 @@ public class OpsController extends JSONBaseController {
 		@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
 		@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
 		long maxId = 0L;
-		List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
+		List<Resource> resources = dao.loadAll(Resource.class);
 		for(Resource resource : resources) {
 			maxId = Math.max(maxId, resource.getId());
 		}
@@ -202,7 +202,7 @@ public class OpsController extends JSONBaseController {
 		String assignmentId = request.getParameter("assignmentId");
 		if(assignmentId != null && assignmentId.length() > 0) {
 			long id = Long.parseLong(assignmentId);
-			SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, id);
+			SearchAssignment assignment = dao.load(SearchAssignment.class, id);
 			assignment.addResource(resource);
 			dao.save(assignment);
 		}
@@ -238,7 +238,7 @@ public class OpsController extends JSONBaseController {
 		int SPOT_PASSWORD = 5;
 		if(csv != null) {
 			long maxId = 0L;
-			List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
+			List<Resource> resources = dao.loadAll(Resource.class);
 			for(Resource r : resources) {
 				maxId = Math.max(maxId, r.getId());
 			}
@@ -254,7 +254,7 @@ public class OpsController extends JSONBaseController {
 					String name = cols[NAME];
 					String callsign = cols[CALLSIGN];
 					if("callsign".equalsIgnoreCase(callsign) || "name".equalsIgnoreCase(name)) continue;
-					Resource resource = (Resource) dao.getByAttr(Resource.class, "callsign", callsign);
+					Resource resource = dao.getByAttr(Resource.class, "callsign", callsign);
 					if(resource != null) {
 						if(cols.length > SPOT_ID)
 							if(resource.getSpotId() == null) resource.setSpotId(cols[SPOT_ID]);
@@ -287,7 +287,7 @@ public class OpsController extends JSONBaseController {
 			@RequestParam(value="name", required=true) String name, @RequestParam(value="type", required=true) String type, 
 			@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
 			@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
-		Resource resource = (Resource) dao.load(Resource.class, id);
+		Resource resource = dao.load(Resource.class, id);
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action")) == Action.DELETE) {			
 			if(resource.getAssignment() != null) {
 				SearchAssignment assignment = resource.getAssignment();
@@ -317,7 +317,7 @@ public class OpsController extends JSONBaseController {
 			@RequestParam(value="lat", required=true) Double lat,
 			@RequestParam(value="lng", required=true) Double lng) {
 		
-		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		Resource resource = dao.load(Resource.class, resourceid);
 		Waypoint wpt = new Waypoint(lat, lng);
 		wpt.setTime(new Date());
 		resource.setPosition(wpt);
@@ -389,7 +389,7 @@ public class OpsController extends JSONBaseController {
 
 	@RequestMapping(value="/{mode}/resource/{resourceid}", method = RequestMethod.GET)
 	public String getResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid) {
-		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		Resource resource = dao.load(Resource.class, resourceid);
 		if(REST.equals(mode)) return json(model, resource);
 		model.addAttribute("resource", resource);
 		return app(model, "Resource.Detail");
@@ -397,8 +397,8 @@ public class OpsController extends JSONBaseController {
 
 	@RequestMapping(value="/{mode}/resource/{resourceid}/detach/{assignmentid}", method = RequestMethod.GET)
 	public String detachResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
-		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentid);
+		Resource resource = dao.load(Resource.class, resourceid);
 		assignment.removeResource(resource);
 		dao.save(assignment);
 		dao.save(resource);
@@ -408,8 +408,8 @@ public class OpsController extends JSONBaseController {
 
 	@RequestMapping(value="/{mode}/resource/{resourceid}/attach/{assignmentid}", method = RequestMethod.GET)
 	public String assignResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentid);
-		Resource resource = (Resource) dao.load(Resource.class, resourceid);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentid);
+		Resource resource = dao.load(Resource.class, resourceid);
 		if(resource.getAssignment() != null) {
 			SearchAssignment old = resource.getAssignment();
 			old.removeResource(resource);

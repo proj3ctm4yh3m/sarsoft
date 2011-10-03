@@ -175,7 +175,7 @@ public abstract class JSONBaseController {
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
 		if(RuntimeProperties.getSearch() != null) model.addAttribute("search", dao.getByPk(Search.class, RuntimeProperties.getSearch()));
-		if(user != null) account = (UserAccount) dao.getByPk(UserAccount.class, user);
+		if(user != null) account = dao.getByPk(UserAccount.class, user);
 		if(isHosted()) {
 			if(account != null) {
 				model.addAttribute("account", account);

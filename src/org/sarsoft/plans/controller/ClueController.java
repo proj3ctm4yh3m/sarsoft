@@ -43,7 +43,7 @@ public class ClueController extends JSONBaseController {
 		
 		long maxId = 0L;
 		@SuppressWarnings("unchecked")
-		List<Clue> clues = (List<Clue>) dao.loadAll(Clue.class);
+		List<Clue> clues = dao.loadAll(Clue.class);
 		for(Clue clue : clues) {
 			maxId = Math.max(maxId, clue.getId());
 		}
@@ -62,11 +62,11 @@ public class ClueController extends JSONBaseController {
 		dao.save(clue);
 		
 		if(assignmentId != null) {
-			SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+			SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 			if(assignment != null) {
 				assignment.addClue(clue);
 				if(wptid != null) {
-					Waypoint wpt = (Waypoint) dao.load(Waypoint.class, wptid);
+					Waypoint wpt = dao.load(Waypoint.class, wptid);
 					if(wpt != null && assignment.getWaypoints().contains(wpt)) assignment.getWaypoints().remove(wpt);
 				}
 				dao.save(assignment);
@@ -79,7 +79,7 @@ public class ClueController extends JSONBaseController {
 	
 	@RequestMapping(value="/{mode}/clue/{clueid}", method = RequestMethod.GET)
 	public String getClue(Model model, @PathVariable("mode") String mode, @PathVariable("clueid") long clueid) {
-		Clue clue = (Clue) dao.load(Clue.class, clueid);
+		Clue clue = dao.load(Clue.class, clueid);
 		if(REST.equals(mode)) return json(model, clue);
 		model.addAttribute("clue", clue);
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
@@ -91,7 +91,7 @@ public class ClueController extends JSONBaseController {
 			@RequestParam(value="lat", required=true) Double lat,
 			@RequestParam(value="lng", required=true) Double lng) {
 		
-		Clue clue = (Clue) dao.load(Clue.class, clueid);
+		Clue clue = dao.load(Clue.class, clueid);
 		clue.setPosition(new Waypoint(lat, lng));
 		dao.save(clue);
 		return "redirect:/app/clue/" + clueid;
@@ -104,7 +104,7 @@ public class ClueController extends JSONBaseController {
 			@RequestParam(value="location", required=false) String location,
 			@RequestParam(value="instructions", required=false) Clue.Disposition instructions,
 			@RequestParam(value="assignmentid", required=false) Long assignmentId) {
-		Clue clue = (Clue) dao.load(Clue.class, clueid);
+		Clue clue = dao.load(Clue.class, clueid);
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action")) == Action.DELETE) {
 			if(clue.getAssignment() != null) {
 				SearchAssignment assignment = clue.getAssignment();
@@ -125,7 +125,7 @@ public class ClueController extends JSONBaseController {
 			dao.save(assignment);
 		}
 		if(assignmentId != null && (clue.getAssignment() == null || assignmentId != clue.getAssignment().getId())) {
-			SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+			SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 			assignment.addClue(clue);
 			dao.save(assignment);
 		}

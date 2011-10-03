@@ -73,7 +73,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			List<SearchAssignment> rejected = new ArrayList<SearchAssignment>();
 			for(String id : ids) {
 				if(id.length() == 0) continue;
-				SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, Long.parseLong(id));
+				SearchAssignment assignment = dao.load(SearchAssignment.class, Long.parseLong(id));
 				if(assignment.getStatus() == SearchAssignment.Status.DRAFT) {
 					rejected.add(assignment);
 				} else {
@@ -121,7 +121,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/app/assignment/{assignmentId}", method = RequestMethod.GET)
 	public String getAssignment(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		model.addAttribute("assignment", assignment);
 		switch(format) {
@@ -145,7 +145,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		String[] ids = form.getBulkIds().split(",");
 		for(String id : ids) {
 			if(id.length() == 0) continue;
-			SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, Long.parseLong(id));
+			SearchAssignment assignment = dao.load(SearchAssignment.class, Long.parseLong(id));
 			if(period == null) period = assignment.getOperationalPeriod();
 			if(form.getResourceType() != null) assignment.setResourceType(form.getResourceType());
 			if(form.getTimeAllocated() != null) assignment.setTimeAllocated(form.getTimeAllocated());
@@ -170,7 +170,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/app/assignment/{assignmentId}", method = RequestMethod.POST)
 	public String setAssignmentDetail(Model model, @PathVariable("assignmentId") long assignmentId, SearchAssignmentForm form) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 //		assignment.setId(form.getId());
 		assignment.setDetails(form.getDetails());
 		assignment.setResourceType(form.getResourceType());
@@ -190,7 +190,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/app/assignment/{assignmentId}/cleantracks", method = RequestMethod.POST)
 	public String cleanTracks(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		if(request.getParameter("radius") != null && request.getParameter("radius").length() > 0) {
 			long radius = Math.abs(Long.parseLong(request.getParameter("radius"))*1000);
 			Waypoint center = null;
@@ -266,12 +266,12 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/rest/assignment/{assignmentId}", method = RequestMethod.GET)
 	public String getAssignmentRest(@PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request, HttpServletResponse response) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".gpx");
-			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 			Map<String, Object> m = new HashMap<String, Object>();
 			m.put("assignment", assignment);
 			if(search.getLkp() != null) m.put("lkp", search.getLkp());
@@ -297,11 +297,11 @@ public class SearchAssignmentController extends JSONBaseController {
 	public String createAssignment(JSONForm params, Model model, HttpServletRequest request) {
 		SearchAssignment assignment = SearchAssignment.createFromJSON(parseObject(params));
 		if(assignment.getId() != null) {
-			SearchAssignment existing = (SearchAssignment) dao.load(SearchAssignment.class, assignment.getId());
+			SearchAssignment existing = dao.load(SearchAssignment.class, assignment.getId());
 			if(existing != null) assignment.setId(null);
 		}
 		if(assignment.getId() == null || assignment.getId() < 1) {
-			List<SearchAssignment> assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
+			List<SearchAssignment> assignments = dao.loadAll(SearchAssignment.class);
 			long maxId = 0L;
 			for(SearchAssignment obj : assignments) {
 				maxId = Math.max(maxId, obj.getId());
@@ -310,7 +310,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 		Long opid = assignment.getOperationalPeriodId();
 		if(opid != null) {
-			OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, opid);
+			OperationalPeriod period = dao.load(OperationalPeriod.class, opid);
 			period.addAssignment(assignment);
 			assignment.preSave();
 			dao.save(period);
@@ -322,7 +322,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/rest/assignment/{assignmentId}", method = RequestMethod.POST)
 	public String updateAssignment(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		switch(action) {
 		case FINALIZE :
@@ -364,7 +364,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	// WAY REST
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/way", method = RequestMethod.GET)
 	public String getWays(@PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		int precision = 0;
 		try {
 			precision = Integer.parseInt(request.getParameter("precision"));
@@ -380,7 +380,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value = "/{mode}/assignment/{assignmentId}/way", method= RequestMethod.POST)
 	public String addWay(JSONForm params, @PathVariable("mode") String mode, @PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 		WayType type = (request.getParameter("type") != null) ? WayType.valueOf(request.getParameter("type").toUpperCase()) : null;
 
@@ -433,7 +433,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/way/{wayId}", method = RequestMethod.POST)
 	public String updateWay(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("wayId") int wayId, Model model, HttpServletRequest request) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		if(action == Action.DELETE) {
 			Way way = assignment.getWays().get(wayId);
 			assignment.getWays().remove(wayId);
@@ -445,7 +445,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/wpt/{waypointId}", method = RequestMethod.POST)
 	public String updateWaypoint(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("waypointId") int waypointId, Model model, HttpServletRequest request) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		if(action == Action.DELETE) {
 			Waypoint waypoint = assignment.getWaypoints().get(waypointId);
 			assignment.getWaypoints().remove(waypointId);
@@ -457,7 +457,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/way/{wayId}/waypoints", method= RequestMethod.POST)
 	public String setRouteWaypoints(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("wayId") int wayId, Model model) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Way way = assignment.getWays().get(wayId);
 		List<Waypoint> waypoints = way.getWaypoints();
 		waypoints.removeAll(waypoints);
@@ -469,7 +469,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/mapConfig", method= RequestMethod.POST)
 	public String addMapconfig(JSONForm params, @PathVariable("assignmentId") long assignmentId, Model model) {
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		MapConfig config = MapConfig.createFromJSON(parseObject(params));
 		assignment.getMapConfigs().add(config);
 		dao.save(assignment);
@@ -479,7 +479,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/mapConfig/{configId}", method= RequestMethod.POST)
 	public String updateMapConfig(JSONForm params, @PathVariable("assignmentId") long assignmentId, @PathVariable("configId") long configId, Model model, HttpServletRequest request) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
-		SearchAssignment assignment = (SearchAssignment) dao.load(SearchAssignment.class, assignmentId);
+		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		for(MapConfig config : assignment.getMapConfigs()) {
 			if(config.getId() == configId) {
 				switch(action) {

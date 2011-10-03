@@ -52,7 +52,7 @@ public class CommonController extends JSONBaseController {
 		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
 		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
 		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		if(getProperty("sarsoft.map.datum") != null) model.addAttribute("datum", getProperty("sarsoft.map.datum"));
 		if(search != null && search.getDatum() != null) model.addAttribute("datum", search.getDatum());
 		return "/global/constants";

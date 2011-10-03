@@ -53,7 +53,7 @@ public class OperationalPeriodController extends JSONBaseController {
 
 	@RequestMapping(value="/app/operationalperiod/{periodId}", method = RequestMethod.GET)
 	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request, HttpServletResponse response) {
-		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
+		OperationalPeriod period = dao.load(OperationalPeriod.class, id);
 		model.addAttribute("period", period);
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		switch(action) {
@@ -90,7 +90,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=search.gpx");
-			List<SearchAssignment> assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
+			List<SearchAssignment> assignments = dao.loadAll(SearchAssignment.class);
 			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignmentList(assignments), "SearchAssignments");
 		default :
 			return json(model, dao.loadAll(OperationalPeriod.class));
@@ -99,7 +99,7 @@ public class OperationalPeriodController extends JSONBaseController {
 
 	@RequestMapping(value ="/rest/operationalperiod/{opid}", method = RequestMethod.GET)
 	public String getOperationalPeriod(Model model, @PathVariable("opid") long id, HttpServletRequest request, HttpServletResponse response) {
-		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
+		OperationalPeriod period = dao.load(OperationalPeriod.class, id);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 
 		switch (format) {
@@ -136,7 +136,7 @@ public class OperationalPeriodController extends JSONBaseController {
 
 	@RequestMapping(value="/rest/operationalperiod/{periodId}/assignment", method = RequestMethod.GET)
 	public String getAssignmentsForOperationalPeriod(Model model, @PathVariable("periodId") long id) {
-		OperationalPeriod period = (OperationalPeriod) dao.load(OperationalPeriod.class, id);
+		OperationalPeriod period = dao.load(OperationalPeriod.class, id);
 		return json(model, period.getAssignments());
 	}
 
