@@ -44,7 +44,7 @@ public class SearchController extends JSONBaseController {
 	
 	@RequestMapping(value ="/rest/search/mapConfig", method = RequestMethod.GET)
 	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("value", search.getMapConfig());
 		return json(model, map);
@@ -53,7 +53,7 @@ public class SearchController extends JSONBaseController {
 	@RequestMapping(value = "/rest/search/mapConfig", method = RequestMethod.POST)
 	public String setSearchProperty(Model model, JSONForm params) {
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		search.setMapConfig((String) m.get("value"));
 		dao.save(search);
 		return json(model, search);
@@ -61,7 +61,7 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.GET)
 	public String getLkp(Model model, HttpServletRequest request, HttpServletResponse response) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("value", search.getLkp());
 		return json(model, map);
@@ -69,7 +69,7 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value = "/rest/search/pls", method = RequestMethod.GET)
 	public String getPls(Model model, HttpServletRequest request, HttpServletResponse response) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("value", search.getPls());
 		return json(model, map);
@@ -77,7 +77,7 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value = "/rest/search/cp", method = RequestMethod.GET)
 	public String getCP(Model model, HttpServletRequest request, HttpServletResponse response) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("value", search.getCP());
 		return json(model, map);
@@ -93,7 +93,7 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.POST)
 	public String setLkp(Model model, JSONForm params, HttpServletRequest request) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		switch(action) {
 		case UPDATE : 
@@ -109,7 +109,7 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value = "/rest/search/pls", method = RequestMethod.POST)
 	public String setPls(Model model, JSONForm params, HttpServletRequest request) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		switch(action) {
 		case UPDATE : 
@@ -125,7 +125,7 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value = "/rest/search/cp", method = RequestMethod.POST)
 	public String setCP(Model model, JSONForm params, HttpServletRequest request) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		switch(action) {
 		case UPDATE : 
@@ -143,7 +143,7 @@ public class SearchController extends JSONBaseController {
 	public String delete(Model model, HttpServletRequest request) {
 		boolean isOwner = false;
 		String name = RuntimeProperties.getSearch();
-		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(account != null) {
 			for(Search srch : account.getSearches()) {
 				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
@@ -155,7 +155,7 @@ public class SearchController extends JSONBaseController {
 		}
 		List l = dao.loadAll(OperationalPeriod.class);
 		if(l == null || l.size() == 0) {
-			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 			search.getAccount().getSearches().remove(search);
 			dao.save(account);
 			RuntimeProperties.setSearch(null);
@@ -191,7 +191,7 @@ public class SearchController extends JSONBaseController {
 	public String update(Model model, HttpServletRequest request) {
 		boolean isOwner = false;
 		String name = RuntimeProperties.getSearch();
-		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(account != null) {
 			for(Search srch : account.getSearches()) {
 				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
@@ -201,7 +201,7 @@ public class SearchController extends JSONBaseController {
 			model.addAttribute("message", "You can only admin this search if you own it.");
 			return "error";
 		}
-		Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 		if(request.getParameter("description") != null && request.getParameter("description").length() > 0) {
 			search.setDescription(request.getParameter("description"));
 			dao.save(search);
@@ -247,12 +247,12 @@ public class SearchController extends JSONBaseController {
 	@RequestMapping(value ="/rest/search", method = RequestMethod.GET)
 	public String bulkGPXDownload(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
-		List<SearchAssignment >assignments = (List<SearchAssignment>) dao.loadAll(SearchAssignment.class);
+		List<SearchAssignment >assignments = dao.loadAll(SearchAssignment.class);
 
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=" + RuntimeProperties.getSearch() + ".gpx");
-			return gpx(model, SearchAssignmentGPXHelper.gpxifySearch((Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()), dao), "Search");
+			return gpx(model, SearchAssignmentGPXHelper.gpxifySearch(dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()), dao), "Search");
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=" + RuntimeProperties.getSearch() + ".kml");
 			return kml(model, assignments, "SearchAssignments");

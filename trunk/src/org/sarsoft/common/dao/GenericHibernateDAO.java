@@ -22,6 +22,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 public class GenericHibernateDAO extends HibernateDaoSupport {
 
+	@SuppressWarnings("rawtypes")
 	private Criteria addTenantRestriction(Class cls, Criteria crit) {
 		Class smo = SarModelObject.class;
 		while(cls != null) {
@@ -33,7 +34,7 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		return crit;
 	}
 
-	private Object checkTenantPermission(Object obj) {
+	private <T> T checkTenantPermission(T obj) {
 		if(obj == null) return null;
 		if(obj instanceof SarModelObject) {
 			SarModelObject smo = (SarModelObject) obj;
@@ -44,64 +45,65 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Object loadByPk(final Class cls, final long pk) {
-		return getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return checkTenantPermission(session.load(cls, pk));
+	public <T> T loadByPk(final Class <T> T, final long pk) {
+		return getHibernateTemplate().execute(new HibernateCallback<T>() {
+			public T doInHibernate(final Session session) throws HibernateException {
+				return checkTenantPermission((T) session.load(T, pk));
 			}
 		});
 	}
 
-	@SuppressWarnings("unchecked")
-	public Object getByPk(final Class cls, final long pk) {
-		return getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return checkTenantPermission(session.get(cls, pk));
+	@SuppressWarnings({"unchecked"})
+	public <T> T getByPk(final Class <T> T, final long pk) {
+		return getHibernateTemplate().execute(new HibernateCallback<T>() {
+			public T doInHibernate(final Session session) throws HibernateException {
+				return checkTenantPermission((T) session.get(T, pk));
 			}
 		});
 	}
 
-	@SuppressWarnings("unchecked")
-	public Object getByPk(final Class cls, final Serializable id) {
-		return getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return checkTenantPermission(session.get(cls, id));
+	@SuppressWarnings({"unchecked"})
+	public <T> T getByPk(final Class <T> T, final Serializable id) {
+		return getHibernateTemplate().execute(new HibernateCallback<T>() {
+			public T doInHibernate(final Session session) throws HibernateException {
+				return checkTenantPermission((T) session.get(T, id));
 			}
 		});
 	}
 
-	public Object load(final Class cls, final long id) {
-		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return addTenantRestriction(cls, session.createCriteria(cls).add(Restrictions.eq("id", id))).list();
-			}
-		});
-		if(list.size() > 0) return list.get(0);
-		return null;
-	}
-
-	public Object load(final Class cls, final int id) {
-		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return addTenantRestriction(cls, session.createCriteria(cls).add(Restrictions.eq("id", id))).list();
+	@SuppressWarnings({"unchecked"})
+	public <T> T load(final Class <T> T, final long id) {
+		List<T> list = getHibernateTemplate().executeFind(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T).add(Restrictions.eq("id", id))).list();
 			}
 		});
 		if(list.size() > 0) return list.get(0);
 		return null;
 	}
 
+	@SuppressWarnings({"unchecked"})
+	public <T> T load(final Class <T> T, final int id) {
+		List<T> list = getHibernateTemplate().executeFind(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T).add(Restrictions.eq("id", id))).list();
+			}
+		});
+		if(list.size() > 0) return list.get(0);
+		return null;
+	}
 
-	@SuppressWarnings("unchecked")
-	public List loadAll(final Class cls) {
-		return (List) getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				final Criteria crit = addTenantRestriction(cls, session.createCriteria(cls));
-				return crit.list();
+
+	@SuppressWarnings({"unchecked"})
+	public <T> List<T> loadAll(final Class <T> T) {
+		return getHibernateTemplate().execute(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T)).list();
 			}
 		});
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void save(final Object obj) {
 		getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
@@ -113,7 +115,7 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		});
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void delete(final Object obj) {
 		getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
@@ -125,47 +127,46 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List loadSince(final Class cls, final Date date) {
-		return (List) getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				Criteria c  = addTenantRestriction(cls, session.createCriteria(cls).add(Restrictions.ge("updated", date)));
-				return c.list();
+	public <T> List<T> loadSince(final Class <T> T, final Date date) {
+		return getHibernateTemplate().execute(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T).add(Restrictions.ge("updated", date))).list();
 			}
 		});
 	}
 
-	@SuppressWarnings("unchecked")
-	public Object getByAttr(final Class cls, final String key, final String value) {
-		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return addTenantRestriction(cls, session.createCriteria(cls).add(Restrictions.eq(key, value))).list();
+	@SuppressWarnings({"unchecked"})
+	public <T> T getByAttr(final Class <T> T, final String key, final String value) {
+		List<T> list = getHibernateTemplate().executeFind(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T).add(Restrictions.eq(key, value))).list();
 			}
 		});
 		if(list.size() > 0) return list.get(0);
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public List getAllByAttr(final Class cls, final String key, final Enum value) {
-		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return addTenantRestriction(cls, session.createCriteria(cls).add(Restrictions.eq(key, value))).list();
+	@SuppressWarnings({"unchecked","rawtypes"})
+	public <T> List<T> getAllByAttr(final Class <T> T, final String key, final Enum value) {
+		List<T> list = getHibernateTemplate().executeFind(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T).add(Restrictions.eq(key, value))).list();
 			}
 		});
 		return list;
 	}
 
-	@SuppressWarnings("unchecked")
-	public List getAllByAttr(final Class cls, final String key, final Object value) {
-		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
-			public Object doInHibernate(final Session session) throws HibernateException {
-				return addTenantRestriction(cls, session.createCriteria(cls).add(Restrictions.eq(key, value))).list();
+	@SuppressWarnings({"unchecked"})
+	public <T> List<T> getAllByAttr(final Class <T> T, final String key, final Object value) {
+		List<T> list = getHibernateTemplate().executeFind(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T).add(Restrictions.eq(key, value))).list();
 			}
 		});
 		return list;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked","rawtypes"})
 	public List<Search> getAllSearches() {
 		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {

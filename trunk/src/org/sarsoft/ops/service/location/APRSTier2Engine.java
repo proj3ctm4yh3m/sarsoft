@@ -51,7 +51,7 @@ public class APRSTier2Engine extends APRSEngine {
 		String filter = "#filter";
 		try {
 			if(createTransaction) beginTransaction();
-			Search search = (Search) dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 			Waypoint wpt = search.getPls();
 			if(search.getCP() != null) wpt = search.getCP();
 			if(search.getLkp() != null) wpt = search.getLkp();
@@ -65,7 +65,7 @@ public class APRSTier2Engine extends APRSEngine {
 			
 			boolean b = false;
 			@SuppressWarnings("unchecked")
-			List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
+			List<Resource> resources = dao.loadAll(Resource.class);
 			for(Resource resource : resources) {
 				if(resource.getAssignment() != null  && resource.getCallsign() != null  && resource.getCallsign().length() > 0) {
 					if(!b) {

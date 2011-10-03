@@ -50,7 +50,7 @@ public class AdminController extends JSONBaseController {
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
 	public String homePage(Model model) {
 		OperationalPeriod lastPeriod = null;
-		List<OperationalPeriod> periods = (List<OperationalPeriod>) dao.loadAll(OperationalPeriod.class);
+		List<OperationalPeriod> periods = dao.loadAll(OperationalPeriod.class);
 		for(OperationalPeriod period : periods) {
 			if(lastPeriod == null || lastPeriod.getId() < period.getId()) lastPeriod = period;
 		}
@@ -70,13 +70,13 @@ public class AdminController extends JSONBaseController {
 
 	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
 	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request) {
-		Search search = (Search) dao.getByAttr(Search.class, "name", name);
+		Search search = dao.getByAttr(Search.class, "name", name);
 		if(search == null) {
 			model.addAttribute("message", "This search does not exist.");
 			return bounce(model);
 		}
 		boolean isOwner = false;
-		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(account != null) {
 			for(Search srch : account.getSearches()) {
 				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
@@ -111,7 +111,7 @@ public class AdminController extends JSONBaseController {
 	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
-		if(user != null) account = (UserAccount) dao.getByAttr(UserAccount.class, "name", user);
+		if(user != null) account = dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
 		String op1name = request.getParameter("op1name");
 		String lat = request.getParameter("lat");
@@ -171,7 +171,7 @@ public class AdminController extends JSONBaseController {
 		try {
 			Identifier id = consumer.verifyResponse(request);
 			String username = id.getIdentifier();
-			UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", username);
+			UserAccount account = dao.getByAttr(UserAccount.class, "name", username);
 			String email = null;
 			if(request.getParameter("openid.ax.value.email") != null) email  = request.getParameter("openid.ax.value.email");
 			if(request.getParameter("openid.ext1.value.email") != null) email = request.getParameter("openid.ext1.value.email");

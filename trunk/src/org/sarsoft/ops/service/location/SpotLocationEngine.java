@@ -75,7 +75,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 		while(enabled && !timedout()) {
 			try {
 				beginTransaction();
-				List<Resource> resources = (List<Resource>) dao.loadAll(Resource.class);
+				List<Resource> resources = dao.loadAll(Resource.class);
 				for(Resource resource : resources) {
 					checkSpot(resource);
 				}

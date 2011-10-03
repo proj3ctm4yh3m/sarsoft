@@ -178,7 +178,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			wpt.setTime(new Date());
 			try {
 				beginTransaction();
-				Resource resource = (Resource) dao.getByAttr(Resource.class, "callsign", from);
+				Resource resource = dao.getByAttr(Resource.class, "callsign", from);
 				if(resource != null) {
 					logger.debug("Updating resource " + resource.getName() + "/" + resource.getAgency() + " based on APRS callsign " + from);
 					Waypoint oldPosition = resource.getPosition();

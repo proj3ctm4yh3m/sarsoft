@@ -177,7 +177,7 @@ public class ImageryController extends JSONBaseController {
 			@RequestParam(value="originy", required=false) Integer originy, @RequestParam(value="originx", required=false) Integer originx) {
 		if(angle != null) response.setHeader("Cache-Control", "max-age=3600, public");
 		response.setContentType("image/png");
-		GeoRefImage georefimage = (GeoRefImage) dao.load(GeoRefImage.class, id);
+		GeoRefImage georefimage = dao.load(GeoRefImage.class, id);
 		try {
 			BufferedImage original = ImageIO.read(new File(GEOREF_IMAGE_DIR + georefimage.getPk() + ".png"));
 			int height = original.getHeight();
@@ -213,7 +213,7 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/app/imagery/georef", method = RequestMethod.POST)
 	public String createGeoReferencedImage(Model model, HttpServletRequest request, ImageForm params) {
 		if(!Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled"))) return "redirect:/app/index.html";
-		List<GeoRefImage> images = (List<GeoRefImage>) dao.loadAll(GeoRefImage.class);
+		List<GeoRefImage> images = dao.loadAll(GeoRefImage.class);
 		long maxId = 0L;
 		for(GeoRefImage image : images) {
 			if(image.getId() != null) maxId = Math.max(maxId, image.getId());
@@ -223,7 +223,7 @@ public class ImageryController extends JSONBaseController {
 		image.setName(params.getName());
 		image.setReferenced(false);
 		dao.save(image);
-		image = (GeoRefImage) dao.load(GeoRefImage.class, maxId+1);
+		image = dao.load(GeoRefImage.class, maxId+1);
 		try {
 			File file = new File(GEOREF_IMAGE_DIR);
 			file.mkdirs();
@@ -252,7 +252,7 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/app/imagery/georef/{id}", method=RequestMethod.GET)
 	public String editGeoRefImage(Model model, HttpServletRequest request, @PathVariable("id") long id) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.VIEW;
-		GeoRefImage image = (GeoRefImage) dao.load(GeoRefImage.class, id);
+		GeoRefImage image = dao.load(GeoRefImage.class, id);
 		if(action == Action.DELETE) {
 			dao.delete(image);
 			new File(GEOREF_IMAGE_DIR + image.getPk() + ".png").delete();
@@ -281,7 +281,7 @@ public class ImageryController extends JSONBaseController {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 
 		GeoRefImage imagePrime = GeoRefImage.createFromJSON(parseObject(params));
-		GeoRefImage image = (GeoRefImage) dao.load(GeoRefImage.class, id);
+		GeoRefImage image = dao.load(GeoRefImage.class, id);
 		switch(action) {
 		case DELETE :
 			dao.delete(image);
