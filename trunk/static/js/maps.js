@@ -2043,8 +2043,8 @@ GeoRefImageOverlay.prototype.redraw = function(force) {
   
   this.div.style.left = pixel.x-this.point.x*scaling + "px";
   this.div.style.top = pixel.y-this.point.y*scaling + "px";
-  this.div.style.height = this.size.height*scaling;
-  this.div.style.width = this.size.width*scaling;
+  this.div.style.height = this.size.height*scaling + "px";
+  this.div.style.width = this.size.width*scaling + "px";
 }
 
 GeoRefImageOverlay.prototype.show = function() {
