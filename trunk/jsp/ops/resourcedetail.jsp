@@ -85,7 +85,7 @@ You can delete ${resource.name}, but this action cannot be undone.
 
 <script>
 org.sarsoft.Loader.queue(function() {
-  var map = new org.sarsoft.EnhancedGMap().createMap(document.getElementById('mapview'));
+  var map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('mapview'));
   var imap = new org.sarsoft.InteractiveMap(map);
 
   rvmc = new org.sarsoft.controller.ResourceViewMapController(${resource.id}, imap);
