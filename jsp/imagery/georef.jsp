@@ -13,11 +13,9 @@ ${mapjs}
 <script type="text/javascript">
 function doload() {
 org.sarsoft.Loader.queue(function() {
-  egm = new org.sarsoft.EnhancedGMap();
-  map = egm.createMap(document.getElementById('map_canvas'));
+  map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
 
-  egm2 = new org.sarsoft.EnhancedGMap();
-  map2 = egm.createMap(document.getElementById('combined_canvas'));
+  map2 = org.sarsoft.EnhancedGMap.createMap(document.getElementById('combined_canvas'));
 
   searchDAO = new org.sarsoft.SearchDAO();
   searchDAO.load(function(config) {

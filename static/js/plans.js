@@ -154,7 +154,7 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	if(navigator.userAgent.indexOf("MSIE") > 0 && typeof(GMap2.ol) == "undefined") height = "8in";
 	this.div.style.width="8in";
 	this.div.style.height=height;
-	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
+	var map = org.sarsoft.EnhancedGMap.createMap(this.div);
 	this.fmap = new org.sarsoft.InteractiveMap(map, {standardControls : true});
 
 	var waypointController = new org.sarsoft.controller.SearchWaypointMapController(this.fmap);
@@ -259,7 +259,7 @@ org.sarsoft.controller.AssignmentViewMapController = function(div, assignment, w
 	config.opacity = (defaultConfig.opacity == null) ? 100 : defaultConfig.opacity;
 	this.baseConfig = config;
 
-	var map = new org.sarsoft.EnhancedGMap().createMap(this.div);
+	var map = org.sarsoft.EnhancedGMap.createMap(this.div);
 	this.fmap = new org.sarsoft.InteractiveMap(map);
 
 	var waypointController = new org.sarsoft.controller.SearchWaypointMapController(this.fmap);

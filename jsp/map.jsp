@@ -94,8 +94,7 @@ removeMarker = function(marker) {
 function doload() {
 org.sarsoft.Loader.queue(function() {
 
-	egm = new org.sarsoft.EnhancedGMap();
-	map = egm.createMap(document.getElementById('map_canvas'));
+	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
 	imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
 
 	newMarkerDialog = new YAHOO.widget.Dialog("newMarkerDlg", {zIndex: "2000"});

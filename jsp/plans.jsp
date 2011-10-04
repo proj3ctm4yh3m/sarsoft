@@ -12,8 +12,7 @@ ${mapjs}
 <script type="text/javascript">
 function doload() {
 org.sarsoft.Loader.queue(function() {
-  egm = new org.sarsoft.EnhancedGMap();
-  map = egm.createMap(document.getElementById('map_canvas'));
+  map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
   plansController = new org.sarsoft.controller.OperationalPeriodMapController(imap, {id : ${period.id}});
   waypointController = new org.sarsoft.controller.SearchWaypointMapController(imap);

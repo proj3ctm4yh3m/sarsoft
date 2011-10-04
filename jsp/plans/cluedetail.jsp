@@ -90,7 +90,7 @@ document.getElementById('utm_n').value = utm.n;
 
 org.sarsoft.Loader.queue(function() {
   
-  var map = new org.sarsoft.EnhancedGMap().createMap(document.getElementById('mapview'));
+  var map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('mapview'));
   var imap = new org.sarsoft.InteractiveMap(map);
 
   cvmc = new org.sarsoft.controller.ClueViewMapController(${clue.id}, imap);
