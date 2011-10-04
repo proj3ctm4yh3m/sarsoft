@@ -2,7 +2,6 @@ package org.sarsoft.ops.service.location;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,10 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 public class APRSLocalEngine extends APRSEngine {
 

@@ -1,22 +1,17 @@
 package org.sarsoft.common.dao;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
+import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.plans.model.Search;
-
-import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 

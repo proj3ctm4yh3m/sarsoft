@@ -65,9 +65,11 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private String secondaryFrequency;
 	private Set<Clue> clues = new HashSet<Clue>();
 
+	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
 
 	static {
+		@SuppressWarnings("rawtypes")
 		Map<String, Class> m = new HashMap<String, Class>();
 		m.putAll(Way.classHints);
 		m.put("mapConfigs", MapConfig.class);

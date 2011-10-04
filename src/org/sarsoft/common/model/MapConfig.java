@@ -1,12 +1,8 @@
 package org.sarsoft.common.model;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 import net.sf.json.JSONObject;
-
-import org.hibernate.annotations.GenericGenerator;
 
 @JSONAnnotatedEntity
 @Entity

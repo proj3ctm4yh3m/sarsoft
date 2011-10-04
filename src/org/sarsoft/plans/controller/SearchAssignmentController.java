@@ -1,23 +1,21 @@
 package org.sarsoft.plans.controller;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONSerializer;
+
 import org.sarsoft.admin.model.MapSource;
-import org.sarsoft.common.controller.FileUploadForm;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
@@ -27,18 +25,10 @@ import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.common.view.Breadcrumb;
 import org.sarsoft.ops.model.Resource;
-import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.model.OperationalPeriod;
-import org.sarsoft.plans.model.Probability;
 import org.sarsoft.plans.model.Search;
 import org.sarsoft.plans.model.SearchAssignment;
-import org.sarsoft.plans.model.SearchAssignment.ResourceType;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONSerializer;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -286,13 +276,11 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/assignment/since/{date}", method = RequestMethod.GET)
 	public String getAssignmentsUpdatedSince(@PathVariable("date") long date, Model model) {
 		return json(model, dao.loadSince(SearchAssignment.class, new Date(date)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/assignment", method = RequestMethod.POST)
 	public String createAssignment(JSONForm params, Model model, HttpServletRequest request) {
 		SearchAssignment assignment = SearchAssignment.createFromJSON(parseObject(params));
@@ -435,7 +423,6 @@ public class SearchAssignmentController extends JSONBaseController {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		if(action == Action.DELETE) {
-			Way way = assignment.getWays().get(wayId);
 			assignment.getWays().remove(wayId);
 			dao.save(assignment);
 		}
@@ -447,7 +434,6 @@ public class SearchAssignmentController extends JSONBaseController {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		if(action == Action.DELETE) {
-			Waypoint waypoint = assignment.getWaypoints().get(waypointId);
 			assignment.getWaypoints().remove(waypointId);
 			dao.save(assignment);
 		}

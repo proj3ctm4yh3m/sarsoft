@@ -1,18 +1,12 @@
 package org.sarsoft.common.model;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.Transient;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import org.hibernate.annotations.GenericGenerator;
 
 @JSONAnnotatedEntity
 @Entity

@@ -46,7 +46,6 @@ public class AdminController extends JSONBaseController {
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
 	public String homePage(Model model) {
 		OperationalPeriod lastPeriod = null;

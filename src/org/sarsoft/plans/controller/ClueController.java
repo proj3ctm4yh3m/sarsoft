@@ -9,7 +9,6 @@ import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.stereotype.Controller;
@@ -42,7 +41,6 @@ public class ClueController extends JSONBaseController {
 			@RequestParam(value="wptid", required=false) Long wptid) {
 		
 		long maxId = 0L;
-		@SuppressWarnings("unchecked")
 		List<Clue> clues = dao.loadAll(Clue.class);
 		for(Clue clue : clues) {
 			maxId = Math.max(maxId, clue.getId());

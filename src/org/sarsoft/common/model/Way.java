@@ -9,8 +9,6 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToMany;
@@ -20,7 +18,6 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IndexColumn;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -37,9 +34,11 @@ public class Way extends SarModelObject implements IPreSave {
 	private Date updated;
 	private int precision = 100;
 
+	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
 
 	static {
+		@SuppressWarnings("rawtypes")
 		Map<String, Class> m = new HashMap<String, Class>();
 		m.put("waypoints", Waypoint.class);
 		classHints = Collections.unmodifiableMap(m);
