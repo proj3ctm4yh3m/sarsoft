@@ -1,23 +1,21 @@
 package org.sarsoft.admin.util;
 
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.openid4java.consumer.ConsumerException;
 import org.openid4java.consumer.ConsumerManager;
 import org.openid4java.consumer.VerificationResult;
-import org.openid4java.discovery.Identifier;
 import org.openid4java.discovery.DiscoveryInformation;
+import org.openid4java.discovery.Identifier;
+import org.openid4java.message.AuthRequest;
+import org.openid4java.message.AuthSuccess;
+import org.openid4java.message.ParameterList;
+import org.openid4java.message.ax.AxMessage;
 import org.openid4java.message.ax.FetchRequest;
 import org.openid4java.message.ax.FetchResponse;
-import org.openid4java.message.ax.AxMessage;
-import org.openid4java.message.*;
-import org.openid4java.OpenIDException;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-import java.io.IOException;
 
 public class OIDConsumer
 {

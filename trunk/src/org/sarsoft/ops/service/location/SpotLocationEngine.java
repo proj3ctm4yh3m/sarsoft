@@ -1,6 +1,5 @@
 package org.sarsoft.ops.service.location;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +45,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 			try {
 				json = request.execute().parseAsString();
 				MorphDynaBean bean = (MorphDynaBean) JSONObject.toBean((JSONObject) JSONSerializer.toJSON(json));
+				@SuppressWarnings("rawtypes")
 				List messages = (List) ((MorphDynaBean) ((MorphDynaBean) ((MorphDynaBean) bean.get("response")).get("feedMessageResponse")).get("messages")).get("message");
 				MorphDynaBean message = (MorphDynaBean) messages.get(0);
 

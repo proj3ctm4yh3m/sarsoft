@@ -234,6 +234,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 			}
 
 			MorphDynaBean bean = (MorphDynaBean) JSONObject.toBean((JSONObject) JSONSerializer.toJSON(json));
+			@SuppressWarnings("rawtypes")
 			List entries = (List) bean.get("entries");
 			if(entries.size() > 0) {
 				bean = (MorphDynaBean) entries.get(0);

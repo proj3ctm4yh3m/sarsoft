@@ -6,7 +6,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.sarsoft.admin.model.Config;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.util.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
@@ -14,7 +13,6 @@ import org.sarsoft.imagery.model.GeoRefImage;
 import org.sarsoft.plans.model.Search;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 

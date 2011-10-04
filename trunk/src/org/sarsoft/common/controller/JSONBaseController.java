@@ -21,22 +21,19 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.log4j.Logger;
-import org.sarsoft.admin.model.Config;
-import org.sarsoft.admin.model.MapSource;
-import org.sarsoft.common.model.MapConfig;
-import org.sarsoft.common.model.UserAccount;
-import org.sarsoft.common.dao.GenericHibernateDAO;
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
-import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.imagery.model.GeoRefImage;
-import org.sarsoft.plans.model.Search;
-
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
+import org.apache.log4j.Logger;
+import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.common.dao.GenericHibernateDAO;
+import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.model.UserAccount;
+import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.imagery.model.GeoRefImage;
+import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +45,6 @@ public abstract class JSONBaseController {
 	protected static String APP = "app";
 	
 	private List<MapSource> mapSources;
-	private List<MapSource> alphaOverlays;
 	private Properties properties;
 	
 	@Autowired
@@ -155,7 +151,7 @@ public abstract class JSONBaseController {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	protected String json(Model model, Object obj) {
 		if(obj == null) return "/json";
 		if(obj instanceof List) {

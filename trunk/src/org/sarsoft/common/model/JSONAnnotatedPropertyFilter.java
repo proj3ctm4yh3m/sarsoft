@@ -4,8 +4,6 @@ import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Transient;
-
 import org.sarsoft.common.model.json.DateProcessor;
 import org.sarsoft.common.model.json.ListProcessor;
 import net.sf.json.JSONArray;

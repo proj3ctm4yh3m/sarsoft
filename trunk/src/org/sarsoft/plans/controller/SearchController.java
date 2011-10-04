@@ -1,8 +1,6 @@
 package org.sarsoft.plans.controller;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,12 +9,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
-import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.UserAccount;
@@ -50,6 +46,7 @@ public class SearchController extends JSONBaseController {
 		return json(model, map);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/rest/search/mapConfig", method = RequestMethod.POST)
 	public String setSearchProperty(Model model, JSONForm params) {
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
@@ -153,7 +150,7 @@ public class SearchController extends JSONBaseController {
 			model.addAttribute("message", "You can only admin this search if you own it.");
 			return admin(model, request);
 		}
-		List l = dao.loadAll(OperationalPeriod.class);
+		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
 		if(l == null || l.size() == 0) {
 			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
 			search.getAccount().getSearches().remove(search);
@@ -182,7 +179,7 @@ public class SearchController extends JSONBaseController {
 		model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
 		model.addAttribute("hosted", isHosted());
 		model.addAttribute("server", RuntimeProperties.getServerUrl());
-		List l = dao.loadAll(OperationalPeriod.class);
+		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
 		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
 		return app(model, "Pages.Search");
 	}
@@ -212,7 +209,7 @@ public class SearchController extends JSONBaseController {
 		}
 		search.setDatum(request.getParameter("datum"));
 		dao.save(search);
-		List l = dao.loadAll(OperationalPeriod.class);
+		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
 		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
 		model.addAttribute("search", search);
 		model.addAttribute("server", RuntimeProperties.getServerUrl());
@@ -243,7 +240,6 @@ public class SearchController extends JSONBaseController {
 		} catch (IOException e) {}
 	}
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value ="/rest/search", method = RequestMethod.GET)
 	public String bulkGPXDownload(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;

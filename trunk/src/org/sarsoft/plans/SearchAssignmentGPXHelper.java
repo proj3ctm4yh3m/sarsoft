@@ -31,10 +31,12 @@ import org.sarsoft.plans.model.SearchAssignment.Status;
 
 public class SearchAssignmentGPXHelper {
 
+	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> searchClassHints = new HashMap<String, Class>();
 	private static Logger logger = Logger.getLogger(SearchAssignmentGPXHelper.class);
 
 	static {
+		@SuppressWarnings("rawtypes")
 		Map<String, Class> m = new HashMap<String, Class>();
 		m.put("waypoints", Waypoint.class);
 		m.put("lkp", Waypoint.class);
@@ -46,7 +48,6 @@ public class SearchAssignmentGPXHelper {
 		searchClassHints = Collections.unmodifiableMap(m);
 	}
 
-	@SuppressWarnings("unchecked")
 	public static Map<String, Object> gpxifySearch(Search search, GenericHibernateDAO dao) {
 		Map<String, Object> modified = new HashMap<String, Object>();		
 		modified.put("assignments", gpxifyAssignmentList(dao.loadAll(SearchAssignment.class)));
@@ -87,7 +88,7 @@ public class SearchAssignmentGPXHelper {
 		return modified;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	public static void updateSearch(JSONObject json, GenericHibernateDAO dao) {
 		Map m = (Map) JSONObject.toBean(json, Map.class, searchClassHints);
 		
@@ -225,7 +226,7 @@ public class SearchAssignmentGPXHelper {
 		updateAssignmentsAndWays(m, dao);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static void updateAssignmentsAndWays(Map[] objs, GenericHibernateDAO dao) {
 		for(Map<String, Object> obj : objs) {
 			String name = (String) obj.get("name");

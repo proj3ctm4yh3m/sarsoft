@@ -5,23 +5,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import net.sf.json.JSONObject;
+
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
-import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.plans.controller.SearchAssignmentController;
-import net.sf.json.JSONObject;
 
 @JSONAnnotatedEntity
 @Entity

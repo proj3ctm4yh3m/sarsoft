@@ -5,15 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import net.sf.ezmorph.bean.MorphDynaBean;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
@@ -21,11 +13,6 @@ import org.sarsoft.common.util.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.Search;
-
-import com.google.api.client.googleapis.GoogleTransport;
-import com.google.api.client.googleapis.json.JsonCParser;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpTransport;
 
 public class APRSTier2Engine extends APRSEngine {
 	
@@ -64,7 +51,6 @@ public class APRSTier2Engine extends APRSEngine {
 			}
 			
 			boolean b = false;
-			@SuppressWarnings("unchecked")
 			List<Resource> resources = dao.loadAll(Resource.class);
 			for(Resource resource : resources) {
 				if(resource.getAssignment() != null  && resource.getCallsign() != null  && resource.getCallsign().length() > 0) {

@@ -24,10 +24,7 @@ import org.sarsoft.ops.model.Resource.Type;
 import org.sarsoft.ops.service.location.APRSLocalEngine;
 import org.sarsoft.ops.service.location.APRSTier2Engine;
 import org.sarsoft.ops.service.location.SpotLocationEngine;
-import org.sarsoft.ops.service.location.AsyncTransactionalEngine.Status;
-import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.controller.SearchAssignmentController;
-import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -164,7 +161,6 @@ public class OpsController extends JSONBaseController {
 		return "redirect:/app/location/status";
 	}
 	
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/app/location/check", method = RequestMethod.GET)
 	public String checkLocations(Model model) {
 		APRSTier2Engine aprs = createAprst2();
@@ -421,7 +417,6 @@ public class OpsController extends JSONBaseController {
 		return "redirect:/app/assignment/" + assignment.getId();
 	}
 
-	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/resource/since/{date}", method = RequestMethod.GET)
 	public String getResourcesUpdatedSince(@PathVariable("date") long date, Model model) {
 		return json(model, dao.loadSince(Resource.class, new Date(date)));

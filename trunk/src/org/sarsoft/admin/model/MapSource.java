@@ -1,16 +1,12 @@
 package org.sarsoft.admin.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import net.sf.json.JSONObject;
+
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
-import org.sarsoft.plans.model.SearchAssignment;
-import net.sf.json.JSONObject;
 
 @JSONAnnotatedEntity
 @Entity

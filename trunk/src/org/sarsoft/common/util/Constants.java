@@ -43,6 +43,7 @@ public class Constants {
 		all = convert(all);
 	}
 
+	@SuppressWarnings("rawtypes")
 	static private Map<String, Object> convert(Map map) {
 		Map<String, Object> strmap = new HashMap<String, Object>();
 		for(Object key : map.keySet()) {

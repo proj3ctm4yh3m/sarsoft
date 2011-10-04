@@ -5,7 +5,6 @@ import javax.persistence.Transient;
 
 import net.sf.json.JSONObject;
 
-import org.sarsoft.admin.model.MapSource;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
