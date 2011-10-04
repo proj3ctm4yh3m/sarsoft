@@ -135,16 +135,11 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	var that = this;
 	this.id = id;
 	var dao = new org.sarsoft.SearchAssignmentDAO();
-	var dlg = jQuery("<div/>", {style: "position: absolute; z-index: 2500; top: 200px; left: 200px; width: 420px"});
-	jQuery('<div class="hd">Upload GPX File</div>').appendTo(dlg);
-	jQuery('<div class="bd"><form method="post" enctype="multipart/form-data" name="gpxupload" action="/app/assignment/' + id + '/way"><input type="file" name="file"/><input type="hidden" name="format" value="gpx"/></form></div>').appendTo(dlg);
-	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "2500", width: "420px"});
-	var buttons = [ { text : "Import", handler: function() {
-		that.dialog.hide(); document.forms['gpxupload'].submit();
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this.dialog.render(document.body);
-	this.dialog.hide();
+		
+	var body = jQuery('<form method="post" enctype="multipart/form-data" name="gpxupload" action="/app/assignment/' + id + '/way"><input type="file" name="file"/><input type="hidden" name="format" value="gpx"/></form>')[0];
+
+	this.dialog = org.sarsoft.view.CreateDialog("Uload GPX File", body, "Import", "Cancel", function() {
+		}, {top: "200px", left: "200px", width: "420px"});
 }
 
 org.sarsoft.controller.AssignmentPrintMapController = function(container, id, mapConfig, showPreviousEfforts) {
@@ -349,8 +344,8 @@ org.sarsoft.view.MapSetupWidget = function(imap) {
 	this.imap = imap;
 
 	this._body = document.createElement("div");
-	var style = {position : "absolute", zIndex : "2500", top : "100px", left : "100px", width : "500px"};
-	this._dialog = org.sarsoft.view.CreateBlankDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
+	var style = {position : "absolute", "z-index" : "2500", top : "100px", left : "100px", width : "500px"};
+	this._dialog = org.sarsoft.view.CreateDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
 	
 	var setup = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Map Setup"/>')[0];
 	GEvent.addDomListener(setup, "click", function() {
@@ -398,7 +393,7 @@ org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
 	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.imap.message("Server Communication Error!"); });
 
 	if(persist) {
-		var saveDlg = org.sarsoft.view.CreateSimpleDialog("Save Map Settings", "This will make the map layers, range rings, assignment coloring and track/location visibility the default for all maps on this search.", "Save", "Cancel", function() {
+		var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "This will make the map layers, range rings, assignment coloring and track/location visibility the default for all maps on this search.", "Save", "Cancel", function() {
 			that.saveConfig();
 		});
 		var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Make this the default search map."/>')[0];
@@ -594,7 +589,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		{text : "Discard Changes", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && that.getAssignmentAttr(assignment, "inedit"); }, handler: function(data) { that.discard(that._getAssignmentFromWay(data.subject)) }}
 		]);
 	
-	var leaveDlg = org.sarsoft.view.CreateSimpleDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.period.id + "?", "Leave", "Cancel", function() {
+	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.period.id + "?", "Leave", "Cancel", function() {
 		window.location = "/app/operationalperiod/" + that.period.id;		
 	});
 	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Back to operational period ' + this.period.id + '"/>')[0];
@@ -935,17 +930,11 @@ org.sarsoft.view.BulkGPXDlg = function(id) {
 	var that = this;
 	this.id = id;
 	var dao = new org.sarsoft.OperationalPeriodDAO();
-	var dlg = jQuery('<div style="position: absolute; z-index: 1000; top: 200px; left: 200px; width: 420px"></div>');
-	jQuery('<div class="hd">Upload GPX File</div>').appendTo(dlg);
-	jQuery('<div class="bd"><form method="post" enctype="multipart/form-data" name="gpxupload" action="/rest/search"><input type="hidden" name="format" value="GPX"/><input type="file" name="file"/></form></div>').appendTo(dlg);
 
-	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "1000", width: "420px"});
-	var buttons = [ { text : "Import", handler: function() {
-		that.dialog.hide(); document.forms['gpxupload'].submit();
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this.dialog.render(document.body);
-	this.dialog.hide();
+	var body = jQuery('<form method="post" enctype="multipart/form-data" name="gpxupload" action="/rest/search"><input type="hidden" name="format" value="GPX"/><input type="file" name="file"/></form>')[0];
+	this.dialog = org.sarsoft.view.CreateDialog("Upload GPX File", body, "Import", "Cancel", function() {
+		document.forms['gpxupload'].submit();
+		}, {width: "420px", left: "200px", top: "200px"});
 }
 
 org.sarsoft.view.ClueTable = function(handler) {

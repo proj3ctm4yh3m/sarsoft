@@ -353,21 +353,12 @@ org.sarsoft.view.EntityCreateDialog = function(title, entityform, handler) {
 	var that = this;
 	this.handler = handler;
 	this.entityform = entityform;
-	var dlg = jQuery('<div style="position: absolute; z-index: 1000; top: 100px; left: 200px; width: 400px"></div>');
-	jQuery('<div class="hd">' + title + '</div>').appendTo(dlg);
-	var bd = jQuery('<div class="bd"></div>').appendTo(dlg)[0];
-	this.entityform.create(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "1000", width: "400px"});
-	var buttons = [ { text : "Create", handler: function() {
-		that.dialog.hide();
+	this.body = document.createElement("div");
+	this.dialog = org.sarsoft.view.CreateDialog(title, this.body, "Create", "Cancel", function() {
 		var obj = that.entityform.read();
 		that.entityform.write(new Object());
 		handler(obj);
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this._rendered = false;
-	this.dialog.render(document.body);
-	this.dialog.hide();
+	},  {left: "200px", width: "400px"});
 }
 
 org.sarsoft.view.EntityCreateDialog.prototype.show = function(obj) {
@@ -375,35 +366,27 @@ org.sarsoft.view.EntityCreateDialog.prototype.show = function(obj) {
 	this.dialog.show();
 }
 
-org.sarsoft.view.CreateBlankDialog = function(title, bodynode, yes, no, handler, style) {
-	var dlg = document.createElement("div");
-	for(var key in style) {
-		dlg.style[key] = style[key];
+org.sarsoft.view.CreateDialog = function(title, bodynode, yes, no, handler, style) {
+	var dlgStyle = {width: "350px", position: "absolute", top: "100px", left: "100px", "z-index": "2500"};
+	if(style != null) for(var key in style) {
+		dlgStyle[key] = style[key];
 	}
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode(title));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
-	bd.appendChild(bodynode);
-	var dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: (style.width == null) ? "350px" : style.width});
+	
+	if(typeof(bodynode)=="string") bodynode = jQuery('<div>' + bodynode + '</div>')[0];
+	
+	var dlg = jQuery('<div><div class="hd">' + title + '</div></div>');
+	dlg.css(dlgStyle);
+	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
+	this.bd.append(bodynode);
+		
 	var buttons = [ { text : yes, handler: function() {
 		dialog.hide();
 		handler();
 	}, isDefault: true}, {text : no, handler : function() { dialog.hide(); }}];
-	dialog.cfg.queueProperty("buttons", buttons);
+	var dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
 	dialog.render(document.body);
 	dialog.hide();
 	return dialog;
-}
-
-org.sarsoft.view.CreateSimpleDialog = function(title, bodytext, yes, no, handler) {
-	style = {zIndex : "200", top : "100px", left : "100px", width: "350px"};
-	var d = document.createElement("div");
-	d.innerHTML = bodytext;
-	return org.sarsoft.view.CreateBlankDialog(title, d, yes, no, handler, style);
 }
 
 org.sarsoft.ToggleControl = function(label, tooltip, handler, states) {

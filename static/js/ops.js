@@ -41,27 +41,10 @@ org.sarsoft.ResourceDAO.prototype.detachResource = function(resource, assignment
 
 org.sarsoft.view.ResourceImportDlg = function(id) {
 	var that = this;
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="1000";
-	dlg.style.top="200px";
-	dlg.style.left="200px";
-	dlg.style.width="420px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Upload Resources as CSV"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	bd.innerHTML="<p>Data should be a comma separated file without character escaping.  Column ordering should match the file created when selecting 'Export to CSV'.</p><form method='post' enctype='multipart/form-data' name='resourceupload' action='/app/resource/'><input type='file' name='file'/><input type='hidden' name='format' value='csv'/></form>";
-	dlg.appendChild(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "1000", width: "420px"});
-	var buttons = [ { text : "Import", handler: function() {
-		that.dialog.hide(); document.forms['resourceupload'].submit();
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this.dialog.render(document.body);
-	this.dialog.hide();
+	var body = jQuery("<div><p>Data should be a comma separated file without character escaping.  Column ordering should match the file created when selecting 'Export to CSV'.</p><form method='post' enctype='multipart/form-data' name='resourceupload' action='/app/resource/'><input type='file' name='file'/><input type='hidden' name='format' value='csv'/></form></div>")[0];
+	this.dialog = org.sarsoft.view.CreateDialog("Upload Resources as CSV", body, "Import", "Cancel", function() {
+		document.forms['resourceupload'].submit();
+		}, {width: "420px", left: "200px", top: "200px"});
 }
 
 
