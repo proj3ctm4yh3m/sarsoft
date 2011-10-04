@@ -8,7 +8,6 @@ ${mapjs}
 <script src="/app/constants.js"></script>
 <script src="/static/js/common.js"></script>
 <script src="/static/js/maps.js"></script>
-<script src="/static/js/admin.js"></script>
 <script src="/static/js/ops.js"></script>
 <script type="text/javascript">
 function doload() {
@@ -133,6 +132,13 @@ function updateCombinedView() {
 	map2.setCenter(new GLatLng(1*georef.originlat, 1*georef.originlng), 12);
 	tabView.set('activeIndex', 2);
 }
+
+org.sarsoft.GeoRefImageDAO = function(errorHandler, baseURL) {
+	if(typeof baseURL == "undefined") baseURL = "/rest/georefimage";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+}
+org.sarsoft.GeoRefImageDAO.prototype = new org.sarsoft.BaseDAO();
 
 function save() {
   var dao = new org.sarsoft.GeoRefImageDAO();
