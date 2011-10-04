@@ -145,7 +145,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var tPlus = null;
 	var tDivOverlay = null;
 	var tDiv = null;
-	var div = document.createElement("div");
+	var div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>').appendTo(map.getContainer());
 	if(this.hasAlphaOverlays) {
 		this.alphaOverlayBoxes = new Array();
 		this.alphaOverlayTypes = transparentTypes;
@@ -157,63 +157,36 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		this.alphaOverlayPlus = tps;
 		tPlus.appendChild(tps);
 
-		tDiv = document.createElement("div");
-		tDiv.style.visibility="hidden";
-		tDiv.style.backgroundColor="white";
-		tDiv.style.position="absolute";
-		tDiv.style.right="0";
-		tDiv.style.top="1.5em";
-		tDiv.style.width="16em";
-		tDivOverlay = document.createElement("div");
-		tDivOverlay.style.color="black";
-		tDivOverlay.style.fontWeight="normal";
-		tDiv.appendChild(tDivOverlay);
+		tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; top: 1.5em; width: 16em"></div>').appendTo(tPlus);
+		tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
 		for(var i = 0; i < transparentTypes.length; i++) {
-			var cb = document.createElement("input");
-			cb.type="checkbox";
-			cb.value=i;
-			cb.name = transparentTypes[i].getName();
-			this.alphaOverlayBoxes[i] = cb;
-			tDiv.appendChild(cb);
-			tDiv.appendChild(document.createTextNode(transparentTypes[i].getName()));
-			if(i < transparentTypes.length - 1) tDiv.appendChild(document.createElement("br"));
+			this.alphaOverlayBoxes[i] = jQuery('<input type="checkbox" value="' + i + '" name="' + transparentTypes[i].getName() + '"/>').appendTo(tDiv)[0];
+			tDiv.append(document.createTextNode(transparentTypes[i].getName()));
+			if(i < transparentTypes.length - 1) tDiv.append(document.createElement("br"));
 		}
-		tPlus.appendChild(tDiv);
 		GEvent.addDomListener(tps, "click", function() {
-			if(tDiv.style.visibility=="hidden") {
-				tDiv.style.visibility="visible";
+			if(tDiv.css("visibility")=="hidden") {
+				tDiv.css("visibility","visible");
 				div.style.zIndex="1001";
 			} else {
-				tDiv.style.visibility="hidden";
+				tDiv.css("visibility", "hidden");
 			}
 			});
 	}
 	
-	div.style.color="red";
-	div.style.background="white";
-	div.style.fontWeight="bold";
-	div.style.zIndex="1001";
-	div.appendChild(this.extras);
-	div.appendChild(document.createTextNode("base: "));
-	div.appendChild(this.typeSelect);
+	div.append(this.extras, document.createTextNode("base: "), this.typeSelect);
 	if(tDivOverlay != null) {
-		tDivOverlay.appendChild(this.overlaySelect);
-		tDivOverlay.appendChild(document.createTextNode("@"));
-		tDivOverlay.appendChild(this.opacityInput);
-		tDivOverlay.appendChild(document.createTextNode("%"));
+		tDivOverlay.append(this.overlaySelect, document.createTextNode("@"), this.opacityInput, document.createTextNode("%"));
 	} else {
-		div.appendChild(document.createTextNode("overlay: "));
-		div.appendChild(this.overlaySelect);
-		div.appendChild(this.opacityInput);		
+		div.append(document.createTextNode("overlay: "), this.overlaySelect, this.opacityInput);
 	}
-	if(tPlus != null) div.appendChild(tPlus);
+	if(tPlus != null) div.append(tPlus);
 	var go = document.createElement("button");
 	go.appendChild(document.createTextNode("GO"));
-	div.appendChild(go);
-	map.getContainer().appendChild(div);
+	div.append(go);
 	
 	GEvent.addDomListener(go, "click", function() {
-		if(tDiv != null) tDiv.style.visibility="hidden";
+		if(tDiv != null) tDiv.css("visibility","hidden");
 		var base = that.types[that.typeSelect.value];
 		var overlay = that.types[that.overlaySelect.value];
 		var opacity = that.opacityInput.value;
@@ -227,7 +200,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		that.updateMap(base, overlay, opacity, tt.length > 0 ? tt : null);
 	});
 	this._go = go;
-	return div;
+	return div[0];
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
@@ -349,41 +322,19 @@ org.sarsoft.MapMessageControl.prototype.clear = function() {
 org.sarsoft.view.MapSizeDlg = function(map) {
 	var that = this;
 	this.map = map;
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="200";
-	dlg.style.top="100px";
-	dlg.style.left="100px";
-	dlg.style.width="350px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Map Size"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
-	var d = document.createElement("div");
-	d.style.paddingBottom="10px";
-	bd.appendChild(d);
-	d.innerHTML = "Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm) and account for margins.  Restore map to original size by setting width and height to 100%";
-	bd.appendChild(document.createTextNode("Width: "));
-	this.widthInput = document.createElement("input");
-	this.widthInput.type="text";
-	this.widthInput.size=8;
-	bd.appendChild(this.widthInput);
-	bd.appendChild(document.createTextNode("   Height: "));
-	this.heightInput = document.createElement("input");
-	this.heightInput.type="text";
-	this.heightInput.size=8;
-	bd.appendChild(this.heightInput);
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "350px"});
+	var dlg = jQuery('<div style="position: absolute; z-index: 200; top: 100px; left: 100px; width: 350px"></div>');
+	jQuery('<div class="hd">Map Size</div>').appendTo(dlg);
+	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm) and account for margins.  Restore map to original size by setting width and height to 100%.</div></div>').appendTo(dlg);
+	bd.append(document.createTextNode("Width: "));
+	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
+	bd.append(document.createTextNode("   Height: "));
+	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "2500", width: "350px"});
 	var buttons = [ { text : "Update", handler: function() {
 		that.dialog.hide();
 		var center = that.map.getCenter();
-		var width = that.widthInput.value;
-		var height = that.heightInput.value;
-		that.map.getContainer().style.width=width;
-		that.map.getContainer().style.height=height;
+		that.map.getContainer().style.width=that.widthInput.val();
+		that.map.getContainer().style.height=that.heightInput.val();
 		that.map.checkResize();
 		that.map.setCenter(center);
 	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
@@ -394,8 +345,8 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 }
 
 org.sarsoft.view.MapSizeDlg.prototype.show = function() {
-	this.widthInput.value=this.map.getContainer().style.width;
-	this.heightInput.value=this.map.getContainer().style.height;
+	this.widthInput.val(this.map.getContainer().style.width);
+	this.heightInput.val(this.map.getContainer().style.height);
 	this.dialog.show();
 }
 
@@ -421,34 +372,20 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	var that = this;
 	this.imap = imap;
 
-	var datumControl = document.createElement("div");
-	datumControl.style.zIndex=2000;
-	datumControl.style.position="absolute";
-	datumControl.style.bottom="0px";
-	datumControl.style.left="0px";
-	datumControl.style.backgroundColor="white";
-	this.datumDisplay = document.createElement("span");
-	datumControl.appendChild(this.datumDisplay);
-	this.datumDisplay.innerHTML = org.sarsoft.map.datum;
-	this.datumControl = datumControl;
-	imap.map.getContainer().appendChild(datumControl);
+	this.datumControl = jQuery('<div style="z-index: 2000; position: absolute; bottom: 0px; left: 0px; background: white"></div>').appendTo(imap.map.getContainer());
+	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '</span>').appendTo(this.datumControl);
 	
 	if(switchable) {
-		var datumSwitcher = document.createElement("a");
-		datumSwitcher.style.cursor="pointer";
-		datumSwitcher.innerHTML = "+";
-		datumSwitcher.className="noprint";
-		this.datumControl.appendChild(datumSwitcher);
-		this.datumSwitcher = datumSwitcher;
+		this.datumSwitcher = jQuery('<a style="cursor: pointer" class="noprint">+</a>').appendTo(this.datumControl)[0];
 		
 		var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;		
-		var datumMenu = new YAHOO.widget.Menu(id, {hidedelay : 800, zIndex : "1000", context : [datumSwitcher, "bl", "tr"]});
+		var datumMenu = new YAHOO.widget.Menu(id, {hidedelay : 800, zIndex : "1000", context : [this.datumSwitcher, "bl", "tr"]});
 		var fn = function(d) {
 			return function() {
 				org.sarsoft.map.datum = d;
 				GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
 				datumMenu.hide();
-				that.datumDisplay.innerHTML = d;
+				that.datumDisplay.html(d);
 				that.imap.updateDatum();
 			}
 		}
@@ -457,8 +394,8 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 		}
 		datumMenu.render(document.body);
 		
-		GEvent.addDomListener(datumSwitcher, "click", function() {
-			datumMenu.cfg.setProperty("context", [datumSwitcher, "bl", "tr"]);
+		GEvent.addDomListener(this.datumSwitcher, "click", function() {
+			datumMenu.cfg.setProperty("context", [this.datumSwitcher, "bl", "tr"]);
 			datumMenu.show();
 		});
 	}
@@ -743,27 +680,15 @@ org.sarsoft.MapFindWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
 	
-	var dlg = document.createElement("div");
-	dlg.style.position="absolute";
-	dlg.style.zIndex="200";
-	dlg.style.top="100px";
-	dlg.style.left="100px";
-	dlg.style.width="450px";
-	var hd = document.createElement("div");
-	hd.appendChild(document.createTextNode("Find"));
-	hd.className = "hd";
-	dlg.appendChild(hd);
-	var bd = document.createElement("div");
-	bd.className = "bd";
-	dlg.appendChild(bd);
+	var dlg = jQuery('<div style="position: absolute; z-index: 200; top: 100px; left: 100px; width: 450px"><div class="hd">Find</div></div>');
+	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
 	var d = document.createElement("div");
-	bd.appendChild(d);
-	this.bd = bd;
+	this.bd.append(d);
 	
 	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
 	this.locationEntryForm.create(d);
 	
-	this.dialog = new YAHOO.widget.Dialog(dlg, {zIndex: "2500", width: "450px"});
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "2500", width: "450px"});
 	var buttons = [ { text : "Find", handler: function() {
 		that.dialog.hide();
 		var entry = that.locationEntryForm.read(function(gll) { that.imap.map.setCenter(gll, 14);});
@@ -773,11 +698,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 	this.dialog.render(document.body);
 	this.dialog.hide();
 
-	var find = document.createElement("img");
-	find.src="/static/images/find.png";
-	find.style.cursor="pointer";
-	find.style.verticalAlign="middle";
-	find.title = "Find a coordinate";
+	var find = jQuery('<img src="/static/images/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>')[0];
 	GEvent.addDomListener(find, "click", function() {
 		that.locationEntryForm.clear();
 		that.initializeDlg();
@@ -788,9 +709,9 @@ org.sarsoft.MapFindWidget = function(imap) {
 
 org.sarsoft.MapFindWidget.prototype.initializeDlg = function() {
 	var blocks = new Array();
-	if(this._container != null) this.bd.removeChild(this._container);
+	if(this._container != null) $(this._container).remove();
 	this._container = document.createElement("div");
-	this.bd.appendChild(this._container);
+	this.bd.append(this._container);
 
 	for(var key in this.imap.registered) {
 		if(this.imap.registered[key].getFindBlock != null) {
@@ -1238,41 +1159,27 @@ org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
 	var that = this;
 	this.minimized = false;
 	this.div = document.createElement("div");
-
-	this.ctrl = document.createElement("span");
-	this.ctrl.style.background = "white";
-	this.ctrl.className = "noprint";
-	this.min = document.createElement("img");
-	this.min.style.cursor = "pointer";
-	this.min.style.width="12px";
-	this.min.style.height="12px";
-	this.min.src = "/static/images/right.png";
-	GEvent.addDomListener(this.min, "click", function() {
+	this.ctrl = jQuery('<span style="background: white" class="noprint"></span>').appendTo(this.div);
+	this.min = jQuery('<img style="cursor: pointer; width: 12px; height: 12px" src="/static/images/right.png"/>').appendTo(this.ctrl);
+	GEvent.addDomListener(this.min[0], "click", function() {
 		that.minmax();
 	});
-	this.ctrl.appendChild(this.min);
-		
-	this.msg = document.createElement("span");
-	this.msg.style.background = "white";
-	
-	this.div.appendChild(this.ctrl);
-	this.div.appendChild(this.msg);
-	
+
+	this.msg = jQuery('<span style="background: white"></span>').appendTo(this.div);
 	map.getContainer().appendChild(this.div);
-	
 	return this.div;
 }
 
 org.sarsoft.MapInfoControl.prototype.minmax = function() {
 	if(this.minimized) {
-		this.ctrl.style.paddingRight = "0";
-		this.msg.style.display = "inline";
-		this.min.src = "/static/images/right.png";
+		this.ctrl.css("padding-right", "0");
+		this.msg.css("display", "inline");
+		this.min.attr("src", "/static/images/right.png");
 		this.minimized = false;
 	} else {
-		this.ctrl.style.paddingRight = "1em";
-		this.msg.style.display = "none";
-		this.min.src = "/static/images/left.png";
+		this.ctrl.css("padding-right", "1em");
+		this.msg.css("display", "none");
+		this.min.attr("src", "/static/images/left.png");
 		this.minimized = true;
 	}
 }
@@ -1285,127 +1192,73 @@ org.sarsoft.UTMEditForm = function() {
 }
 
 org.sarsoft.UTMEditForm.prototype.create = function(container) {
-	this.zone = document.createElement("input");
-	this.zone.type="text";
-	this.zone.size=2;
-	container.appendChild(this.zone);
-	var label = document.createElement("span");
-	label.className="hint";
-	label.innerHTML = "zone";
-	container.appendChild(label);
-	container.appendChild(document.createTextNode(" "));
+	this.zone = jQuery('<input type="text" size="2"/>').appendTo(container);
+	jQuery('<span class="hint">zone</span>').appendTo(container);
+	$(container).append(" ");
 	
-	this.e = document.createElement("input");
-	this.e.type="text";
-	this.e.size=9;
-	container.appendChild(this.e);
-	label = document.createElement("span");
-	label.className="hint";
-	label.innerHTML = "E";
-	container.appendChild(label);
-	container.appendChild(document.createTextNode(" "));
+	this.e = jQuery('<input type="text" size="9"/>').appendTo(container);
+	jQuery('<span class="hint">E</span>').appendTo(container);
+	$(container).append(" ");
 
-	this.n = document.createElement("input");
-	this.n.type="text";
-	this.n.size=9;
-	container.appendChild(this.n);
-	label = document.createElement("span");
-	label.className="hint";
-	label.innerHTML = "N";
-	container.appendChild(label);
+	this.n = jQuery('<input type="text" size="9"/>').appendTo(container);
+	jQuery('<span class="hint">N</span>').appendTo(container);
 }
 
 org.sarsoft.UTMEditForm.prototype.write = function(utm) {
 	if(utm == null) utm = {zone : null, e: null, n : null};
-	this.zone.value = utm.zone;
-	this.e.value = utm.e;
-	this.n.value = utm.n;
+	this.zone.val(utm.zone);
+	this.e.val(utm.e);
+	this.n.val(utm.n);
 }
 
 org.sarsoft.UTMEditForm.prototype.read = function() {
-	var zone = this.zone.value;	
+	var zone = this.zone.val();	
 	if(zone == null || zone.length == 0) return null;
 	if(zone.length > 2) zone = zone.substring(0, 2);
-	return new UTM(this.e.value*1, this.n.value*1, zone*1);
+	return new UTM(this.e.val()*1, this.n.val()*1, zone*1);
 }
 
 org.sarsoft.LocationEntryForm = function() {
 }
 
 org.sarsoft.LocationEntryForm.prototype.create = function(container) {
-	var table = document.createElement("table");
-	table.border=0;
-	var tbody = document.createElement("tbody");
-	table.appendChild(tbody);
-	var tr = document.createElement("tr");
-	var td = document.createElement("td");
-	td.vAlign="top";
-	td.innerHTML = "UTM";
-	tr.appendChild(td);
-	td = document.createElement("td");
-	this.utmcontainer = td;
-	tr.appendChild(td);
-	tbody.appendChild(tr);
+	var table = jQuery('<table border="0"></table>').appendTo(container);
+	var tbody = jQuery('<tbody></tbody>').appendTo(table);
+	
+	var tr = jQuery('<tr><td valign="top">UTM</td></tr>').appendTo(tbody);
+	this.utmcontainer = document.createElement("td");
+	tr.append(this.utmcontainer);
 	this.utmform = new org.sarsoft.UTMEditForm();
 	this.utmform.create(this.utmcontainer);
 	
-	tr = document.createElement("tr");
-	td = document.createElement("td");
-	td.vAlign="top";
-	td.innerHTML = "Lat/Lng";
-	tr.appendChild(td);
-	td = document.createElement("td");
-	this.lat = document.createElement("input");
-	this.lat.type="text";
-	this.lat.size="8";
-	td.appendChild(this.lat);
-	td.appendChild(document.createTextNode(", "));
-	this.lng = document.createElement("input");
-	this.lng.type="text";
-	this.lng.size="9";
-	td.appendChild(this.lng);
-	td.appendChild(document.createElement("br"));
-	var span = document.createElement("span");
-	span.className="hint";
-	span.innerHTML="WGS84 decimal degrees, e.g. 39.3422, -120.2036";
-	td.appendChild(span);
-	tr.appendChild(td);
-	tbody.appendChild(tr);
+	tr = jQuery('<tr><td valign="top">Lat/Lng</td></tr>').appendTo(tbody);
+	var td = jQuery("<td/>").appendTo(tr);
+	this.lat = jQuery('<input type="text" size="8"/>').appendTo(td);
+	td.append(", ");
+	this.lng = jQuery('<input type="text" size="8"/>').appendTo(td);
+	td.append('<br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span>');
 	
-	tr = document.createElement("tr");
-	td = document.createElement("td");
-	td.vAlign="top";
-	td.innerHTML = "Address";
-	tr.appendChild(td);
-	td = document.createElement("td");
-	this.address = document.createElement("input");
-	this.address.type="text";
-	this.address.size="16";
-	td.appendChild(this.address);
-	td.appendChild(document.createElement("br"));
-	span = document.createElement("span");
-	span.className="hint";
-	span.innerHTML="e.g. 'Truckee, CA'.  Requires a working internet connection.";
-	td.appendChild(span);
-	tr.appendChild(td);
+	tr = jQuery('<tr><td valign="top">Address</td></tr>').appendTo(tbody);
+	td = jQuery("<td/>").appendTo(tr);
+	this.address = jQuery('<input type="text" size="16"/>').appendTo(td);
+	td.append('<br/><span class="hint">e.g. "Truckee, CA".  Requires a working internet connection.</span>');
 	if(typeof GClientGeocoder == 'undefined') {
-		tr.style.display = "none";
+		tr.css("display", "none");
 	}
-	tbody.appendChild(tr);
-	
-	container.appendChild(table);
 }
 
 org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
 	var utm = this.utmform.read();
-	var addr = this.address.value;
+	var addr = this.address.val();
+	var lat = this.lat.val();
+	var lng = this.lng.val();
 	if(utm != null) {
 		callback(GeoUtil.UTMToGLatLng(utm));
 	} else if(addr != null && addr.length > 0 && typeof GClientGeocoder != 'undefined') {
 		var gcg = new GClientGeocoder();
 		gcg.getLatLng(addr, callback);
-	} else if(this.lat.value != null && this.lat.value.length > 0 && this.lng.value != null && this.lng.value.length > 0) {
-		callback(new GLatLng(this.lat.value, this.lng.value));
+	} else if(lat != null && lat.length > 0 && lng != null && lng > 0) {
+		callback(new GLatLng(lat, lng));
 	} else {
 		return false;
 	}
@@ -1414,9 +1267,9 @@ org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
 
 org.sarsoft.LocationEntryForm.prototype.clear = function() {
 	this.utmform.write({zone : "", e : "", n : ""});
-	this.address.value="";
-	this.lat.value="";
-	this.lng.value="";
+	this.address.val("");
+	this.lat.val("");
+	this.lng.val("");
 }
 
 function UTM(e, n, zone) {
