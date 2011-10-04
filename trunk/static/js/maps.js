@@ -322,26 +322,21 @@ org.sarsoft.MapMessageControl.prototype.clear = function() {
 org.sarsoft.view.MapSizeDlg = function(map) {
 	var that = this;
 	this.map = map;
-	var dlg = jQuery('<div style="position: absolute; z-index: 200; top: 100px; left: 100px; width: 350px"></div>');
-	jQuery('<div class="hd">Map Size</div>').appendTo(dlg);
-	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm) and account for margins.  Restore map to original size by setting width and height to 100%.</div></div>').appendTo(dlg);
+
+	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm) and account for margins.  Restore map to original size by setting width and height to 100%.</div></div>');
 	bd.append(document.createTextNode("Width: "));
 	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
 	bd.append(document.createTextNode("   Height: "));
 	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
-	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "2500", width: "350px"});
-	var buttons = [ { text : "Update", handler: function() {
-		that.dialog.hide();
+
+	this.dialog = org.sarsoft.view.CreateDialog("Map Size", bd[0], "Update", "Cancel", function() {
 		var center = that.map.getCenter();
 		that.map.getContainer().style.width=that.widthInput.val();
 		that.map.getContainer().style.height=that.heightInput.val();
 		that.map.checkResize();
 		that.map.setCenter(center);
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this._rendered = false;
-	this.dialog.render(document.body);
-	this.dialog.hide();
+		});
+	
 }
 
 org.sarsoft.view.MapSizeDlg.prototype.show = function() {
@@ -679,25 +674,16 @@ org.sarsoft.MapFindWidget = function(imap) {
 	var that = this;
 	var that = this;
 	this.imap = imap;
-	
-	var dlg = jQuery('<div style="position: absolute; z-index: 200; top: 100px; left: 100px; width: 450px"><div class="hd">Find</div></div>');
-	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
-	var d = document.createElement("div");
-	this.bd.append(d);
-	
-	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
-	this.locationEntryForm.create(d);
-	
-	this.dialog = new YAHOO.widget.Dialog(dlg[0], {zIndex: "2500", width: "450px"});
-	var buttons = [ { text : "Find", handler: function() {
-		that.dialog.hide();
+
+	this.body = document.createElement("div");
+	this.dialog = org.sarsoft.view.CreateDialog("Find", this.body, "Find", "Cancel", function() {
 		var entry = that.locationEntryForm.read(function(gll) { that.imap.map.setCenter(gll, 14);});
 		if(!entry) that.checkBlocks();
-	}, isDefault: true}, {text : "Cancel", handler : function() { that.dialog.hide(); }}];
-	this.dialog.cfg.queueProperty("buttons", buttons);
-	this.dialog.render(document.body);
-	this.dialog.hide();
+		}, {width: "450px"});
 
+	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
+	this.locationEntryForm.create(this.body);
+	
 	var find = jQuery('<img src="/static/images/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>')[0];
 	GEvent.addDomListener(find, "click", function() {
 		that.locationEntryForm.clear();
@@ -711,7 +697,7 @@ org.sarsoft.MapFindWidget.prototype.initializeDlg = function() {
 	var blocks = new Array();
 	if(this._container != null) $(this._container).remove();
 	this._container = document.createElement("div");
-	this.bd.append(this._container);
+	this.body.appendChild(this._container);
 
 	for(var key in this.imap.registered) {
 		if(this.imap.registered[key].getFindBlock != null) {
