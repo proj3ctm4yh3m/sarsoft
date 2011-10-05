@@ -329,6 +329,7 @@ org.sarsoft.MapDeclinationWidget.prototype.refresh = function() {
 org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	var that = this;
 	this.imap = imap;
+	imap.register("org.sarsoft.MapDatumWidget", this);
 
 	this.datumControl = jQuery('<div style="z-index: 2000; position: absolute; bottom: 0px; left: 0px; background: white"></div>').appendTo(imap.map.getContainer());
 	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '</span>').appendTo(this.datumControl);
@@ -366,10 +367,10 @@ org.sarsoft.UTMGridControl = function(imap) {
 	this.utmgridlines = new Array();
 	this.text = new Array();
 	this.utminitialized = false;
+	this.imap = imap;
 	if(imap != null) {
 			this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Enable/disable UTM gridlines", function(value) {
-				that._showUTM = value;
-				that._drawUTMGrid(true);
+				that.setValue(value);
 			}, [{value : true, style : ""},
 			 {value : "tickmark", style : "color: white; background-color: red"},
 			 {value : false, style : "text-decoration: line-through"}]);
@@ -407,11 +408,20 @@ org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 	return div;
 }
 
+org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
+	this._showUTM = value;
+	this._drawUTMGrid(true);
+	this._UTMToggle.setValue(this._showUTM);
+	var mdw = this.imap.registered["org.sarsoft.MapDatumWidget"];
+	if(mdw != null) {
+		if(!value) { mdw.datumDisplay.addClass("noprint"); }
+		else { mdw.datumDisplay.removeClass("noprint"); }
+	}
+}
+
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	if(config.UTMGridControl == null) return;
-	this._showUTM = config.UTMGridControl.showUTM;
-	this._UTMToggle.setValue(this._showUTM);
-	this._drawUTMGrid(true);
+	this.setValue(config.UTMGridControl.showUTM);
 }
 
 org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
