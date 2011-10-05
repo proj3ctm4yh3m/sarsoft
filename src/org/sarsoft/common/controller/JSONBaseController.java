@@ -143,17 +143,17 @@ public abstract class JSONBaseController {
 	}
 
 	protected String getCommonHeader() {
-		if(this.header != null) return this.header;
-		synchronized(this) {
-			String header = "";
+		if(this.header != null) {
 			if("google".equals(this.mapViewer)) {
-				header += "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
-				getProperty("google.maps.apikey." + RuntimeProperties.getServerName()) + "\" type=\"text/javascript\"></script>";			
+				return "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
+				getProperty("google.maps.apikey." + RuntimeProperties.getServerName()) + "\" type=\"text/javascript\"></script>" + this.header;
 			} else {
-				header += "<script src=\"/static/js/openlayers.js\"></script>\n" +
-				"<script src=\"/static/js/gmapolwrapper.js\"></script>";
+				return "<script src=\"/static/js/openlayers.js\"></script>\n" +
+				"<script src=\"/static/js/gmapolwrapper.js\"></script>" + this.header;
 			}
-			header += "<script src=\"/static/js/yui.js\"></script>\n" +
+		}
+		synchronized(this) {
+			String header = "<script src=\"/static/js/yui.js\"></script>\n" +
 			"<script src=\"/static/js/jquery-1.6.4.js\"></script>\n" +
 			"<script src=\"/app/constants.js\"></script>\n" +
 			"<script src=\"/static/js/common.js\"></script>\n" +
@@ -171,7 +171,7 @@ public abstract class JSONBaseController {
 			"<![endif]-->\n";
 			this.header = header;
 		}
-		return this.header;
+		return getCommonHeader();
 	}
 	
 
