@@ -125,6 +125,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		this.alphaOverlayPlus = tps[0];
 
 		tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; top: 1.5em; width: 16em"></div>').appendTo(tPlus);
+		if($.browser.msie) tDiv.css("top", "0.6em");
 		tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
 
 		for(var i = 0; i < alphaTypes.length; i++) {
@@ -136,6 +137,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		GEvent.addDomListener(tps[0], "click", function() {
 			if(tDiv.css("visibility")=="hidden") {
 				tDiv.css("visibility","visible");
+				div.css("z-index", 1001); // z-index gets overwritten by OpenLayers
 			} else {
 				tDiv.css("visibility", "hidden");
 			}
