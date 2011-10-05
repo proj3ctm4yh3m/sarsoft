@@ -18,9 +18,6 @@ org.sarsoft.Loader.queue(function() {
 }
 </script>
 <style type="text/css">
-@page {
-	margin: 0.25in;
-}
 </style>
 <style type="text/css" media="print">
 .noprint { display: none; }
