@@ -2,13 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <html>
 <head>
-${mapjs}
-<script src="/static/js/yui.js"></script>
-<script src="/static/js/jquery-1.6.4.js"></script>
-<script src="/app/constants.js"></script>
-<script src="/static/js/common.js"></script>
-<script src="/static/js/maps.js"></script>
-<script src="/static/js/ops.js"></script>
+${head}
 <script type="text/javascript">
 function doload() {
 org.sarsoft.Loader.queue(function() {
@@ -165,8 +159,6 @@ org.sarsoft.Loader.queue(function() {
 </c:if>
 
 </script>
-<link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
-<link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
 

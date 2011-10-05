@@ -46,6 +46,7 @@ public abstract class JSONBaseController {
 	
 	private List<MapSource> mapSources;
 	private Properties properties;
+	private String header = null;
 	
 	@Autowired
 	protected ServletContext context;
@@ -141,15 +142,38 @@ public abstract class JSONBaseController {
 		}
 	}
 
-	protected String getMapJS() {
-		if("google".equals(this.mapViewer)) {
-			return "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
-			getProperty("google.maps.apikey." + RuntimeProperties.getServerName()) + "\" type=\"text/javascript\"></script>";			
-		} else {
-			return "<script src=\"/static/js/openlayers.js\"></script>\n" +
-			"<script src=\"/static/js/gmapolwrapper.js\"></script>";
+	protected String getCommonHeader() {
+		if(this.header != null) return this.header;
+		synchronized(this) {
+			String header = "";
+			if("google".equals(this.mapViewer)) {
+				header += "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
+				getProperty("google.maps.apikey." + RuntimeProperties.getServerName()) + "\" type=\"text/javascript\"></script>";			
+			} else {
+				header += "<script src=\"/static/js/openlayers.js\"></script>\n" +
+				"<script src=\"/static/js/gmapolwrapper.js\"></script>";
+			}
+			header += "<script src=\"/static/js/yui.js\"></script>\n" +
+			"<script src=\"/static/js/jquery-1.6.4.js\"></script>\n" +
+			"<script src=\"/app/constants.js\"></script>\n" +
+			"<script src=\"/static/js/common.js\"></script>\n" +
+			"<script src=\"/static/js/maps.js\"></script>\n" +
+			"<script src=\"/static/js/plans.js\"></script>\n" +
+			"<script src=\"/static/js/ops.js\"></script>\n" +
+			"<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/yui.css\"/>\n" +
+			"<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/AppBase.css\"/>\n" +
+			"<!--[if gte IE 9]>\n" +
+			"<style type=\"text/css\">\n" +
+			"@media print { img.olTileImage {position: absolute !important;}\n" +
+				"img.olAlphaImage {position: absolute !important;}\n" +
+				"div.olAlphaImage {position: absolute !important;}}\n" +
+			"</style>\n"+
+			"<![endif]-->\n";
+			this.header = header;
 		}
+		return this.header;
 	}
+	
 
 	@SuppressWarnings("rawtypes")
 	protected String json(Model model, Object obj) {
@@ -181,7 +205,7 @@ public abstract class JSONBaseController {
 			model.addAttribute("searches", dao.getAllSearches());
 		}
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
-		model.addAttribute("mapjs", getMapJS());
+		model.addAttribute("head", getCommonHeader());
 		return "Pages.Welcome";
 	}
 
@@ -193,7 +217,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("username", username);
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
-		model.addAttribute("mapjs", getMapJS());
+		model.addAttribute("head", getCommonHeader());
 		if(RuntimeProperties.getSearch() == null && !"/map".equals(view)) {
 			return bounce(model);
 		}

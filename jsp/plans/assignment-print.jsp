@@ -8,15 +8,7 @@
 <html>
 <head>
 <title>${search.publicName} - Assignment ${assignment.id}</title>
-${mapjs}
-<script src="/static/js/yui.js"></script>
-<script src="/static/js/jquery-1.6.4.js"></script>
-<script src="/app/constants.js"></script>
-<script src="/static/js/common.js"></script>
-<script src="/static/js/maps.js"></script>
-<script src="/static/js/plans.js"></script>
-<link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
-<link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
+${head}
 <style tyle="text/css">
 .box {
 	border-left: 1px solid black; float: left; height: 100%; overflow: hidden;

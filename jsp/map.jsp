@@ -1,14 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
 <html xmlns="http://www.w3.org/TR/html4/loose.dtd">
 <head>
-${mapjs}
-<script src="/static/js/yui.js"></script>
-<script src="/static/js/jquery-1.6.4.js"></script>
-<script src="/app/constants.js"></script>
-<script src="/static/js/common.js"></script>
-<script src="/static/js/maps.js"></script>
-<script src="/static/js/plans.js"></script>
-<script src="/static/js/ops.js"></script>
+${head}
 <script type="text/javascript">
 
 markers = new Array();
@@ -135,8 +128,6 @@ function checkhashupdate() {
 }
 window.setInterval("checkhashupdate()", 500);
 </script>
-<link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
-<link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="width: 100%; height: 100%">
 <div id="map_canvas" style="width: 100%; height: 100%">

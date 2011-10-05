@@ -34,6 +34,7 @@ org.sarsoft.EnhancedGMap._createTileLayers = function(config) {
 org.sarsoft.EnhancedGMap.createMap = function(element) {
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
+		$(element).css("z-index", 0);
 
 		if(typeof G_PHYSICAL_MAP != "undefined") {
 			map.addMapType(G_PHYSICAL_MAP);
@@ -299,7 +300,6 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 		that.map.checkResize();
 		that.map.setCenter(center);
 		});
-	
 }
 
 org.sarsoft.view.MapSizeDlg.prototype.show = function() {
