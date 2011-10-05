@@ -4,17 +4,7 @@
 <html>
 <head>
 <title>Search & Rescue Planning Software</title>
-${mapjs}
-<script src="/static/js/yui.js"></script>
-<script src="/static/js/jquery-1.6.4.js"></script>
-<script src="/app/constants.js"></script>
-<script src="/static/js/common.js"></script>
-<script src="/static/js/maps.js"></script>
-<script src="/static/js/plans.js"></script>
-<script src="/static/js/ops.js"></script>
-
-<link rel="stylesheet" type="text/css" href="/static/css/yui.css"/>
-<link rel="stylesheet" type="text/css" href="/static/css/AppBase.css"/>
+${head}
 </head>
 <body class="yui-skin-sam">
 <div class="headercontainer">
