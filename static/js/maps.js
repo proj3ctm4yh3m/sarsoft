@@ -287,24 +287,44 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 	var that = this;
 	this.map = map;
 
-	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm) and account for margins.  Restore map to original size by setting width and height to 100%.</div></div>');
+	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm); sizes do not include margins.  Restore map to original size by setting width and height to 100%.</div></div>');
 	bd.append(document.createTextNode("Width: "));
 	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
 	bd.append(document.createTextNode("   Height: "));
 	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
+	bd.append(document.createElement("br"));
+	bd.append(document.createElement("br"));
+	bd.append(document.createTextNode("Margin: "));
+	this.marginInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
+	bd.append(document.createTextNode(" (not supported on Firefox)"));
 
 	this.dialog = org.sarsoft.view.CreateDialog("Map Size", bd[0], "Update", "Cancel", function() {
 		var center = that.map.getCenter();
 		that.map.getContainer().style.width=that.widthInput.val();
 		that.map.getContainer().style.height=that.heightInput.val();
+		var rule = that._getMarginRule();
+		if(rule != null) rule.style.setProperty('margin',that.marginInput.val());
 		that.map.checkResize();
 		that.map.setCenter(center);
-		});
+		}, {width: "350px"});
+}
+
+org.sarsoft.view.MapSizeDlg.prototype._getMarginRule = function() {
+	for(var i = 0; i < document.styleSheets.length; i++) {
+		var sheet = document.styleSheets[i];
+		var rules = sheet.cssRules;
+		if(rules == null) rules = sheet.rules;
+		for(var j = 0; j < rules.length; j++) {
+			if(rules[j].cssText.indexOf("@page") >= 0 && rules[j].cssText.indexOf("margin") >= 0) return rules[j];
+		}
+	}
 }
 
 org.sarsoft.view.MapSizeDlg.prototype.show = function() {
 	this.widthInput.val(this.map.getContainer().style.width);
 	this.heightInput.val(this.map.getContainer().style.height);
+	var rule = this._getMarginRule();
+	if(rule != null) this.marginInput.val(rule.style.getPropertyValue('margin'));
 	this.dialog.show();
 }
 
