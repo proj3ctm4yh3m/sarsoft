@@ -382,7 +382,6 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	}
 }
 
-
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
 	this._showUTM = true;
@@ -487,6 +486,66 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	if(ne.zone - sw.zone > 1) return;
 	this._drawUTMGridForZone(sw.zone, spacing, false);
 	if(sw.zone != ne.zone)  this._drawUTMGridForZone(ne.zone, spacing, true);
+	
+	this._drawLatLongGrid();	
+}
+
+org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
+	var bounds = this.map.getBounds();
+	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getNorthEast()).x;
+	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
+	
+	function createText(deg) {
+		var neg = false;
+		if(deg < 0) {
+			neg = true;
+			deg = deg*-1;
+		}
+		var d=Math.floor(deg);
+		var m=Math.floor((deg-d)*60);
+		var h=Math.round(((deg-d)*60-m)*100);
+		if(h == 100) {
+			h = 0;
+			m = m + 1;
+		}		
+		return "<div style=\"font-size: smaller; color:#000000; background: #FFFFFF\"><b>" + d+"\u00B0"+m + (h == 50 ? ".5'" : "'") + "</b></div>";
+	}
+
+	var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())*60;
+	var spacing = 6000;
+	if(span < 80) spacing = 2000;
+	if(span < 50) spacing = 500;
+	if(span < 8) spacing = 100;
+	if(span  < 2) spacing = 50;
+	var lat = bounds.getSouthWest().lat();
+	var lng = Math.round(bounds.getSouthWest().lng()*6000/spacing)*spacing;
+	var east = bounds.getNorthEast().lng()*6000;
+	while(lng < east) {
+		var offset = this.map.fromLatLngToContainerPixel(new GLatLng(lat, lng/6000)).x;
+		var point = new GPoint(offset, pymax-2);
+		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lng/6000), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
+		this.map.addOverlay(label);
+		this.text.push(label);
+		lng = lng + spacing;
+	}
+
+	var span = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())*60;
+	var spacing = 6000;
+	if(span < 80) spacing = 2000;
+	if(span < 50) spacing = 500;
+	if(span < 8) spacing = 100;
+	if(span  < 2) spacing = 50;
+	var lng = bounds.getSouthWest().lng();
+	var lat = Math.round(bounds.getSouthWest().lat()*6000/spacing)*spacing;
+	var north = bounds.getNorthEast().lat()*6000;
+	while(lat < north) {
+		var offset = this.map.fromLatLngToContainerPixel(new GLatLng(lat/6000, lng)).y;
+		var point = new GPoint(0, offset);
+		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lat/6000), null, null, new GSize(0,-0.5));
+		this.map.addOverlay(label);
+		this.text.push(label);
+		lat = lat + spacing;
+	}
 }
 
 org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm, primary, zone) {
@@ -534,6 +593,10 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	var easting = Math.round(sw.e / spacing)  * spacing;
 	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getNorthEast()).x;
 	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
+	
+	var scale = (screenNE.n - screenSW.n)/pymax;
+	var crossHatchSize = Math.min(spacing/10, scale*20);
+	
 	while(easting < ne.e) {
 		var start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
 
@@ -543,8 +606,8 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 			} else {
 				var northing = Math.round(sw.n / spacing) * spacing;
 				while(northing < ne.n) {
-					this._drawGridLine(new UTM(easting, northing-(spacing/10), zone), new UTM(easting, northing+(spacing/10), zone), true);
-					this._drawGridLine(new UTM(easting-(spacing/10), northing, zone), new UTM(easting+(spacing/10), northing, zone), true);
+					this._drawGridLine(new UTM(easting, northing-crossHatchSize, zone), new UTM(easting, northing+crossHatchSize, zone), true);
+					this._drawGridLine(new UTM(easting-crossHatchSize, northing, zone), new UTM(easting+crossHatchSize, northing, zone), true);
 					northing = northing + spacing;
 				}
 			}
@@ -559,7 +622,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 		}
 		easting = easting + spacing;
 	}
-
+	
 	var northing = Math.round(sw.n / spacing) * spacing;
 	while(northing < ne.n) {
 		if(this._showUTM == true) {
