@@ -353,6 +353,7 @@ org.sarsoft.view.EntityCreateDialog = function(title, entityform, handler) {
 	this.handler = handler;
 	this.entityform = entityform;
 	this.body = document.createElement("div");
+	entityform.create(this.body);
 	this.dialog = org.sarsoft.view.CreateDialog(title, this.body, "Create", "Cancel", function() {
 		var obj = that.entityform.read();
 		that.entityform.write(new Object());
