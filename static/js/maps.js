@@ -34,7 +34,7 @@ org.sarsoft.EnhancedGMap._createTileLayers = function(config) {
 org.sarsoft.EnhancedGMap.createMap = function(element) {
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
-		$(element).css("z-index", 0);
+		$(element).css({"z-index": 0, overflow: "hidden"});
 
 		if(typeof G_PHYSICAL_MAP != "undefined") {
 			map.addMapType(G_PHYSICAL_MAP);
@@ -512,7 +512,7 @@ org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm
 	vertices.push(start_ll);
 	vertices.push(end_ll);
 	
-	var overlay = new GPolyline(vertices, "#0000FF", 1, primary ? 1 : 0.5);
+	var overlay = new GPolyline(vertices, "#0000FF", 1, primary ? 0.8 : 0.4);
 	this.utmgridlines.push(overlay);
 	this.map.addOverlay(overlay);
 }
@@ -528,7 +528,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	var west = GeoUtil.getWestBorder(zone);
 
 	function createText(meters) {
-		return "<div style=\"color:#0000FF; background: #FFFFFF\"><b>" + Math.round(meters/1000) + "</b><span style=\"font-size: smaller\">000</span></div>";
+		return "<div style=\"font-size: smaller; color:#0000FF; background: #FFFFFF\"><b>" + Math.round(meters/1000) + "</b><span style=\"font-size: smaller\">000</span></div>";
 	}
 
 	var easting = Math.round(sw.e / spacing)  * spacing;
@@ -551,8 +551,8 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 
 			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: screenSW.n, zone: zone}))).x;
 			if(0 < offset && offset < pxmax && easting % 1000 == 0) {
-				var point = new GPoint(offset, pymax-15);
-				var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-1));
+				var point = new GPoint(offset, pymax-2);
+				var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
 				this.map.addOverlay(label);
 				this.text.push(label);
 			}
@@ -1793,6 +1793,15 @@ ELabel.prototype.redraw = function(force) {
   var p = this.map_.fromLatLngToDivPixel(this.point);
   var h = parseInt(this.div_.clientHeight);
   var w = parseInt(this.div_.clientWidth);
+  if(this.style.indexOf("rotate(270") > 0 || this.style.indexOf("rotate(90") > 0) {
+	  if($.browser.msie) {
+		  var tmp = w;
+		  w=h;
+		  h=tmp*2;
+	  } else {
+		  h = w+h;  
+	  }	  
+  }
   this.div2_.style.left = Math.round(p.x + this.pixelOffset.width + w * this.centerOffset.width) + "px";
   this.div2_.style.top = Math.round(p.y +this.pixelOffset.height + h * this.centerOffset.height) + "px";
 }
