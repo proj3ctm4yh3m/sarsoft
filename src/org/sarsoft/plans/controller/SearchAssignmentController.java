@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONSerializer;
 
-import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;

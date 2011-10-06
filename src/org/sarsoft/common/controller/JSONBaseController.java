@@ -27,7 +27,7 @@ import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
 import org.apache.log4j.Logger;
-import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.UserAccount;
