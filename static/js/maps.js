@@ -979,7 +979,7 @@ org.sarsoft.InteractiveMap.prototype.addRangeRing = function(center, radius, ver
 	this.rangerings.push(poly);
 
 	var labelUTM = new UTM(centerUTM.e, 1*centerUTM.n + 1*radius, centerUTM.zone);
-	var label = new ELabel(GeoUtil.UTMToGLatLng(labelUTM), "<span class='maplabel'>" + radius + "m</span>", new GSize(-6, -4));
+	var label = new ELabel(GeoUtil.UTMToGLatLng(labelUTM), "<span class='maplabel'>" + radius + "m</span>", "", new GSize(-6, -4));
 	this.rangerings.push(label);
 	this.map.addOverlay(label);
 }
@@ -1074,6 +1074,21 @@ org.sarsoft.InteractiveMap.prototype._GLatLngListToWpt = function(glls) {
 
 org.sarsoft.InteractiveMap.prototype.edit = function(id) {
 	this.polys[id].overlay.enableEditing();
+}
+
+org.sarsoft.InteractiveMap.prototype.redraw = function(id) {
+	var that = this;
+	var label = this.polys[id].overlay.label;
+	this._removeOverlay(this.polys[id].overlay);
+	this.polys[id].overlay = this._addOverlay({id : id, polygon: this.polys[id].way.polygon}, this.polys[id].config);
+	this.polys[id].overlay.label = label;
+	this.polys[id].overlay.enableDrawing();
+	GEvent.addListener(this.polys[id].overlay, "endline", function() {
+		window.setTimeout(function() { that.edit(id);}, 200);
+	});
+	GEvent.addListener(this.polys[id], "cancelline", function() {
+		that.discard(id);
+	});
 }
 
 org.sarsoft.InteractiveMap.prototype.save = function(id) {
@@ -1856,6 +1871,7 @@ ELabel.prototype.redraw = function(force) {
   var p = this.map_.fromLatLngToDivPixel(this.point);
   var h = parseInt(this.div_.clientHeight);
   var w = parseInt(this.div_.clientWidth);
+  if(typeof(this.style.indexOf)=="undefined") alert(this.html);
   if(this.style.indexOf("rotate(270") > 0 || this.style.indexOf("rotate(90") > 0) {
 	  if($.browser.msie) {
 		  var tmp = w;
