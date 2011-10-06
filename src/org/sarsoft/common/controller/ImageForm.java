@@ -1,4 +1,4 @@
-package org.sarsoft.imagery.controller;
+package org.sarsoft.common.controller;
 
 public class ImageForm {
 

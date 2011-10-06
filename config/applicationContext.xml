@@ -80,7 +80,6 @@
 				<value>org.sarsoft.common.model</value>
 				<value>org.sarsoft.plans.model</value>
 				<value>org.sarsoft.ops.model</value>
-				<value>org.sarsoft.imagery.model</value>
 			</list>
 		</property>
 

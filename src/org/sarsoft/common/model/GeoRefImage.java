@@ -1,4 +1,4 @@
-package org.sarsoft.imagery.model;
+package org.sarsoft.common.model;
 
 import javax.persistence.Entity;
 import javax.persistence.Transient;

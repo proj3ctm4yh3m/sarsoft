@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.util.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.imagery.model.GeoRefImage;
+import org.sarsoft.common.model.GeoRefImage;
 import org.sarsoft.plans.model.Search;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
