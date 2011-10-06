@@ -1231,7 +1231,7 @@ org.sarsoft.MapInfoControl.prototype.minmax = function() {
 }
 
 org.sarsoft.MapInfoControl.prototype.setMessage = function(message) {
-	this.msg.innerHTML = message;
+	this.msg.html(message);
 }
 
 org.sarsoft.UTMEditForm = function() {	
