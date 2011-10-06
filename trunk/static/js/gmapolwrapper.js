@@ -170,6 +170,12 @@ function GMap2(node) {
 	this.ol.modifyControl.standalone = true;
 	this.ol.modifyControl.activate();
 
+	this.ol.drawLineControl = new OpenLayers.Control.DrawFeature(this.ol.vectorLayer, OpenLayers.Handler.Path);
+	this.ol.map.addControl(this.ol.drawLineControl);
+
+	this.ol.drawPolygonControl = new OpenLayers.Control.DrawFeature(this.ol.vectorLayer, OpenLayers.Handler.Polygon);
+	this.ol.map.addControl(this.ol.drawPolygonControl);
+
 	this.ol.getFeatureFromEvent = function(evt) {
 		var feature = that.ol.vectorLayer.getFeatureFromEvent(evt);
 		if(feature != null) return feature.goverlay;
@@ -360,9 +366,11 @@ GMap2.prototype.redrawOverlays = function() {
 
 GMap2.prototype.removeOverlay = function(overlay) {
 	if(overlay._olcapable) {
-		overlay.remove();
 		for(var i = 0; i < this._overlays.length; i++) {
-			if(this._overlays[i] == overlay) delete this._overlays[i];
+			if(this._overlays[i] == overlay) {
+				delete this._overlays[i];
+				overlay.remove();
+			}
 		}
 		return;
 	}
@@ -512,6 +520,28 @@ GPoly.prototype.getVertex = function(idx) {
 		idx = 0;
 	return GLatLng.fromPoint(this.ol.vector.geometry.getVertices()[idx]);
 }
+
+GPoly.prototype.enableDrawing = function() {
+	var that = this;
+	this.ol.map.ol.vectorLayer.removeFeatures([this.ol.vector]);
+
+	var control = this.ol.map.ol.drawLineControl;
+	if(this._closed) control = this.ol.map.ol.drawPolygonControl;
+	this.ol.map.ol.vectorLayer.events.remove("sketchcomplete");
+	control.handler.style = {strokeColor: this.ol.style.strokeColor, strokeWidth: this.ol.style.strokeWidth, strokeOpacity: this.ol.style.strokeOpacity, fillColor: this.ol.style.fillColor, fillOpacity: this.ol.style.fillOpacity};
+	control.activate();
+	this.ol.map.ol.vectorLayer.events.register("sketchcomplete", this.ol.map.ol.vectorLayer, function(e) {
+		control.deactivate();
+		that.ol.map.ol.vectorLayer.events.remove("sketchcomplete");
+		that.ol.map.ol.vectorLayer.removeFeatures([e.feature]);
+		that.ol.vector = new OpenLayers.Feature.Vector(e.feature.geometry, null, that.ol.style);
+		that.ol.vector.goverlay = that;
+		that.ol.map.ol.vectorLayer.addFeatures([that.ol.vector]);
+		GEvent.trigger(that, "endline");
+		return false; // required to prevent OpenLayers from re-adding feature.
+	});
+}
+
 GPoly.prototype.enableEditing = function(opts) {
 	this.ol.map.ol.modifyControl.selectFeature(this.ol.vector);
 }
@@ -529,7 +559,8 @@ function GPolygon(latlngs, strokeColor, strokeWeight, strokeOpacity, fillColor, 
 	}
 	this.ol = new Object();
 	var linearRing = new OpenLayers.Geometry.LinearRing(vertices);
-	this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Polygon([linearRing]), null, {strokeColor: strokeColor, strokeWidth: strokeWeight, strokeOpacity: strokeOpacity, fillColor: fillColor, fillOpacity: fillOpacity});
+	this.ol.style = {strokeColor: strokeColor, strokeWidth: strokeWeight, strokeOpacity: strokeOpacity, fillColor: fillColor, fillOpacity: fillOpacity};
+	this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Polygon([linearRing]), null, this.ol.style);
 	this.ol.vector.goverlay = this;
 }
 GPolygon.prototype = new GPoly();
@@ -541,7 +572,8 @@ function GPolyline(latlngs, strokeColor, strokeWeight, strokeOpacity) {
 		vertices.push(new OpenLayers.Geometry.Point(ll.lon, ll.lat));
 	}
 	this.ol = new Object();
-	this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(vertices), null, {strokeColor: strokeColor, strokeWidth: strokeWeight, strokeOpacity: strokeOpacity});
+	this.ol.style = {strokeColor: strokeColor, strokeWidth: strokeWeight, strokeOpacity: strokeOpacity};
+	this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(vertices), null, this.ol.style);
 	this.ol.vector.goverlay = this;
 }
 GPolyline.prototype = new GPoly();
