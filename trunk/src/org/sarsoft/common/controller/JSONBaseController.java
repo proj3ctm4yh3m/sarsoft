@@ -32,7 +32,7 @@ import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.imagery.model.GeoRefImage;
+import org.sarsoft.common.model.GeoRefImage;
 import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

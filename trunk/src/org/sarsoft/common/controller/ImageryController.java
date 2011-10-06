@@ -1,4 +1,4 @@
-package org.sarsoft.imagery.controller;
+package org.sarsoft.common.controller;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -30,7 +30,7 @@ import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
-import org.sarsoft.imagery.model.GeoRefImage;
+import org.sarsoft.common.model.GeoRefImage;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
