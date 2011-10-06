@@ -26,7 +26,7 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 
 import org.apache.log4j.Logger;
-import org.sarsoft.admin.model.MapSource;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
