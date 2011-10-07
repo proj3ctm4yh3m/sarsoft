@@ -12,6 +12,7 @@ org.sarsoft.Loader.queue(function() {
   resourceController = new org.sarsoft.controller.ResourceLocationMapController(imap);
   callsignController = new org.sarsoft.controller.CallsignMapController(imap);
   clueController = new org.sarsoft.controller.ClueLocationMapController(imap);
+  markupController = new org.sarsoft.controller.MarkupMapController(imap);
   plansController.setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, true);
   configWidget.loadConfig();

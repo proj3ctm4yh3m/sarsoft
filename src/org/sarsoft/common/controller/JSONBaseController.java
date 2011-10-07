@@ -160,6 +160,7 @@ public abstract class JSONBaseController {
 			"<script src=\"/static/js/maps.js\"></script>\n" +
 			"<script src=\"/static/js/plans.js\"></script>\n" +
 			"<script src=\"/static/js/ops.js\"></script>\n" +
+			"<script src=\"/static/js/markup.js\"></script>\n" +
 			"<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/yui.css\"/>\n" +
 			"<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/AppBase.css\"/>\n" +
 			"<!--[if gte IE 9]>\n" +
