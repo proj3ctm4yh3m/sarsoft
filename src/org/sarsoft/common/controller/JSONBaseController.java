@@ -34,7 +34,6 @@ import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.model.GeoRefImage;
-import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -195,7 +194,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("hosted", isHosted());
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
-		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Search.class, RuntimeProperties.getTenant()));
+		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Tenant.class, RuntimeProperties.getTenant()));
 		if(user != null) account = dao.getByPk(UserAccount.class, user);
 		if(isHosted()) {
 			if(account != null) {
@@ -203,7 +202,7 @@ public abstract class JSONBaseController {
 				model.addAttribute("searches", account.getTenants());
 			}
 		} else {
-			model.addAttribute("searches", dao.getAllSearches());
+			model.addAttribute("searches", dao.getAllTenants());
 		}
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		model.addAttribute("head", getCommonHeader());

@@ -12,13 +12,17 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.controller.AdminController;
+import org.sarsoft.common.controller.CommonController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
+import org.sarsoft.common.model.GeoRefImage;
+import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.plans.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.controller.OpsController;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
@@ -43,12 +47,31 @@ public class SearchController extends JSONBaseController {
 
 	@Autowired
 	AdminController adminController;
-
+	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
-	}	
+	}
 	
+	public void addConstantsToModel(Model model) {
+		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
+		model.addAttribute("mapSources", getMapSources());
+		model.addAttribute("tileCacheEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled")));
+		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
+		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
+		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
+		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
+	}
+	
+	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
+	public String getConstants(Model model) {
+		addConstantsToModel(model);
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
+		if(getProperty("sarsoft.map.datum") != null) model.addAttribute("datum", getProperty("sarsoft.map.datum"));
+		if(search != null && search.getDatum() != null) model.addAttribute("datum", search.getDatum());
+		return "/global/constants";
+	}
+
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
 	public String homePage(Model model) {
 		OperationalPeriod lastPeriod = null;

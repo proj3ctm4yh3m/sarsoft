@@ -10,8 +10,8 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.SarModelObject;
+import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.plans.model.Search;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
@@ -162,13 +162,13 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	}
 
 	@SuppressWarnings({"unchecked","rawtypes"})
-	public List<Search> getAllSearches() {
+	public List<Tenant> getAllTenants() {
 		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
-				Criteria c = session.createCriteria(Search.class).add(Restrictions.isNull("account"));
+				Criteria c = session.createCriteria(Tenant.class).add(Restrictions.isNull("account"));
 				return c.list();
 			}
 		});
-		return (List<Search>) list;
+		return (List<Tenant>) list;
 	}
 }
