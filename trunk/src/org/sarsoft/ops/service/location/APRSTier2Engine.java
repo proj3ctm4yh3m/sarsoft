@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.common.util.Constants;
+import org.sarsoft.plans.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.Search;

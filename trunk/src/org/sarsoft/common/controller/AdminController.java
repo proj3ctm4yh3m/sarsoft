@@ -1,7 +1,5 @@
 package org.sarsoft.common.controller;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -9,19 +7,13 @@ import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
-import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.ops.controller.OpsController;
-import org.sarsoft.plans.model.OperationalPeriod;
-import org.sarsoft.plans.model.Search;
-import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,9 +31,6 @@ public class AdminController extends JSONBaseController {
 	@Qualifier("searchSessionFactory")
 	LocalSessionFactoryBean sessionFactory;
 
-	@Autowired
-	OpsController opsController;
-	
 	private OIDConsumer consumer = null;
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
@@ -85,7 +74,7 @@ public class AdminController extends JSONBaseController {
 		UserAccount account = null;
 		if(user != null) account = dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
-		if(!isHosted() && dao.getByAttr(Search.class, "name", name) != null) {
+		if(!isHosted() && dao.getByAttr(Tenant.class, "name", name) != null) {
 			return setTenant(model, name, cls, request);
 		}
 		Tenant tenant;
@@ -115,8 +104,6 @@ public class AdminController extends JSONBaseController {
 		request.getSession().setAttribute("tenant", tenant.getName());
 		RuntimeProperties.setTenant(tenant.getName());
 
-		OperationalPeriod period = new OperationalPeriod();
-		
 		return null;
 	}
 

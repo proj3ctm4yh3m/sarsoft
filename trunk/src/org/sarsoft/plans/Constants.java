@@ -1,4 +1,4 @@
-package org.sarsoft.common.util;
+package org.sarsoft.plans;
 
 import java.util.HashMap;
 import java.util.Map;

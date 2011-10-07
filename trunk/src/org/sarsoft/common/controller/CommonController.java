@@ -6,11 +6,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
-import org.sarsoft.common.util.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.common.model.GeoRefImage;
-import org.sarsoft.plans.model.Search;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,21 +35,6 @@ public class CommonController extends JSONBaseController {
 		model.addAttribute("hostName", "http://" + RuntimeProperties.getServerName());
 		model.addAttribute("garminKey", getProperty("garmin.key." + RuntimeProperties.getServerName()));
 		return "/plans/fromgarmin";
-	}
-
-	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
-	public String getConstants(Model model) {
-		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
-		model.addAttribute("mapSources", getMapSources());
-		model.addAttribute("tileCacheEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled")));
-		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
-		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
-		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
-		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
-		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-		if(getProperty("sarsoft.map.datum") != null) model.addAttribute("datum", getProperty("sarsoft.map.datum"));
-		if(search != null && search.getDatum() != null) model.addAttribute("datum", search.getDatum());
-		return "/global/constants";
 	}
 
 	@SuppressWarnings("unchecked")
