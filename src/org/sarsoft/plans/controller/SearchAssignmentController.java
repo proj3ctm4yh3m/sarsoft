@@ -52,7 +52,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		switch(format) {
 		case PRINT:
-			model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
+			model.addAttribute("tenant", dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant()));
 
 			String print104 = request.getParameter("print104");
 			model.addAttribute("print104", "on".equalsIgnoreCase(print104));
@@ -116,7 +116,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		model.addAttribute("assignment", assignment);
 		switch(format) {
 		case PRINT :
-			model.addAttribute("search", dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch()));
+			model.addAttribute("tenant", dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant()));
 			if("maps".equalsIgnoreCase(request.getParameter("content"))) {
 				return app(model, "Assignment.PrintMaps");
 			} else {
@@ -261,7 +261,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".gpx");
-			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
 			Map<String, Object> m = new HashMap<String, Object>();
 			m.put("assignment", assignment);
 			if(search.getLkp() != null) m.put("lkp", search.getLkp());

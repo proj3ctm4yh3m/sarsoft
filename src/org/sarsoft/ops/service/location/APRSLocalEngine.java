@@ -22,7 +22,7 @@ public class APRSLocalEngine extends APRSEngine {
 
 	public void doRun() {
 		Logger logger = Logger.getLogger(APRSLocalEngine.class);
-		logger.info("Now monitoring local APRS devices for search " + RuntimeProperties.getSearch());
+		logger.info("Now monitoring local APRS devices for search " + RuntimeProperties.getTenant());
 		statusMessage = null;
 
 		// build list of all possible linux and windows device locations
@@ -79,7 +79,7 @@ public class APRSLocalEngine extends APRSEngine {
 			}
 		
 			for(APRSConsoleThread thread : threads.values()) {
-				logger.debug(RuntimeProperties.getSearch() + " listening to APRS traffic on " + thread.getDevice());
+				logger.debug(RuntimeProperties.getTenant() + " listening to APRS traffic on " + thread.getDevice());
 				thread.addListener(messages);
 			}
 		}
@@ -104,7 +104,7 @@ public class APRSLocalEngine extends APRSEngine {
 		}
 
 		for(APRSConsoleThread thread : threads.values()) {
-			logger.debug(RuntimeProperties.getSearch() + " no longer listening to APRS traffic on " + thread.getDevice());
+			logger.debug(RuntimeProperties.getTenant() + " no longer listening to APRS traffic on " + thread.getDevice());
 			thread.removeListener(messages);
 		}
 	}

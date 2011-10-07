@@ -49,7 +49,7 @@ public abstract class AsyncTransactionalEngine extends Thread {
 
 	public void run() {
 		keepAlive();
-		RuntimeProperties.setSearch(search);
+		RuntimeProperties.setTenant(search);
 		doRun();
 	}
 

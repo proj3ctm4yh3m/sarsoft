@@ -93,7 +93,7 @@ public class SearchAssignmentGPXHelper {
 		Map m = (Map) JSONObject.toBean(json, Map.class, searchClassHints);
 		
 		Map<String, String> attrs = decodeAttrs((String) m.get("desc")); 
-		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
 		if(attrs.containsKey("mapConfig")) search.setMapConfig(attrs.get("mapConfig"));
 		
 		if(m.containsKey("lkp")) search.setLkp((Waypoint) m.get("lkp"));

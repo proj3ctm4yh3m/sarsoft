@@ -13,7 +13,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class RuntimeProperties {
 
-	private static ThreadLocal<String> tSearch = new ThreadLocal<String>();
+	private static ThreadLocal<String> tTenant = new ThreadLocal<String>();
 	private static ThreadLocal<String> tUsername = new ThreadLocal<String>();
 	private static ThreadLocal<String> tServerName = new ThreadLocal<String>();
 	private static ThreadLocal<Integer> tServerPort = new ThreadLocal<Integer>();
@@ -46,12 +46,12 @@ public class RuntimeProperties {
 	
 	private static Boolean hosted = null;
 
-	public static void setSearch(String search) {
-		tSearch.set(search);
+	public static void setTenant(String tenant) {
+		tTenant.set(tenant);
 	}
 
-	public static String getSearch() {
-		return tSearch.get();
+	public static String getTenant() {
+		return tTenant.get();
 	}
 
 	public static void setUsername(String username) {

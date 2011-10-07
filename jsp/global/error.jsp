@@ -7,7 +7,7 @@
 <body>
 <h1>Sorry, something seems to have gone wrong!</h1>
 
-<% if(session.getAttribute("search") == null) { %>
+<% if(session.getAttribute("tenant") == null) { %>
 <p>
 It looks like you're not currently working on a search <% if(session.getAttribute("username") == null) { %> or logged in. <% } %><br/>
 If you've left your computer idle for a while, your browser session might have expired.<br/>

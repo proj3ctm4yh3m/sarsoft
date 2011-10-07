@@ -38,7 +38,7 @@ public class APRSTier2Engine extends APRSEngine {
 		String filter = "#filter";
 		try {
 			if(createTransaction) beginTransaction();
-			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getSearch());
+			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
 			Waypoint wpt = search.getPls();
 			if(search.getCP() != null) wpt = search.getCP();
 			if(search.getLkp() != null) wpt = search.getLkp();
@@ -74,7 +74,7 @@ public class APRSTier2Engine extends APRSEngine {
 			if(createTransaction) closeTransaction();
 		}
 		
-		logger.debug("Filter for " + RuntimeProperties.getSearch() + " on " + t2server + ":" + t2port + " is " + filter);
+		logger.debug("Filter for " + RuntimeProperties.getTenant() + " on " + t2server + ":" + t2port + " is " + filter);
 		return filter + "\r\n";
 	}
 	
@@ -96,7 +96,7 @@ public class APRSTier2Engine extends APRSEngine {
 	
 	public void doRun() {
 		try {
-			logger.info("Connecting to APRS Tier 2 server " + t2server + ":" + t2port + " for search " + RuntimeProperties.getSearch());
+			logger.info("Connecting to APRS Tier 2 server " + t2server + ":" + t2port + " for search " + RuntimeProperties.getTenant());
 			Socket socket = new Socket(t2server, t2port);
 			
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -134,9 +134,9 @@ public class APRSTier2Engine extends APRSEngine {
 				logger.info("Lost connection to " + t2server + ":" + t2port);
 				statusMessage = t2server + ":" + t2port + " Connection Lost";
 			} else if(timedout()){
-				logger.info("Idling APRS Tier 2 connection for search " + RuntimeProperties.getSearch() + " due to inactivity");
+				logger.info("Idling APRS Tier 2 connection for search " + RuntimeProperties.getTenant() + " due to inactivity");
 			} else {
-				logger.info("APRS Tier 2 connection for search " + RuntimeProperties.getSearch() + " stopped by user");
+				logger.info("APRS Tier 2 connection for search " + RuntimeProperties.getTenant() + " stopped by user");
 			}
 			
 		} catch (Exception e) {

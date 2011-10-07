@@ -70,7 +70,7 @@ public class OpsController extends JSONBaseController {
 	private APRSTier2Engine createAprst2() {
 		APRSTier2Engine aprst2 = new APRSTier2Engine();
 		aprst2.setDao(this.dao);
-		aprst2.setSearch(RuntimeProperties.getSearch());
+		aprst2.setSearch(RuntimeProperties.getTenant());
 		aprst2.setAprsFiKey(getProperty("sarsoft.location.aprs.fi.key"));
 		aprst2.setUser(getProperty("sarsoft.location.aprs.is.user"));
 		aprst2.setServer(getProperty("sarsoft.location.aprs.is.serverName"));
@@ -84,7 +84,7 @@ public class OpsController extends JSONBaseController {
 		if(getProperty("sarsoft.location.aprs.local.deviceNames") != null) aprsLocal.setDeviceNames(getProperty("sarsoft.location.aprs.local.deviceNames"));
 		if(getProperty("sarsoft.location.aprs.local.deviceNamePrefixes") != null) aprsLocal.setDeviceNamePrefixes(getProperty("sarsoft.location.aprs.local.deviceNamePrefixes"));
 		aprsLocal.setDao(this.dao);
-		aprsLocal.setSearch(RuntimeProperties.getSearch());
+		aprsLocal.setSearch(RuntimeProperties.getTenant());
 		aprsLocal.setAprsFiKey(getProperty("sarsoft.location.aprs.fi.key"));
 		aprsLocal.setUser(getProperty("sarsoft.location.aprs.is.user"));
 		aprsLocal.setTimeout(getProperty("sarsoft.location.aprs.local.timeToIdle"));
@@ -94,14 +94,14 @@ public class OpsController extends JSONBaseController {
 	private SpotLocationEngine createSpot() {
 		SpotLocationEngine spot = new SpotLocationEngine();
 		spot.setDao(this.dao);
-		spot.setSearch(RuntimeProperties.getSearch());
+		spot.setSearch(RuntimeProperties.getTenant());
 		spot.setRefreshInterval(getProperty("sarsoft.location.spot.refreshInterval"));
 		spot.setTimeout(getProperty("sarsoft.location.spot.timeToIdle"));
 		return spot;
 	}
 	
 	public void checkLocators() {
-		String search = RuntimeProperties.getSearch();
+		String search = RuntimeProperties.getTenant();
 		if(search == null) return;
 		EngineList engines = locationEngines.get(search);
 		if(engines == null) {
@@ -135,14 +135,14 @@ public class OpsController extends JSONBaseController {
 	public String checkLocationEngines(Model model) {
 		checkLocators();
 		
-		model.addAttribute("engines", locationEngines.get(RuntimeProperties.getSearch()));
+		model.addAttribute("engines", locationEngines.get(RuntimeProperties.getTenant()));
 		
 		return app(model, "Location.Status");
 	}
 	
 	@RequestMapping(value = "/app/location/reset", method = RequestMethod.GET)
 	public String resetLocationEngines(Model model) {
-		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());
+		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());
 		if(engines.spot != null) {
 			engines.spot.quit();
 			engines.spot = null;
@@ -192,7 +192,7 @@ public class OpsController extends JSONBaseController {
 		resource.setSpotPassword(spotPassword);
 		dao.save(resource);
 
-		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());		
+		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());		
 		if(engines.aprst2 != null) engines.aprst2.updateFilter();
 		
 		String assignmentId = request.getParameter("assignmentId");
@@ -301,7 +301,7 @@ public class OpsController extends JSONBaseController {
 		resource.setSpotPassword(spotPassword);
 		dao.save(resource);
 		
-		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());		
+		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());		
 		if(engines.aprst2 != null) engines.aprst2.updateFilter();
 
 		model.addAttribute("resource", resource);
@@ -349,7 +349,7 @@ public class OpsController extends JSONBaseController {
 	
 	@RequestMapping(value="/app/callsign/clear", method = RequestMethod.GET)
 	public String clearCallsigns(Model model) {
-		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());
+		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());
 		if(engines.aprst2 != null) engines.aprst2.clearCallsigns();
 		if(engines.aprsLocal != null) engines.aprsLocal.clearCallsigns();
 		return "redirect:/app/resource";
@@ -358,7 +358,7 @@ public class OpsController extends JSONBaseController {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value="/rest/callsign/since/{date}", method = RequestMethod.GET)
 	public String getCallsignsSince(Model model, @PathVariable("date") long date) {
-		EngineList engines = locationEngines.get(RuntimeProperties.getSearch());
+		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());
 		if(engines != null && (engines.aprsLocal != null || engines.aprst2 != null)) {
 			Map<String, Waypoint> csmap = new HashMap<String, Waypoint>();
 			if(engines.aprst2 != null) csmap.putAll(engines.aprst2.getCallsigns());
