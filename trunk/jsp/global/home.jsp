@@ -11,14 +11,14 @@ gpxdlg = new org.sarsoft.view.BulkGPXDlg();
 });
 </script>
 
-<h2>Sarsoft Home Page - ${search.description}</h2>
+<h2>Sarsoft Home Page - ${tenant.description}</h2>
 <ul>
  <li>Lost?  You probably want to click on the <a href="/app/operationalperiod/${lastperiod.id}/map">Map</a> link
 to start creating assignments or the <a href="/app/operationalperiod/${lastperiod.id}">List</a> link to edit existing assignments and print maps and ICS forms.</li>
 <c:if test="${hosted eq true and search.visible}">
- <li>Invite others to work on this search by sharing this URL with them: <a href="${server}app/setsearch/${search.name}">${server}app/setsearch/${search.name}</a>.
+ <li>Invite others to work on this search by sharing this URL with them: <a href="${server}app/setsearch/${tenant.name}">${server}app/setsearch/${tenant.name}</a>.
 </c:if>
- <li> Not looking for ${search.description}?  <a href="/app/setsearch">Work on a different search</a>.</li>
+ <li> Not looking for ${tenant.description}?  <a href="/app/setsearch">Work on a different search</a>.</li>
 
 <c:if test="${account ne null}">
 <li>Logged in as ${account.email}.  <a href="/app/logout">Logout</a></li>
@@ -50,7 +50,7 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
 <c:when test="${hosted eq false}">
  <li><a href="/app/search">Search Admin.</a>  Change map datum and search name.</li>
 </c:when>
-<c:when test="${search.account.name eq username}">
+<c:when test="${tenant.account.name eq username}">
  <li><a href="/app/search">Search Admin.</a>  Map datum, sharing and password protection.</li>
 </c:when>
 </c:choose>

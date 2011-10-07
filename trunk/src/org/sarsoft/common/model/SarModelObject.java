@@ -15,10 +15,10 @@ public abstract class SarModelObject {
 
 	protected Long id;
 	private Long pk;
-	private String search;
+	private String tenant;
 
 	public SarModelObject() {
-		search = RuntimeProperties.getSearch();
+		tenant = RuntimeProperties.getTenant();
 	}
 
 	@JSONSerializable
@@ -41,12 +41,12 @@ public abstract class SarModelObject {
 		this.pk = pk;
 	}
 
-	public void setSearch(String search) {
-		this.search = search;
+	public void setTenant(String tenant) {
+		this.tenant = tenant;
 	}
 
-	public String getSearch() {
-		return search;
+	public String getTenant() {
+		return tenant;
 	}
 
 }

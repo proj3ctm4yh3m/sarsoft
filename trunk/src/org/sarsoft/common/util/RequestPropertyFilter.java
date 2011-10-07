@@ -19,7 +19,7 @@ public class RequestPropertyFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest servletRequest = (HttpServletRequest) request;
 		if(!RuntimeProperties.isInitialized()) RuntimeProperties.initialize(servletRequest.getSession(true).getServletContext());
-		RuntimeProperties.setSearch((String) servletRequest.getSession(true).getAttribute("search"));
+		RuntimeProperties.setTenant((String) servletRequest.getSession(true).getAttribute("tenant"));
 		RuntimeProperties.setUsername((String) servletRequest.getSession(true).getAttribute("username"));
 		RuntimeProperties.setServerName(servletRequest.getServerName());
 		RuntimeProperties.setServerPort(servletRequest.getServerPort());

@@ -69,7 +69,7 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 	}
 	
 	public void doRun() {
-		logger.info("Starting SPOT beacon checks for " + RuntimeProperties.getSearch() + " every " + Math.round(refreshInterval/1000) + " seconds");
+		logger.info("Starting SPOT beacon checks for " + RuntimeProperties.getTenant() + " every " + Math.round(refreshInterval/1000) + " seconds");
 		statusMessage = "Checking SPOT server every " + Math.round(refreshInterval/1000) + " seconds";
 
 		while(enabled && !timedout()) {
@@ -92,9 +92,9 @@ public class SpotLocationEngine extends AsyncTransactionalEngine {
 		}
 		
 		if(timedout()) {
-			logger.info("SPOT beacon checks for " + RuntimeProperties.getSearch() + " idled due to inactivity");
+			logger.info("SPOT beacon checks for " + RuntimeProperties.getTenant() + " idled due to inactivity");
 		} else {
-			logger.info("SPOT beacon checks for " + RuntimeProperties.getSearch() + " stopped by user");
+			logger.info("SPOT beacon checks for " + RuntimeProperties.getTenant() + " stopped by user");
 		}
 	}
 

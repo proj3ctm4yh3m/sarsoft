@@ -22,7 +22,7 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		Class smo = SarModelObject.class;
 		while(cls != null) {
 			if(cls == smo) {
-				return crit.add(Restrictions.eq("search", RuntimeProperties.getSearch()));
+				return crit.add(Restrictions.eq("tenant", RuntimeProperties.getTenant()));
 			}
 			cls = cls.getSuperclass();
 		}
@@ -33,7 +33,7 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		if(obj == null) return null;
 		if(obj instanceof SarModelObject) {
 			SarModelObject smo = (SarModelObject) obj;
-			if(smo.getSearch().equalsIgnoreCase(RuntimeProperties.getSearch())) return obj;
+			if(smo.getTenant().equalsIgnoreCase(RuntimeProperties.getTenant())) return obj;
 			return null;
 		}
 		return obj;

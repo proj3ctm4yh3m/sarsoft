@@ -11,10 +11,10 @@
 <form action="/app/search" method="POST">
 <table border="0">
 <tr><td colspan="2"><b>Search Name and Datum</b></td></tr>
-<tr><td>Name</td><td><input type="text" size="15" value="${search.publicName}" name="description"/></td></tr>
+<tr><td>Name</td><td><input type="text" size="15" value="${tenant.publicName}" name="description"/></td></tr>
 <tr><td>Datum</td><td><select name="datum">
-  <option value="WGS84"<c:if test="${search.datum eq 'WGS84'}"> selected="selected"</c:if>>WGS84</option>
-  <option value="NAD27 CONUS"<c:if test="${search.datum eq 'NAD27 CONUS'}"> selected="selected"</c:if>>NAD27 CONUS</option>
+  <option value="WGS84"<c:if test="${tenant.datum eq 'WGS84'}"> selected="selected"</c:if>>WGS84</option>
+  <option value="NAD27 CONUS"<c:if test="$tenant.datum eq 'NAD27 CONUS'}"> selected="selected"</c:if>>NAD27 CONUS</option>
 </select></td></tr>
 
 <tr><td colspan="2" style="padding-top: 15px"><b>Sharing</b></td></tr>
@@ -23,8 +23,8 @@
 
 <tr><td colspan="2" style="padding-bottom: 15px">
 <c:choose>
-<c:when test="${search.visible}">
-This search is publicly visible.  You can share it with others by giving them the following URL: <a href="${server}app/setsearch/${search.name}">${server}app/setsearch/${search.name}</a>.<br/>
+<c:when test="${tenant.visible}">
+This search is publicly visible.  You can share it with others by giving them the following URL: <a href="${server}app/setsearch/${tenant.name}">${server}app/setsearch/${search.name}</a>.<br/>
   <c:choose>
   <c:when test="${fn:length(search.password) gt 0}">
 This search is password protected; anyone with that URL will still need to know the password.
@@ -39,7 +39,7 @@ You are the only one allowed to view this search.
 </c:otherwise>
 </c:choose>
 </td></tr>
-<tr><td>Shared?</td><td><input type="checkbox" name="public" value="public" <c:if test="${search.visible}">checked="checked"</c:if>/><span class="hint">Allow others to view/edit this search.</span>
+<tr><td>Shared?</td><td><input type="checkbox" name="public" value="public" <c:if test="${tenant.visible}">checked="checked"</c:if>/><span class="hint">Allow others to view/edit this search.</span>
 </td></tr>
 <tr><td valign="top">Password</td><td><input type="password" size="15" name="password"/><br/><span class="hint">Leave blank to keep the search's current password.</span></td></tr>
 </c:when>

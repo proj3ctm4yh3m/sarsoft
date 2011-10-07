@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
+import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.OIDConsumer;
@@ -45,111 +46,78 @@ public class AdminController extends JSONBaseController {
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
 
-	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
-	public String homePage(Model model) {
-		OperationalPeriod lastPeriod = null;
-		List<OperationalPeriod> periods = dao.loadAll(OperationalPeriod.class);
-		for(OperationalPeriod period : periods) {
-			if(lastPeriod == null || lastPeriod.getId() < period.getId()) lastPeriod = period;
-		}
-		model.addAttribute("lastperiod", lastPeriod);
-		model.addAttribute("periods", periods);
-		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
-		model.addAttribute("imageUploadEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled")));
-		model.addAttribute("server", RuntimeProperties.getServerUrl());
-		opsController.checkLocators();
-		return app(model, "Pages.Home");
-	}
-
-	@RequestMapping(value="/app/setsearch", method = RequestMethod.GET)
-	public String chooseNewSearch(Model model, HttpServletRequest request) {
-		return bounce(model);
-	}
-
-	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
-	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request) {
-		Search search = dao.getByAttr(Search.class, "name", name);
-		if(search == null) {
-			model.addAttribute("message", "This search does not exist.");
+	public String setTenant(Model model, String name, Class<? extends Tenant> cls, HttpServletRequest request) {
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", name);
+		if(tenant == null) {
+			model.addAttribute("message", cls.getName() + " not found.");
 			return bounce(model);
 		}
 		boolean isOwner = false;
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(account != null) {
-			for(Search srch : account.getSearches()) {
-				if(name.equalsIgnoreCase(srch.getName())) isOwner = true;
+			for(Tenant t : account.getTenants()) {
+				if(name.equalsIgnoreCase(t.getName())) isOwner = true;
 			}
 		}
-		if(isHosted() && !search.isVisible() && isOwner == false ){
-			model.addAttribute("message", "This search is not publicly visible");
-			return bounce(model);
-		}
-		if(isHosted() && search.getPassword() != null && isOwner == false) {
+		
+		if(isHosted() && tenant.getPassword() != null && isOwner == false) {
 			if(request.getParameter("password") == null || request.getParameter("password").length() == 0) {
 				bounce(model);
 				model.addAttribute("searchname", name);
 				return "Pages.Password";
 			}
 			String password = hash(request.getParameter("password"));
-			if(!search.getPassword().equals(password)) {
+			if(!tenant.getPassword().equals(password)) {
 				model.addAttribute("message", "Wrong Password.");
 				return bounce(model);
 			}
 		}
 
-		request.getSession().setAttribute("search", name);
-		RuntimeProperties.setSearch(name);
-		opsController.checkLocators();
+		request.getSession().setAttribute("tenant", name);
+		RuntimeProperties.setTenant(name);
 		String dest = request.getParameter("dest");
 		if(dest != null && dest.length() > 0) return "redirect:" + dest;
-		return homePage(model);
+		return null;
 	}
 
-	@RequestMapping(value="/app/setsearch", method = RequestMethod.POST)
-	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
+	public String createNewTenant(Model model, Class<? extends Tenant> cls, HttpServletRequest request) {
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
 		if(user != null) account = dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
-		String op1name = request.getParameter("op1name");
-		String lat = request.getParameter("lat");
-		String lng = request.getParameter("lng");
 		if(!isHosted() && dao.getByAttr(Search.class, "name", name) != null) {
-			return setAppDataSchema(model, name, request);
+			return setTenant(model, name, cls, request);
 		}
-		Search search = new Search();
-		search.setName(name);
-		search.setDescription(name);
-		if(getProperty("sarsoft.map.datum") != null) search.setDatum(getProperty("sarsoft.map.datum"));
+		Tenant tenant;
+		try {
+			tenant = cls.newInstance();
+		} catch (InstantiationException e) {
+			return bounce(model);
+		} catch (IllegalAccessException e) {
+			return bounce(model);
+		}
+		tenant.setName(name);
+		tenant.setDescription(name);
 		if(account != null) {
-			search.setAccount(account);
+			tenant.setAccount(account);
 			Object obj = new Object();
-			String searchname = null;
+			String tenantname = null;
 			int i = 0;
 			while(obj != null) {
 				i++;
-				searchname = hash(user + name + System.nanoTime() + i).substring(0,8);
-				obj = dao.getByPk(Search.class, searchname);
+				tenantname = hash(user + name + System.nanoTime() + i).substring(0,8);
+				obj = dao.getByPk(Tenant.class, tenantname);
 			}
-			search.setName(searchname);
-			search.setVisible(true);
+			tenant.setName(tenantname);
+			tenant.setVisible(true);
 		}
-		dao.save(search);
-		request.getSession().setAttribute("search", search.getName());
-		RuntimeProperties.setSearch(search.getName());
+		dao.save(tenant);
+		request.getSession().setAttribute("tenant", tenant.getName());
+		RuntimeProperties.setTenant(tenant.getName());
 
 		OperationalPeriod period = new OperationalPeriod();
-		period.setDescription((op1name != null && op1name.length() > 0) ? op1name : "first operational period");
-		period.setId(1L);
-		dao.save(period);
 		
-		if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
-			Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
-			search.setLkp(lkp);
-			dao.save(search);
-		}
-		
-		return homePage(model);
+		return null;
 	}
 
 	@RequestMapping(value="/app/openidrequest", method = RequestMethod.GET)
@@ -194,8 +162,8 @@ public class AdminController extends JSONBaseController {
 	@RequestMapping(value="/app/logout")
 	public String logout(Model model, HttpServletRequest request) {
 		RuntimeProperties.setUsername(null);
-		RuntimeProperties.setSearch(null);
-		request.getSession(true).removeAttribute("search");
+		RuntimeProperties.setTenant(null);
+		request.getSession(true).removeAttribute("tenant");
 		request.getSession(true).removeAttribute("username");
 		return bounce(model);
 	}

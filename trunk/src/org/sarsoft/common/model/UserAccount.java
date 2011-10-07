@@ -7,14 +7,13 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.Cascade;
-import org.sarsoft.plans.model.Search;
 
 @Entity
 public class UserAccount {
 
 	private String name;
 	private String email;
-	private Set<Search> searches;
+	private Set<Tenant> tenants;
 
 	@Id
 	public String getName() {
@@ -26,11 +25,11 @@ public class UserAccount {
 
 	@OneToMany(mappedBy="account")
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-	public Set<Search> getSearches() {
-		return searches;
+	public Set<Tenant> getTenants() {
+		return tenants;
 	}
-	public void setSearches(Set<Search> searches) {
-		this.searches = searches;
+	public void setTenants(Set<Tenant> tenants) {
+		this.tenants = tenants;
 	}
 	public String getEmail() {
 		return email;

@@ -7,7 +7,7 @@
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 <html>
 <head>
-<title>${search.publicName} - Assignment ${assignment.id}</title>
+<title>${tenant.publicName} - Assignment ${assignment.id}</title>
 ${head}
 <style tyle="text/css">
 .box {

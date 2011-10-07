@@ -14,7 +14,7 @@ newAssignmentDlg = new org.sarsoft.view.EntityCreateDialog("New Operational Peri
 
 <h2>All Operational Periods</h2>
 
-<p>This is a list of all operational periods that have been created for the ${search.description} search.  If you're lost, you probably want to click on an operational period
+<p>This is a list of all operational periods that have been created for the ${tenant.description} search.  If you're lost, you probably want to click on an operational period
 and then onto either the map view or an individual assignment's details.</p>
 
 <ul>

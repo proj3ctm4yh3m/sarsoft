@@ -11,7 +11,7 @@ ${head}
 
 <tiles:importAttribute name="app"/>
 <div class="header">
-<div style="font-weight: bold; float: left"><a href="/" class="sarsoft">${search.description}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<div style="font-weight: bold; float: left"><a href="/" class="sarsoft">${tenant.description}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <c:choose>
  <c:when test="${app eq 'plans'}">
   <a href="/app/operationalperiod">Plans</a>

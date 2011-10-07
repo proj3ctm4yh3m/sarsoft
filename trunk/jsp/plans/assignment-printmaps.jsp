@@ -7,7 +7,7 @@
 <%@page import="org.sarsoft.plans.model.SearchAssignment"%>
 <html>
 <head>
-<title>${search.publicName} - Map ${assignment.id}</title>
+<title>${tenant.publicName} - Map ${assignment.id}</title>
 ${head}
 <script>
 

@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.model.GeoRefImage;
@@ -194,12 +195,12 @@ public abstract class JSONBaseController {
 		model.addAttribute("hosted", isHosted());
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
-		if(RuntimeProperties.getSearch() != null) model.addAttribute("search", dao.getByPk(Search.class, RuntimeProperties.getSearch()));
+		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Search.class, RuntimeProperties.getTenant()));
 		if(user != null) account = dao.getByPk(UserAccount.class, user);
 		if(isHosted()) {
 			if(account != null) {
 				model.addAttribute("account", account);
-				model.addAttribute("searches", account.getSearches());
+				model.addAttribute("searches", account.getTenants());
 			}
 		} else {
 			model.addAttribute("searches", dao.getAllSearches());
@@ -218,10 +219,10 @@ public abstract class JSONBaseController {
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
 		model.addAttribute("head", getCommonHeader());
-		if(RuntimeProperties.getSearch() == null && !"/map".equals(view)) {
+		if(RuntimeProperties.getTenant() == null && !"/map".equals(view)) {
 			return bounce(model);
 		}
-		if(RuntimeProperties.getSearch() != null) model.addAttribute("search", dao.getByPk(Search.class, RuntimeProperties.getSearch()));
+		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Tenant.class, RuntimeProperties.getTenant()));
 		return view;
 	}
 

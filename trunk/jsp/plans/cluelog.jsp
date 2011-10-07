@@ -2,7 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@page import="org.sarsoft.plans.model.Clue"%>
 
-<h2>Clue Log for ${search.description}</h2>
+<h2>Clue Log for ${tenant.description}</h2>
 <table border="0">
 <c:forEach var="clue" items="${clues}">
 <tr><td colspan="2" style="padding-top: 10px; font-weight: bold; font-size: larger">${clue.id}: ${clue.summary}</td></tr>
