@@ -38,15 +38,38 @@ org.sarsoft.view.MarkerForm = function() {
 org.sarsoft.view.MarkerForm.prototype = new org.sarsoft.view.EntityForm();
 
 org.sarsoft.view.ShapeForm = function() {
-	var fields = [
-		{ name : "color", label: "color", type : "string"},
-		{ name : "weight", label: "weight", type : "string"},
-		{ name : "fill", label: " will", type : "string"}
-	];
-	org.sarsoft.view.EntityForm.call(this, fields);
 }
 
-org.sarsoft.view.ShapeForm.prototype = new org.sarsoft.view.EntityForm();
+org.sarsoft.view.ShapeForm.prototype.create = function(container) {
+	var that = this;
+	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
+	var div = jQuery('<div class="item"><label for="color">Color:</label></div>').appendTo(form);
+	this.colorInput = jQuery('<input name="color" type="text" size="8"/>').appendTo(div);
+	
+	div = jQuery('<div class="item"><label for="color">Weight:</label></div>').appendTo(form);
+	this.weightInput = jQuery('<input name="weight" type="text" size="2"/>').appendTo(div);
+	
+	div = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
+	this.fillInput = jQuery('<input name="fill" type="text" size="2"/>').appendTo(div);
+	
+	var colorContainer = jQuery('<div border: 1px solid red"></div>').appendTo(form);
+	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
+	for(var i = 0; i < colors.length; i++) {
+		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
+		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j])}}());
+	}
+}
+
+org.sarsoft.view.ShapeForm.prototype.read = function() {
+	return {color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val()};
+}
+
+org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
+	this.colorInput.val(obj.color);
+	this.fillInput.val(obj.fill);
+	this.weightInput.val(obj.weight);
+	this.fillInput.attr("disabled",  (obj.way.polygon ? false : true));
+}
 
 org.sarsoft.controller.MarkupMapController = function(imap) {
 	var that = this;
@@ -76,7 +99,7 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 	this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details", new org.sarsoft.view.ShapeForm(), function(shape) {
 		if(that.shapeDlg.shape != null) {
 			that.shapeDAO.save(that.shapeDlg.shape.id, shape, function(obj) {
-				that.refreshShapes([shape]);
+				that.refreshShapes([obj]);
 			});
 		} else {
 			shape.way = {polygon: that.shapeDlg.polygon};
@@ -243,9 +266,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape)
 	shape.way.waypoints = shape.way.zoomAdjustedWaypoints;
 	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
 
-	var config = new Object();	
-
-	this.imap.addWay(shape.way, {clickable : true, fill: false, color: "#FF0000", opacity: 100});
+	this.imap.addWay(shape.way, {clickable : true, fill: shape.fill, color: shape.color, weight: shape.weight});
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.refreshMarkers = function(markers) {
