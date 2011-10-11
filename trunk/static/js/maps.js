@@ -891,7 +891,8 @@ org.sarsoft.InteractiveMap.prototype._createPolygon = function(vertices, config)
 	var color = config.color;
 	if(config.opacity == null) config.opacity = 100;
 	if(config.fill == null) config.fill = 35
-	var poly = new GPolygon(vertices, color, 2, Math.max(Math.min(config.opacity/100, 1), 0), color, config.fill/100);
+	if(config.weight == null) config.weight = 2;
+	var poly = new GPolygon(vertices, color, Math.max(config.weight, 1), Math.max(Math.min(config.opacity/100, 1), 0), color, config.fill/100);
 	this.map.addOverlay(poly);
 	return poly;
 }

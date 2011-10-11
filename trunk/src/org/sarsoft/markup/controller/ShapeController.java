@@ -41,7 +41,7 @@ public class ShapeController extends JSONBaseController {
 	public String updateShape(JSONForm params, Model model, @PathVariable("id") long id, HttpServletRequest request) {
 		Shape shape = dao.load(Shape.class, id);
 		Shape updated = Shape.createFromJSON(parseObject(params));
-		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		switch(action) {
 		case UPDATE :
 			shape.setColor(updated.getColor());
