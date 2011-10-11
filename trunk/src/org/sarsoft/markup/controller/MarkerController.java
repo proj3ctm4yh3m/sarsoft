@@ -39,7 +39,7 @@ public class MarkerController extends JSONBaseController {
 		switch(action) {
 		case UPDATE :
 			marker.setLabel(updated.getLabel());
-			marker.setURL(updated.getURL());
+			marker.setUrl(updated.getUrl());
 			dao.save(marker);
 			break;
 		case DELETE :
