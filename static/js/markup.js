@@ -28,14 +28,33 @@ org.sarsoft.MarkerDAO = function(errorHandler, baseURL) {
 org.sarsoft.MarkerDAO.prototype = new org.sarsoft.BaseDAO();
 
 org.sarsoft.view.MarkerForm = function() {
-	var fields = [
-		{ name : "label", label: "Label", type : "string"},
-		{ name : "url", label: "Image URL", type : "string"}
-	];
-	org.sarsoft.view.EntityForm.call(this, fields);
 }
 
-org.sarsoft.view.MarkerForm.prototype = new org.sarsoft.view.EntityForm();
+org.sarsoft.view.MarkerForm.prototype.create = function(container) {
+	var that = this;
+	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
+	var div = jQuery('<div class="item"><label for="label">Label:</label></div>').appendTo(form);
+	this.labelInput = jQuery('<input name="label" type="text" size="8"/>').appendTo(div);
+	
+	div = jQuery('<div class="item"><label for="image">Image:</label></div>').appendTo(form);
+	this.imageInput = jQuery('<input name="image" type="text" size="2"/>').appendTo(div);
+		
+	var imageContainer = jQuery('<div></div>').appendTo(form);
+	var images = ["/static/images/config.png", "/static/images/find.png", "/static/images/save.png", "/static/images/warning.png"];
+	for(var i = 0; i < images.length; i++) {
+		var swatch = jQuery('<img src="' + images[i] + '"/>').appendTo(imageContainer);
+		swatch.click(function() { var j = i; return function() {that.imageInput.val(images[j])}}());
+	}
+}
+
+org.sarsoft.view.MarkerForm.prototype.read = function() {
+	return {label : this.labelInput.val(), url: this.imageInput.val()};
+}
+
+org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
+	this.labelInput.val(obj.label);
+	this.imageInput.val(obj.url);
+}
 
 org.sarsoft.view.ShapeForm = function() {
 }
@@ -52,7 +71,7 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	div = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
 	this.fillInput = jQuery('<input name="fill" type="text" size="2"/>').appendTo(div);
 	
-	var colorContainer = jQuery('<div border: 1px solid red"></div>').appendTo(form);
+	var colorContainer = jQuery('<div></div>').appendTo(form);
 	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
 	for(var i = 0; i < colors.length; i++) {
 		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
@@ -255,7 +274,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	var tooltip = marker.label;
 	
 	var icon = org.sarsoft.MapUtil.createIcon(16, "/static/images/find.png");
-	this.imap.addWaypoint(marker.position, {icon: icon}, tooltip, marker.label);
+	this.imap.addWaypoint(marker.position, {icon: (marker.url == null || marker.url.length == 0 ? org.sarsoft.MapUtil.createIcon(16, "/static/images/find.png") : org.sarsoft.MapUtil.createIcon(16, marker.url))}, tooltip, marker.label);
 }
 
 
