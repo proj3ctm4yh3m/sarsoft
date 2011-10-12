@@ -80,7 +80,7 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	this.refreshCount=0;
 	
 	this.imap.addContextMenuItems([
-     		{text : "View Resource Details", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/resource/' + that.getResourceIdFromWpt(data.subject)); }}
+     		{text : "Details (opens new window)", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/resource/' + that.getResourceIdFromWpt(data.subject)); }}
      		]);
 	
 	var showHide = new org.sarsoft.ToggleControl("LOC", "Show/Hide Resource Locations", function(value) {
