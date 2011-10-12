@@ -97,7 +97,7 @@ org.sarsoft.Loader.queue(function() {YAHOO.util.Event.throwErrors = true;});
 
 org.sarsoft.view.ContextMenu = function() {
 	var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;
-	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 800, zIndex: "1000"});
+	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 9800, zIndex: "1000"});
 	this.menu.render(document.body);
 }
 
@@ -107,19 +107,32 @@ org.sarsoft.view.ContextMenu.prototype.setItems = function(items) {
 	this.items = items;
 }
 
+org.sarsoft.view.ContextMenu.prototype._addItems = function(menu, items, subject, data) {
+	var createhandler = function(idx) {
+		return function() { items[idx].handler(data)}
+	}
+	
+	for(var i = 0; i < items.length; i++) {
+		if(items[i].applicable(subject)) {
+			if(items[i].items != null) {
+				var submenu = new YAHOO.widget.Menu("ContextMenu_" + org.sarsoft.view.ContextMenu._idx++, { hidedelay : 9800, zIndex : "1010"});
+				this._addItems(submenu, items[i].items, subject, data);
+				var item = menu.addItem(new YAHOO.widget.MenuItem(items[i].text, { submenu: submenu}));
+			} else {
+				var handler = items[i].handler;
+				menu.addItem(new YAHOO.widget.MenuItem(items[i].text, { onclick: { fn: createhandler(i)}}));
+			}
+		}
+	}
+}
+
 org.sarsoft.view.ContextMenu.prototype.show = function(point, subject) {
 	var that = this;
 	this.data = {point: point, subject: subject};
 	this.menu.clearContent();
-	var createhandler = function(idx) {
-		return function() { that.items[idx].handler(that.data)}
-	}
-	for(var i = 0; i < this.items.length; i++) {
-		if(this.items[i].applicable(subject)) {
-			var handler = this.items[i].handler;
-			this.menu.addItem(new YAHOO.widget.MenuItem(this.items[i].text, { onclick: { fn: createhandler(i)}}));
-		}
-	}
+	
+	this._addItems(this.menu, this.items, subject, this.data);
+
 	this.menu.moveTo(point.x, point.y);
 	this.menu.render(document.body);
 	this.menu.show();
