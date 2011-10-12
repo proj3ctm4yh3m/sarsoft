@@ -131,6 +131,23 @@ org.sarsoft.view.SearchAssignmentForm = function() {
 
 org.sarsoft.view.SearchAssignmentForm.prototype = new org.sarsoft.view.EntityForm();
 
+org.sarsoft.view.SearchAssignmentForm.prototype.create = function(container) {
+	org.sarsoft.view.EntityForm.prototype.create.call(this, container);
+	this.freehandDiv = jQuery('<div class="item"><label for="freehand">Freehand:</label></div>').appendTo(this.form);
+	this.freehandInput = jQuery('<input name="freehand" type="checkbox"/>').appendTo(this.freehandDiv);
+}
+
+org.sarsoft.view.SearchAssignmentForm.prototype.read = function() {
+	var obj = org.sarsoft.view.EntityForm.prototype.read.call(this);
+	obj.freehand = this.freehandInput.attr("checked");
+	return obj;
+}
+
+org.sarsoft.view.SearchAssignmentForm.prototype.write = function(obj) {
+	org.sarsoft.view.EntityForm.prototype.write.call(this, obj);
+	this.freehandInput.attr("checked", false);
+}
+
 org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	var that = this;
 	this.id = id;
@@ -642,7 +659,8 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 			}
 		}
 		that.assignmentDAO.create(function(obj) {
-			that.addAssignment(obj);
+			that.addAssignment(obj, function() {
+			if(assignment.freehand) that.redraw(obj)});
 		}, assignment);		
 	});
 
@@ -819,7 +837,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.isAssignmentVisi
 	return true;
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = function(assignment) {
+org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = function(assignment, handler) {
 	var that = this;
 	this.assignments[assignment.id] = assignment;
 	if(!this.isAssignmentVisible(assignment)) return;
@@ -840,9 +858,10 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 
 	if(config.clickable) {
 		this._addAssignmentCallback(config, assignment.ways, assignment);
-		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); }, assignment, 10);
+		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); if(typeof("handler") != "undefined") handler(); }, assignment, 10);
 	} else {
 		this._addAssignmentCallback(config, assignment.ways, assignment);
+		if(typeof("handler") != "undefined") handler();
 		}
 }
 

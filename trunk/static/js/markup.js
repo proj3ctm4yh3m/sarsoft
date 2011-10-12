@@ -78,9 +78,12 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	div = jQuery('<div class="item"><label for="color">Weight:</label></div>').appendTo(form);
 	this.weightInput = jQuery('<input name="weight" type="text" size="2"/>').appendTo(div);
 	
-	div = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
-	this.fillInput = jQuery('<input name="fill" type="text" size="2"/>').appendTo(div);
-	
+	this.fillDiv = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
+	this.fillInput = jQuery('<input name="fill" type="text" size="2"/>').appendTo(this.fillDiv);
+
+	this.freehandDiv = jQuery('<div class="item"><label for="freehand">Freehand:</label></div>').appendTo(form);
+	this.freehandInput = jQuery('<input name="freehand" type="checkbox"/>').appendTo(this.freehandDiv);
+
 	var colorContainer = jQuery('<div></div>').appendTo(form);
 	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
 	for(var i = 0; i < colors.length; i++) {
@@ -90,7 +93,7 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
-	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val()};
+	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val(), freehand : this.freehandInput.attr("checked")};
 }
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
@@ -98,7 +101,8 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.fillInput.val(obj.fill);
 	this.weightInput.val(obj.weight);
 	this.labelInput.val(obj.label);
-	if(obj.way != null) this.fillInput.attr("disabled",  (obj.way.polygon ? false : true));
+	if(obj.way != null) this.fillDiv.css("display", (obj.way.polygon ? "block" : "none"));
+	this.freehandDiv.css("display", (obj.create ? "block" : "none"));
 }
 
 org.sarsoft.controller.MarkupMapController = function(imap) {
@@ -111,7 +115,7 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 	this.shapes = new Object();
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
-	
+
 	this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", new org.sarsoft.view.MarkerForm(), function(marker) {
 		if(that.markerDlg.marker != null) {
 			marker.position = that.markerDlg.marker.position;
@@ -125,7 +129,7 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 				that.refreshMarkers([obj]);
 			}, marker);
 		}});
-	
+
 	this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details", new org.sarsoft.view.ShapeForm(), function(shape) {
 		if(that.shapeDlg.shape != null) {
 			that.shapeDAO.save(that.shapeDlg.shape.id, shape, function(obj) {
@@ -136,6 +140,7 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 			shape.way.waypoints = that.imap.getNewWaypoints(that.shapeDlg.point, that.shapeDlg.polygon);
 			that.shapeDAO.create(function(obj) {
 				that.refreshShapes([obj]);
+				if(shape.freehand) that.redrawShape(obj);
 			}, shape);
 		}});
 	
@@ -143,8 +148,8 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
        		{text : "Add Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({});that.markerDlg.point=data.point; that.markerDlg.show(); }},
     		{text : "Edit Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
     		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
-       		{text : "Add Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
-       		{text : "Add Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
+       		{text : "Add Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, way : {polygon: false}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
+       		{text : "Add Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, way : {polygon: true}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
     		{text : "Edit Bounds", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
     		{text : "Redraw Freehand", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.redrawShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
     		{text : "Save Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.saveShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
@@ -321,7 +326,8 @@ org.sarsoft.controller.MarkupMapController.prototype.refreshShapes = function(sh
 
 	var timestamp = this.shapeDAO._timestamp;
 	for(var i = 0; i < shapes.length; i++) {
-		this.showShape(shapes[i]);
+		if(!this.getShapeAttr(shapes[i], "inedit"))
+				this.showShape(shapes[i]);
 	}
 }
 
