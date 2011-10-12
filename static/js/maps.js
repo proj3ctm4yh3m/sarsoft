@@ -1008,6 +1008,13 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	tt = tt +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(waypoint.lat, waypoint.lng))).toString() + ")";
 	var marker = new GMarker(gll, { title : tt, icon : icon});
 	this.map.addOverlay(marker);
+	GEvent.addListener(marker, "mouseover", function() {
+		if(waypoint.displayMessage == null) {
+			that._infomessage(label);
+		} else {
+			that._infomessage(waypoint.displayMessage);
+		}
+	});
 	marker.id = waypoint.id;
 	if(label != null) {
 		labelOverlay = new ELabel(gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", new GSize(4, -4));

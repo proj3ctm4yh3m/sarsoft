@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 import net.sf.json.JSONObject;
 
@@ -16,6 +17,7 @@ import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Way;
+import org.sarsoft.common.model.WayType;
 
 @JSONAnnotatedEntity
 @Entity
@@ -25,6 +27,7 @@ public class Shape extends SarModelObject implements IPreSave {
 	private String color;
 	private Float weight;
 	private Float fill;
+	private String label;
 	private Date updated;
 
 	@SuppressWarnings("rawtypes")
@@ -81,6 +84,15 @@ public class Shape extends SarModelObject implements IPreSave {
 	}
 	
 	@JSONSerializable
+	public String getLabel() {
+		return label;
+	}
+	
+	public void setLabel(String label) {
+		this.label = label;
+	}
+	
+	@JSONSerializable
 	public Date getUpdated() {
 		return updated;
 	}
@@ -90,4 +102,15 @@ public class Shape extends SarModelObject implements IPreSave {
 	public void preSave() {
 		setUpdated(new Date());
 	}
+
+	@Transient
+	@JSONSerializable
+	public String getFormattedSize() {
+		if(way.isPolygon()) {
+			return way.getArea() + " km&sup2;";
+		} else {
+			return way.getDistance() + " km";
+		}
+	}
+
 }
