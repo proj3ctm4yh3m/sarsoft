@@ -37,13 +37,19 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	this.labelInput = jQuery('<input name="label" type="text" size="8"/>').appendTo(div);
 	
 	div = jQuery('<div class="item"><label for="image">Image:</label></div>').appendTo(form);
-	this.imageInput = jQuery('<input name="image" type="text" size="2"/>').appendTo(div);
+	this.imageInput = jQuery('<input name="image" type="text" size="15"/>').appendTo(div);
 		
 	var imageContainer = jQuery('<div></div>').appendTo(form);
-	var images = ["/static/images/config.png", "/static/images/find.png", "/static/images/save.png", "/static/images/warning.png"];
+	var images = ["warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"];
 	for(var i = 0; i < images.length; i++) {
-		var swatch = jQuery('<img src="' + images[i] + '"/>').appendTo(imageContainer);
-		swatch.click(function() { var j = i; return function() {that.imageInput.val(images[j])}}());
+		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + images[i] + '.png"/>').appendTo(imageContainer);
+		swatch.click(function() { var j = i; return function() {
+			that.imageInput.val(images[j])}}());
+	}
+	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
+	for(var i = 0; i < colors.length; i++) {
+		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/resource/imagery/icons/circle/' + colors[i].substr(1) + '.png"></div>').appendTo(imageContainer);
+		swatch.click(function() { var j = i; return function() {that.imageInput.val(colors[j])}}());
 	}
 }
 
@@ -62,7 +68,11 @@ org.sarsoft.view.ShapeForm = function() {
 org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	var that = this;
 	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
-	var div = jQuery('<div class="item"><label for="color">Color:</label></div>').appendTo(form);
+	
+	var div = jQuery('<div class="item"><label for="label">Label:</label></div>').appendTo(form);
+	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);	
+	
+	div = jQuery('<div class="item"><label for="color">Color:</label></div>').appendTo(form);
 	this.colorInput = jQuery('<input name="color" type="text" size="8"/>').appendTo(div);
 	
 	div = jQuery('<div class="item"><label for="color">Weight:</label></div>').appendTo(form);
@@ -80,14 +90,15 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
-	return {color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val()};
+	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val()};
 }
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.colorInput.val(obj.color);
 	this.fillInput.val(obj.fill);
 	this.weightInput.val(obj.weight);
-	this.fillInput.attr("disabled",  (obj.way.polygon ? false : true));
+	this.labelInput.val(obj.label);
+	if(obj.way != null) this.fillInput.attr("disabled",  (obj.way.polygon ? false : true));
 }
 
 org.sarsoft.controller.MarkupMapController = function(imap) {
@@ -273,19 +284,27 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	var config = new Object();	
 	var tooltip = marker.label;
 	
-	var icon = org.sarsoft.MapUtil.createIcon(16, "/static/images/find.png");
-	this.imap.addWaypoint(marker.position, {icon: (marker.url == null || marker.url.length == 0 ? org.sarsoft.MapUtil.createIcon(16, "/static/images/find.png") : org.sarsoft.MapUtil.createIcon(16, marker.url))}, tooltip, marker.label);
+	if(marker.url == null || marker.url.length == 0) {
+		config.color = "#FF0000";
+	} else if(marker.url.indexOf('#') == 0) {
+		config.color = marker.url;
+	} else if(marker.url.indexOf('/') == -1 && marker.url.indexOf('.') == -1) {
+		config.icon = org.sarsoft.MapUtil.createIcon(24, "/static/images/icons/" + marker.url + ".png");
+	} else {
+		config.icon = org.sarsoft.MapUtil.createIcon(20, marker.url);
+	}
+	this.imap.addWaypoint(marker.position, config, tooltip, marker.label);
 }
-
 
 org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape) {
 	if(this.shapes[shape.id] != null) this.imap.removeWay(this.shapes[shape.id].way);
 	if(shape.way == null) return;
 	this.shapes[shape.id] = shape;
 	shape.way.waypoints = shape.way.zoomAdjustedWaypoints;
+	shape.way.displayMessage = shape.label + " (" + shape.formattedSize + ")";
 	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
 
-	this.imap.addWay(shape.way, {clickable : true, fill: shape.fill, color: shape.color, weight: shape.weight});
+	this.imap.addWay(shape.way, {clickable : true, fill: shape.fill, color: shape.color, weight: shape.weight}, shape.label);
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.refreshMarkers = function(markers) {
