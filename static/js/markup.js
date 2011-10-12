@@ -264,7 +264,7 @@ org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id)
 
 org.sarsoft.controller.MarkupMapController.prototype.removeShape = function(id) {
 	if(this.shapes[id] != null) this.imap.removeWay(this.shapes[id].way);
-	this.shapes[id] = null;
+	delete this.shapes[id];
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.setConfig = function(config) {
@@ -373,3 +373,45 @@ org.sarsoft.controller.MarkupMapController.prototype.handleSetupChange = functio
 		}
 	}
 }
+
+org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
+	var that = this;
+	var node = jQuery('<div></div>');
+	var node1 = jQuery('<div>Marker:</div>').appendTo(node);
+	var select1 = jQuery('<select><option value="--">--</option></select>').appendTo(node1);
+	for(var id in this.markers) {
+		var label = this.markers[id].label;
+		if(label != null && label.length > 0) {
+			jQuery('<option value="' + id + '">' + label + '</option>').appendTo(select1);
+		}
+	}
+
+	var node2 = jQuery('<div>Shape:</div>').appendTo(node);
+	var select2 = jQuery('<select><option value="--">--</option></select>').appendTo(node2);
+	for(var id in this.shapes) {
+		var label = this.shapes[id].label;
+		if(label != null && label.length > 0) {
+			jQuery('<option value="' + id + '">' + label + '</option>').appendTo(select2);
+		}
+	}
+
+	this._findBlock = {order : 10, node : node[0], handler : function() {
+		var id = select1.val();
+		if(id != "--") {
+			var wpt = that.markers[id].position;
+			that.imap.map.setCenter(new GLatLng(wpt.lat, wpt.lng), 15);
+			return true;
+		}
+		id = select2.val();
+		if(id != "--") {
+			var bb = that.shapes[id].way.boundingBox;
+			that.imap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
+			return true;
+		}
+		return false;
+	}};
+
+	return this._findBlock;
+}
+
+
