@@ -44,7 +44,7 @@ ${head}
  </c:when>
 </c:choose>
 </div>
-<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>SARSOFT&nbsp;<%= org.sarsoft.common.util.Constants.version %></div>
+<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>SARSOFT&nbsp;<%= org.sarsoft.plans.Constants.version %></div>
 </div>
 <div class="headerbottom"></div>
 </div>

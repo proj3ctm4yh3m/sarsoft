@@ -87,7 +87,6 @@ public class SearchController extends JSONBaseController {
 		opsController.checkLocators();
 		return app(model, "Pages.Home");
 	}
-	
 
 	@RequestMapping(value="/app/setsearch", method = RequestMethod.GET)
 	public String chooseNewSearch(Model model, HttpServletRequest request) {
