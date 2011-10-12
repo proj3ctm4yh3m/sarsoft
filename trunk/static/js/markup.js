@@ -34,22 +34,34 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	var that = this;
 	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
 	var div = jQuery('<div class="item"><label for="label">Label:</label></div>').appendTo(form);
-	this.labelInput = jQuery('<input name="label" type="text" size="8"/>').appendTo(div);
+	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
 	
 	div = jQuery('<div class="item"><label for="image">Image:</label></div>').appendTo(form);
 	this.imageInput = jQuery('<input name="image" type="text" size="15"/>').appendTo(div);
-		
+
+	var imgSwatch = jQuery('<img style="width: 20px; height: 20px"/>').appendTo(div);
+	this.imageInput.change(function() {
+		var url = that.imageInput.val();
+		if(url == null) url = "";
+		if(url.indexOf('#') == 0) {
+			url = '/resource/imagery/icons/circle/' + url.substr(1) + '.png';
+		} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
+			url = '/static/images/icons/' + url + '.png';
+		}
+		imgSwatch.attr("src", url);
+		});
+
 	var imageContainer = jQuery('<div></div>').appendTo(form);
 	var images = ["warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"];
 	for(var i = 0; i < images.length; i++) {
 		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + images[i] + '.png"/>').appendTo(imageContainer);
 		swatch.click(function() { var j = i; return function() {
-			that.imageInput.val(images[j])}}());
+			that.imageInput.val(images[j]); that.imageInput.trigger('change');}}());
 	}
 	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
 	for(var i = 0; i < colors.length; i++) {
 		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/resource/imagery/icons/circle/' + colors[i].substr(1) + '.png"></div>').appendTo(imageContainer);
-		swatch.click(function() { var j = i; return function() {that.imageInput.val(colors[j])}}());
+		swatch.click(function() { var j = i; return function() {that.imageInput.val(colors[j]); that.imageInput.trigger('change');}}());
 	}
 }
 
@@ -60,7 +72,7 @@ org.sarsoft.view.MarkerForm.prototype.read = function() {
 org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.labelInput.val(obj.label);
 	this.imageInput.val(obj.url);
-}
+	this.imageInput.trigger('change');}
 
 org.sarsoft.view.ShapeForm = function() {
 }
@@ -73,23 +85,29 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);	
 	
 	div = jQuery('<div class="item"><label for="color">Color:</label></div>').appendTo(form);
-	this.colorInput = jQuery('<input name="color" type="text" size="8"/>').appendTo(div);
+	this.colorInput = jQuery('<input name="color" type="text" size="8" style="float: left"/>').appendTo(div);
+	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left"></div>').appendTo(div);
+	this.colorInput.change(function() {colorSwatch.css('background-color', that.colorInput.val())});
 	
-	div = jQuery('<div class="item"><label for="color">Weight:</label></div>').appendTo(form);
-	this.weightInput = jQuery('<input name="weight" type="text" size="2"/>').appendTo(div);
-	
-	this.fillDiv = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
-	this.fillInput = jQuery('<input name="fill" type="text" size="2"/>').appendTo(this.fillDiv);
-
-	this.freehandDiv = jQuery('<div class="item"><label for="freehand">Freehand:</label></div>').appendTo(form);
-	this.freehandInput = jQuery('<input name="freehand" type="checkbox"/>').appendTo(this.freehandDiv);
-
-	var colorContainer = jQuery('<div></div>').appendTo(form);
-	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
+	var colorContainer = jQuery('<div style="clear: both"></div>').appendTo(form);
+	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
 	for(var i = 0; i < colors.length; i++) {
 		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
-		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j])}}());
+		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j]); that.colorInput.trigger('change');}}());
 	}
+	
+	div = jQuery('<div class="item" style="clear: both"><label for="color">Weight:</label></div>').appendTo(form);
+	this.weightInput = jQuery('<select name="weight"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>').appendTo(div);
+	
+	this.fillDiv = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
+	this.fillInput = jQuery('<select name="fill"><option value="0">None</option><option value="10">10%</option>' + 
+			'<option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>' +
+			'<option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>' +
+			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
+
+	this.freehandDiv = jQuery('<div class="item"><label for="freehand">Freehand Draw:</label></div>').appendTo(form);
+	this.freehandInput = jQuery('<input name="freehand" type="checkbox"/>').appendTo(this.freehandDiv);
+
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
@@ -98,6 +116,7 @@ org.sarsoft.view.ShapeForm.prototype.read = function() {
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.colorInput.val(obj.color);
+	this.colorInput.trigger('change');
 	this.fillInput.val(obj.fill);
 	this.weightInput.val(obj.weight);
 	this.labelInput.val(obj.label);
@@ -145,16 +164,16 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 		}});
 	
 	this.imap.addContextMenuItems([
-       		{text : "Add Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({});that.markerDlg.point=data.point; that.markerDlg.show(); }},
-    		{text : "Edit Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
+       		{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
+    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
     		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
-       		{text : "Add Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, way : {polygon: false}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
-       		{text : "Add Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, way : {polygon: true}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
-    		{text : "Edit Bounds", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
-    		{text : "Redraw Freehand", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.redrawShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
+       		{text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: false}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
+       		{text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: true}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
+    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
+    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
+    		{text : "Redraw", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.redrawShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
     		{text : "Save Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.saveShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
     		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
-    		{text : "Edit Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
     		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
      		]);
 	

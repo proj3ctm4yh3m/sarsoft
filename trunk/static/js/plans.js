@@ -574,10 +574,10 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		};
 
 	this.emap.addContextMenuItems([
-		{text : "New Search Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.original = null; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
-		{text : "Edit Assignment Bounds", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.edit(that._getAssignmentFromWay(data.subject)) }},
-		{text : "View Assignment Details", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); if(assignment == null) assignment = that._getAssignmentFromWaypoint(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); if(assignment == null) assignment = that._getAssignmentFromWaypoint(data.subject); window.open('/app/assignment/' + assignment.id); }},
-		{text : "Redraw Assignment Freehand", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.redraw(that._getAssignmentFromWay(data.subject)) }},
+		{text : "New Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.original = null; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
+		{text : "Modify Points", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.edit(that._getAssignmentFromWay(data.subject)) }},
+		{text : "Details (opens new window)", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); if(assignment == null) assignment = that._getAssignmentFromWaypoint(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); if(assignment == null) assignment = that._getAssignmentFromWaypoint(data.subject); window.open('/app/assignment/' + assignment.id); }},
+		{text : "Redraw", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.redraw(that._getAssignmentFromWay(data.subject)) }},
 		{text : "Delete Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return obj != null && obj.type != "TRACK" && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.assignmentDAO.del(assignment.id); that.removeAssignment(assignment); }},
 		{text : "Clone Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return obj != null && obj.type != "TRACK" && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable")}, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.newAssignmentDlg.point = null; that.newAssignmentDlg.original = assignment;
 			that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: assignment.resourceType, unresponsivePOD: assignment.unresponsivePOD, responsivePOD: assignment.responsivePOD, cluePOD: assignment.cluePOD, timeAllocated: assignment.timeAllocated, details: assignment.details}); }},
@@ -858,7 +858,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 
 	if(config.clickable) {
 		this._addAssignmentCallback(config, assignment.ways, assignment);
-		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); if(typeof("handler") != "undefined") handler(); }, assignment, 10);
+		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); if(typeof(handler) != "undefined") handler(); }, assignment, 10);
 	} else {
 		this._addAssignmentCallback(config, assignment.ways, assignment);
 		if(typeof("handler") != "undefined") handler();
@@ -1020,7 +1020,7 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 	this.showClues = true;
 	
 	this.imap.addContextMenuItems([
-     		{text : "View Clue Details", applicable : function(obj) { return obj != null && that.getClueIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/clue/' + that.getClueIdFromWpt(data.subject)); }}
+     		{text : "Details (opens new window)", applicable : function(obj) { return obj != null && that.getClueIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/clue/' + that.getClueIdFromWpt(data.subject)); }}
      		]);
 	
 	var showHide = new org.sarsoft.ToggleControl("CLUE", "Show/Hide Clues", function(value) {
