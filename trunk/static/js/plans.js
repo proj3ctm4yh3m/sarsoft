@@ -468,7 +468,7 @@ org.sarsoft.controller.SearchWaypointMapController = function(imap) {
 	this.imap = imap;
 	this.imap.register("org.sarsoft.controller.SearchWaypointMapController", this);
 	this.imap.addContextMenuItems([
-	    {text : "Search Waypoints \u2192", applicable : function(obj) { return obj == null }, items: [
+	    {text : "ICS Waypoints \u2192", applicable : function(obj) { return obj == null }, items: [
 		  {text : "Set LKP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("LKP", data.point); }},
 		  {text : "Set PLS here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("PLS", data.point); }},
 		  {text : "Set CP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("CP", data.point); }}]},
