@@ -230,7 +230,6 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.getFindBlock = fu
 	return this._findBlock;
 }
 
-
 org.sarsoft.controller.CallsignMapController = function(imap) {
 	var that = this;
 	this.callsignDAO = new org.sarsoft.ResourceDAO(function() { that.imap.message("Server Communication Error!"); }, "/rest/callsign");
