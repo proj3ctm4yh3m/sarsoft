@@ -54,13 +54,11 @@ public class CollaborativeMapController extends JSONBaseController {
 			if(map != null) {
 				String lat = request.getParameter("lat");
 				String lng = request.getParameter("lng");
-				if(getProperty("sarsoft.map.datum") != null) map.setDatum(getProperty("sarsoft.map.datum"));
 				if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
 					Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
 					map.setDefaultCenter(lkp);
 				}
 				dao.save(map);
-
 			}
 			return homePage(model);
 		}
