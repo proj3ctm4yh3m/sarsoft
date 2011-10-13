@@ -53,25 +53,6 @@ public class SearchController extends JSONBaseController {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 	}
 	
-	public void addConstantsToModel(Model model) {
-		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
-		model.addAttribute("mapSources", getMapSources());
-		model.addAttribute("tileCacheEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled")));
-		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
-		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
-		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
-		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
-	}
-	
-	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
-	public String getConstants(Model model) {
-		addConstantsToModel(model);
-		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-		if(getProperty("sarsoft.map.datum") != null) model.addAttribute("datum", getProperty("sarsoft.map.datum"));
-		if(search != null && search.getDatum() != null) model.addAttribute("datum", search.getDatum());
-		return "/global/constants";
-	}
-
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
 	public String homePage(Model model) {
 		OperationalPeriod lastPeriod = null;
@@ -110,7 +91,6 @@ public class SearchController extends JSONBaseController {
 				String op1name = request.getParameter("op1name");
 				String lat = request.getParameter("lat");
 				String lng = request.getParameter("lng");
-				if(getProperty("sarsoft.map.datum") != null) search.setDatum(getProperty("sarsoft.map.datum"));
 				OperationalPeriod period = new OperationalPeriod();
 				period.setDescription((op1name != null && op1name.length() > 0) ? op1name : "first operational period");
 				period.setId(1L);
@@ -278,7 +258,6 @@ public class SearchController extends JSONBaseController {
 		if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
 			search.setPassword(hash(request.getParameter("password")));
 		}
-		search.setDatum(request.getParameter("datum"));
 		dao.save(search);
 		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
 		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);

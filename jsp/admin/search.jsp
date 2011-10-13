@@ -10,12 +10,8 @@
 <p>
 <form action="/app/search" method="POST">
 <table border="0">
-<tr><td colspan="2"><b>Search Name and Datum</b></td></tr>
+<tr><td colspan="2"><b>Search Name</b></td></tr>
 <tr><td>Name</td><td><input type="text" size="15" value="${tenant.publicName}" name="description"/></td></tr>
-<tr><td>Datum</td><td><select name="datum">
-  <option value="WGS84"<c:if test="${tenant.datum eq 'WGS84'}"> selected="selected"</c:if>>WGS84</option>
-  <option value="NAD27 CONUS"<c:if test="$tenant.datum eq 'NAD27 CONUS'}"> selected="selected"</c:if>>NAD27 CONUS</option>
-</select></td></tr>
 
 <tr><td colspan="2" style="padding-top: 15px"><b>Sharing</b></td></tr>
 <c:choose>

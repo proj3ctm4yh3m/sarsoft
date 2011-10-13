@@ -360,26 +360,41 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 		this.datumSwitcher = jQuery('<a style="cursor: pointer" class="noprint">+</a>').appendTo(this.datumControl)[0];
 		
 		var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;		
-		var datumMenu = new YAHOO.widget.Menu(id, {hidedelay : 800, zIndex : "1000", context : [this.datumSwitcher, "bl", "tr"]});
+		this.datumMenu = new YAHOO.widget.Menu(id, {hidedelay : 800, zIndex : "1000", context : [this.datumSwitcher, "bl", "tr"]});
 		var fn = function(d) {
 			return function() {
-				org.sarsoft.map.datum = d;
-				GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
-				datumMenu.hide();
-				that.datumDisplay.html(d);
-				that.imap.updateDatum();
+				that.setDatum(d);
 			}
 		}
 		for(var datum in org.sarsoft.map.datums) {
-			datumMenu.addItem(new YAHOO.widget.MenuItem(datum,  { onclick : { fn : fn(datum) }}));
+			this.datumMenu.addItem(new YAHOO.widget.MenuItem(datum,  { onclick : { fn : fn(datum) }}));
 		}
-		datumMenu.render(document.body);
+		this.datumMenu.render(document.body);
 		
 		GEvent.addDomListener(this.datumSwitcher, "click", function() {
-			datumMenu.cfg.setProperty("context", [this.datumSwitcher, "bl", "tr"]);
-			datumMenu.show();
+			that.datumMenu.cfg.setProperty("context", [this.datumSwitcher, "bl", "tr"]);
+			that.datumMenu.show();
 		});
 	}
+}
+
+org.sarsoft.MapDatumWidget.prototype.setDatum = function(datum) {
+	org.sarsoft.map.datum = datum;
+	GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
+	if(this.datumMenu != null) this.datumMenu.hide();
+	this.datumDisplay.html(datum);
+	this.imap.updateDatum();
+}
+
+org.sarsoft.MapDatumWidget.prototype.setConfig = function(config) {
+	if(config.MapDatumWidget == null) return;
+	this.setDatum(config.MapDatumWidget.datum);
+}
+
+org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
+	if(config.MapDatumWidget == null) config.MapDatumWidget = new Object();
+	config.MapDatumWidget.datum = org.sarsoft.map.datum;
+	return config;
 }
 
 org.sarsoft.UTMGridControl = function(imap) {

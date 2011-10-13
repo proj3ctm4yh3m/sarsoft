@@ -17,7 +17,7 @@
 <li>View your <a href="/map.html">map.</a></li>
 <c:choose>
 <c:when test="${hosted eq false}">
- <li><a href="/app/search">Map Admin.</a>  Change map datum and search name.</li>
+ <li><a href="/app/search">Map Admin.</a>  Change map name.</li>
 </c:when>
 <c:when test="${tenant.account.name eq username}">
  <li><a href="/app/search">Map Admin.</a>  Map datum, sharing and password protection.</li>

@@ -10,10 +10,13 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
+import org.sarsoft.common.model.GeoRefImage;
+import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.plans.Constants;
 import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,6 +43,22 @@ public class AdminController extends JSONBaseController {
 	private OIDConsumer consumer = null;
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
+	
+	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
+	public String getConstants(Model model) {
+		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
+		model.addAttribute("mapSources", getMapSources());
+		model.addAttribute("tileCacheEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled")));
+		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
+		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
+		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
+		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
+		
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		if(getProperty("sarsoft.map.datum") != null) model.addAttribute("datum", getProperty("sarsoft.map.datum"));
+		if(tenant != null && tenant.getDatum() != null) model.addAttribute("datum", tenant.getDatum());
+		return "/global/constants";
+	}
 
 	public String setTenant(Model model, String name, Class<? extends Tenant> cls, HttpServletRequest request) {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", name);
@@ -179,6 +198,4 @@ public class AdminController extends JSONBaseController {
 		return json(model, tenant);
 	}
 
-
-	
 }

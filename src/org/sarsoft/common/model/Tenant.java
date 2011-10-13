@@ -1,11 +1,18 @@
 package org.sarsoft.common.model;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
+
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 @JSONAnnotatedEntity
 @Entity
@@ -18,7 +25,16 @@ public abstract class Tenant {
 	private String description;
 	private UserAccount account;
 	private String mapConfig;
-	private String datum;
+	
+	@SuppressWarnings("rawtypes")
+	public static Map<String, Class> classHints = new HashMap<String, Class>();
+
+	static {
+		@SuppressWarnings("rawtypes")
+		Map<String, Class> m = new HashMap<String, Class>();
+		m.put("MapDatumWidget", HashMap.class);
+		classHints = Collections.unmodifiableMap(m);
+	}
 
 	public void setName(String name) {
 		this.name = name;
@@ -74,12 +90,15 @@ public abstract class Tenant {
 		return mapConfig;
 	}
 
+	@SuppressWarnings("rawtypes")
+	@Transient
 	public String getDatum() {
-		return datum;
+		Map m = (Map) JSONObject.toBean((JSONObject) JSONSerializer.toJSON(mapConfig), HashMap.class, classHints);
+		if(m != null && m.containsKey("MapDatumWidet")) {
+			Map m2 = (Map) m.get("MapDatumWidget");
+			if(m2 != null) return (String) m2.get("datum");
+		}
+		return null;
 	}
 	
-	public void setDatum(String datum) {
-		this.datum = datum;
-	}
-		
 }
