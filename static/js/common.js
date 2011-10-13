@@ -63,9 +63,6 @@ org.sarsoft.BaseDAO.prototype.loadAll = function(handler) {
 	this._doGet("/", handler);
 }
 
-if(typeof net == "undefined") net = new Object();
-if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
-
 org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
 	if(typeof baseURL == "undefined") baseURL = "/rest/search";
 	this.baseURL = baseURL;
@@ -73,6 +70,14 @@ org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
 }
 
 org.sarsoft.SearchDAO.prototype = new org.sarsoft.BaseDAO();
+
+org.sarsoft.TenantDAO = function(errorHandler, baseURL) {
+	if(typeof baseURL == "undefined") baseURL = "/rest/tenant";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+}
+
+org.sarsoft.TenantDAO.prototype = new org.sarsoft.BaseDAO();
 
 org.sarsoft.Loader = new Object();
 org.sarsoft.Loader._tasks = new Array();

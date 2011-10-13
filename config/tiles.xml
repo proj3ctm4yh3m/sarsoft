@@ -75,4 +75,8 @@
 		<put-attribute name="content" value="/imagery/georefimagelist.jsp"/>
 	</definition>
 
+	<definition name="Map.Home" extends="App.Base">
+		<put-attribute name="content" value="/global/map-home.jsp"/>
+	</definition>
+
 </tiles-definitions>

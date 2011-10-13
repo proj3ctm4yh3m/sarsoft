@@ -1,7 +1,12 @@
 package org.sarsoft.common.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
@@ -9,6 +14,7 @@ import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
@@ -154,5 +160,25 @@ public class AdminController extends JSONBaseController {
 		request.getSession(true).removeAttribute("username");
 		return bounce(model);
 	}
+	
+	@RequestMapping(value ="/rest/tenant/mapConfig", method = RequestMethod.GET)
+	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("value", tenant.getMapConfig());
+		return json(model, map);
+	}
 
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/rest/tenant/mapConfig", method = RequestMethod.POST)
+	public String setSearchProperty(Model model, JSONForm params) {
+		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		tenant.setMapConfig((String) m.get("value"));
+		dao.save(tenant);
+		return json(model, tenant);
+	}
+
+
+	
 }

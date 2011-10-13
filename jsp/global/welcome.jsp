@@ -52,10 +52,29 @@ below, or create a new one.
 </c:choose>
 </b><br/>
 <ul>
-<c:forEach var="srch" items="${searches}">
-<li><a href="javascript:window.location='/app/setsearch/${srch.name}'">${srch.description}</a></li>
+<c:forEach var="tenant" items="${tenants}">
+<c:if test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">
+<li><a href="javascript:window.location='/app/setsearch/${tenant.name}'">${tenant.description}</a></li>
+</c:if>
 </c:forEach>
 </ul>
+<br/>
+
+<b>
+<c:choose>
+ <c:when test="${hosted eq true}">Interactive Maps Created By Your Account</c:when>
+ <c:otherwise>All Interactive Maps On This Server</c:otherwise>
+</c:choose>
+</b><br/>
+<ul>
+<c:forEach var="tenant" items="${tenants}">
+<c:if test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">
+<li><a href="javascript:window.location='/map?id=${tenant.name}'">${tenant.description}</a></li>
+</c:if>
+</c:forEach>
+</ul>
+<br/>
+
 <br/>
 <p>
 <form action="/app/setsearch" method="post" id="newsearch">
@@ -75,6 +94,7 @@ below, or create a new one.
 
 <div style="padding-top: 15px">
 <button onclick="createSearch()">Create Search</button>
+<button onclick="createMap()">Create Map</button>
 </div>
 </p>
 
@@ -83,6 +103,11 @@ org.sarsoft.Loader.queue(function() {
 	locform = new org.sarsoft.LocationEntryForm();
 	locform.create(document.getElementById('searchlocation'));
 });
+
+function createMap() {
+	document.forms["newsearch"].action="/map";
+	createSearch();
+}
 
 function createSearch() {
 	var searchname = document.getElementById('name').value;
