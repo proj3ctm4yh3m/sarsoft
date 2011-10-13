@@ -17,6 +17,8 @@ public abstract class Tenant {
 	private String password;
 	private String description;
 	private UserAccount account;
+	private String mapConfig;
+	private String datum;
 
 	public void setName(String name) {
 		this.name = name;
@@ -63,5 +65,21 @@ public abstract class Tenant {
 		this.visible = visible;
 	}
 
+	public void setMapConfig(String mapConfig) {
+		this.mapConfig = mapConfig;
+	}
+
+	@JSONSerializable
+	public String getMapConfig() {
+		return mapConfig;
+	}
+
+	public String getDatum() {
+		return datum;
+	}
 	
+	public void setDatum(String datum) {
+		this.datum = datum;
+	}
+		
 }

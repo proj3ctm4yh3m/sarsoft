@@ -127,24 +127,6 @@ public class SearchController extends JSONBaseController {
 		return val;
 	}
 		
-	@RequestMapping(value ="/rest/search/mapConfig", method = RequestMethod.GET)
-	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {
-		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("value", search.getMapConfig());
-		return json(model, map);
-	}
-
-	@SuppressWarnings("rawtypes")
-	@RequestMapping(value = "/rest/search/mapConfig", method = RequestMethod.POST)
-	public String setSearchProperty(Model model, JSONForm params) {
-		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
-		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-		search.setMapConfig((String) m.get("value"));
-		dao.save(search);
-		return json(model, search);
-	}
-
 	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.GET)
 	public String getLkp(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());

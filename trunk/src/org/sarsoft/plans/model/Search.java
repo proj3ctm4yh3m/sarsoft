@@ -13,20 +13,9 @@ import org.sarsoft.common.model.Waypoint;
 @Entity
 public class Search extends Tenant {
 
-	private String mapConfig;
 	private Waypoint lkp;
 	private Waypoint pls;
 	private Waypoint cp;
-	private String datum;
-
-	public void setMapConfig(String mapConfig) {
-		this.mapConfig = mapConfig;
-	}
-
-	@JSONSerializable
-	public String getMapConfig() {
-		return mapConfig;
-	}
 
 	@ManyToOne
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
@@ -58,11 +47,4 @@ public class Search extends Tenant {
 		this.cp = cp;
 	}
 	
-	public String getDatum() {
-		return datum;
-	}
-	
-	public void setDatum(String datum) {
-		this.datum = datum;
-	}
 }

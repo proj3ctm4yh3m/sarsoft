@@ -407,7 +407,7 @@ org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
 org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
 	var that = this;
 	this.imap = imap;
-	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.imap.message("Server Communication Error!"); });
+	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
 
 	if(persist) {
 		var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "This will make the map layers, range rings, assignment coloring and track/location visibility the default for all maps on this search.", "Save", "Cancel", function() {
@@ -425,7 +425,7 @@ org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
 
 org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 	var that = this;
-	this.searchDAO.load(function(cfg) {
+	this.tenantDAO.load(function(cfg) {
 		var config = {};
 		if(cfg.value != null) {
 			config = YAHOO.lang.JSON.parse(cfg.value);			
@@ -436,14 +436,14 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 			if(val != null && val.getConfig != null) {
 				val.getConfig(config);
 			}
-			that.searchDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
+			that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
 		}
 	}, "mapConfig");
 }
 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
 	var that = this;
-	this.searchDAO.load(function(cfg) {
+	this.tenantDAO.load(function(cfg) {
 		var config = {};
 		if(cfg.value != null) {
 			config = YAHOO.lang.JSON.parse(cfg.value);			
@@ -562,7 +562,6 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.emap = emap;
 	this.period = operationalperiod;
 	this.emap.register("org.sarsoft.controller.OperationalPeriodMapController", this);
-	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.emap.message("Server Communication Error"); });
 	this.assignmentDAO = new org.sarsoft.SearchAssignmentDAO(function() { that.emap.message("Server Communication Error"); });
 	this.periodDAO = new org.sarsoft.OperationalPeriodDAO(function() { that.emap.message("Server Communication Error"); });
 	this.assignments = new Object();

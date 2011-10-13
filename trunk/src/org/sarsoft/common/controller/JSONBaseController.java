@@ -200,10 +200,10 @@ public abstract class JSONBaseController {
 		if(isHosted()) {
 			if(account != null) {
 				model.addAttribute("account", account);
-				model.addAttribute("searches", account.getTenants());
+				model.addAttribute("tenants", account.getTenants());
 			}
 		} else {
-			model.addAttribute("searches", dao.getAllTenants());
+			model.addAttribute("tenants", dao.getAllTenants());
 		}
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		model.addAttribute("head", getCommonHeader());
