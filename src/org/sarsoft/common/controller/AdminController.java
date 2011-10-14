@@ -174,6 +174,8 @@ public class AdminController extends JSONBaseController {
 			}
 			request.getSession(true).setAttribute("username", account.getName());
 			RuntimeProperties.setUsername(account.getName());
+			request.getSession(true).removeAttribute("tenant");
+			RuntimeProperties.setTenant(null);
 			return bounce(model);
 		} catch (Exception e) {
 			logger.error("Exception encountered handling OpenID response", e);
