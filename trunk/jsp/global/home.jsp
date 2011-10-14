@@ -48,10 +48,10 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
 <ul>
 <c:choose>
 <c:when test="${hosted eq false}">
- <li><a href="/app/search">Search Admin.</a>  Change search name.</li>
+ <li><a href="/admin">Search Admin.</a>  Change search name.</li>
 </c:when>
 <c:when test="${tenant.account.name eq username}">
- <li><a href="/app/search">Search Admin.</a>  Map datum, sharing and password protection.</li>
+ <li><a href="/admin">Search Admin.</a>  Map datum, sharing and password protection.</li>
 </c:when>
 </c:choose>
  <c:if test="${imageUploadEnabled}">
