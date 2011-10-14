@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -76,10 +77,28 @@ public class SearchController extends JSONBaseController {
 	}
 	
 	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
-	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request) {
+	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request, HttpServletResponse response) {
 		String val = adminController.setTenant(model, name, Search.class, request);
 		opsController.checkLocators();
 		if(val != null) return val;
+		if(name != null) {
+			Cookie[] cookies = request.getCookies();
+			Cookie myCookie = null;
+			for(Cookie cookie : cookies) {
+				if("org.sarsoft.recentlyLoadedSearches".equals(cookie.getName())) {
+					myCookie = cookie;
+				}
+			}
+			if(myCookie != null && myCookie.getValue() != null) {
+				myCookie.setValue(myCookie.getValue().replaceAll("(^|,)" + name + "=.*?(,|$)", "") + ",");
+			} else {
+				myCookie = new Cookie("org.sarsoft.recentlyLoadedSearches","");
+			}
+			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
+			myCookie.setValue(myCookie.getValue() + name + "=" + tenant.getDescription());
+			myCookie.setMaxAge(7776000);
+			response.addCookie(myCookie);
+		}
 		return homePage(model);
 	}
 	
@@ -89,21 +108,15 @@ public class SearchController extends JSONBaseController {
 		if(val == null) {
 			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
 			if(search != null) {
-				String op1name = request.getParameter("op1name");
 				String lat = request.getParameter("lat");
 				String lng = request.getParameter("lng");
-				OperationalPeriod period = new OperationalPeriod();
-				period.setDescription((op1name != null && op1name.length() > 0) ? op1name : "first operational period");
-				period.setId(1L);
-				dao.save(period);
 				if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
 					Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
 					search.setLkp(lkp);
 				}
 				dao.save(search);
-
 			}
-			return homePage(model);
+			return "redirect:/app/setsearch/" + RuntimeProperties.getTenant();
 		}
 		return val;
 	}
@@ -186,26 +199,6 @@ public class SearchController extends JSONBaseController {
 		}
 		dao.save(search);
 		return json(model, search);
-	}
-
-	@RequestMapping(value="/app/search/delete", method = RequestMethod.GET)
-	public String delete(Model model, HttpServletRequest request) {
-		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
-			model.addAttribute("message", "You can only admin this search if you own it.");
-			return adminController.getSharing(model);
-		}
-		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-
-		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
-		if(l == null || l.size() == 0) {
-			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-			search.getAccount().getTenants().remove(search);
-			dao.save(account);
-			RuntimeProperties.setTenant(null);
-			request.getSession(true).removeAttribute("tenant");
-			return bounce(model);
-		}
-		else return adminController.getSharing(model);
 	}
 
 	@RequestMapping(value = "/rest/search", method= RequestMethod.POST)

@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.sarsoft.common.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.model.Tenant;
-import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.CollaborativeMap;
@@ -63,7 +62,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			myCookie.setMaxAge(7776000);
 			response.addCookie(myCookie);			
 		}
-		return mapEditor(model);
+		return app(model, "/collabmap");
 	}
 
 	@RequestMapping(value="/map", method = RequestMethod.POST)
@@ -83,16 +82,6 @@ public class CollaborativeMapController extends JSONBaseController {
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
 		}
 		return val;
-	}
-
-	@RequestMapping(value="/map.html", method = RequestMethod.GET)
-	public String mapEditor(Model model) {
-		return app(model, "/collabmap");
-	}
-
-	@RequestMapping(value="/info.html", method = RequestMethod.GET)
-	public String mapInfo(Model model) {
-		return app(model, "Map.Home");
 	}
 
 }

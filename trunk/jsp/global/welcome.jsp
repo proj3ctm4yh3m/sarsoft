@@ -1,19 +1,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<c:choose>
-<c:when test="${account ne null}">
-<h2>Welcome to Sarsoft, ${account.email}.</h2>
-<a href="/app/logout">Logout</a>
-<br/>
-</c:when>
-<c:otherwise>
-<h2>Welcome to Sarsoft!</h2>
+<h2>Welcome to Sarsoft<c:if test="${account ne null}">, ${account.email}.  (<a href="/app/logout">Logout</a>)</c:if></h2>
 <div>
 ${welcomeMessage}
-</div>
-</c:otherwise>
-</c:choose>
 
 <c:if test="${message ne null}">
 <div style="font-weight: bold; color: red">Error: ${message}</div>
@@ -23,14 +13,17 @@ ${welcomeMessage}
 <c:set var="url">
 <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">/map?id=${tenant.name}</c:when><c:otherwise>/app/setsearch/${tenant.name}</c:otherwise></c:choose>
 </c:set>
-<div style="font-size: larger; padding-bottom: 20px">
-Continue working on <a href="${url}">${tenant.description}</a>.
+<div>
+Continue working on: <a href="${url}">${tenant.description}</a>.
 </div>
 </c:if>
+<div style="padding-bottom: 20px; border-bottom: 1px solid #CCCCCC">
+You can always use the <a href="/app/map.html">Quick Map Viewer</a> to browse map layers if you don't need to save anything.
+</div>
 
 <div style="float: left">
 <c:if test="${tenantSubclasses['org.sarsoft.plans.model.Search']}">
-<b>Your Searches</b>
+<p><b>Your Searches</b>
 <ul>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">
@@ -38,11 +31,11 @@ Continue working on <a href="${url}">${tenant.description}</a>.
 </c:if>
 </c:forEach>
 </ul>
-<br/>
+</p>
 </c:if>
 
 <c:if test="${tenantSubclasses['org.sarsoft.markup.model.CollaborativeMap']}">
-<b>Your Maps</b>
+<p><b>Your Maps</b>
 <ul>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">
@@ -50,20 +43,23 @@ Continue working on <a href="${url}">${tenant.description}</a>.
 </c:if>
 </c:forEach>
 </ul>
+</p>
 </c:if>
 
 <div id="recentlyLoadedSearchDiv" style="display: none">
-<b>Recently Viewed Searches</b>
+<p><b>Recently Viewed Searches</b>
 <ul id="recentlyLoadedSearchUl">
 </ul>
+<a href="javascript:clearRecentSearches()">Clear</a>
+</p>
 </div>
 
 <div id="recentlyLoadedMapDiv" style="display: none">
-<b>Recently Viewed Maps</b>
+<p><b>Recently Viewed Maps</b>
 <ul id="recentlyLoadedMapUl">
 </ul>
 <a href="javascript:clearRecentMaps()">Clear</a>
-</div>
+</p></div>
 
 </div>
 
@@ -72,8 +68,8 @@ Continue working on <a href="${url}">${tenant.description}</a>.
 <c:choose>
 <c:when test="${hosted eq true and account eq null}">
 <div style="float: left; clear: both">
-<p>You need to log in with a Google or Yahoo account to create new maps and searches.  If someone's shared a URL with you, you don't need to log
-in to use their map.
+<p>You need to log in with a Google or Yahoo account to create new objects.  If someone's shared a URL with you, you can visit it directly
+without logging in.
 </p>
 <p>
 Log in using your:
@@ -87,17 +83,16 @@ Log in using your:
 </c:when>
 <c:otherwise>
 <form action="/app/setsearch" method="post" id="newsearch">
-<b>Create a new search</b><br/>
-<table border="0">
-<tr><td>Search Name:</td><td><input type="text" size="15" name="name" id="name"/></td></tr>
-<tr><td>Name of first operational period:</td><td><input type="text" size="15" name="op1name"/></td></tr>
-</table>
+<p>
+<b>Create a new object</b><br/><br/>
+<label for="name">Name</label><input type="text" size="15" name="name" id="name"/>
 
 <input type="hidden" id="lat" name="lat"/>
 <input type="hidden" id="lng" name="lng"/>
+</p>
 </form>
 
-<div style="padding-top: 15px">If known, enter the location of your search in UTM, Lat/Lng, or as an address:</div>
+<div style="padding-top: 15px">If known, enter the starting location in UTM, Lat/Lng, or as an address:</div>
 <div id="searchlocation">
 </div>
 
@@ -113,6 +108,7 @@ Log in using your:
 org.sarsoft.Loader.queue(function() {
 	locform = new org.sarsoft.LocationEntryForm();
 	locform.create(document.getElementById('searchlocation'));
+
 	var recentlyLoaded = YAHOO.util.Cookie.get("org.sarsoft.recentlyLoadedMaps");
 	if(recentlyLoaded != null) {
 		$('#recentlyLoadedMapDiv').css("display","block");
@@ -122,11 +118,26 @@ org.sarsoft.Loader.queue(function() {
 			$('#recentlyLoadedMapUl').append('<li><a href="/map?id=' + map[0] + '">' + map[1] + '</a></li>');
 		}
 	}
+
+	recentlyLoaded = YAHOO.util.Cookie.get("org.sarsoft.recentlyLoadedSearches");
+	if(recentlyLoaded != null) {
+		$('#recentlyLoadedSearchDiv').css("display","block");
+		var searches = recentlyLoaded.split(',');
+		for(var i = 0; i < searches.length; i++) {
+			var search = searches[i].split('=');
+			$('#recentlyLoadedSearchUl').append('<li><a href="/app/setsearch/' + search[0] + '">' + search[1] + '</a></li>');
+		}
+	}
 });
 
 function clearRecentMaps() {
 	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedMaps");
 	$('#recentlyLoadedMapDiv').css("display","none");
+}
+
+function clearRecentSearches() {
+	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedSearches");
+	$('#recentlyLoadedSearchDiv').css("display","none");
 }
 
 function createMap() {
