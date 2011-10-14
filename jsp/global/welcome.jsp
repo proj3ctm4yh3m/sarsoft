@@ -9,6 +9,18 @@ ${welcomeMessage}
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>
 
+<c:if test="${targetDest ne null}">
+<div>
+<form action="/cachepassword" method="POST">
+The page you are trying to reach is password protected.  Please enter it below:<br/>
+<label for="password">Password:</label>
+<input type="password" name="password" size="10"/>
+<input type="hidden" name="dest" value="${targetDest}"/>
+<button type="submit">Submit</button>
+</form>
+</div>
+</c:if>
+
 <c:if test="${tenant ne null}">
 <c:set var="url">
 <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">/map?id=${tenant.name}</c:when><c:otherwise>/app/setsearch/${tenant.name}</c:otherwise></c:choose>

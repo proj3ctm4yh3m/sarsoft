@@ -135,6 +135,8 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
 
+	this.passwordDlg = new org.sarsoft.PasswordDialog();
+	
 	this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", new org.sarsoft.view.MarkerForm(), function(marker) {
 		if(that.markerDlg.marker != null) {
 			marker.position = that.markerDlg.marker.position;
@@ -170,8 +172,11 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	if(nestMenuItems) {
 		items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
 	}
-	
-	this.imap.addContextMenuItems(items.concat([
+
+	if(org.sarsoft.userPermissionLevel == "READ") {
+		this.imap.addContextMenuItems([{text : "Enter password for write access", applicable : function(obj) { return obj == null }, handler: function(data) { that.passwordDlg.show();}}]);
+	} else {
+		this.imap.addContextMenuItems(items.concat([
     		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
     		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
     		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
@@ -181,6 +186,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
     		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
     		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
      		]));
+	}
 	
 	var showHide = new org.sarsoft.ToggleControl("MRK", "Show/Hide Markup", function(value) {
 		that.showMarkup = value;
@@ -413,5 +419,3 @@ org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
 
 	return this._findBlock;
 }
-
-
