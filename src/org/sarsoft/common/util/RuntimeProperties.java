@@ -10,11 +10,13 @@ import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.sarsoft.common.model.Tenant;
 
 public class RuntimeProperties {
 
 	private static ThreadLocal<String> tTenant = new ThreadLocal<String>();
 	private static ThreadLocal<String> tUsername = new ThreadLocal<String>();
+	private static ThreadLocal<Tenant.Permission> tPermission = new ThreadLocal<Tenant.Permission>();
 	private static ThreadLocal<String> tServerName = new ThreadLocal<String>();
 	private static ThreadLocal<Integer> tServerPort = new ThreadLocal<Integer>();
 	private static Properties properties;
@@ -62,6 +64,14 @@ public class RuntimeProperties {
 		return tUsername.get();
 	}
 	
+	public static void setUserPermission(Tenant.Permission permission) {
+		tPermission.set(permission);
+	}
+
+	public static Tenant.Permission getUserPermission() {
+		return tPermission.get();
+	}
+
 	public static void setServerName(String servername) {
 		tServerName.set(servername);
 	}

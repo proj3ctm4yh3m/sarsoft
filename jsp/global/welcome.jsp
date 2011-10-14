@@ -9,48 +9,28 @@
 </c:when>
 <c:otherwise>
 <h2>Welcome to Sarsoft!</h2>
+<div>
 ${welcomeMessage}
-<c:if test="${fn:length(welcomeMessage) gt 0}"><br/></c:if>
+</div>
 </c:otherwise>
 </c:choose>
+
 <c:if test="${message ne null}">
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>
-<c:choose>
-<c:when test="${hosted eq true and account eq null}">
 
-<p><b>This server is connected to the Internet</b>.  In order to keep sensitive information private and 
-prevent miscreants from vandalizing your data, you must log in to create new searches.
-</p>
-<p>
-Once you create a search, you can share it with others using a secret URL; they will not need to log in.
-</p>
-<p>
-Log in using your:
-<ul>
-<li><a href="/app/openidrequest?domain=google">Google account</a></li>
-<li><a href="/app/openidrequest?domain=yahoo">Yahoo account</a></li>
-</ul>
-</p>
+<c:if test="${tenant ne null}">
+<c:set var="url">
+<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">/map?id=${tenant.name}</c:when><c:otherwise>/app/setsearch/${tenant.name}</c:otherwise></c:choose>
+</c:set>
+<div style="font-size: larger; padding-bottom: 20px">
+Continue working on <a href="${url}">${tenant.description}</a>.
+</div>
+</c:if>
 
-</c:when>
-<c:otherwise>
-
-
-<p>Before you get started, you need to select a search to work on.  You can choose from the list of 
-<c:choose>
- <c:when test="${hosted eq true}">searches created by your account</c:when>
- <c:otherwise>all searches on this server</c:otherwise>
-</c:choose>
-below, or create a new one.
-</p>
-
-<b>
-<c:choose>
- <c:when test="${hosted eq true}">Searches Created By Your Account</c:when>
- <c:otherwise>All Searches On This Server</c:otherwise>
-</c:choose>
-</b><br/>
+<div style="float: left">
+<c:if test="${tenantSubclasses['org.sarsoft.plans.model.Search']}">
+<b>Your Searches</b>
 <ul>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">
@@ -59,13 +39,10 @@ below, or create a new one.
 </c:forEach>
 </ul>
 <br/>
+</c:if>
 
-<b>
-<c:choose>
- <c:when test="${hosted eq true}">Interactive Maps Created By Your Account</c:when>
- <c:otherwise>All Interactive Maps On This Server</c:otherwise>
-</c:choose>
-</b><br/>
+<c:if test="${tenantSubclasses['org.sarsoft.markup.model.CollaborativeMap']}">
+<b>Your Maps</b>
 <ul>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">
@@ -73,10 +50,42 @@ below, or create a new one.
 </c:if>
 </c:forEach>
 </ul>
-<br/>
+</c:if>
 
-<br/>
+<div id="recentlyLoadedSearchDiv" style="display: none">
+<b>Recently Viewed Searches</b>
+<ul id="recentlyLoadedSearchUl">
+</ul>
+</div>
+
+<div id="recentlyLoadedMapDiv" style="display: none">
+<b>Recently Viewed Maps</b>
+<ul id="recentlyLoadedMapUl">
+</ul>
+<a href="javascript:clearRecentMaps()">Clear</a>
+</div>
+
+</div>
+
+<div style="float: left; margin-left: 50px; padding-left: 10px; border-left: 1px solid #CCCCCC">
+
+<c:choose>
+<c:when test="${hosted eq true and account eq null}">
+<div style="float: left; clear: both">
+<p>You need to log in with a Google or Yahoo account to create new maps and searches.  If someone's shared a URL with you, you don't need to log
+in to use their map.
+</p>
 <p>
+Log in using your:
+<ul>
+<li><a href="/app/openidrequest?domain=google">Google account</a></li>
+<li><a href="/app/openidrequest?domain=yahoo">Yahoo account</a></li>
+</ul>
+</p>
+</div>
+
+</c:when>
+<c:otherwise>
 <form action="/app/setsearch" method="post" id="newsearch">
 <b>Create a new search</b><br/>
 <table border="0">
@@ -96,13 +105,29 @@ below, or create a new one.
 <button onclick="createSearch()">Create Search</button>
 <button onclick="createMap()">Create Map</button>
 </div>
-</p>
+</c:otherwise>
+</c:choose>
+</div>
 
 <script>
 org.sarsoft.Loader.queue(function() {
 	locform = new org.sarsoft.LocationEntryForm();
 	locform.create(document.getElementById('searchlocation'));
+	var recentlyLoaded = YAHOO.util.Cookie.get("org.sarsoft.recentlyLoadedMaps");
+	if(recentlyLoaded != null) {
+		$('#recentlyLoadedMapDiv').css("display","block");
+		var maps = recentlyLoaded.split(',');
+		for(var i = 0; i < maps.length; i++) {
+			var map = maps[i].split('=');
+			$('#recentlyLoadedMapUl').append('<li><a href="/map?id=' + map[0] + '">' + map[1] + '</a></li>');
+		}
+	}
 });
+
+function clearRecentMaps() {
+	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedMaps");
+	$('#recentlyLoadedMapDiv').css("display","none");
+}
 
 function createMap() {
 	document.forms["newsearch"].action="/map";
@@ -124,6 +149,3 @@ function createSearch() {
 	})) document.forms["newsearch"].submit();
 }
 </script>
-
-</c:otherwise>
-</c:choose>

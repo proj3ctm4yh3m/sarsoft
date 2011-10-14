@@ -10,7 +10,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -197,14 +199,21 @@ public abstract class JSONBaseController {
 		UserAccount account = null;
 		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Tenant.class, RuntimeProperties.getTenant()));
 		if(user != null) account = dao.getByPk(UserAccount.class, user);
+		List<Tenant> tenants = new ArrayList<Tenant>();
 		if(isHosted()) {
 			if(account != null) {
 				model.addAttribute("account", account);
-				model.addAttribute("tenants", account.getTenants());
+				if(account.getTenants() != null) tenants.addAll(account.getTenants());
 			}
 		} else {
-			model.addAttribute("tenants", dao.getAllTenants());
+			tenants = dao.getAllTenants();
 		}
+		model.addAttribute("tenants", tenants);
+		Map<String, Boolean> tenantSubclasses = new HashMap<String, Boolean>();
+		for(Tenant tenant : tenants) {
+			tenantSubclasses.put(tenant.getClass().getName(), true);
+		}
+		model.addAttribute("tenantSubclasses", tenantSubclasses);
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		model.addAttribute("head", getCommonHeader());
 		return "Pages.Welcome";

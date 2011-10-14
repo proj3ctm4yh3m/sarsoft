@@ -1,6 +1,7 @@
 package org.sarsoft.common.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,10 +14,13 @@ import org.openid4java.discovery.Identifier;
 import org.sarsoft.common.model.GeoRefImage;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.Tenant;
+import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.plans.Constants;
+import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -62,33 +66,33 @@ public class AdminController extends JSONBaseController {
 
 	public String setTenant(Model model, String name, Class<? extends Tenant> cls, HttpServletRequest request) {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", name);
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(tenant == null) {
 			model.addAttribute("message", cls.getName() + " not found.");
 			return bounce(model);
 		}
-		boolean isOwner = false;
-		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-		if(account != null) {
-			for(Tenant t : account.getTenants()) {
-				if(name.equalsIgnoreCase(t.getName())) isOwner = true;
-			}
-		}
 		
-		if(isHosted() && tenant.getPassword() != null && isOwner == false) {
-			if(request.getParameter("password") == null || request.getParameter("password").length() == 0) {
-				bounce(model);
-				model.addAttribute("searchname", name);
-				return "Pages.Password";
-			}
+		Permission permission = Permission.NONE;
+		if(tenant.getAccount() == null) permission = Permission.ADMIN;
+		else if(account != null && tenant.getAccount().getName().equals(account.getName())) permission = Permission.ADMIN;
+		else if(request.getParameter("password") == null || request.getParameter("password").length() == 0) permission = tenant.getAllUserPermission();
+		else {
 			String password = hash(request.getParameter("password"));
 			if(!tenant.getPassword().equals(password)) {
 				model.addAttribute("message", "Wrong Password.");
 				return bounce(model);
 			}
+			permission = tenant.getPasswordProtectedUserPermission();
+			
 		}
-
+		if(permission == Permission.NONE) return bounce(model);
+		
 		request.getSession().setAttribute("tenant", name);
 		RuntimeProperties.setTenant(name);
+		
+		request.getSession().setAttribute("userPermission", permission);
+		RuntimeProperties.setUserPermission(permission);
+		
 		String dest = request.getParameter("dest");
 		if(dest != null && dest.length() > 0) return "redirect:" + dest;
 		return null;
@@ -123,11 +127,17 @@ public class AdminController extends JSONBaseController {
 				obj = dao.getByPk(Tenant.class, tenantname);
 			}
 			tenant.setName(tenantname);
-			tenant.setVisible(true);
+			tenant.setAllUserPermission(Tenant.Permission.READ);
+			tenant.setPasswordProtectedUserPermission(Tenant.Permission.NONE);
 		}
-		dao.save(tenant);
+
+		dao.superSave(tenant);
+
 		request.getSession().setAttribute("tenant", tenant.getName());
 		RuntimeProperties.setTenant(tenant.getName());
+
+		request.getSession().setAttribute("userPermission", Permission.ADMIN);
+		RuntimeProperties.setUserPermission(Permission.ADMIN);
 
 		return null;
 	}
@@ -157,10 +167,10 @@ public class AdminController extends JSONBaseController {
 				account = new UserAccount();
 				account.setName(username);
 				account.setEmail(email);
-				dao.save(account);
+				dao.superSave(account);
 			} else if(account.getEmail() == null) {
 				account.setEmail(email);
-				dao.save(account);
+				dao.superSave(account);
 			}
 			request.getSession(true).setAttribute("username", account.getName());
 			RuntimeProperties.setUsername(account.getName());
@@ -179,6 +189,47 @@ public class AdminController extends JSONBaseController {
 		request.getSession(true).removeAttribute("username");
 		return bounce(model);
 	}
+	
+	@RequestMapping(value="/sharing", method = RequestMethod.GET)
+	public String getSharing(Model model) {
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+
+		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
+			model.addAttribute("message", "You don't own this object, and therefore can't edit it.");
+			return "error";
+		}
+
+		model.addAttribute("tenant", tenant);
+		model.addAttribute("hosted", isHosted());
+		model.addAttribute("server", RuntimeProperties.getServerUrl());
+		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
+		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
+		return app(model, "Pages.Search");
+	}
+
+	@RequestMapping(value="/sharing", method = RequestMethod.POST)
+	public String updateSharing(Model model, HttpServletRequest request) {
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		
+		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
+			model.addAttribute("message", "You don't own this object, and therefore can't edit it.");
+			return "error";
+		}
+
+		if(request.getParameter("description") != null && request.getParameter("description").length() > 0) {
+			tenant.setDescription(request.getParameter("description"));
+			dao.save(tenant);
+		}
+		tenant.setAllUserPermission(Permission.valueOf(request.getParameter("allUsers")));
+		tenant.setPasswordProtectedUserPermission(Permission.valueOf(request.getParameter("passwordUsers")));
+		if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
+			tenant.setPassword(hash(request.getParameter("password")));
+		}
+		dao.save(tenant);
+		
+		return getSharing(model);
+	}
+	
 	
 	@RequestMapping(value ="/rest/tenant/mapConfig", method = RequestMethod.GET)
 	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {

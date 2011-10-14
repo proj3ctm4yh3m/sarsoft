@@ -20,6 +20,7 @@ import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.GeoRefImage;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.Tenant;
+import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.plans.Constants;
@@ -86,7 +87,7 @@ public class SearchController extends JSONBaseController {
 	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
 		String val = adminController.createNewTenant(model, Search.class, request);
 		if(val == null) {
-			Search search = dao.getByAttr(Search.class, "name", request.getParameter("name"));
+			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
 			if(search != null) {
 				String op1name = request.getParameter("op1name");
 				String lat = request.getParameter("lat");
@@ -106,7 +107,7 @@ public class SearchController extends JSONBaseController {
 		}
 		return val;
 	}
-		
+
 	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.GET)
 	public String getLkp(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
@@ -189,18 +190,12 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value="/app/search/delete", method = RequestMethod.GET)
 	public String delete(Model model, HttpServletRequest request) {
-		boolean isOwner = false;
-		String name = RuntimeProperties.getTenant();
-		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-		if(account != null) {
-			for(Tenant tenant : account.getTenants()) {
-				if(name.equalsIgnoreCase(tenant.getName())) isOwner = true;
-			}
-		}
-		if(isHosted() && isOwner == false) {
+		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
 			model.addAttribute("message", "You can only admin this search if you own it.");
-			return admin(model, request);
+			return adminController.getSharing(model);
 		}
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+
 		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
 		if(l == null || l.size() == 0) {
 			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
@@ -210,60 +205,7 @@ public class SearchController extends JSONBaseController {
 			request.getSession(true).removeAttribute("tenant");
 			return bounce(model);
 		}
-		else return admin(model, request);
-	}
-
-	@RequestMapping(value="/app/search", method = RequestMethod.GET)
-	public String admin(Model model, HttpServletRequest request) {
-		boolean isOwner = false;
-		String name = RuntimeProperties.getTenant();
-		UserAccount account = (UserAccount) dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-		if(account != null) {
-			for(Tenant tenant : account.getTenants()) {
-				if(name.equalsIgnoreCase(tenant.getName())) isOwner = true;
-			}
-		}
-		if(isHosted() && isOwner == false) {
-			model.addAttribute("message", "You can only admin this search if you own it.");
-			return "error";
-		}
-		model.addAttribute("tenant", dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant()));
-		model.addAttribute("hosted", isHosted());
-		model.addAttribute("server", RuntimeProperties.getServerUrl());
-		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
-		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
-		return app(model, "Pages.Search");
-	}
-
-	@RequestMapping(value="/app/search", method = RequestMethod.POST)
-	public String update(Model model, HttpServletRequest request) {
-		boolean isOwner = false;
-		String name = RuntimeProperties.getTenant();
-		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-		if(account != null) {
-			for(Tenant tenant : account.getTenants()) {
-				if(name.equalsIgnoreCase(tenant.getName())) isOwner = true;
-			}
-		}
-		if(isHosted() && isOwner == false) {
-			model.addAttribute("message", "You can only admin this search if you own it.");
-			return "error";
-		}
-		Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-		if(request.getParameter("description") != null && request.getParameter("description").length() > 0) {
-			search.setDescription(request.getParameter("description"));
-			dao.save(search);
-		}
-		search.setVisible("public".equalsIgnoreCase(request.getParameter("public")));
-		if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
-			search.setPassword(hash(request.getParameter("password")));
-		}
-		dao.save(search);
-		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
-		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
-		model.addAttribute("tenant", search);
-		model.addAttribute("server", RuntimeProperties.getServerUrl());
-		return app(model, "Pages.Search");
+		else return adminController.getSharing(model);
 	}
 
 	@RequestMapping(value = "/rest/search", method= RequestMethod.POST)
