@@ -45,3 +45,5 @@ org.sarsoft.map.datum = "${datum}";
 org.sarsoft.map.datum = "WGS84";
 </c:otherwise>
 </c:choose>
+
+org.sarsoft.userPermissionLevel="${userPermissionLevel}"

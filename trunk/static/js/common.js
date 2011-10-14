@@ -407,6 +407,14 @@ org.sarsoft.view.CreateDialog = function(title, bodynode, yes, no, handler, styl
 	return dialog;
 }
 
+org.sarsoft.PasswordDialog = function() {
+	var bodynode = jQuery('<form action="/password" method="post">This will reload the page you are on.<br/>' +
+			'<input type="hidden" name="dest" value="' + window.location + '"/><label for="password">Password:</label><input type="password" name="password" length="10"/></form>');
+	return new org.sarsoft.view.CreateDialog("Enter Password", bodynode, "Enter", "Cancel", function() {
+		bodynode.submit();
+	});
+}
+
 org.sarsoft.ToggleControl = function(label, tooltip, handler, states) {
 	var that = this;
 	if(states == null) states = [{value: true, style: ""}, {value: false, style: "text-decoration: line-through"}];

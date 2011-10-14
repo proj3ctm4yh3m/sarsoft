@@ -12,6 +12,7 @@ org.sarsoft.Loader.queue(function() {
   configWidget.loadConfig();
   setInterval("imap.timer()", 10000);
 
+  if(org.sarsoft.userPermissionLevel != "READ") {
 	var configDlg = org.sarsoft.view.CreateDialog("Configuration and Sharing", "Leave map view and go to Configuration and Sharing page?", "Leave", "Cancel", function() {
 		window.location = "/admin";		
 	});
@@ -20,6 +21,7 @@ org.sarsoft.Loader.queue(function() {
 		configDlg.show();
 	});
 	imap.addMenuItem(config, 39);
+  }
 
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
 		window.location = "/";		

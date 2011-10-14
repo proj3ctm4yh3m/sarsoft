@@ -18,10 +18,8 @@ import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.plans.Constants;
 import org.sarsoft.plans.model.OperationalPeriod;
-import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
@@ -61,6 +59,7 @@ public class AdminController extends JSONBaseController {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		if(getProperty("sarsoft.map.datum") != null) model.addAttribute("datum", getProperty("sarsoft.map.datum"));
 		if(tenant != null && tenant.getDatum() != null) model.addAttribute("datum", tenant.getDatum());
+		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
 		return "/global/constants";
 	}
 
@@ -71,21 +70,33 @@ public class AdminController extends JSONBaseController {
 			model.addAttribute("message", cls.getName() + " not found.");
 			return bounce(model);
 		}
-		
+
 		Permission permission = Permission.NONE;
 		if(tenant.getAccount() == null) permission = Permission.ADMIN;
 		else if(account != null && tenant.getAccount().getName().equals(account.getName())) permission = Permission.ADMIN;
-		else if(request.getParameter("password") == null || request.getParameter("password").length() == 0) permission = tenant.getAllUserPermission();
+		else if(request.getSession(true).getAttribute("cachedPassword") == null) permission = tenant.getAllUserPermission();
 		else {
-			String password = hash(request.getParameter("password"));
+			String password = (String) request.getSession(true).getAttribute("cachedPassword");
+			request.getSession(true).removeAttribute("cachedPassword");
 			if(!tenant.getPassword().equals(password)) {
 				model.addAttribute("message", "Wrong Password.");
 				return bounce(model);
 			}
-			permission = tenant.getPasswordProtectedUserPermission();
-			
+			permission = tenant.getPasswordProtectedUserPermission();			
 		}
-		if(permission == Permission.NONE) return bounce(model);
+		if(permission == Permission.NONE) {
+			if(tenant.getPassword() != null && tenant.getPassword().length() > 0) {
+				String target = request.getRequestURI();
+				if(request.getParameter("id") != null) try {
+					target = target + "?id=" + java.net.URLEncoder.encode(request.getParameter("id"), "ISO-8859-1");
+				} catch (Exception e) {}
+				if(request.getParameter("dest") != null) try {
+					target = target + "?dest=" + java.net.URLEncoder.encode(request.getParameter("dest"), "ISO-8859-1");
+				} catch (Exception e) {}
+				model.addAttribute("targetDest", target);
+			}
+			return bounce(model);
+		}
 		
 		request.getSession().setAttribute("tenant", name);
 		RuntimeProperties.setTenant(name);
@@ -96,6 +107,27 @@ public class AdminController extends JSONBaseController {
 		String dest = request.getParameter("dest");
 		if(dest != null && dest.length() > 0) return "redirect:" + dest;
 		return null;
+	}
+	
+	@RequestMapping(value="/cachepassword", method = RequestMethod.POST)
+	public String cachePassword(Model model, @RequestParam("password") String password, @RequestParam("dest") String dest, HttpServletRequest request) {
+		request.getSession(true).setAttribute("cachedPassword", hash(password));
+		return "redirect:" + dest;
+	}
+
+	@RequestMapping(value="/password", method = RequestMethod.POST)
+	public String password(Model model, @RequestParam("password") String password, @RequestParam("dest") String dest, HttpServletRequest request) {
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		password = hash(password);
+		if(!tenant.getPassword().equals(password)) {
+			model.addAttribute("message", "Wrong Password.");
+			return bounce(model);
+		}
+		Permission permission = tenant.getPasswordProtectedUserPermission();			
+		request.getSession().setAttribute("userPermission", permission);
+		RuntimeProperties.setUserPermission(permission);
+		
+		return "redirect:" + dest;
 	}
 
 	public String createNewTenant(Model model, Class<? extends Tenant> cls, HttpServletRequest request) {
