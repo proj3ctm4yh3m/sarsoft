@@ -1,5 +1,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page import="org.sarsoft.common.model.Tenant.Permission"%>
+<% pageContext.setAttribute("none", Permission.NONE); %>
+<% pageContext.setAttribute("read", Permission.READ); %>
+<% pageContext.setAttribute("write", Permission.WRITE); %>
 
 <h2>Search Admin</h2>
 
@@ -8,43 +12,36 @@
 <br/>
 </c:if>
 <p>
-<form action="/app/search" method="POST">
+<form action="/sharing" method="POST">
 <table border="0">
 <tr><td colspan="2"><b>Search Name</b></td></tr>
 <tr><td>Name</td><td><input type="text" size="15" value="${tenant.publicName}" name="description"/></td></tr>
 
 <tr><td colspan="2" style="padding-top: 15px"><b>Sharing</b></td></tr>
-<c:choose>
-<c:when test="${hosted eq true}">
 
-<tr><td colspan="2" style="padding-bottom: 15px">
-<c:choose>
-<c:when test="${tenant.visible}">
-This search is publicly visible.  You can share it with others by giving them the following URL: <a href="${server}app/setsearch/${tenant.name}">${server}app/setsearch/${search.name}</a>.<br/>
-  <c:choose>
-  <c:when test="${fn:length(search.password) gt 0}">
-This search is password protected; anyone with that URL will still need to know the password.
-  </c:when>
-  <c:otherwise>
-You have not set a password; anyone with the above URL will be able to view this search.
-  </c:otherwise>
-  </c:choose>
-</c:when>
-<c:otherwise>
-You are the only one allowed to view this search.
-</c:otherwise>
-</c:choose>
+<tr><td valign="top">All Users</td>
+
+<td><select name="allUsers">
+  <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>Nothing</option>
+  <option value="READ"<c:if test="${tenant.allUserPermission eq read}"> selected="selected"</c:if>>View this map</option>
+  <option value="WRITE"<c:if test="${tenant.allUserPermission eq write}"> selected="selected"</c:if>>Edit this map<option>
+</select></td></tr>
+
+<tr><td valign="top">Password-Protected Users</td>
+<td>
+ <c:choose>
+  <c:when test="${fn:length(tenant.password) eq 0}">Please set a password:</c:when>
+  <c:otherwise>Leave blank to keep the current password:</c:otherwise>
+ </c:choose>
+ <br/>
+ <input type="password" size="15" name="password"/><br/>
+ <select name="passwordUsers">
+  <option value="NONE"<c:if test="${tenant.passwordProtectedUserPermission eq none}"> selected="selected"</c:if>>Nothing</option>
+  <option value="READ"<c:if test="${tenant.passwordProtectedUserPermission eq read}"> selected="selected"</c:if>>View this map</option>
+  <option value="WRITE"<c:if test="${tenant.passwordProtectedUserPermission eq write}"> selected="selected"</c:if>>Edit this map<option>
+ </select>
 </td></tr>
-<tr><td>Shared?</td><td><input type="checkbox" name="public" value="public" <c:if test="${tenant.visible}">checked="checked"</c:if>/><span class="hint">Allow others to view/edit this search.</span>
-</td></tr>
-<tr><td valign="top">Password</td><td><input type="password" size="15" name="password"/><br/><span class="hint">Leave blank to keep the search's current password.</span></td></tr>
-</c:when>
-<c:otherwise>
-<tr><td colspan="2">Anyone with access to Sarsoft can view and make changes to this search.</td></tr>
-</c:otherwise>
-</c:choose>
 </table>
-
 
 <input type="submit" value="Update"/>
 </form>

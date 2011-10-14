@@ -11,6 +11,9 @@ import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.Cascade;
+
+import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -18,9 +21,14 @@ import net.sf.json.JSONSerializer;
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class Tenant {
+	
+	public enum Permission {
+		NONE,READ,WRITE,ADMIN
+	}
 
 	private String name;
-	private boolean visible = false;
+	private Permission allUserPermission;
+	private Permission passwordProtectedUserPermission;
 	private String password;
 	private String description;
 	private UserAccount account;
@@ -73,14 +81,6 @@ public abstract class Tenant {
 		this.account = account;
 	}
 
-	public boolean isVisible() {
-		return visible;
-	}
-
-	public void setVisible(boolean visible) {
-		this.visible = visible;
-	}
-
 	public void setMapConfig(String mapConfig) {
 		this.mapConfig = mapConfig;
 	}
@@ -89,14 +89,33 @@ public abstract class Tenant {
 	public String getMapConfig() {
 		return mapConfig;
 	}
+	
+	public Permission getAllUserPermission() {
+		return allUserPermission;
+	}
+
+	public void setAllUserPermission(Permission allUserPermission) {
+		this.allUserPermission = allUserPermission;
+	}
+
+	public Permission getPasswordProtectedUserPermission() {
+		return passwordProtectedUserPermission;
+	}
+
+	public void setPasswordProtectedUserPermission(Permission passwordProtectedUserPermission) {
+		this.passwordProtectedUserPermission = passwordProtectedUserPermission;
+	}
 
 	@SuppressWarnings("rawtypes")
 	@Transient
 	public String getDatum() {
-		Map m = (Map) JSONObject.toBean((JSONObject) JSONSerializer.toJSON(mapConfig), HashMap.class, classHints);
-		if(m != null && m.containsKey("MapDatumWidet")) {
-			Map m2 = (Map) m.get("MapDatumWidget");
-			if(m2 != null) return (String) m2.get("datum");
+		JSON json = JSONSerializer.toJSON(mapConfig);
+		if(json instanceof JSONObject) {
+			Map m = (Map) JSONObject.toBean((JSONObject) json, HashMap.class, classHints);
+			if(m != null && m.containsKey("MapDatumWidet")) {
+				Map m2 = (Map) m.get("MapDatumWidget");
+				if(m2 != null) return (String) m2.get("datum");
+			}
 		}
 		return null;
 	}

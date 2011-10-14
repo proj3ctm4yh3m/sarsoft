@@ -1,21 +1,20 @@
 package org.sarsoft.markup.controller;
 
-import java.util.List;
-
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.sarsoft.common.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
+import org.sarsoft.common.model.Tenant;
+import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.plans.controller.SearchController;
-import org.sarsoft.plans.model.OperationalPeriod;
-import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -40,9 +39,30 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/map", method = RequestMethod.GET)
-	public String setMap(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request) {
-		String val = adminController.setTenant(model, id, CollaborativeMap.class, request);
-		if(val != null) return val;
+	public String setMap(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
+		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
+			String val = adminController.setTenant(model, id, CollaborativeMap.class, request);
+			if(val != null) return val;
+		}
+
+		if(id != null) {
+			Cookie[] cookies = request.getCookies();
+			Cookie myCookie = null;
+			for(Cookie cookie : cookies) {
+				if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName())) {
+					myCookie = cookie;
+				}
+			}
+			if(myCookie != null && myCookie.getValue() != null) {
+				myCookie.setValue(myCookie.getValue().replaceAll("(^|,)" + id + "=.*?(,|$)", "") + ",");
+			} else {
+				myCookie = new Cookie("org.sarsoft.recentlyLoadedMaps","");
+			}
+			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
+			myCookie.setValue(myCookie.getValue() + id + "=" + tenant.getDescription());
+			myCookie.setMaxAge(7776000);
+			response.addCookie(myCookie);			
+		}
 		return mapEditor(model);
 	}
 
@@ -50,7 +70,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	public String createNewMap(Model model, HttpServletRequest request) {
 		String val = adminController.createNewTenant(model, CollaborativeMap.class, request);
 		if(val == null) {
-			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", request.getParameter("name"));
+			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 			if(map != null) {
 				String lat = request.getParameter("lat");
 				String lng = request.getParameter("lng");
@@ -60,7 +80,7 @@ public class CollaborativeMapController extends JSONBaseController {
 				}
 				dao.save(map);
 			}
-			return homePage(model);
+			return "redirect:/map?id=" + RuntimeProperties.getTenant();
 		}
 		return val;
 	}

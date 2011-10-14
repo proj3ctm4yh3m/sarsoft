@@ -11,6 +11,7 @@ import org.hibernate.criterion.Restrictions;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Tenant;
+import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -102,6 +103,19 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	public void save(final Object obj) {
 		getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
+				if(RuntimeProperties.getUserPermission() != Permission.WRITE && RuntimeProperties.getUserPermission() != Permission.ADMIN) return null;
+				if(obj instanceof IPreSave) ((IPreSave) obj).preSave();
+				session.save(obj);
+				session.flush();
+				return null;
+			}
+		});
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void superSave(final Object obj) {
+		getHibernateTemplate().execute(new HibernateCallback() {
+			public Object doInHibernate(final Session session) throws HibernateException {
 				if(obj instanceof IPreSave) ((IPreSave) obj).preSave();
 				session.save(obj);
 				session.flush();
@@ -114,6 +128,7 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	public void delete(final Object obj) {
 		getHibernateTemplate().execute(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
+				if(RuntimeProperties.getUserPermission() != Permission.WRITE && RuntimeProperties.getUserPermission() != Permission.ADMIN) return null;
 				session.delete(obj);
 				session.flush();
 				return null;

@@ -10,6 +10,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.sarsoft.common.model.Tenant.Permission;
+
 public class RequestPropertyFilter implements Filter {
 
 	public void destroy() {
@@ -21,6 +23,7 @@ public class RequestPropertyFilter implements Filter {
 		if(!RuntimeProperties.isInitialized()) RuntimeProperties.initialize(servletRequest.getSession(true).getServletContext());
 		RuntimeProperties.setTenant((String) servletRequest.getSession(true).getAttribute("tenant"));
 		RuntimeProperties.setUsername((String) servletRequest.getSession(true).getAttribute("username"));
+		RuntimeProperties.setUserPermission((Permission) servletRequest.getSession(true).getAttribute("userPermission"));
 		RuntimeProperties.setServerName(servletRequest.getServerName());
 		RuntimeProperties.setServerPort(servletRequest.getServerPort());
 		chain.doFilter(request, response);
