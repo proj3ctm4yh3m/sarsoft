@@ -7,6 +7,10 @@
 <body>
 <h1>Sorry, something seems to have gone wrong!</h1>
 
+<c:if test="${message ne null}">
+<p style="font-weight: bold; color: red">${message}</p>
+</c:if>
+
 <% if(session.getAttribute("tenant") == null) { %>
 <p>
 It looks like you're not currently working on a search <% if(session.getAttribute("username") == null) { %> or logged in. <% } %><br/>
