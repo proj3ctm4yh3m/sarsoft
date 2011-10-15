@@ -59,9 +59,6 @@
 	<definition name="Pages.Welcome" extends="App.Base">
 		<put-attribute name="content" value="/global/welcome.jsp"/>
 	</definition>
-	<definition name="Pages.Password" extends="App.Base">
-		<put-attribute name="content" value="/global/password.jsp"/>
-	</definition>
 	<definition name="Pages.Admin" extends="App.Base">
 		<put-attribute name="content" value="/global/admin.jsp"/>
 		<put-attribute name="app" value="admin"/>
