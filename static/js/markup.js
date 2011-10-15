@@ -183,7 +183,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
     		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
      		]));
 	}
-	
+
 	var showHide = new org.sarsoft.ToggleControl("MRK", "Show/Hide Markup", function(value) {
 		that.showMarkup = value;
 		that.handleSetupChange();
@@ -207,18 +207,20 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 				w = Math.min(w, marker.position.lng);
 			}
 		}
-		if(total > 1) {
-			that.imap.growInitialMap(new GLatLng(s, w));
-			that.imap.growInitialMap(new GLatLng(n, e));
-		}
+		that.imap.growInitialMap(new GLatLng(s, w));
+		that.imap.growInitialMap(new GLatLng(n, e));
 
 		that.refreshMarkers(markers);
 	});		
 	this.markerDAO.mark();
-	
+
 	this.shapeDAO.loadAll(function(shapes) {
-		// TODO adjust map size/center
 		that.refreshShapes(shapes);
+		for(var i = 0; i < shapes.length; i++) {
+			var bb = shapes[i].way.boundingBox;
+			that.imap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
+			that.imap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
+		}
 	});
 	this.shapeDAO.mark();	
 }
@@ -271,14 +273,14 @@ org.sarsoft.controller.MarkupMapController.prototype.removeShape = function(id) 
 
 org.sarsoft.controller.MarkupMapController.prototype.setConfig = function(config) {
 	if(config.MarkupMapController == null || config.MarkupMapController.showClues == null) return;
-	this.showMarkup = config.ClueLocationMapController.showMarkup;
+	this.showMarkup = config.MarkupMapController.showMarkup;
 	this.handleSetupChange();
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
 	if(config.MarkupMapController == null) config.MarkupMapController = new Object();
-	config.MarkupMapController.showClues = this.showMarkup;
+	config.MarkupMapController.showMarkup = this.showMarkup;
 	return config;
 }
 
