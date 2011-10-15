@@ -39,7 +39,7 @@ You can always use the <a href="/app/map.html">Quick Map Viewer</a> to browse ma
 <ul>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">
-<li><a href="javascript:window.location='/search?id=${tenant.name}'">${tenant.description}</a></li>
+<li><a href="/search?id=${tenant.name}">${tenant.description}</a></li>
 </c:if>
 </c:forEach>
 </ul>
@@ -51,7 +51,7 @@ You can always use the <a href="/app/map.html">Quick Map Viewer</a> to browse ma
 <ul>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">
-<li><a href="javascript:window.location='/map?id=${tenant.name}'">${tenant.description}</a></li>
+<li><a href="/map?id=${tenant.name}">${tenant.description}</a></li>
 </c:if>
 </c:forEach>
 </ul>
