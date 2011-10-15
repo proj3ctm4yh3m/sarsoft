@@ -23,7 +23,7 @@ The page you are trying to reach is password protected.  Please enter it below:<
 
 <c:if test="${tenant ne null}">
 <c:set var="url">
-<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">/map?id=${tenant.name}</c:when><c:otherwise>/app/setsearch/${tenant.name}</c:otherwise></c:choose>
+<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">/map?id=${tenant.name}</c:when><c:otherwise>/search?id=${tenant.name}</c:otherwise></c:choose>
 </c:set>
 <div>
 Continue working on: <a href="${url}">${tenant.description}</a>.
@@ -39,7 +39,7 @@ You can always use the <a href="/app/map.html">Quick Map Viewer</a> to browse ma
 <ul>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">
-<li><a href="javascript:window.location='/app/setsearch/${tenant.name}'">${tenant.description}</a></li>
+<li><a href="javascript:window.location='/search?id=${tenant.name}'">${tenant.description}</a></li>
 </c:if>
 </c:forEach>
 </ul>
@@ -94,7 +94,7 @@ Log in using your:
 
 </c:when>
 <c:otherwise>
-<form action="/app/setsearch" method="post" id="newsearch">
+<form action="/search" method="post" id="newsearch">
 <p>
 <b>Create a new object</b><br/><br/>
 <label for="name">Name</label><input type="text" size="15" name="name" id="name"/>
@@ -137,7 +137,7 @@ org.sarsoft.Loader.queue(function() {
 		var searches = recentlyLoaded.split(',');
 		for(var i = 0; i < searches.length; i++) {
 			var search = searches[i].split('=');
-			$('#recentlyLoadedSearchUl').append('<li><a href="/app/setsearch/' + search[0] + '">' + search[1] + '</a></li>');
+			$('#recentlyLoadedSearchUl').append('<li><a href="/search?id=' + search[0] + '">' + search[1] + '</a></li>');
 		}
 	}
 });

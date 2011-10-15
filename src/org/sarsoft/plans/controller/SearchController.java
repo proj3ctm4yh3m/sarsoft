@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
@@ -71,13 +72,9 @@ public class SearchController extends JSONBaseController {
 		return app(model, "Pages.Home");
 	}
 
-	@RequestMapping(value="/app/setsearch", method = RequestMethod.GET)
-	public String chooseNewSearch(Model model, HttpServletRequest request) {
-		return bounce(model);
-	}
-	
-	@RequestMapping(value="/app/setsearch/{ds}", method = RequestMethod.GET)
-	public String setAppDataSchema(Model model, @PathVariable("ds") String name, HttpServletRequest request, HttpServletResponse response) {
+	@RequestMapping(value="search", method = RequestMethod.GET)
+	public String setAppDataSchema(Model model, @RequestParam(value="id", required=false) String name, HttpServletRequest request, HttpServletResponse response) {
+		if(name == null) return bounce(model);
 		String val = adminController.setTenant(model, name, Search.class, request);
 		opsController.checkLocators();
 		if(val != null) return val;
@@ -102,7 +99,7 @@ public class SearchController extends JSONBaseController {
 		return homePage(model);
 	}
 	
-	@RequestMapping(value="/app/setsearch", method = RequestMethod.POST)
+	@RequestMapping(value="/search", method = RequestMethod.POST)
 	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
 		String val = adminController.createNewTenant(model, Search.class, request);
 		if(val == null) {
@@ -116,7 +113,7 @@ public class SearchController extends JSONBaseController {
 				}
 				dao.save(search);
 			}
-			return "redirect:/app/setsearch/" + RuntimeProperties.getTenant();
+			return "redirect:/search" + RuntimeProperties.getTenant();
 		}
 		return val;
 	}
