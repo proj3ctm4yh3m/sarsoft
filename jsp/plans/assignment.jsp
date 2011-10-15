@@ -5,6 +5,11 @@
 <% pageContext.setAttribute("prepared", SearchAssignment.Status.PREPARED); %>
 <% pageContext.setAttribute("inprogress", SearchAssignment.Status.INPROGRESS); %>
 <% pageContext.setAttribute("completed", SearchAssignment.Status.COMPLETED); %>
+<%@page import="org.sarsoft.common.model.Tenant.Permission"%>
+<% pageContext.setAttribute("none", Permission.NONE); %>
+<% pageContext.setAttribute("read", Permission.READ); %>
+<% pageContext.setAttribute("write", Permission.WRITE); %>
+<% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
 <script type="text/javascript">
 function exportassignment() {
@@ -61,6 +66,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <c:if test="${assignment.trackDistance gt 0}">  ${assignment.trackDistance} km of tracks have been downloaded.</c:if>
   You can:<br/>
 
+<c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
 <ul>
  <c:if test="${assignment.status eq draft}">
  	<li><a href="javascript:finalizeDlg.show()">Prepare Assignment</a> (allows you to print search maps and SAR 104 forms)</li>
@@ -76,6 +82,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
     <li><a href="javascript:transition('rollback')">Roll Back</a> to Prepared if this assignment was started by mistake.</li>
  </c:if>
 </ul>
+</c:if>
 
 <c:if test="${assignment.status ne draft}">
 <ul>
@@ -86,7 +93,9 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <li>Print <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Debrief Map</a></li>
 </c:if>
 <li>Export to: <a href="javascript:document.forms['togarmin'].submit()">Garmin GPS</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=kml">KML</a></li>
+<c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
 <li>Import tracks from: <a href="/app/fromgarmin?id=${assignment.id}">Garmin GPS</a>&nbsp;|&nbsp;<a href="javascript:gpxdlg.dialog.show()">GPX</a></li>
+</c:if>
 </ul>
 </c:if>
 
@@ -292,6 +301,12 @@ function stealResource() {
 }
 
 org.sarsoft.Loader.queue(function() {
+	
+	<c:if test="${userPermissionLevel ne write and userPermissionLevel ne admin}">
+	$('input').attr("disabled", true);
+	$('textarea').attr("disabled", true);
+	</c:if>
+	
     tracktable = new org.sarsoft.view.WayTable(function(way) { avtc.highlight(way);}, function(record) {
     	var way = record.getData();
     	var idx = 100;

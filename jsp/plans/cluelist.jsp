@@ -1,11 +1,18 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@page import="org.sarsoft.plans.model.Clue"%>
+<%@page import="org.sarsoft.common.model.Tenant.Permission"%>
+<% pageContext.setAttribute("none", Permission.NONE); %>
+<% pageContext.setAttribute("read", Permission.READ); %>
+<% pageContext.setAttribute("write", Permission.WRITE); %>
+<% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
 <h2>Clue Log</h2>
 
 <ul>
+<c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
  <li><a href="javascript:showNewClueForm()">Report New Clue</a></li>
+</c:if>
  <li><a href="/app/clue?format=PRINT">Print</a> a clue log</li>
 </ul>
 

@@ -1,5 +1,10 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page import="org.sarsoft.common.model.Tenant.Permission"%>
+<% pageContext.setAttribute("none", Permission.NONE); %>
+<% pageContext.setAttribute("read", Permission.READ); %>
+<% pageContext.setAttribute("write", Permission.WRITE); %>
+<% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
 <script language="javascript">
 function gotoAssignment() {
@@ -46,15 +51,10 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
 </ul>
 <h4>Administration and Configuration</h4>
 <ul>
-<c:choose>
-<c:when test="${hosted eq false}">
- <li><a href="/admin">Search Admin.</a>  Change search name.</li>
-</c:when>
-<c:when test="${tenant.account.name eq username}">
- <li><a href="/admin">Search Admin.</a>  Map datum, sharing and password protection.</li>
-</c:when>
-</c:choose>
- <c:if test="${imageUploadEnabled}">
+<c:if test="${userPermissionLevel eq admin}">
+ <li><a href="/admin">Search Admin.</a>  Change search name and sharing.</li>
+</c:if>
+ <c:if test="${imageUploadEnabled and (userPermissionLevel eq write or userPermissionLevel eq admin)}">
   <li><a href="/app/imagery/georef">Map Imagery.</a>  Turn JPEG files into custom map backgrounds.</li>
  </c:if>
  <li><a href="/app/location/status">Location Tracking.</a>  Debug location tracking issues.</li>
@@ -63,6 +63,8 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
 <h4>Import and Export</h4>
 <ul>
  <li><a href="/rest/search?format=GPX">Backup search</a> to a GPX file.</li>
+<c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
  <li><a href="javascript:gpxdlg.dialog.show()">Import assignments</a> from GPX (Caution!  Recommended only for newly created searches)</li>
+</c:if>
 </ul>
 

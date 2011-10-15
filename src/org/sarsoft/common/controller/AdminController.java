@@ -119,7 +119,7 @@ public class AdminController extends JSONBaseController {
 	public String password(Model model, @RequestParam("password") String password, @RequestParam("dest") String dest, HttpServletRequest request) {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		password = hash(password);
-		if(!tenant.getPassword().equals(password)) {
+		if(tenant.getPassword() == null || !tenant.getPassword().equals(password)) {
 			model.addAttribute("message", "Wrong Password.");
 			return bounce(model);
 		}

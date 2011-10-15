@@ -1,6 +1,11 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@page import="org.sarsoft.plans.model.Clue"%>
+<%@page import="org.sarsoft.common.model.Tenant.Permission"%>
+<% pageContext.setAttribute("none", Permission.NONE); %>
+<% pageContext.setAttribute("read", Permission.READ); %>
+<% pageContext.setAttribute("write", Permission.WRITE); %>
+<% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
 <h2>Clue ${clue.id}: ${clue.summary}</h2>
 
@@ -90,6 +95,11 @@ document.getElementById('utm_n').value = utm.n;
 
 org.sarsoft.Loader.queue(function() {
   
+<c:if test="${userPermissionLevel ne write and userPermissionLevel ne admin}">
+$('input').attr("disabled", true);
+$('textarea').attr("disabled", true);
+</c:if>
+
   var map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('mapview'));
   var imap = new org.sarsoft.InteractiveMap(map);
 

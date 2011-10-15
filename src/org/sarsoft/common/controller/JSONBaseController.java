@@ -223,6 +223,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("mapSources", getMapSources());
 		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
 		model.addAttribute("hosted", isHosted());
+		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
 		String username = RuntimeProperties.getUsername();
 		model.addAttribute("username", username);
 		if(username != null)
