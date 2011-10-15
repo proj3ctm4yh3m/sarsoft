@@ -743,6 +743,14 @@ org.sarsoft.MapSizeWidget = function(imap) {
 	imap.addMenuItem(pagesetup, 30);
 }
 
+org.sarsoft.MapPermissionWidget = function(imap) {
+	if(org.sarsoft.userPermissionLevel == "READ" || org.sarsoft.userPermissionLevel == "NONE") {
+		var passwordDlg = new org.sarsoft.PasswordDialog();	
+		imap.addContextMenuItems([{text : "Enter password for write access", applicable : function(obj) { return obj == null }, handler: function(data) { passwordDlg.show();}}]);
+	}
+}
+
+
 org.sarsoft.MapFindWidget = function(imap) {
 	var that = this;
 	var that = this;
@@ -837,6 +845,9 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options == null) options = {};
 	if(options.positionWindow || options.standardControls) {
 		this.map.addControl(new org.sarsoft.PositionInfoControl());
+	}
+	if(!options.suppressPermissionWidget) {
+		new org.sarsoft.MapPermissionWidget(this);
 	}
 	var dc = new org.sarsoft.MapDatumWidget(this, options.switchableDatum);
 	var mn = new org.sarsoft.MapDeclinationWidget(this);

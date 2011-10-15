@@ -1,10 +1,17 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page import="org.sarsoft.common.model.Tenant.Permission"%>
+<% pageContext.setAttribute("none", Permission.NONE); %>
+<% pageContext.setAttribute("read", Permission.READ); %>
+<% pageContext.setAttribute("write", Permission.WRITE); %>
+<% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
 <h2>All Resources</h2>
 
 <ul>
+<c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
   <li>Create new resource:&nbsp;<a href="javascript:showNewResourceForm()">Manually</a>&nbsp;|&nbsp;<a href="javascript:uploadDlg.dialog.show()">From CSV</a>
+</c:if>
   <li>Export to <a href="/app/resource?format=CSV">CSV</a>.
 </ul>
 

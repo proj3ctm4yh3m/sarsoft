@@ -135,8 +135,6 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
 
-	this.passwordDlg = new org.sarsoft.PasswordDialog();
-	
 	this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", new org.sarsoft.view.MarkerForm(), function(marker) {
 		if(that.markerDlg.marker != null) {
 			marker.position = that.markerDlg.marker.position;
@@ -173,9 +171,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 		items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
 	}
 
-	if(org.sarsoft.userPermissionLevel == "READ") {
-		this.imap.addContextMenuItems([{text : "Enter password for write access", applicable : function(obj) { return obj == null }, handler: function(data) { that.passwordDlg.show();}}]);
-	} else {
+	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
 		this.imap.addContextMenuItems(items.concat([
     		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
     		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},

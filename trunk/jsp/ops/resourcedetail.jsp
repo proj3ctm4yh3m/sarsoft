@@ -85,6 +85,11 @@ You can delete ${resource.name}, but this action cannot be undone.
 
 <script>
 org.sarsoft.Loader.queue(function() {
+
+<c:if test="${userPermissionLevel ne write and userPermissionLevel ne admin}">
+$('input').attr("disabled", true);
+</c:if>
+	
   var map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('mapview'));
   var imap = new org.sarsoft.InteractiveMap(map);
 
