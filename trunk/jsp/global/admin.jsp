@@ -19,6 +19,7 @@
 <input type="text" size="30" value="${tenant.publicName}" name="description"/>
 </p>
 
+<c:if test="${hosted}">
 <p>
 <h3>Sharing</h3>
 <label for="allUsers">All Users can</label>
@@ -46,7 +47,7 @@ Password:
 </c:choose>
 </span>
 </p>
-
+</c:if>
 <input type="submit" value="Update"/>
 </form>
 
