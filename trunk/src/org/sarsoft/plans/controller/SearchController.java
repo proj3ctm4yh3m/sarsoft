@@ -111,9 +111,16 @@ public class SearchController extends JSONBaseController {
 					Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
 					search.setLkp(lkp);
 				}
+
 				dao.save(search);
+
+				String op1name = request.getParameter("op1name");				
+                OperationalPeriod period = new OperationalPeriod();
+                period.setDescription((op1name != null && op1name.length() > 0) ? op1name : "first operational period");
+                period.setId(1L);
+                dao.save(period);                
 			}
-			return "redirect:/search" + RuntimeProperties.getTenant();
+			return "redirect:/search?id=" + RuntimeProperties.getTenant();
 		}
 		return val;
 	}
