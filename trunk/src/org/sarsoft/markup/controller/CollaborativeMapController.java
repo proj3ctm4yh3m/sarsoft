@@ -53,7 +53,12 @@ public class CollaborativeMapController extends JSONBaseController {
 				}
 			}
 			if(myCookie != null && myCookie.getValue() != null) {
-				myCookie.setValue(myCookie.getValue().replaceAll("(^|,)" + id + "=.*?(,|$)", "") + ",");
+				String value = myCookie.getValue();
+				value = value.replaceAll("(^|,)" + id + "=.*?(,|$)", ",");
+				value = value.replaceAll(",,", ",");
+				if(value.length() > 0 && !value.endsWith(",")) value = value + ",";
+				if(value.startsWith(",")) value = value.substring(1);
+				myCookie.setValue(value);
 			} else {
 				myCookie = new Cookie("org.sarsoft.recentlyLoadedMaps","");
 			}

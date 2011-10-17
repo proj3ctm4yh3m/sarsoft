@@ -232,7 +232,7 @@ public abstract class JSONBaseController {
 		if(RuntimeProperties.getTenant() == null && !"/map".equals(view)) {
 			return bounce(model);
 		}
-		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Tenant.class, RuntimeProperties.getTenant()));
+		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
 		return view;
 	}
 

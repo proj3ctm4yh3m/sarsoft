@@ -425,8 +425,8 @@ org.sarsoft.UTMGridControl.prototype.getDefaultPosition = function() { return ne
 org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 	var that = this;
 	this.map = map;
-
-	GEvent.addListener(map, "tilesloaded", function() {
+	
+	var fn = function() {
 		if(that.utminitialized == false) {
 			that._drawUTMGrid();
 			GEvent.addListener(map, "moveend", function() { that._drawUTMGrid(); });
@@ -439,7 +439,13 @@ org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 			});
 			that.utminitialized=true;
 		}
-	});
+	}
+	
+	if(map.isLoaded()) {
+		fn();
+	} else {
+		GEvent.addListener(map, "tilesloaded", fn);
+	}
 	
 	var div = document.createElement("div");
 	map.getContainer().appendChild(div);
