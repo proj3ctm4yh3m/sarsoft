@@ -58,7 +58,7 @@ public class CollaborativeMapController extends JSONBaseController {
 				myCookie = new Cookie("org.sarsoft.recentlyLoadedMaps","");
 			}
 			Tenant tenant = dao.getByPk(CollaborativeMap.class, RuntimeProperties.getTenant());
-			myCookie.setValue(myCookie.getValue() + id + "=" + tenant.getDescription());
+			myCookie.setValue(myCookie.getValue() + id + "=" + tenant.getDescription().replaceAll(",", ""));
 			myCookie.setMaxAge(7776000);
 			response.addCookie(myCookie);
 		}
