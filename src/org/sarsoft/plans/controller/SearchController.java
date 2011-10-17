@@ -92,7 +92,7 @@ public class SearchController extends JSONBaseController {
 				myCookie = new Cookie("org.sarsoft.recentlyLoadedSearches","");
 			}
 			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
-			myCookie.setValue(myCookie.getValue() + name + "=" + tenant.getDescription());
+			myCookie.setValue(myCookie.getValue() + name + "=" + tenant.getDescription().replaceAll(",", ""));
 			myCookie.setMaxAge(7776000);
 			response.addCookie(myCookie);
 		}
