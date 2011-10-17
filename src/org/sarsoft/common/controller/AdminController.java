@@ -64,7 +64,7 @@ public class AdminController extends JSONBaseController {
 	}
 
 	public String setTenant(Model model, String name, Class<? extends Tenant> cls, HttpServletRequest request) {
-		Tenant tenant = dao.getByAttr(Tenant.class, "name", name);
+		Tenant tenant = dao.getByAttr(cls, "name", name);
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(tenant == null) {
 			model.addAttribute("message", cls.getName() + " not found.");
