@@ -14,7 +14,6 @@ import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.markup.model.Shape;
-import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;

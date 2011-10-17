@@ -1,3 +1,6 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <html>
 <head>
@@ -5,7 +8,14 @@ ${head}
 <script type="text/javascript">
 function doload() {
 org.sarsoft.Loader.queue(function() {
-  map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
+  <c:choose>
+  <c:when test="${empty tenant.defaultCenter}">
+    map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
+  </c:when>
+  <c:otherwise>
+   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), new GLatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14);
+  </c:otherwise>
+  </c:choose>
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
   markupController = new org.sarsoft.controller.MarkupMapController(imap);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, true);

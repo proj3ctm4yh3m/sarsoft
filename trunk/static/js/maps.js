@@ -31,7 +31,7 @@ org.sarsoft.EnhancedGMap._createTileLayers = function(config) {
 	}
 }
 
-org.sarsoft.EnhancedGMap.createMap = function(element) {
+org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
 		$(element).css({"z-index": 0, overflow: "hidden"});
@@ -57,7 +57,9 @@ org.sarsoft.EnhancedGMap.createMap = function(element) {
 
 		map.geoRefImages = org.sarsoft.EnhancedGMap.geoRefImages.slice(0);
 
-		map.setCenter(new GLatLng(org.sarsoft.map._default.lat, org.sarsoft.map._default.lng), org.sarsoft.map._default.zoom);
+		if(center == null) center = new GLatLng(org.sarsoft.map._default.lat, org.sarsoft.map._default.lng);
+		if(zoom == null) zoom = org.sarsoft.map._default.zoom;
+		map.setCenter(center, zoom);
 		map.addControl(new OverlayDropdownMapControl());
 		map.addControl(new GLargeMapControl3D());
 		map.addControl(new GScaleControl());

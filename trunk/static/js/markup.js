@@ -192,25 +192,10 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this.imap.addMenuItem(showHide.node, 19);
 
 	this.markerDAO.loadAll(function(markers) {
-		var n = -180;
-		var s = 180;
-		var e = -180;
-		var w = 180;
-		var total = 0;
-		for(var i = 0; i < markers.length; i++) {
-			var marker = markers[i];
-			if(marker.position != null) {
-				total++;
-				n = Math.max(n, marker.position.lat);
-				s = Math.min(s, marker.position.lat);
-				e = Math.max(e, marker.position.lng);
-				w = Math.min(w, marker.position.lng);
-			}
-		}
-		that.imap.growInitialMap(new GLatLng(s, w));
-		that.imap.growInitialMap(new GLatLng(n, e));
-
 		that.refreshMarkers(markers);
+		for(var i = 0; i < markers.length; i++) {
+			that.imap.growInitialMap(new GLatLng(markers[i].position.lat, markers[i].position.lng));
+		}
 	});		
 	this.markerDAO.mark();
 

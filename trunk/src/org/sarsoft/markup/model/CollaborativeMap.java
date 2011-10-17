@@ -5,6 +5,7 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
+import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Waypoint;
 
@@ -24,4 +25,5 @@ public class CollaborativeMap extends Tenant {
 	public void setDefaultCenter(Waypoint defaultCenter) {
 		this.defaultCenter = defaultCenter;
 	}
+
 }
