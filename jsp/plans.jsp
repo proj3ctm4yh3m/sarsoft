@@ -14,7 +14,7 @@ org.sarsoft.Loader.queue(function() {
   clueController = new org.sarsoft.controller.ClueLocationMapController(imap);
   markupController = new org.sarsoft.controller.MarkupMapController(imap, true);
   plansController.setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
-  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, true);
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
   setInterval("imap.timer()", 10000);
 });
