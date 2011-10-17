@@ -18,7 +18,7 @@ org.sarsoft.Loader.queue(function() {
   </c:choose>
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
   markupController = new org.sarsoft.controller.MarkupMapController(imap);
-  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, true);
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
   setInterval("imap.timer()", 10000);
 
