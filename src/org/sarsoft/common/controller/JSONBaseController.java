@@ -224,6 +224,10 @@ public abstract class JSONBaseController {
 		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
 		model.addAttribute("hosted", isHosted());
 		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
+		model.addAttribute("version", getProperty("sarsoft.version"));
+		String objects = getProperty("sarsoft.objects");
+		if(objects == null) objects = "map,search";
+		model.addAttribute("objects", objects);
 		String username = RuntimeProperties.getUsername();
 		model.addAttribute("username", username);
 		if(username != null)

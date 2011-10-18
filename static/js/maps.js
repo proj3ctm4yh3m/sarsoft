@@ -1345,7 +1345,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container) {
 	tr = jQuery('<tr><td valign="top">Address</td></tr>').appendTo(tbody);
 	td = jQuery("<td/>").appendTo(tr);
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(td);
-	td.append('<br/><span class="hint">e.g. "Truckee, CA".  Requires a working internet connection.</span>');
+	td.append('<br/><span class="hint">e.g. "Truckee, CA".</span>');
 	if(typeof GClientGeocoder == 'undefined') {
 		tr.css("display", "none");
 	}

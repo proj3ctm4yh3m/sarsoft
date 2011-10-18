@@ -3,7 +3,7 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <html>
 <head>
-<title>Search & Rescue Planning Software</title>
+<title>${version}</title>
 ${head}
 </head>
 <body class="yui-skin-sam">
@@ -20,7 +20,7 @@ ${head}
   <a href="/">Operations</a>
  </c:when>
  <c:when test="${app eq 'admin'}">
-  <a href="/app/admin">Admin Console</a>
+  Administration & Sharing
  </c:when>
 </c:choose>
 <c:choose>
@@ -44,7 +44,7 @@ ${head}
  </c:when>
 </c:choose>
 </div>
-<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>SARSOFT&nbsp;<%= org.sarsoft.plans.Constants.version %></div>
+<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>${version}</div>
 </div>
 <div class="headerbottom"></div>
 </div>
