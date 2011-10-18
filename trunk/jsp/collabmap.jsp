@@ -23,7 +23,7 @@ org.sarsoft.Loader.queue(function() {
   setInterval("imap.timer()", 10000);
 
   if(org.sarsoft.userPermissionLevel != "READ") {
-	var configDlg = org.sarsoft.view.CreateDialog("Configuration and Sharing", "Leave map view and go to Configuration and Sharing page?", "Leave", "Cancel", function() {
+	var configDlg = org.sarsoft.view.CreateDialog("Administration and Sharing", "Leave map view and go to Administration and Sharing page?", "Leave", "Cancel", function() {
 		window.location = "/admin";		
 	});
 	var config = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Configuration and Sharing"/>')[0];

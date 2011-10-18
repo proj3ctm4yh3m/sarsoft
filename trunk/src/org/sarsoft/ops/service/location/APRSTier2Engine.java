@@ -104,7 +104,7 @@ public class APRSTier2Engine extends APRSEngine {
 
 			String str = in.readLine();	
 
-			String login = "user " + user + " pass -1 vers Sarsoft " + Constants.version + "\r\n";
+			String login = "user " + user + " pass -1 vers Sarsoft beta\r\n";
 
 			writeLine(out, login);
 			String message = in.readLine();

@@ -1,7 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<h2>Welcome to Sarsoft<c:if test="${account ne null}">, ${account.email}.  (<a href="/app/logout">Logout</a>)</c:if></h2>
+<h2>Welcome<c:if test="${account ne null}">, ${account.email}.  (<a href="/app/logout">Logout</a>)</c:if></h2>
 <div>
 ${welcomeMessage}
 
@@ -109,8 +109,8 @@ Log in using your:
 </div>
 
 <div style="padding-top: 15px">
-<button onclick="createSearch()">Create Search</button>
-<button onclick="createMap()">Create Map</button>
+<c:if test="${fn:contains(objects, 'search')}"><button onclick="createSearch()">Create Search</button></c:if>
+<c:if test="${fn:contains(objects, 'map')}"><button onclick="createMap()">Create Map</button></c:if>
 </div>
 </c:otherwise>
 </c:choose>
