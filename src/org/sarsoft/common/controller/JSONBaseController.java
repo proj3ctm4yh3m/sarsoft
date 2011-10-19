@@ -199,6 +199,8 @@ public abstract class JSONBaseController {
 		model.addAttribute("tenantSubclasses", tenantSubclasses);
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		model.addAttribute("head", getCommonHeader());
+		model.addAttribute("version", getProperty("sarsoft.version"));
+		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
 		return "Pages.Welcome";
 	}
 
@@ -208,6 +210,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("hosted", isHosted());
 		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
 		model.addAttribute("version", getProperty("sarsoft.version"));
+		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
 		String objects = getProperty("sarsoft.objects");
 		if(objects == null) objects = "map,search";
 		model.addAttribute("objects", objects);
