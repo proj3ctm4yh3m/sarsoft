@@ -18,6 +18,8 @@ import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.markup.model.Marker;
+import org.sarsoft.markup.model.Shape;
 import org.sarsoft.plans.Constants;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,7 +100,7 @@ public class AdminController extends JSONBaseController {
 			return bounce(model);
 		}
 		
-		request.getSession().setAttribute("tenant", name);
+		request.getSession().setAttribute("tenantid", name);
 		RuntimeProperties.setTenant(name);
 		
 		request.getSession().setAttribute("userPermission", permission);
@@ -165,7 +167,7 @@ public class AdminController extends JSONBaseController {
 
 		dao.superSave(tenant);
 
-		request.getSession().setAttribute("tenant", tenant.getName());
+		request.getSession().setAttribute("tenantid", tenant.getName());
 		RuntimeProperties.setTenant(tenant.getName());
 
 		request.getSession().setAttribute("userPermission", Permission.ADMIN);
@@ -206,7 +208,7 @@ public class AdminController extends JSONBaseController {
 			}
 			request.getSession(true).setAttribute("username", account.getName());
 			RuntimeProperties.setUsername(account.getName());
-			request.getSession(true).removeAttribute("tenant");
+			request.getSession(true).removeAttribute("tenantid");
 			RuntimeProperties.setTenant(null);
 			return "redirect:/";
 		} catch (Exception e) {
@@ -219,7 +221,7 @@ public class AdminController extends JSONBaseController {
 	public String logout(Model model, HttpServletRequest request) {
 		RuntimeProperties.setUsername(null);
 		RuntimeProperties.setTenant(null);
-		request.getSession(true).removeAttribute("tenant");
+		request.getSession(true).removeAttribute("tenantid");
 		request.getSession(true).removeAttribute("username");
 		return bounce(model);
 	}
@@ -284,16 +286,20 @@ public class AdminController extends JSONBaseController {
 			return "redirect:/admin.html";
 		}
 
+		dao.deleteAll(Marker.class);
+		dao.deleteAll(Shape.class);
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		if(tenant.getAccount() != null) {
 			UserAccount account = tenant.getAccount();
 			account.getTenants().remove(tenant);
 			tenant.setAccount(null);
+			// will delete tenant as well due to delete_orphan cascade
 			dao.save(account);
+		} else {
+			dao.delete(tenant);
 		}
-		dao.delete(tenant);
 		RuntimeProperties.setTenant(null);
-		request.getSession(true).removeAttribute("tenant");
+		request.getSession(true).removeAttribute("tenantid");
 		return bounce(model);
 	}
 	

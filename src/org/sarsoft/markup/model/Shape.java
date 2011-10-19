@@ -44,7 +44,7 @@ public class Shape extends SarModelObject implements IPreSave {
 	public static Shape createFromJSON(JSONObject json) {
 		return (Shape) JSONObject.toBean(json, Shape.class, classHints);
 	}
-	
+
 	@ManyToOne
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@JSONSerializable

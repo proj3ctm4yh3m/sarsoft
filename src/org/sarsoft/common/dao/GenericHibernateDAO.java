@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.sarsoft.common.model.IPreSave;
@@ -130,6 +131,21 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 			public Object doInHibernate(final Session session) throws HibernateException {
 				if(RuntimeProperties.getUserPermission() != Permission.WRITE && RuntimeProperties.getUserPermission() != Permission.ADMIN) return null;
 				session.delete(obj);
+				session.flush();
+				return null;
+			}
+		});
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void deleteAll(final Class<? extends SarModelObject> cls) {
+		getHibernateTemplate().execute(new HibernateCallback() {
+			public Object doInHibernate(final Session session) throws HibernateException {
+				if(RuntimeProperties.getUserPermission() != Permission.ADMIN) return null;
+				if(RuntimeProperties.getTenant() == null || RuntimeProperties.getTenant().length() == 0) return null;
+				session.beginTransaction();
+				session.createQuery("delete from " + cls.getSimpleName() + " where tenant = ?").setString(0, RuntimeProperties.getTenant()).executeUpdate();
+				session.getTransaction().commit();
 				session.flush();
 				return null;
 			}

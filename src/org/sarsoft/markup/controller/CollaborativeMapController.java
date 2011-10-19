@@ -47,7 +47,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		if(id != null) {
 			Cookie[] cookies = request.getCookies();
 			Cookie myCookie = null;
-			for(Cookie cookie : cookies) {
+			if(cookies != null) for(Cookie cookie : cookies) {
 				if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName())) {
 					myCookie = cookie;
 				}
