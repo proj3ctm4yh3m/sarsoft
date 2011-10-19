@@ -248,7 +248,7 @@ org.sarsoft.controller.MarkupMapController.prototype.editShape = function(shape)
 
 org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id) {
 	if(this.markers[id] != null) this.imap.removeWaypoint(this.markers[id].position);
-	this.markers[id] = null;
+	delete this.markers[id];
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.removeShape = function(id) {
