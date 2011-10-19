@@ -30,7 +30,7 @@ Continue working on: <a href="${url}">${tenant.description}</a>.
 </div>
 </c:if>
 <div style="padding-bottom: 20px; border-bottom: 1px solid #CCCCCC">
-You can always use the <a href="/app/map.html">Quick Map Viewer</a> to browse map layers if you don't need to save anything.
+You can always use the <a href="/map.html">Quick Map Viewer</a> to browse map layers if you don't need to save anything.
 </div>
 
 <div style="float: left">

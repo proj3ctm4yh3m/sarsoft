@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class CommonController extends JSONBaseController {
 
-	@RequestMapping(value="/app/map.html", method = RequestMethod.GET)
+	@RequestMapping(value="/map.html", method = RequestMethod.GET)
 	public String showMap(Model model, HttpServletRequest request) {
 		return app(model, "/map");
 	}
