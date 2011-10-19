@@ -7,11 +7,11 @@
 ${head}
 </head>
 <body class="yui-skin-sam">
-<div class="headercontainer">
 
 <tiles:importAttribute name="app"/>
-<div class="header">
-<div style="font-weight: bold; float: left"><a href="/" class="sarsoft">${tenant.description}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<div class="header" style="${headerStyle}">
+<div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</div>
+<h1><a href="/" class="sarsoft">${tenant.description}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <c:choose>
  <c:when test="${app eq 'plans'}">
   <a href="/app/operationalperiod">Plans</a>
@@ -43,12 +43,9 @@ ${head}
  	&nbsp;:&nbsp;<a href="/app/clue">Clue Log</a>&nbsp;:&nbsp;Clue ${clue.id}
  </c:when>
 </c:choose>
+</h1>
 </div>
-<div style="font-weight: bold; text-align: right; float: right; margin-right: 3em"><span style="font-size: 200%">&nbsp;</span>${version}</div>
-</div>
-<div class="headerbottom"></div>
-</div>
-<div class="content">
+<div>
 <tiles:insertAttribute name="content"/>
 </div>
 </body>
