@@ -24,7 +24,7 @@ org.sarsoft.Loader.queue(function() {
 
   if(org.sarsoft.userPermissionLevel != "READ") {
 	var configDlg = org.sarsoft.view.CreateDialog("Administration and Sharing", "Leave map view and go to Administration and Sharing page?", "Leave", "Cancel", function() {
-		window.location = "/admin";		
+		window.location = "/admin.html";		
 	});
 	var config = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Configuration and Sharing"/>')[0];
 	GEvent.addDomListener(config, "click", function() {

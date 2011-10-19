@@ -12,7 +12,7 @@
 <br/>
 </c:if>
 
-<form action="/admin" method="POST">
+<form action="/admin.html" method="POST">
 
 <p>
 <label for="description">Name</label>

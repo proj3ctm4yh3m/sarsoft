@@ -224,7 +224,7 @@ public class AdminController extends JSONBaseController {
 		return bounce(model);
 	}
 	
-	@RequestMapping(value="/admin", method = RequestMethod.GET)
+	@RequestMapping(value="/admin.html", method = RequestMethod.GET)
 	public String getAdmin(Model model) {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 
@@ -241,7 +241,7 @@ public class AdminController extends JSONBaseController {
 		return app(model, "Pages.Admin");
 	}
 
-	@RequestMapping(value="/admin", method = RequestMethod.POST)
+	@RequestMapping(value="/admin.html", method = RequestMethod.POST)
 	public String updateAdmin(Model model, HttpServletRequest request) {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		
@@ -270,18 +270,18 @@ public class AdminController extends JSONBaseController {
 	public String delete(Model model, @RequestParam("id") String id, HttpServletRequest request) {
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
 			model.addAttribute("message", "You don't own this object, and therefore can't delete it.");
-			return "redirect:/admin";
+			return "redirect:/admin.html";
 		}
 		
 		if(!id.equals(RuntimeProperties.getTenant())) {
 			model.addAttribute("message", "Something seems to have gone wrong - it looks like you're trying to delete a different object than the one you're currently viewing.");
-			return "redirect:/admin";
+			return "redirect:/admin.html";
 		}
 
 		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
 		if(l != null && l.size() > 0) {
 			model.addAttribute("message", "You must delete all operational periods before deleting this search.");
-			return "redirect:/admin";
+			return "redirect:/admin.html";
 		}
 
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
