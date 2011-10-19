@@ -216,7 +216,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		}
 		
 		// update visual controls
-		this.opacityInput.value=Math.round(opacity*100);
+		this.opacityInput.val(Math.round(opacity*100));
 		for(var i = 0; i < this.types.length; i++) {
 			if(this.types[i] == base) this.typeSelect.value = i;
 			if(this.types[i] == overlay) this.overlaySelect.value = i;
