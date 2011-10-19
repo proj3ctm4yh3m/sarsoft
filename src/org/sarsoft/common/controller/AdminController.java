@@ -254,12 +254,14 @@ public class AdminController extends JSONBaseController {
 			tenant.setDescription(request.getParameter("description"));
 			dao.save(tenant);
 		}
-		tenant.setAllUserPermission(Permission.valueOf(request.getParameter("allUsers")));
-		tenant.setPasswordProtectedUserPermission(Permission.valueOf(request.getParameter("passwordUsers")));
-		if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
-			tenant.setPassword(hash(request.getParameter("password")));
+		if(tenant.getAccount() != null) {
+			tenant.setAllUserPermission(Permission.valueOf(request.getParameter("allUsers")));
+			tenant.setPasswordProtectedUserPermission(Permission.valueOf(request.getParameter("passwordUsers")));
+			if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
+				tenant.setPassword(hash(request.getParameter("password")));
+			}
+			dao.save(tenant);
 		}
-		dao.save(tenant);
 		
 		return getAdmin(model);
 	}
