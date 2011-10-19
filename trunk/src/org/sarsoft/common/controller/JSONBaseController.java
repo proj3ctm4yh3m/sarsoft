@@ -201,6 +201,9 @@ public abstract class JSONBaseController {
 		model.addAttribute("head", getCommonHeader());
 		model.addAttribute("version", getProperty("sarsoft.version"));
 		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
+		String objects = getProperty("sarsoft.objects");
+		if(objects == null) objects = "map,search";
+		model.addAttribute("objects", objects);
 		return "Pages.Welcome";
 	}
 
