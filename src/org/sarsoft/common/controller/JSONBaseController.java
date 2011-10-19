@@ -108,23 +108,41 @@ public abstract class JSONBaseController {
 		return mapSources;
 	}
 	
+	private byte[] sha1(String str) {
+		try {
+			MessageDigest d = MessageDigest.getInstance("SHA-1");
+			d.reset();
+			d.update(str.getBytes());
+			return d.digest();
+		} catch (NoSuchAlgorithmException e) {
+			return null;
+		}
+	}
+	
+	protected String hash32(String str) {
+		if(str == null) return null;
+		byte[] bytes = sha1(str);
+		if(bytes == null) return str;
+		StringBuffer sb = new StringBuffer();
+		for(byte b : bytes) {
+			int i = b & 0xFF;
+			if(i < 32) sb.append("0");
+			sb.append(Integer.toString(i, 32));
+		}
+		return sb.toString().toUpperCase();
+	}
+	
 	protected String hash(String password) {
 		if(password == null) return null;
-		try {
-		MessageDigest d = MessageDigest.getInstance("SHA-1");
-		d.reset();
-		d.update(password.getBytes());
-		byte[] bytes = d.digest();
 		StringBuffer sb = new StringBuffer();
+		byte[] bytes = sha1(password);
+		if(bytes == null) return password;
 		for(byte b : bytes) {
 			int i = b & 0xFF;
 			if(i < 16) sb.append("0");
 			sb.append(Integer.toHexString(i));
 		}
 		return sb.toString().toUpperCase();
-		} catch (NoSuchAlgorithmException e) {
-			return password;
-		}
 	}
 
 	protected String getCommonHeader() {

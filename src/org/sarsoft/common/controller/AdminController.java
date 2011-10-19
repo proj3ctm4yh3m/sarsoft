@@ -157,7 +157,7 @@ public class AdminController extends JSONBaseController {
 			int i = 0;
 			while(obj != null) {
 				i++;
-				tenantname = hash(user + name + System.nanoTime() + i).substring(0,8);
+				tenantname = hash32(user + name + System.nanoTime() + i).substring(0,4);
 				obj = dao.getByPk(Tenant.class, tenantname);
 			}
 			tenant.setName(tenantname);
