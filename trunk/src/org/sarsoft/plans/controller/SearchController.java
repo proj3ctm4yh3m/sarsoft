@@ -81,7 +81,7 @@ public class SearchController extends JSONBaseController {
 		if(name != null) {
 			Cookie[] cookies = request.getCookies();
 			Cookie myCookie = null;
-			for(Cookie cookie : cookies) {
+			if(cookies != null) for(Cookie cookie : cookies) {
 				if("org.sarsoft.recentlyLoadedSearches".equals(cookie.getName())) {
 					myCookie = cookie;
 				}
