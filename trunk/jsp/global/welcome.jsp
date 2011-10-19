@@ -123,6 +123,7 @@ org.sarsoft.Loader.queue(function() {
 
 	var recentlyLoaded = YAHOO.util.Cookie.get("org.sarsoft.recentlyLoadedMaps");
 	if(recentlyLoaded != null) {
+		if(recentlyLoaded.indexOf('"') == 0) recentlyLoaded = recentlyLoaded.substring(1, recentlyLoaded.length - 1);
 		$('#recentlyLoadedMapDiv').css("display","block");
 		var maps = recentlyLoaded.split(',');
 		for(var i = 0; i < maps.length; i++) {
@@ -133,6 +134,7 @@ org.sarsoft.Loader.queue(function() {
 
 	recentlyLoaded = YAHOO.util.Cookie.get("org.sarsoft.recentlyLoadedSearches");
 	if(recentlyLoaded != null) {
+		if(recentlyLoaded.indexOf('"') == 0) recentlyLoaded = recentlyLoaded.substring(1, recentlyLoaded.length - 1);
 		$('#recentlyLoadedSearchDiv').css("display","block");
 		var searches = recentlyLoaded.split(',');
 		for(var i = 0; i < searches.length; i++) {
