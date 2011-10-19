@@ -52,7 +52,7 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
 <h4>Administration and Configuration</h4>
 <ul>
 <c:if test="${userPermissionLevel eq admin}">
- <li><a href="/admin">Search Admin.</a>  Change search name and sharing.</li>
+ <li><a href="/admin.html">Search Admin.</a>  Change search name and sharing.</li>
 </c:if>
  <c:if test="${imageUploadEnabled and (userPermissionLevel eq write or userPermissionLevel eq admin)}">
   <li><a href="/app/imagery/georef">Map Imagery.</a>  Turn JPEG files into custom map backgrounds.</li>
