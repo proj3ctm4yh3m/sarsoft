@@ -78,25 +78,8 @@ public abstract class JSONBaseController {
 	}
 	
 	protected String getProperty(String name) {
-		if(properties != null) return properties.getProperty(name);
-		synchronized(this) {
-			properties = new Properties();
-			String prop = System.getProperty("config");
-			if(prop == null) prop ="local";
-			String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
-			try {
-				InputStream inputStream = context.getResourceAsStream(propertiesFileName);
-				properties.load(inputStream);
-				if(new File("sarsoft.properties").exists()) {
-					FileInputStream fis = new FileInputStream("sarsoft.properties");
-					properties.load(fis);
-				}
-			} catch (IOException e) {
-				logger.error("IOException encountered reading from " + propertiesFileName + " or sarsoft.properties", e);
-			}
-		}
-		if(System.getProperty(name) != null) return System.getProperty(name);
-		return properties.getProperty(name);
+		if(!RuntimeProperties.isInitialized()) RuntimeProperties.initialize(context);
+		return RuntimeProperties.getProperty(name);
 	}
 
 	protected List<MapSource> getMapSources() {
