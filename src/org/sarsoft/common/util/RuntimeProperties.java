@@ -24,7 +24,12 @@ public class RuntimeProperties {
 	public static boolean isInitialized() {
 		return (properties != null);
 	}
-	
+
+	public static String getProperty(String name) {
+		if(System.getProperty(name) != null) return System.getProperty(name);
+		return properties.getProperty(name);
+	}
+
 	public static void initialize(ServletContext context) {
 		synchronized(RuntimeProperties.class) {
 			if(properties != null) return;
@@ -32,22 +37,22 @@ public class RuntimeProperties {
 			String prop = System.getProperty("config");
 			if(prop == null) prop ="local";
 			String propertiesFileName = "/WEB-INF/" + prop + ".spring-config.properties";
+			String sarsoftPropertyName = "sarsoft.properties";
+			if(System.getProperty("sarsoft.properties") != null) sarsoftPropertyName = System.getProperty("sarsoft.properties");
 			try {
 				InputStream inputStream = context.getResourceAsStream(propertiesFileName);
 				properties.load(inputStream);
-				if(new File("sarsoft.properties").exists()) {
-					FileInputStream fis = new FileInputStream("sarsoft.properties");
+				if(new File(sarsoftPropertyName).exists()) {
+					FileInputStream fis = new FileInputStream(sarsoftPropertyName);
 					properties.load(fis);
 				}
 				PropertyConfigurator.configure(properties);
 			} catch (IOException e) {
-				Logger.getLogger(RuntimeProperties.class).error("IOException encountered reading from " + propertiesFileName + " or sarsoft.properties", e);
+				Logger.getLogger(RuntimeProperties.class).error("IOException encountered reading from " + propertiesFileName + " or " + sarsoftPropertyName, e);
 			}
 		}
 	}
 	
-	private static Boolean hosted = null;
-
 	public static void setTenant(String tenant) {
 		tTenant.set(tenant);
 	}
