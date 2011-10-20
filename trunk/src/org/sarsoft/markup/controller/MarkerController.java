@@ -59,6 +59,9 @@ public class MarkerController extends JSONBaseController {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=marker-" + (marker.getLabel() == null ? marker.getId() : marker.getLabel()) + ".gpx");
 			return gpx(model, marker, "Marker");
+		case KML :
+			response.setHeader("Content-Disposition", "attachment; filename=marker-" + (marker.getLabel() == null ? marker.getId() : marker.getLabel()) + ".kml");
+			return kml(model, marker, "Marker");
 		default :
 			return json(model, marker);
 		}

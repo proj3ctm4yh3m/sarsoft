@@ -99,6 +99,9 @@ public class ShapeController extends JSONBaseController {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=shape-" + (shape.getLabel() == null ? shape.getId() : shape.getLabel()) + ".gpx");
 			return gpx(model, shape, "Shape");
+		case KML :
+			response.setHeader("Content-Disposition", "attachment; filename=shape-" + (shape.getLabel() == null ? shape.getId() : shape.getLabel()) + ".kml");
+			return kml(model, shape, "Shape");
 		default :
 			return json(model, shape);
 		}
