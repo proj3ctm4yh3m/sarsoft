@@ -52,7 +52,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 		});
 
 	var imageContainer = jQuery('<div></div>').appendTo(form);
-	var images = ["warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"];
+	var images = ["nps-4wd","nps-climbing","nps-dirtbike","nps-diving","nps-firstaid","nps-gas","nps-lookout","nps-phone","nps-picnic","nps-roadbike","nps-rockfall","nps-scramble","nps-shelter","nps-shower","nps-snowmobile","nps-water","warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","tent","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"];
 	for(var i = 0; i < images.length; i++) {
 		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + images[i] + '.png"/>').appendTo(imageContainer);
 		swatch.click(function() { var j = i; return function() {
