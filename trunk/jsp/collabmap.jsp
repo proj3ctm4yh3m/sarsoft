@@ -32,10 +32,9 @@ org.sarsoft.Loader.queue(function() {
 	});
 	imap.addMenuItem(goback, 40);
 
-	if(org.sarsoft.userPermissionLevel != "READ") {
+	if(org.sarsoft.userPermissionLevel == "ADMIN") {
 		var goToAdmin = new Object();
 		imap.register("goToAdmin", goToAdmin);
-	
 		goToAdmin.getSetupBlock = function() {
 			return {
 				order : 1,
