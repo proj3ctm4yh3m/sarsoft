@@ -26,14 +26,23 @@ public class CommonController extends JSONBaseController {
 		model.addAttribute("name", request.getParameter("name"));
 		model.addAttribute("hostName", "http://" + RuntimeProperties.getServerName());
 		model.addAttribute("garminKey", getProperty("garmin.key." + RuntimeProperties.getServerName()));
+		model.addAttribute("version", getProperty("sarsoft.version"));
+		if(request.getParameter("callbackurl") != null) {
+			model.addAttribute("callbackurl", request.getParameter("callbackurl"));
+		}
 		return "/plans/togarmin";
 	}
 
 	@RequestMapping(value="/app/fromgarmin", method = RequestMethod.GET)
 	public String fromGarmin(Model model, HttpServletRequest request) {
 		model.addAttribute("id", request.getParameter("id"));
+		model.addAttribute("version", getProperty("sarsoft.version"));
 		model.addAttribute("hostName", "http://" + RuntimeProperties.getServerName());
 		model.addAttribute("garminKey", getProperty("garmin.key." + RuntimeProperties.getServerName()));
+		if(request.getParameter("posturl") != null) {
+			model.addAttribute("posturl", request.getParameter("posturl"));
+			model.addAttribute("callbackurl", request.getParameter("callbackurl"));
+		}
 		return "/plans/fromgarmin";
 	}
 

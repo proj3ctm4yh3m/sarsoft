@@ -14,6 +14,15 @@
 		<xsl:when test="$template='Search'">
 			<xsl:call-template name="SearchToGpx"/>
 		</xsl:when>
+		<xsl:when test="$template='Map'">
+			<xsl:call-template name="MapToGpx"/>
+		</xsl:when>
+		<xsl:when test="$template='Shape'">
+			<xsl:call-template name="ShapeToGpx"/>
+		</xsl:when>
+		<xsl:when test="$template='Marker'">
+			<xsl:call-template name="MarkerToGpx"/>
+		</xsl:when>
 	</xsl:choose>
 </gpx>
 </xsl:template>
@@ -63,6 +72,17 @@
 		<xsl:call-template name="SearchAssignmentsToGpx"/>
 	</xsl:for-each>
 </xsl:template>
+<xsl:template name="MapToGpx">
+	<xsl:for-each select="json:markers/json:e">
+		<xsl:call-template name="MarkerToGpx"/>
+	</xsl:for-each>
+	<xsl:for-each select="json:shapes/json:e[json:way/json:type='ROUTE']">
+		<xsl:call-template name="ShapeToGpx"/>
+	</xsl:for-each>
+	<xsl:for-each select="json:shapes/json:e[json:way/json:type!='ROUTE']">
+		<xsl:call-template name="ShapeToGpx"/>
+	</xsl:for-each>
+</xsl:template>
 <xsl:template name="SearchAssignmentsToGpx">
 	<xsl:for-each select="json:e">
 		<xsl:call-template name="SearchAssignmentToGpx"/>
@@ -98,6 +118,25 @@
 		<xsl:call-template name="WaypointToWpt">
 			<xsl:with-param name="name" select="concat($operationalperiod, $assignmentid, 'W', position()-1)"/>
 			<xsl:with-param name="desc" select="json:name"/>
+		</xsl:call-template>
+	</xsl:for-each>
+</xsl:template>
+<xsl:template name="ShapeToGpx">
+	<xsl:variable name="label" select="json:label"/>
+	<xsl:variable name="desc" select="concat('color=', json:color, '&amp;weight=', json:weight, '&amp;fill=', json:fill)"/>
+	<xsl:for-each select="json:way">
+		<xsl:call-template name="WayToGpx">
+			<xsl:with-param name="name" select="$label"/>
+			<xsl:with-param name="desc" select="$desc"/>
+		</xsl:call-template>
+	</xsl:for-each>
+</xsl:template>
+<xsl:template name="MarkerToGpx">
+	<xsl:variable name="marker" select="."/>
+	<xsl:for-each select="json:position">
+		<xsl:call-template name="WaypointToWpt">
+			<xsl:with-param name="name" select="$marker/json:label"/>
+			<xsl:with-param name="desc" select="$marker/json:url"/>
 		</xsl:call-template>
 	</xsl:for-each>
 </xsl:template>

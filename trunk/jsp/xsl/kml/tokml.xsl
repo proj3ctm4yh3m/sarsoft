@@ -11,6 +11,9 @@
 		<xsl:when test="$template='SearchAssignment'">
 			<xsl:call-template name="SearchAssignmentToKml"/>
 		</xsl:when>
+		<xsl:when test="$template='Map'">
+			<xsl:call-template name="MapToKml"/>
+		</xsl:when>
 	</xsl:choose>
  </Document>
 </kml>
@@ -35,7 +38,7 @@
 </xsl:template>
 <xsl:template name="SearchAssignmentToKml">
 	<xsl:variable name="idx" select="number(json:id)"/>
-	<xsl:variable name="rgbcolor" select="org:sarsoft.common.util.Constants.getColorById($idx)"/>
+	<xsl:variable name="rgbcolor" select="org:sarsoft.plans.Constants.getColorById($idx)"/>
 	<xsl:variable name="color" select="concat(substring($rgbcolor,6,2),substring($rgbcolor,4,2),substring($rgbcolor,2,2))"/>
 	<xsl:variable name="name" select="concat('Assignment ', json:id, ': ', json:name)"/>
 	<xsl:for-each select="json:ways/json:e">
@@ -57,10 +60,71 @@
 	</Placemark>
 	</xsl:for-each>
 </xsl:template>
+
+
+
+<xsl:template name="MapToKml">
+	<xsl:for-each select="json:shapes/json:e">
+		<xsl:call-template name="ShapeToKml"/>
+	</xsl:for-each>
+	<xsl:for-each select="json:markers/json:e">
+		<xsl:call-template name="MarkerToKml"/>
+	</xsl:for-each>
+</xsl:template>
+
+<xsl:template name="ShapeToKml">
+	<xsl:variable name="idx" select="number(json:id)"/>
+	<xsl:variable name="rgbcolor" select="json:color"/>
+	<xsl:variable name="color" select="concat(substring($rgbcolor,6,2),substring($rgbcolor,4,2),substring($rgbcolor,2,2))"/>
+	<xsl:variable name="name">
+		<xsl:choose>
+			<xsl:when test="string-length(json:label) &gt; 0"><xsl:value-of select="json:label"/></xsl:when>
+			<xsl:otherwise><xsl:value-of select="json:id"/></xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable>
+  <Placemark>
+    <Style>
+      <LineStyle>
+           <color><xsl:value-of select="concat('FF', $color)"/></color>
+        <width><xsl:value-of select="json:weight"/></width>
+      </LineStyle>
+      <PolyStyle>
+      	<fill>0</fill>
+      	<outline>1</outline>
+      	<width><xsl:value-of select="json:weight"/></width>
+        <color><xsl:value-of select="concat('FF', $color)"/></color>
+      </PolyStyle>
+    </Style>
+    <name><xsl:value-of select="$name"/></name>
+    	<xsl:for-each select="json:way">
+			<xsl:call-template name="WayToKml"/>
+		</xsl:for-each>
+</Placemark>
+</xsl:template>
+
+<xsl:template name="MarkerToKml">
+	<xsl:variable name="name">
+		<xsl:choose>
+			<xsl:when test="string-length(json:label) &gt; 0"><xsl:value-of select="json:label"/></xsl:when>
+			<xsl:otherwise><xsl:value-of select="json:id"/></xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable>
+
+	<Placemark> 
+	 <name><xsl:value-of select="$name"/></name> 
+	 <Point>
+	  <coordinates>
+	  <xsl:for-each select="json:position">
+	  	<xsl:call-template name="WaypointToKml"/>
+	  </xsl:for-each>
+	  </coordinates>
+	 </Point> 
+	</Placemark>
+</xsl:template>
+
 <xsl:template name="WayToKml">
-    <xsl:param name="color"/>
 	<xsl:choose>
-	<xsl:when test="json:polygon=true">
+	<xsl:when test="json:polygon=true()">
 		<xsl:call-template name="PolygonToKml"/>
 	</xsl:when>
 	<xsl:otherwise>

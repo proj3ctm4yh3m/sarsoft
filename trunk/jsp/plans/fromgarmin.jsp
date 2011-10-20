@@ -72,8 +72,18 @@ GarminReadListener.prototype.onFinishReadFromDevice = function(obj) {
 	console(gpx);
 	pass('copy');
 	start('post');
-	var dao = new org.sarsoft.SearchAssignmentDAO();
-	dao.createWaysFromGpx(function() { pass('post');start('done');pass('done'); window.location="/app/assignment/${id}#tracks"}, this.id, {gpx: gpx}, "TRACK");
+<c:choose>
+<c:when test="${callbackurl ne null}">
+    var dao = new org.sarsoft.BaseDAO();
+    dao.baseURL = "";
+	dao._doPost('${posturl}', function() { window.location='${callbackurl}'}, {gpx:gpx});
+</c:when>
+<c:otherwise>
+    var dao = new org.sarsoft.SearchAssignmentDAO();
+    dao.createWaysFromGpx(function() { pass('post');start('done');pass('done'); window.location="/app/assignment/${id}#tracks"}, this.id, {gpx: gpx}, "TRACK");
+</c:otherwise>
+</c:choose>
+	
 }
 
 GarminReadListener.prototype.onException = function(obj) {
@@ -109,6 +119,7 @@ function showDetails() {
 </head>
 <body class="yui-skin-sam" onload="load()">
 
+<h1>${version} GPS Import</h1>
 <div style="margin-left: 4em; margin-top: 4em">
 <h2 id="find" style="visibility: hidden">Searching For Devices</h2>
 <h2 id="copy" style="visibility: hidden">Copying Tracks</h2>
