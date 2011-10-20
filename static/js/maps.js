@@ -118,41 +118,8 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	this.opacityInput = jQuery('<input size="2" value="0"></input>');
 	var div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>').appendTo(map.getContainer());
 	div.append(this.extras, "base: ", this.typeSelect);
-	// Create '+' dropdown and alpha overlay checkboxes if we have alpha types
-	if(alphaTypes.length > 0) {
-		this.alphaOverlayBoxes = new Array();
-		this.alphaOverlayTypes = alphaTypes;
-		var tPlus = jQuery('<span style="position: relative"></span>').appendTo(div);
-		var tps = jQuery('<span style="cursor: pointer">+</span>').appendTo(tPlus);
-		this.alphaOverlayPlus = tps[0];
 
-		tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; top: 1.5em; width: 16em"></div>').appendTo(tPlus);
-		if($.browser.msie) tDiv.css("top", "0.6em");
-		tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
-
-		for(var i = 0; i < alphaTypes.length; i++) {
-			this.alphaOverlayBoxes[i] = jQuery('<input type="checkbox" value="' + i + '" name="' + alphaTypes[i].getName() + '"/>').appendTo(tDiv)[0];
-			tDiv.append(alphaTypes[i].getName());
-			if(i < alphaTypes.length - 1) tDiv.append(document.createElement("br"));
-		}
-		
-		GEvent.addDomListener(tps[0], "click", function() {
-			if(tDiv.css("visibility")=="hidden") {
-				tDiv.css("visibility","visible");
-				div.css("z-index", 1001); // z-index gets overwritten by OpenLayers
-			} else {
-				tDiv.css("visibility", "hidden");
-			}
-			});
-		tDivOverlay.append(this.overlaySelect, "@", this.opacityInput, "%");
-	} else {
-		div.append(document.createTextNode("overlay: "), this.overlaySelect, this.opacityInput);
-	}
-	
-	var go = jQuery('<button>GO</button>').appendTo(div)[0];
-	
-	GEvent.addDomListener(go, "click", function() {
-		if(tDiv != null) tDiv.css("visibility","hidden");
+	function handleLayerChange() {
 		var base = that.types[that.typeSelect.value];
 		var overlay = that.types[that.overlaySelect.value];
 		opacity = Math.min(100, Math.max(0, that.opacityInput.val())) / 100;
@@ -161,10 +128,46 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 			if(that.alphaOverlayBoxes[i].checked) tt.push(that.alphaOverlayTypes[i]);
 		}
 		that.updateMap(that.types[that.typeSelect.value], that.types[that.overlaySelect.value], opacity, tt.length > 0 ? tt : null);
+	}
+	
+	this.opacityInput.change(handleLayerChange);
+	$(this.typeSelect).change(handleLayerChange);
+	$(this.overlaySelect).change(handleLayerChange);
+	this.opacityInput.keydown(function(event) {
+		if(event.keyCode == 13) if(tDiv != null) tDiv.css("visibility","hidden");
 	});
-	this._go = go;
-	return div[0];
+	
+	this.alphaOverlayBoxes = new Array();
+	this.alphaOverlayTypes = alphaTypes;
+	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(div);
+	var tps = jQuery('<span style="cursor: pointer">+</span>').appendTo(tPlus);
+	this.alphaOverlayPlus = tps[0];
+
+	tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; top: 1.5em; width: 16em"></div>').appendTo(tPlus);
+	if($.browser.msie) tDiv.css("top", "0.6em");
+	tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
+
+	for(var i = 0; i < alphaTypes.length; i++) {
+		this.alphaOverlayBoxes[i] = jQuery('<input type="checkbox" value="' + i + '" name="' + alphaTypes[i].getName() + '"/>').appendTo(tDiv)[0];
+		tDiv.append(alphaTypes[i].getName());
+		$(this.alphaOverlayBoxes[i]).change(handleLayerChange);
+		if(i < alphaTypes.length - 1) tDiv.append(document.createElement("br"));
+	}
+	
+	GEvent.addDomListener(tps[0], "click", function() {
+		if(tDiv.css("visibility")=="hidden") {
+			tDiv.css("visibility","visible");
+			div.css("z-index", 1001); // z-index gets overwritten by OpenLayers
+		} else {
+			tDiv.css("visibility", "hidden");
+		}
+		});
+	tDivOverlay.append(this.overlaySelect, "@", this.opacityInput, "%");
+	var upArrow = jQuery('<span style="margin-left: 5px; color: red; font-weight: bold; cursor: pointer">&uarr;</span>').appendTo(tDivOverlay);
+	upArrow.click(function() {tDiv.css("visibility", "hidden");});
+		
 	this.hasAlphaOverlays = (alphaTypes.length > 0);
+	return div[0];
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
@@ -175,17 +178,20 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			}
 		}
 
+		var realBase = base;
+		var realOverlay = overlay;
+		var realOpacity = opacity;
 		if(overlay.getMaximumResolution != null && base.getMaximumResolution() > overlay.getMaximumResolution() && !overlay._alphaOverlay && opacity > 0) {
 			// google maps doesn't seem to check the overlays' min and max resolutions
-			var tmp = overlay;
-			overlay = base;
-			base = tmp;
-			opacity = 1-opacity;
+			realOverlay = base;
+			realBase = overlay;
+			realOpacity = 1-opacity;
 		}
 
 		// set base type and create new overlays
-		this.map.setMapType(base);
+		this.map.setMapType(realBase);
 		this._overlays = new Array();
+		this.baseName = base.getName();
 		this.opacity = opacity;
 
 		var infoString = "";
@@ -195,14 +201,14 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		if(overlay.angle != null) {
 			this._overlays[0] = new GeoRefImageOverlay(new GPoint(1*overlay.originx, 1*overlay.originy), new GLatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new GSize(1*overlay.width, 1*overlay.height), opacity);
 			this.map.addOverlay(this._overlays[0]);
-			this.overlay = overlay.name;
+			this.overlayName = overlay.name;
 		} else {
-			var layers = overlay.getTileLayers();
+			var layers = realOverlay.getTileLayers();
 			for(var i = 0; i < layers.length; i++) {
-				this._overlays[i] = new GTileLayerOverlay(new org.sarsoft.GAlphaTileLayerWrapper(overlay.getTileLayers()[i], opacity));
+				this._overlays[i] = new GTileLayerOverlay(new org.sarsoft.GAlphaTileLayerWrapper(realOverlay.getTileLayers()[i], realOpacity));
 				this.map.addOverlay(this._overlays[i]);
 			}
-			this.overlay = overlay.getName();
+			this.overlayName = overlay.getName();
 		}
 		if(alphaOverlays != null) {
 			this.alphaOverlays="";
@@ -226,7 +232,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			for(var j = 0; j < alphaOverlays.length; j++) {
 				if(this.alphaOverlayTypes[i] == alphaOverlays[j]) this.alphaOverlayBoxes[i].checked=true;
 			}
-		}		
+		}
 		var extras = 0;
 		if(alphaOverlays != null) extras = extras + alphaOverlays.length;
 		if(this.hasAlphaOverlays) {
@@ -883,9 +889,9 @@ org.sarsoft.InteractiveMap.prototype.updateDatum = function() {
 
 org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
-	config.base = this.map.getCurrentMapType().getName();
+	config.base = this.map._overlaydropdownmapcontrol.baseName;
 	if(this.map._overlaydropdownmapcontrol != null) {
-		config.overlay = this.map._overlaydropdownmapcontrol.overlay;
+		config.overlay = this.map._overlaydropdownmapcontrol.overlayName;
 		config.opacity = this.map._overlaydropdownmapcontrol.opacity;
 		if(this.map._overlaydropdownmapcontrol.alphaOverlays != null) config.alphaOverlays = this.map._overlaydropdownmapcontrol.alphaOverlays;
 	}
