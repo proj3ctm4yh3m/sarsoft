@@ -919,7 +919,7 @@ org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
 		var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.", "Save", "Cancel", function() {
 			that.saveConfig();
 		});
-		var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Make this the default search map."/>')[0];
+		var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Save Map Settings."/>')[0];
 		GEvent.addDomListener(save, "click", function() {
 			saveDlg.show();
 		});
