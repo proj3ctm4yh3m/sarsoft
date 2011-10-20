@@ -23,6 +23,8 @@ org.sarsoft.Loader.queue(function() {
   configWidget.loadConfig();
   setInterval("imap.timer()", 10000);
 
+  imap.message("Right click on map background to create shapes", 30000);
+
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
 		window.location = "/";		
 	});
