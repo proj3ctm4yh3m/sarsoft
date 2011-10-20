@@ -249,7 +249,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 			}
 		});
 		
-		var icon = jQuery('<img src="/static/images/right.png" style="cursor: pointer; vertical-align: middle" title="Export"/>')[0];
+		var icon = jQuery('<img src="/static/images/gps.png" style="cursor: pointer; vertical-align: middle" title="Export"/>')[0];
 		GEvent.addDomListener(icon, "click", function() {
 			that.gps.shape.empty();
 			for(var key in that.shapes) {
