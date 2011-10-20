@@ -112,6 +112,20 @@
 
 	<Placemark> 
 	 <name><xsl:value-of select="$name"/></name> 
+	<Style>
+	      <IconStyle>
+	<Icon>
+	<href>
+<xsl:choose>
+<xsl:when test="string-length(json:url) = 0">http://caltopo.com/resource/imagery/icons/circle/FF0000.png</xsl:when>
+<xsl:when test="starts-with(json:url, '#')">http://caltopo.com/resource/imagery/icons/circle/<xsl:value-of select="substring(json:url, 2)"/>.png</xsl:when>
+<xsl:when test="not(contains(json:url, '/') or contains(json:url, '.'))">http://caltopo.com/static/images/icons/<xsl:value-of select="json:url"/>.png</xsl:when>
+<xsl:otherwise><xsl:value-of select="json:url"/></xsl:otherwise>
+</xsl:choose>
+	</href>
+	</Icon>
+	      </IconStyle>
+	</Style>
 	 <Point>
 	  <coordinates>
 	  <xsl:for-each select="json:position">
