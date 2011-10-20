@@ -36,7 +36,7 @@ function WriteToGarmin(gpxstr, name) {
 	if(unlocked) {
 		control.findDevices();
 	} else {
-		fail('find', 'Error unlocking Garmin control plugin.  Please verify that the Garmin plugin is installed and check your device key in the admin console');
+		fail('find', 'Error unlocking the Garmin Communicator plugin.  Please verify that the communicator plugin is installed, and ask the server administrator to verify the API key.');
 	}
 }
 
