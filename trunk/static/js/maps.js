@@ -407,17 +407,20 @@ org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
-	this._showUTM = true;
+	this._showUTM = "tickmark";
+	this.style = {major : 0.8, minor : 0.4, crosshatch : 0}
+
 	this.utmgridlines = new Array();
 	this.text = new Array();
 	this.utminitialized = false;
 	this.imap = imap;
 	if(imap != null) {
-			this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Enable/disable UTM gridlines", function(value) {
+			this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Toggle UTM grid", function(value) {
 				that.setValue(value);
 			}, [{value : true, style : ""},
 			 {value : "tickmark", style : "color: white; background-color: red"},
 			 {value : false, style : "text-decoration: line-through"}]);
+			this._UTMToggle.setValue(this._showUTM);
 			imap.addMenuItem(this._UTMToggle.node, 10);
 			imap.register("org.sarsoft.UTMGridControl", this);
 	}
@@ -472,14 +475,52 @@ org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	if(config.UTMGridControl == null) return;
 	this.setValue(config.UTMGridControl.showUTM);
+	if(config.UTMGridControl.major != null) this.style.major = config.UTMGridControl.major;
+	if(config.UTMGridControl.minor != null) this.style.minor = config.UTMGridControl.minor;
+	if(config.UTMGridControl.crosshatch != null) this.style.crosshatch = config.UTMGridControl.crosshatch;
+	this._drawUTMGrid(true);
 }
 
 org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
 	if(config.UTMGridControl == null) config.UTMGridControl = new Object();
 	config.UTMGridControl.showUTM = this._showUTM;
+	config.UTMGridControl.major = this.style.major;
+	config.UTMGridControl.minor = this.style.minor;
+	config.UTMGridControl.crosshatch = this.style.crosshatch;
 	return config;
 }
-		
+
+org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
+	var that = this;
+	if(this._mapForm == null) {
+		this._mapForm = new org.sarsoft.view.EntityForm([
+		    {name : "major", label: "1km Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%"]},
+		    {name : "minor", label: "Minor Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%","None"]},
+		    {name : "crosshatch", label: "Crosshatch Size", type : ["Edge Tickmarks Only","20px"]}
+		]);
+		var node = jQuery('<div style="margin-top: 10px"><span style="font-weight: bold; text-decoration: underline">UTM Grid</span></div>')[0];
+		this._mapForm.create(node);
+		this._setupBlock = {order : 10, node : node, handler : function() {
+			var obj = that._mapForm.read();
+			that.style.major = obj.major.substring(0, obj.major.length - 1)/100;
+			that.style.minor = (obj.minor == "None") ? 0 : obj.minor.substring(0, obj.minor.length - 1)/100;
+			if(obj.crosshatch == "20px") {
+				that.style.crosshatch = 20;
+			} else {
+				that.style.crosshatch = 0;
+			}
+			that._drawUTMGrid(true);
+		}};
+	}
+
+	this._mapForm.write({
+		major : (this.style.major*100) + "%",
+		minor : (this.style.minor == 0) ? "None" : (this.style.minor*100) + "%",
+		crosshatch : (that.style.crosshatch == 0) ? "Edge Tickmarks Only" : "20px"
+	});
+	return this._setupBlock;
+}
+
 org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	if(force != true && typeof this.utmgridcoverage != "undefined" && this.utmgridcoverage.getSouthWest().distanceFrom(this.map.getBounds().getSouthWest()) == 0 &&
 		this.utmgridcoverage.getNorthEast().distanceFrom(this.map.getBounds().getNorthEast()) == 0) return;
@@ -600,7 +641,7 @@ org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm
 	vertices.push(start_ll);
 	vertices.push(end_ll);
 	
-	var overlay = new GPolyline(vertices, "#0000FF", 1, primary ? 0.8 : 0.4);
+	var overlay = new GPolyline(vertices, "#0000FF", 1, primary ? this.style.major : this.style.minor);
 	this.utmgridlines.push(overlay);
 	this.map.addOverlay(overlay);
 }
@@ -624,7 +665,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	
 	var scale = (screenNE.n - screenSW.n)/pymax;
-	var crossHatchSize = Math.min(spacing/10, scale*20);
+	var crossHatchSize = Math.min(spacing/10, scale*this.style.crosshatch);
 	
 	while(easting < ne.e) {
 		var start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
@@ -632,7 +673,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 		if(west < start.lng() && start.lng() < east) {
 			if(this._showUTM == true) {
 				this._drawGridLine(new UTM(easting, sw.n, zone), new UTM(easting, ne.n, zone), (easting % 1000 == 0));
-			} else {
+			} else if(this.style.crosshatch > 0) {
 				var northing = Math.round(sw.n / spacing) * spacing;
 				while(northing < ne.n) {
 					this._drawGridLine(new UTM(easting, northing-crossHatchSize, zone), new UTM(easting, northing+crossHatchSize, zone), true);
@@ -818,6 +859,109 @@ org.sarsoft.MapFindWidget.prototype.checkBlocks = function() {
 	}
 }
 
+org.sarsoft.view.MapSetupWidget = function(imap) {
+	var that = this;
+	this.imap = imap;
+
+	this._body = document.createElement("div");
+	var style = {position : "absolute", "z-index" : "2500", top : "100px", left : "100px", width : "500px"};
+	this._dialog = org.sarsoft.view.CreateDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
+	
+	var setup = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Map Setup"/>')[0];
+	GEvent.addDomListener(setup, "click", function() {
+		that.showDlg();
+	});
+	imap.addMenuItem(setup, 25);
+
+}
+
+org.sarsoft.view.MapSetupWidget.prototype.showDlg = function() {
+	var blocks = new Array();
+	if(this._container != null) this._body.removeChild(this._container);
+	this._container = document.createElement("div");
+	this._body.appendChild(this._container);
+
+	for(var key in this.imap.registered) {
+		if(this.imap.registered[key].getSetupBlock != null) {
+			var block = this.imap.registered[key].getSetupBlock();
+			while(blocks[block.order] != null) block.order++;
+			blocks[block.order] = block;
+		}
+	}
+	
+	for(var i = 0; i < blocks.length; i++) {
+		if(blocks[i] != null) {
+			this._container.appendChild(blocks[i].node);
+		}
+	}
+	this._dialog.show();
+	this.blocks = blocks;
+}
+
+org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
+	for(var i = 0; i < this.blocks.length; i++) {
+		if(this.blocks[i] != null) {
+			this.blocks[i].handler();
+		}
+	}
+	this.blocks = null;
+}
+
+org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
+	var that = this;
+	this.imap = imap;
+	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
+
+	if(persist) {
+		var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.", "Save", "Cancel", function() {
+			that.saveConfig();
+		});
+		var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Make this the default search map."/>')[0];
+		GEvent.addDomListener(save, "click", function() {
+			saveDlg.show();
+		});
+		
+		imap.addMenuItem(save, 34);
+	}
+}
+
+org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
+	var that = this;
+	this.tenantDAO.load(function(cfg) {
+		var config = {};
+		if(cfg.value != null) {
+			config = YAHOO.lang.JSON.parse(cfg.value);			
+		}
+		that.imap.getConfig(config);
+		for(var key in that.imap.registered) {
+			var val = that.imap.registered[key];
+			if(val != null && val.getConfig != null) {
+				val.getConfig(config);
+			}
+			that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
+		}
+	}, "mapConfig");
+}
+
+org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
+	var that = this;
+	this.tenantDAO.load(function(cfg) {
+		var config = {};
+		if(cfg.value != null) {
+			config = YAHOO.lang.JSON.parse(cfg.value);			
+		}
+		if(typeof(overrides) != "undefined") for(var key in overrides) {
+			config[key] = overrides[key];
+		}
+		that.imap.setConfig(config);
+		for(var key in that.imap.registered) {
+			var val = that.imap.registered[key];
+			if(val != null && val.setConfig != null) {
+				val.setConfig(config);
+			}
+		}
+	}, "mapConfig");
+}
 
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
