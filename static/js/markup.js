@@ -211,13 +211,16 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 		this.gps.imp = jQuery('<div style="display: none"></div>').appendTo(this.gps.form);
 		this.gps.imp.append("from:");
 		this.gps.impFormat = jQuery('<select style="margin-left: 15px"><option value="GPX">GPX</option><option value="GPS">Garmin GPS</option></select>').appendTo(this.gps.imp);
-		this.gps.imp.append('<br/>GPX File:<input type="file" name="file" style="margin-left: 15px"/><input type="hidden" name="format" value="gpx"/>');
+		this.gps.imp.append('<br/>GPX File:<input type="hidden" name="format" value="gpx"/>');
+		this.gps.impFile = jQuery('<input type="file" name="file" style="margin-left: 15px"/>').appendTo(this.gps.imp);
 		
 		this.gps.io.change(function() {
 			var impexp = that.gps.io.val();
 			if(impexp == "export") { that.gps.exp.css("display", "block"); that.gps.imp.css("display", "none"); }
 			else { that.gps.exp.css("display", "none"); that.gps.imp.css("display", "block"); }
 		});
+		
+		this.gps.impFormat.change(function() { that.gps.impFile.attr("disabled", that.gps.impFormat.val() != "GPX"); });
 
 		var download = function(url, format) {
 			if(format == "GPX" || format == "KML") {
