@@ -191,6 +191,79 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this.showHide = showHide;
 	this.imap.addMenuItem(showHide.node, 19);
 
+	if(!nestMenuItems) {
+		this.gps = new Object();
+		this.gps.form = jQuery('<form name="gpsform" action="/map/gpxupload" enctype="multipart/form-data" method="post">I want to:</form>');
+		this.gps.io = jQuery('<select style="margin-left: 15px"><option value="export">Export</option><option value="import">Import</option></select').appendTo(this.gps.form);
+		this.gps.form.append("<br/><br/>");
+		
+		this.gps.exp = jQuery('<div></div>').appendTo(this.gps.form);
+		this.gps.exportAll = jQuery('<input type="radio" name="gpsexport" value="all" checked="yes">The entire map</input>').appendTo(this.gps.exp);
+		this.gps.exp.append("<br/>");
+		this.gps.exportShape = jQuery('<input type="radio" name="gpsexport" value="shape">A single shape:</input>').appendTo(this.gps.exp);
+		this.gps.shape = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.exp);
+		this.gps.exp.append("<br/>");
+		this.gps.exportMarker = jQuery('<input type="radio" name="gpsexport" value="marker">A single marker:</input>').appendTo(this.gps.exp);
+		this.gps.marker = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.exp);
+		this.gps.exp.append("<br/><br/>to:");
+		this.gps.expFormat = jQuery('<select style="margin-left: 15px"><option value="GPX">GPX</option><option value="KML">KML</option><option value="GPS">Garmin GPS</option></select>').appendTo(this.gps.exp);
+		
+		this.gps.imp = jQuery('<div style="display: none"></div>').appendTo(this.gps.form);
+		this.gps.imp.append("from:");
+		this.gps.impFormat = jQuery('<select style="margin-left: 15px"><option value="GPX">GPX</option><option value="GPS">Garmin GPS</option></select>').appendTo(this.gps.imp);
+		this.gps.imp.append('<br/>GPX File:<input type="file" name="file" style="margin-left: 15px"/><input type="hidden" name="format" value="gpx"/>');
+		
+		this.gps.io.change(function() {
+			var impexp = that.gps.io.val();
+			if(impexp == "export") { that.gps.exp.css("display", "block"); that.gps.imp.css("display", "none"); }
+			else { that.gps.exp.css("display", "none"); that.gps.imp.css("display", "block"); }
+		});
+
+		var download = function(url, format) {
+			if(format == "GPX" || format == "KML") {
+				window.location = url + format;
+			} else {
+				url = url + "GPX";
+				window.location = "/app/togarmin?name=Map%20Export&file=" + encodeURIComponent(url) + "&callbackurl=" + encodeURIComponent(window.location);
+			}
+		}
+		this.gps.dlg = new org.sarsoft.view.CreateDialog("Import / Export", this.gps.form[0], "GO", "Cancel", function() {
+			var impexp = that.gps.io.val();
+			if(impexp == "export") {
+				var val = $("input[@name=gpsexport]:checked").val();
+				var format = that.gps.expFormat.val();
+				if(val == "all") {
+					download(window.location+'&format=', format);
+				} else if(val == "shape") {
+					download("/rest/shape/" + that.gps.shape.val() + "?format=", format);
+				} else if(val == "marker") {
+					download("/rest/marker/" + that.gps.marker.val() + "?format=", format);
+				}
+			} else {
+				var format = that.gps.impFormat.val();
+				if(format == "GPS") {
+					window.location="/app/fromgarmin?callbackurl=" + encodeURIComponent(window.location) + "&posturl=/map/restgpxupload";
+				} else {
+					that.gps.form.submit();
+				}
+			}
+		});
+		
+		var icon = jQuery('<img src="/static/images/right.png" style="cursor: pointer; vertical-align: middle" title="Export"/>')[0];
+		GEvent.addDomListener(icon, "click", function() {
+			that.gps.shape.empty();
+			for(var key in that.shapes) {
+				that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + that.shapes[key].label + '</option>')
+			}
+			that.gps.marker.empty();
+			for(var key in that.markers) {
+				that.gps.marker.append('<option value="' + that.markers[key].id + '">' + that.markers[key].label + '</option>')
+			}
+			that.gps.dlg.show();
+		});
+		imap.addMenuItem(icon, 40);
+	}
+
 	this.markerDAO.loadAll(function(markers) {
 		that.refreshMarkers(markers);
 		for(var i = 0; i < markers.length; i++) {

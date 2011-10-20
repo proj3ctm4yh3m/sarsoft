@@ -4,11 +4,14 @@ import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.common.model.Format;
 import org.sarsoft.markup.model.Marker;
+import org.sarsoft.markup.model.Shape;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,9 +52,16 @@ public class MarkerController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/rest/marker/{markerid}", method = RequestMethod.GET)
-	public String getMarker(Model model, @PathVariable("shapeid") long markerid) {
+	public String getMarker(Model model, @PathVariable("markerid") long markerid, HttpServletRequest request, HttpServletResponse response) {
 		Marker marker = dao.load(Marker.class, markerid);
-		return json(model, marker);
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
+		switch (format) {
+		case GPX :
+			response.setHeader("Content-Disposition", "attachment; filename=marker-" + (marker.getLabel() == null ? marker.getId() : marker.getLabel()) + ".gpx");
+			return gpx(model, marker, "Marker");
+		default :
+			return json(model, marker);
+		}
 	}
 		
 	@RequestMapping(value="/rest/marker", method = RequestMethod.GET)
