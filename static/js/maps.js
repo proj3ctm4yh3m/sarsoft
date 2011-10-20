@@ -818,7 +818,10 @@ org.sarsoft.MapFindWidget = function(imap) {
 		}, {width: "450px"});
 
 	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
-	this.locationEntryForm.create(this.body);
+	this.locationEntryForm.create(this.body, function() {
+		that.dialog.hide();
+		that.locationEntryForm.read(function (gll) {that.imap.map.setCenter(gll, 14);});
+	});
 	
 	var find = jQuery('<img src="/static/images/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>')[0];
 	GEvent.addDomListener(find, "click", function() {
@@ -1475,7 +1478,8 @@ org.sarsoft.UTMEditForm.prototype.read = function() {
 org.sarsoft.LocationEntryForm = function() {
 }
 
-org.sarsoft.LocationEntryForm.prototype.create = function(container) {
+org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
+	var that = this;
 	var table = jQuery('<table border="0"></table>').appendTo(container);
 	var tbody = jQuery('<tbody></tbody>').appendTo(table);
 	
@@ -1499,6 +1503,15 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container) {
 	if(typeof GClientGeocoder == 'undefined') {
 		tr.css("display", "none");
 	}
+	
+	if(handler != null) {
+		this.lng.keydown(function(event) {
+			if(event.keyCode == 13 && that.lat.val() != null) handler();
+		});
+		this.address.keydown(function(event) {
+			if(event.keyCode == 13) handler();
+		});
+	}
 }
 
 org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
@@ -1511,8 +1524,8 @@ org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
 	} else if(addr != null && addr.length > 0 && typeof GClientGeocoder != 'undefined') {
 		var gcg = new GClientGeocoder();
 		gcg.getLatLng(addr, callback);
-	} else if(lat != null && lat.length > 0 && lng != null && lng > 0) {
-		callback(new GLatLng(lat, lng));
+	} else if(lat != null && lat.length > 0 && lng != null && lng.length > 0) {
+		callback(new GLatLng(1*lat, 1*lng));
 	} else {
 		return false;
 	}
