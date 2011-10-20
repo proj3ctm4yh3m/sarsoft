@@ -18,20 +18,10 @@ org.sarsoft.Loader.queue(function() {
   </c:choose>
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
   markupController = new org.sarsoft.controller.MarkupMapController(imap);
+  setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
   setInterval("imap.timer()", 10000);
-
-  if(org.sarsoft.userPermissionLevel != "READ") {
-	var configDlg = org.sarsoft.view.CreateDialog("Administration and Sharing", "Leave map view and go to Administration and Sharing page?", "Leave", "Cancel", function() {
-		window.location = "/admin.html";		
-	});
-	var config = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Configuration and Sharing"/>')[0];
-	GEvent.addDomListener(config, "click", function() {
-		configDlg.show();
-	});
-	imap.addMenuItem(config, 39);
-  }
 
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
 		window.location = "/";		
@@ -42,6 +32,18 @@ org.sarsoft.Loader.queue(function() {
 	});
 	imap.addMenuItem(goback, 40);
 
+	if(org.sarsoft.userPermissionLevel != "READ") {
+		var goToAdmin = new Object();
+		imap.register("goToAdmin", goToAdmin);
+	
+		goToAdmin.getSetupBlock = function() {
+			return {
+				order : 1,
+				node : jQuery('<div>Visit the <a href="/admin.html">Admin Page</a> to manage sharing</div>')[0],
+				handler : function() {}
+			}
+		}
+	}
 });
 }
 </script>

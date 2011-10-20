@@ -356,111 +356,6 @@ org.sarsoft.view.OperationalPeriodForm = function() {
 
 org.sarsoft.view.OperationalPeriodForm.prototype = new org.sarsoft.view.EntityForm();
 
-org.sarsoft.view.MapSetupWidget = function(imap) {
-	var that = this;
-	this.imap = imap;
-
-	this._body = document.createElement("div");
-	var style = {position : "absolute", "z-index" : "2500", top : "100px", left : "100px", width : "500px"};
-	this._dialog = org.sarsoft.view.CreateDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
-	
-	var setup = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Map Setup"/>')[0];
-	GEvent.addDomListener(setup, "click", function() {
-		that.showDlg();
-	});
-	imap.addMenuItem(setup, 25);
-
-}
-
-org.sarsoft.view.MapSetupWidget.prototype.showDlg = function() {
-	var blocks = new Array();
-	if(this._container != null) this._body.removeChild(this._container);
-	this._container = document.createElement("div");
-	this._body.appendChild(this._container);
-
-	for(var key in this.imap.registered) {
-		if(this.imap.registered[key].getSetupBlock != null) {
-			var block = this.imap.registered[key].getSetupBlock();
-			while(blocks[block.order] != null) block.order++;
-			blocks[block.order] = block;
-		}
-	}
-	
-	for(var i = 0; i < blocks.length; i++) {
-		if(blocks[i] != null) {
-			this._container.appendChild(blocks[i].node);
-		}
-	}
-	this._dialog.show();
-	this.blocks = blocks;
-}
-
-org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
-	for(var i = 0; i < this.blocks.length; i++) {
-		if(this.blocks[i] != null) {
-			this.blocks[i].handler();
-		}
-	}
-	this.blocks = null;
-}
-
-org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
-	var that = this;
-	this.imap = imap;
-	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
-
-	if(persist) {
-		var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.", "Save", "Cancel", function() {
-			that.saveConfig();
-		});
-		var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Make this the default search map."/>')[0];
-		GEvent.addDomListener(save, "click", function() {
-			saveDlg.show();
-		});
-		
-		imap.addMenuItem(save, 34);
-	}
-}
-
-
-org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
-	var that = this;
-	this.tenantDAO.load(function(cfg) {
-		var config = {};
-		if(cfg.value != null) {
-			config = YAHOO.lang.JSON.parse(cfg.value);			
-		}
-		that.imap.getConfig(config);
-		for(var key in that.imap.registered) {
-			var val = that.imap.registered[key];
-			if(val != null && val.getConfig != null) {
-				val.getConfig(config);
-			}
-			that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
-		}
-	}, "mapConfig");
-}
-
-org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
-	var that = this;
-	this.tenantDAO.load(function(cfg) {
-		var config = {};
-		if(cfg.value != null) {
-			config = YAHOO.lang.JSON.parse(cfg.value);			
-		}
-		if(typeof(overrides) != "undefined") for(var key in overrides) {
-			config[key] = overrides[key];
-		}
-		that.imap.setConfig(config);
-		for(var key in that.imap.registered) {
-			var val = that.imap.registered[key];
-			if(val != null && val.setConfig != null) {
-				val.setConfig(config);
-			}
-		}
-	}, "mapConfig");
-}
-
 org.sarsoft.controller.SearchWaypointMapController = function(imap) {
 	var that = this;
 	this.waypoints = new Object();
@@ -557,7 +452,6 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.getSetupBlock = fun
 	this._mapForm.write({rangerings : this.rangerings});
 	return this._setupBlock;
 }
-
 
 org.sarsoft.controller.OperationalPeriodMapController = function(emap, operationalperiod) {
 	var that = this;
