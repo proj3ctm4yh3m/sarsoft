@@ -143,7 +143,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var tps = jQuery('<span style="cursor: pointer">+</span>').appendTo(tPlus);
 	this.alphaOverlayPlus = tps[0];
 
-	tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; top: 1.5em; width: 16em"></div>').appendTo(tPlus);
+	tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; top: 1.5em; width: 18em"></div>').appendTo(tPlus);
 	if($.browser.msie) tDiv.css("top", "0.6em");
 	tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
 
@@ -163,9 +163,9 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		}
 		});
 	tDivOverlay.append(this.overlaySelect, "@", this.opacityInput, "%");
-	var upArrow = jQuery('<span style="margin-left: 5px; color: red; font-weight: bold; cursor: pointer">&uarr;</span>').appendTo(tDivOverlay);
+	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right">&uarr;</span>').appendTo(tDivOverlay);
 	upArrow.click(function() {tDiv.css("visibility", "hidden");});
-		
+
 	this.hasAlphaOverlays = (alphaTypes.length > 0);
 	return div[0];
 }
@@ -235,10 +235,8 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		}
 		var extras = 0;
 		if(alphaOverlays != null) extras = extras + alphaOverlays.length;
-		if(this.hasAlphaOverlays) {
-			if(opacity > 0) extras++;
-			this.alphaOverlayPlus.innerHTML = "+" + ((extras == 0) ? "" : extras);
-		}
+		if(opacity > 0) extras++;
+		this.alphaOverlayPlus.innerHTML = "+" + ((extras == 0) ? "" : extras);
 		if(infoString.length > 0 && this.map._imap != null)  {
 			this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, infoString);
 		} else {
@@ -343,6 +341,12 @@ org.sarsoft.MapDeclinationWidget = function(imap) {
 	this.imap = imap;
 	GEvent.addListener(imap.map, "moveend", function() { that.refresh(); });
 	GEvent.addListener(imap.map, "zoomend", function(foo, bar) { that.refresh(); });
+
+	if(imap.map.isLoaded()) {
+		this.refresh();
+	} else {
+		GEvent.addListener(imap.map, "tilesloaded", function() {that.refresh();});
+	}
 }
 
 org.sarsoft.MapDeclinationWidget.prototype.refresh = function() {
