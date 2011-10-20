@@ -14,6 +14,12 @@
 		<xsl:when test="$template='Map'">
 			<xsl:call-template name="MapToKml"/>
 		</xsl:when>
+		<xsl:when test="$template='Shape'">
+			<xsl:call-template name="ShapeToKml"/>
+		</xsl:when>
+		<xsl:when test="$template='Marker'">
+			<xsl:call-template name="MarkerToKml"/>
+		</xsl:when>
 	</xsl:choose>
  </Document>
 </kml>

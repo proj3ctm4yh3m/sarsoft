@@ -256,11 +256,11 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 		GEvent.addDomListener(icon, "click", function() {
 			that.gps.shape.empty();
 			for(var key in that.shapes) {
-				that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + that.shapes[key].label + '</option>')
+				if(that.shapes[key].label != null && that.shapes[key].label.length > 0) that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + that.shapes[key].label + '</option>')
 			}
 			that.gps.marker.empty();
 			for(var key in that.markers) {
-				that.gps.marker.append('<option value="' + that.markers[key].id + '">' + that.markers[key].label + '</option>')
+				if(that.markers[key].label != null && that.markers[key].label.length > 0) that.gps.marker.append('<option value="' + that.markers[key].id + '">' + that.markers[key].label + '</option>')
 			}
 			that.gps.dlg.show();
 		});
