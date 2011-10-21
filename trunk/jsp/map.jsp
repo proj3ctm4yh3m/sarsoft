@@ -111,11 +111,11 @@ org.sarsoft.Loader.queue(function() {
 	GEvent.addListener(map, "zoomend", function() {
 		if(!ignorehash) saveMap();
 	});
-	GEvent.addDomListener(map._overlaydropdownmapcontrol._go, "click", function() {
-		saveMap();
-	});
   
 	checkhashupdate();
+
+	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
+
 });
 }
 
