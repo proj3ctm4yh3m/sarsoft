@@ -122,7 +122,16 @@
 	</xsl:for-each>
 </xsl:template>
 <xsl:template name="ShapeToGpx">
-	<xsl:variable name="label" select="json:label"/>
+	<xsl:variable name="label">
+	<xsl:choose>
+		<xsl:when test="string-length(normalize-space(json:label)) = 0">
+			<xsl:value-of select="concat('-', json:id)"/>
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="json:label"/>
+		</xsl:otherwise>
+	</xsl:choose>
+	</xsl:variable>
 	<xsl:variable name="desc" select="concat('color=', json:color, '&amp;weight=', json:weight, '&amp;fill=', json:fill)"/>
 	<xsl:for-each select="json:way">
 		<xsl:call-template name="WayToGpx">
@@ -133,9 +142,19 @@
 </xsl:template>
 <xsl:template name="MarkerToGpx">
 	<xsl:variable name="marker" select="."/>
+	<xsl:variable name="label">
+	<xsl:choose>
+		<xsl:when test="string-length(normalize-space(json:label)) = 0">
+			<xsl:value-of select="concat('-', json:url)"/>
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="json:label"/>
+		</xsl:otherwise>
+	</xsl:choose>
+	</xsl:variable>
 	<xsl:for-each select="json:position">
 		<xsl:call-template name="WaypointToWpt">
-			<xsl:with-param name="name" select="$marker/json:label"/>
+			<xsl:with-param name="name" select="$label"/>
 			<xsl:with-param name="desc" select="$marker/json:url"/>
 		</xsl:call-template>
 	</xsl:for-each>

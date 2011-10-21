@@ -26,7 +26,7 @@
 </xsl:template>
 
 <xsl:template name="GpxToTrack">
-	<xsl:if test="string-length(normalize-space(gpx:name | gpx0:name))&gt;0"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
+	<xsl:if test="string-length(normalize-space(gpx:name | gpx0:name))&gt;0 and not(starts-with(normalize-space(gpx:name | gpx0:name), '-'))"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
 	<xsl:if test="string-length(normalize-space(gpx:desc | gpx0:desc))&gt;0"><desc><xsl:value-of select="gpx:desc | gpx0:desc"/></desc></xsl:if>
 	<polygon type="boolean">false</polygon>
 	<type type="string">TRACK</type>
@@ -40,7 +40,7 @@
 </xsl:template>
 
 <xsl:template name="GpxToRoute">
-	<xsl:if test="string-length(normalize-space(gpx:name | gpx0:name))&gt;0"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
+	<xsl:if test="string-length(normalize-space(gpx:name | gpx0:name))&gt;0 and not(starts-with(normalize-space(gpx:name | gpx0:name), '-'))"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
 	<xsl:if test="string-length(gpx:desc | gpx0:desc) &gt; 0"><desc><xsl:value-of select="gpx:desc | gpx0:desc"/></desc></xsl:if>
 	<polygon type="boolean">false</polygon>
 	<type type="string">ROUTE</type>
@@ -56,7 +56,7 @@
 <xsl:template name="GpxToWaypoint">
 	<lat type="number"><xsl:value-of select="@lat"/></lat>
 	<lng type="number"><xsl:value-of select="@lon"/></lng>
-	<xsl:if test="string-length(gpx:name | gpx0:name) &gt; 0"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
+	<xsl:if test="string-length(gpx:name | gpx0:name) &gt; 0 and not(starts-with(normalize-space(gpx:name | gpx0:name), '-'))"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
 	<xsl:if test="string-length(gpx:desc | gpx0:desc) &gt; 0"><desc type="string"><xsl:value-of select="gpx:desc | gpx0:desc"/></desc></xsl:if>
 </xsl:template>
 
