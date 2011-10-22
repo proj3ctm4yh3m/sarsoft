@@ -175,6 +175,7 @@ org.sarsoft.controller.AssignmentPrintMapController = function(container, id, ma
 	this.fmap = new org.sarsoft.InteractiveMap(map, {standardControls : true});
 
 	var waypointController = new org.sarsoft.controller.SearchWaypointMapController(this.fmap);
+	var markupController = new org.sarsoft.controller.MarkupMapController(this.fmap, "none");
 	var configWidget = new org.sarsoft.view.PersistedConfigWidget(this.fmap);
 	configWidget.loadConfig(mapConfig);
 	
