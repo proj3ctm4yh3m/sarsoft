@@ -13,6 +13,7 @@ function gotoAssignment() {
 }
 org.sarsoft.Loader.queue(function() {
 gpxdlg = new org.sarsoft.view.BulkGPXDlg();
+gpxdlg2 = new org.sarsoft.view.BulkGPXDlg("gpximport2", "/map/gpxupload", "/");
 });
 </script>
 
@@ -62,9 +63,11 @@ to start creating assignments or the <a href="/app/operationalperiod/${lastperio
  
 <h4>Import and Export</h4>
 <ul>
- <li><a href="/rest/search?format=GPX">Backup search</a> to a GPX file.</li>
+ <li><a href="/rest/search?format=GPX">Backup search</a> objects (assignments, tracks, clues) to a GPX file.</li>
+ <li><a href="/map?id=${tenant.name}&format=GPX">Backup markup</a> (shapes, markers) to a GPX file.</li>
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
- <li><a href="javascript:gpxdlg.dialog.show()">Import assignments</a> from GPX (Caution!  Recommended only for newly created searches)</li>
+ <li><a href="javascript:gpxdlg.dialog.show()">Import search</a> objects from GPX (Caution!  Recommended only for newly created searches)</li>
+ <li><a href="javascript:gpxdlg2.dialog.show()">Import markup</a> from GPX</li>
 </c:if>
 </ul>
 

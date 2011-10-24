@@ -862,14 +862,15 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getFindBlock = f
 	return this._findBlock;
 }
 
-org.sarsoft.view.BulkGPXDlg = function(id) {
+org.sarsoft.view.BulkGPXDlg = function(id, url, dest) {
 	var that = this;
+	if(id == null) id = "gpxupload";
 	this.id = id;
-	var dao = new org.sarsoft.OperationalPeriodDAO();
-
-	var body = jQuery('<form method="post" enctype="multipart/form-data" name="gpxupload" action="/rest/search"><input type="hidden" name="format" value="GPX"/><input type="file" name="file"/></form>')[0];
+	if(url == null) url = "/rest/search";
+	var body = jQuery('<form method="post" enctype="multipart/form-data" name="' + id + '" action="' + url + '"><input type="hidden" name="format" value="GPX"/><input type="file" name="file"/></form>')[0];
+	if(dest != null) jQuery('<input type="hidden" name="dest" value="' + dest + '"/>').appendTo(body);
 	this.dialog = org.sarsoft.view.CreateDialog("Upload GPX File", body, "Import", "Cancel", function() {
-		document.forms['gpxupload'].submit();
+		document.forms[that.id].submit();
 		}, {width: "420px", left: "200px", top: "200px"});
 }
 

@@ -90,29 +90,6 @@ public class CollaborativeMapController extends JSONBaseController {
 			if(val != null) return val;
 		}
 
-		if(id != null) {
-			Cookie[] cookies = request.getCookies();
-			Cookie myCookie = null;
-			if(cookies != null) for(Cookie cookie : cookies) {
-				if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName())) {
-					myCookie = cookie;
-				}
-			}
-			if(myCookie != null && myCookie.getValue() != null) {
-				String value = myCookie.getValue();
-				value = value.replaceAll("(^|,)" + id + "=.*?(,|$)", ",");
-				value = value.replaceAll(",,", ",");
-				if(value.length() > 0 && !value.endsWith(",")) value = value + ",";
-				if(value.startsWith(",")) value = value.substring(1);
-				myCookie.setValue(value);
-			} else {
-				myCookie = new Cookie("org.sarsoft.recentlyLoadedMaps","");
-			}
-			Tenant tenant = dao.getByPk(CollaborativeMap.class, RuntimeProperties.getTenant());
-			myCookie.setValue(myCookie.getValue() + id + "=" + tenant.getDescription().replaceAll(",", ""));
-			myCookie.setMaxAge(7776000);
-			response.addCookie(myCookie);
-		}
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		switch (format) {
@@ -123,6 +100,28 @@ public class CollaborativeMapController extends JSONBaseController {
 			response.setHeader("Content-Disposition", "attachment; filename=" + tenant.getDescription() + ".kml");
 			return kml(model, gpxifyMap(), "Map");
 		default :
+			if(id != null) {
+				Cookie[] cookies = request.getCookies();
+				Cookie myCookie = null;
+				if(cookies != null) for(Cookie cookie : cookies) {
+					if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName())) {
+						myCookie = cookie;
+					}
+				}
+				if(myCookie != null && myCookie.getValue() != null) {
+					String value = myCookie.getValue();
+					value = value.replaceAll("(^|,)" + id + "=.*?(,|$)", ",");
+					value = value.replaceAll(",,", ",");
+					if(value.length() > 0 && !value.endsWith(",")) value = value + ",";
+					if(value.startsWith(",")) value = value.substring(1);
+					myCookie.setValue(value);
+				} else {
+					myCookie = new Cookie("org.sarsoft.recentlyLoadedMaps","");
+				}
+				myCookie.setValue(myCookie.getValue() + id + "=" + tenant.getDescription().replaceAll(",", ""));
+				myCookie.setMaxAge(7776000);
+				response.addCookie(myCookie);
+			}
 			return app(model, "/collabmap");
 		}
 	}
@@ -239,7 +238,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			}
 			if(!exists) dao.save(marker);
 		}
-		
+		if(request.getParameter("dest") != null && request.getParameter("dest").length() > 0) return "redirect:" + request.getParameter("dest");
 		return "redirect:/map?id=" + RuntimeProperties.getTenant();
 	}
 }
