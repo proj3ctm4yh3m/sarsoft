@@ -15,7 +15,7 @@ org.sarsoft.Loader.queue(function() {
     map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
   </c:when>
   <c:otherwise>
-   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), new GLatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14);
+   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas')<c:if test="${tenant.defaultCenter ne null}">, new GLatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14</c:if>);
   </c:otherwise>
   </c:choose>
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
