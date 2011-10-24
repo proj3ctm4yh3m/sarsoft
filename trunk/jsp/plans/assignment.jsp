@@ -53,12 +53,13 @@ function transition(state) {
 
 </script>
 
-<div style="width: 30em; position: absolute; right: 25px; top: 10px; text-align: right">
+<div style="position: relative">
+<div style="width: 30em; position: absolute; right: 25px; top: 0px; text-align: right">
    <c:forEach var="status" varStatus="loopStatus" items="<%= org.sarsoft.plans.model.SearchAssignment.Status.values() %>">
      <c:if test="${loopStatus.index gt 0}">-</c:if>
      <c:choose><c:when test="${assignment.status eq status}"><span style="color: black">${status}</span></c:when><c:otherwise><span style="color: #CCCCCC">${status}</span></c:otherwise></c:choose>
    </c:forEach>
-
+</div>
 </div>
 
 <h2>Assignment ${assignment.id}</h2>

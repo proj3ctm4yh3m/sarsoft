@@ -10,8 +10,9 @@ ${head}
 
 <tiles:importAttribute name="app"/>
 <div class="header" style="${headerStyle}">
-<div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</div>
-<h1 style="margin-top: 0; padding-top: 0; border-top: 0"><a href="/" class="sarsoft">${tenant.description}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</span></div>
+<h1 style="margin: 0; padding: 0; border: 0"><a href="/" class="sarsoft">${tenant.description}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="font-size: smaller">
 <c:choose>
  <c:when test="${app eq 'plans'}">
   <a href="/app/operationalperiod">Plans</a>
@@ -43,6 +44,7 @@ ${head}
  	&nbsp;:&nbsp;<a href="/app/clue">Clue Log</a>&nbsp;:&nbsp;Clue ${clue.id}
  </c:when>
 </c:choose>
+</span>
 </h1>
 </div>
 <div>
