@@ -61,9 +61,6 @@ textarea.entityform {
 	.printonly {
 		display: block !important;
 	}
-}
-
-@media print and (-webkit-min-device-pixel-ratio:0) {
 	img.olTileImage {
 		position: absolute !important;
 	}
