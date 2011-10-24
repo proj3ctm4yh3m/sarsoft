@@ -224,6 +224,10 @@ GMap2.ol = new Object();
 GMap2.ol.geographic = new OpenLayers.Projection("EPSG:4326");
 GMap2.ol.mercator = new OpenLayers.Projection("EPSG:900913");
 
+GMap2.prototype.isLoaded = function() {
+	return true;
+}
+
 GMap2.prototype.checkResize = function() {
 	this.ol.map.updateSize();
 }
