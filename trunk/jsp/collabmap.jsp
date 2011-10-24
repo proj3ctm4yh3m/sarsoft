@@ -11,11 +11,11 @@ ${head}
 function doload() {
 org.sarsoft.Loader.queue(function() {
   <c:choose>
-  <c:when test="${empty tenant.defaultCenter}">
+  <c:when test="${tenant.class.name ne 'org.sarsoft.markup.model.CollaborativeMap' or empty tenant.defaultCenter}">
     map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
   </c:when>
   <c:otherwise>
-   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas')<c:if test="${tenant.defaultCenter ne null}">, new GLatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14</c:if>);
+   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), new GLatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14);
   </c:otherwise>
   </c:choose>
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
