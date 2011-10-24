@@ -1334,11 +1334,11 @@ org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
 	if(this._boundsInitialized) return;
 	if(typeof this._boundsInitialized == "undefined") {
 		this._boundsInitialized = false;
+		this._bounds = new GLatLngBounds(gll, gll);
 		this.map.setCenter(gll, 15);
 	} else {
-		var bounds = this.map.getBounds();
-		bounds.extend(gll);
-		this.map.setCenter(bounds.getCenter(), this.map.getBoundsZoomLevel(bounds, true));
+		this._bounds.extend(gll);
+		this.map.setCenter(this._bounds.getCenter(), this.map.getBoundsZoomLevel(this._bounds, true));
 	}
 }
 
