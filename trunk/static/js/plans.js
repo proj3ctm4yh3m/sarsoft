@@ -466,7 +466,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	this.showOtherPeriods = true;
 	this._mapsetup = {
 		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50},
-		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 35, opacity : 100},
+		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 10, opacity : 100},
 		showtracks : true
 		};
 
