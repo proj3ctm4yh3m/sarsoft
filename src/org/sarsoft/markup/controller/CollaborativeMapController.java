@@ -91,7 +91,8 @@ public class CollaborativeMapController extends JSONBaseController {
 		}
 
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
-		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		Tenant tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		if(tenant == null) tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=" + tenant.getDescription() + ".gpx");
