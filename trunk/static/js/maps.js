@@ -1338,7 +1338,7 @@ org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
 		this.map.setCenter(gll, 15);
 	} else {
 		this._bounds.extend(gll);
-		this.map.setCenter(this._bounds.getCenter(), this.map.getBoundsZoomLevel(this._bounds, true));
+		this.map.setCenter(this._bounds.getCenter(), this.map.getBoundsZoomLevel(this._bounds));
 	}
 }
 

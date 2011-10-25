@@ -766,7 +766,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); if(typeof(handler) != "undefined") handler(); }, assignment, 10);
 	} else {
 		this._addAssignmentCallback(config, assignment.ways, assignment);
-		if(typeof("handler") != "undefined") handler();
+		if(typeof(handler) != "undefined") handler();
 		}
 }
 
