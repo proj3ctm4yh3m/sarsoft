@@ -396,14 +396,17 @@ org.sarsoft.view.CreateDialog = function(title, bodynode, yes, no, handler, styl
 	dlg.css(dlgStyle);
 	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
 	this.bd.append(bodynode);
-		
-	var buttons = [ { text : yes, handler: function() {
+	
+	var ok = function() {
 		dialog.hide();
 		handler();
-	}, isDefault: true}, {text : no, handler : function() { dialog.hide(); }}];
+	}
+		
+	var buttons = [ { text : yes, handler: this.ok, isDefault: true}, {text : no, handler : function() { dialog.hide(); }}];
 	var dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
 	dialog.render(document.body);
 	dialog.hide();
+	dialog.ok = ok;
 	return dialog;
 }
 
