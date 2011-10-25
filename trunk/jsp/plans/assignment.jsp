@@ -70,7 +70,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
 <ul>
  <c:if test="${assignment.status eq draft}">
- 	<li><a href="javascript:finalizeDlg.show()">Prepare Assignment</a> (allows you to print search maps and SAR 104 forms)</li>
+ 	<li><a href="javascript:finalizeDlg.show();$('#dlgpreparedby').focus()">Prepare Assignment</a> (allows you to print search maps and SAR 104 forms)</li>
  </c:if>
  <c:if test="${assignment.status eq prepared}">
     <li><a href="javascript:transition('start')">Start Assignment</a></li>
@@ -389,6 +389,7 @@ org.sarsoft.Loader.queue(function() {
 	finalizeDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { finalizeDlg.hide(); }}, { text : "Prepare", handler: function() { finalizeDlg.hide(); finalize();}, isDefault: true }]);
 	finalizeDlg.render(document.body);
 	finalizeDlg.hide();
+	$('#dlgpreparedby').keydown(function(event) { if (event.keyCode == 13) finalize();});
 	
 	stealDlg = new YAHOO.widget.Dialog("steal", {zIndex: "1000", width: "300px"});
 	stealDlg.cfg.queueProperty("buttons", [ { text: "Cancel", handler: function() { stealDlg.hide(); }}, { text : "Steal", handler: function() { finalizeDlg.hide(); stealResource();}, isDefault: true }]);

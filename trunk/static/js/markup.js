@@ -135,7 +135,8 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
 
-	this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", new org.sarsoft.view.MarkerForm(), function(marker) {
+	var form = new org.sarsoft.view.MarkerForm();
+	this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", form, function(marker) {
 		if(that.markerDlg.marker != null) {
 			marker.position = that.markerDlg.marker.position;
 			that.markerDAO.save(that.markerDlg.marker.id, marker, function(obj) {
@@ -148,8 +149,10 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 				that.refreshMarkers([obj]);
 			}, marker);
 		}});
+	form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.markerDlg.dialog.ok();});
 
-	this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details", new org.sarsoft.view.ShapeForm(), function(shape) {
+	form = new org.sarsoft.view.ShapeForm();
+	this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details",form , function(shape) {
 		if(that.shapeDlg.shape != null) {
 			that.shapeDAO.save(that.shapeDlg.shape.id, shape, function(obj) {
 				that.refreshShapes([obj]);
@@ -162,6 +165,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 				if(shape.freehand) that.redrawShape(obj);
 			}, shape);
 		}});
+	form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
 	
 	var items = [{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
 	    {text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: false}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
