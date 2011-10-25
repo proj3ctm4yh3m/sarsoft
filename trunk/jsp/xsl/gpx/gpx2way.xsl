@@ -46,6 +46,7 @@
 <xsl:template name="GpxToWaypoint">
 	<lat type="number"><xsl:value-of select="@lat"/></lat>
 	<lng type="number"><xsl:value-of select="@lon"/></lng>
+	<xsl:if test="count(gpx:time | gpx0:time) &gt; 0"><garminTime><xsl:value-of select="gpx:time | gpx0:time"/></garminTime></xsl:if>
 </xsl:template>
 
 </xsl:stylesheet>
