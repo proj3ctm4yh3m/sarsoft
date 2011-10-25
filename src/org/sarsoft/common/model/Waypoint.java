@@ -1,9 +1,12 @@
 package org.sarsoft.common.model;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.Transient;
+
+import com.sun.xml.internal.rngom.parse.compact.ParseException;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -78,6 +81,15 @@ public class Waypoint extends SarModelObject {
 	}
 	public void setTime(Date time) {
 		this.time = time;
+	}
+	@JSONSerializable
+	public void setGarminTime(String time) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		try {
+			setTime(sdf.parse(time));
+		} catch (java.text.ParseException e) {
+			// if not in Garmin format, ignore
+		}
 	}
 
 	public double distanceFrom(Waypoint wpt) {
