@@ -297,12 +297,12 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 
 	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm); sizes do not include margins.  Restore map to original size by setting width and height to 100%.</div></div>');
 	bd.append(document.createTextNode("Width: "));
-	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
+	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();});
 	bd.append(document.createTextNode("   Height: "));
-	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
+	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();});
 	bd.append(document.createElement("br"));
 	bd.append(document.createElement("br"));
-	bd.append(document.createTextNode("Margin: "));
+	bd.append(document.createTextNode("Margin: ")).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();});
 	this.marginInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
 	bd.append(document.createTextNode(" (not supported on Firefox)"));
 
