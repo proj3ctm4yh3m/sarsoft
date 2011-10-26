@@ -14,7 +14,7 @@
  * Datum switcher persists the search's datum
 
 ==Migration instructions for 0.7==
-The standalone map option required reworking the database structure and Hibernate is unable to automatically migrate old tables.  You must back up existing searches to .GPX files, wipe the database and any temporary application data, and then re-import searches to 0.7.  For a stock install, this involves deleting the .sarsoft directory and Winstone's temporary working directory, which is logged to the console on startup (look for "set web app root system property: 'webapp.root' = [. . . ]").
+The standalone map option required reworking the database structure and Hibernate is unable to automatically migrate old tables.  You must back up existing searches to .GPX files, wipe the database and any temporary application data, and then re-import searches to 0.7.  For a stock install, this involves deleting the .sarsoft directory and Winstone's temporary working directory, which is logged to the console on startup (look for "set web app root system property: 'webapp.root' = ").
 
 = Version 0.6 =
 
