@@ -22,7 +22,7 @@ Below the GO button that switches map layers is a *cursor position* readout in b
 
 At the bottom right of the map is a *map info* bar.  This shows static information about the map: distances between range rings, which assignments are being shown, etc.
 
-The datum is displayed at the bottom left.  If a plus sign (+) is present after the datum, you can click on it to switch the map's datum *for this page only*.  To permanently change the search's datum, go to the home page and click "Search Admin".
+The datum is displayed at the bottom left.  If a plus sign (+) is present after the datum, you can click on it to switch the map's datum.  The current datum is saved along with other settings when you click on the save icon; changing the datum and then pressing save will affect all other pages, including printed assignment maps.
 
 = Actions =
 
