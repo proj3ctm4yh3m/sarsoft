@@ -143,8 +143,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var tps = jQuery('<span style="cursor: pointer">+</span>').appendTo(tPlus);
 	this.alphaOverlayPlus = tps[0];
 
-	tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; top: 1.5em; width: 18em"></div>').appendTo(tPlus);
-	if($.browser.msie) tDiv.css("top", "0.6em");
+	tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
 	tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
 
 	for(var i = 0; i < alphaTypes.length; i++) {
