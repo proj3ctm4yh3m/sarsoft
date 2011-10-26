@@ -28,6 +28,7 @@ org.sarsoft.Loader.queue(function() {
 .noprint { display: none; }
 .page {
 	page-break-before: always;
+	border: 1px solid white;
 }
 </style>
 <style tyle="text/css">
@@ -105,7 +106,7 @@ ${assignment.id}: ${assignment.timeAllocated} hour, ${assignment.formattedSize} 
 <jsp:include page="assignment-printbody.jsp"/>
 </c:if>
 <c:forEach var="mapConfig" items="${mapConfigs}" varStatus="status2">
-<div id="maps${status.index}_${status2.index}"<c:choose><c:when test="${status2.index eq 0}"> class="page"</c:when></c:choose> style="width: 100%; height: 100%">
+<div id="maps${status.index}_${status2.index}" class="page" style="width: 100%; height: 100%">
 </div>
 </c:forEach>
 </c:forEach>
