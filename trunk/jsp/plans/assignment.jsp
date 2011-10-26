@@ -70,7 +70,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
 <ul>
  <c:if test="${assignment.status eq draft}">
- 	<li><a href="javascript:finalizeDlg.show();$('#dlgpreparedby').focus()">Prepare Assignment</a> (allows you to print search maps and SAR 104 forms)</li>
+ 	<li><a href="javascript:showFinalizeDlg()">Prepare Assignment</a> (allows you to print search maps and SAR 104 forms)</li>
  </c:if>
  <c:if test="${assignment.status eq prepared}">
     <li><a href="javascript:transition('start')">Start Assignment</a></li>
@@ -282,6 +282,11 @@ var _resources = new Object();
 <c:forEach var="resource" items="${resources}">
 <c:if test="${resource.assignment ne null}">_resources[${resource.id}]=${resource.assignment.id};</c:if>
 </c:forEach>
+
+function showFinalizeDlg() {
+	finalizeDlg.show();
+	$('#dlgpreparedby').focus();
+}
 
 function attachExistingResource() {
 	var select = document.getElementById("resources");
