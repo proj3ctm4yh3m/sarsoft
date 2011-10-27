@@ -913,39 +913,60 @@ org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
 	this.blocks = null;
 }
 
-org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
+org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 	var that = this;
-	this.imap = imap;
-	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
-
-	if(persist) {
-		var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.", "Save", "Cancel", function() {
-			that.saveConfig();
-		});
-		var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Save Map Settings."/>')[0];
-		GEvent.addDomListener(save, "click", function() {
-			saveDlg.show();
-		});
-		
-		imap.addMenuItem(save, 34);
+	if(imap != null) {
+		this.imap = imap;
+		if(persist) {
+			var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.", "Save", "Cancel", function() {
+				that.saveConfig();
+			});
+			var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Save Map Settings."/>')[0];
+			GEvent.addDomListener(save, "click", function() {
+				saveDlg.show();
+			});
+			imap.addMenuItem(save, 34);
+		}
 	}
 }
+
+org.sarsoft.view.BaseConfigWidget.prototype._toConfigObj = function(config) {
+	if(config == null) config = {};
+	this.imap.getConfig(config);
+	for(var key in this.imap.registered) {
+		var val = this.imap.registered[key];
+		if(val != null && val.getConfig != null) {
+			val.getConfig(config);
+		}
+	}
+	return config;
+}
+
+org.sarsoft.view.BaseConfigWidget.prototype._fromConfigObj = function(config) {
+	this.imap.setConfig(config);
+	for(var key in this.imap.registered) {
+		var val = this.imap.registered[key];
+		if(val != null && val.setConfig != null) {
+			val.setConfig(config);
+		}
+	}
+}
+
+org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
+	org.sarsoft.view.BaseConfigWidget.call(this, imap, persist);
+	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
+}
+org.sarsoft.view.PersistedConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
 
 org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
 	var that = this;
 	this.tenantDAO.load(function(cfg) {
 		var config = {};
 		if(cfg.value != null) {
-			config = YAHOO.lang.JSON.parse(cfg.value);			
+			config = YAHOO.lang.JSON.parse(cfg.value);
 		}
-		that.imap.getConfig(config);
-		for(var key in that.imap.registered) {
-			var val = that.imap.registered[key];
-			if(val != null && val.getConfig != null) {
-				val.getConfig(config);
-			}
-			that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
-		}
+		that._toConfigObj(config);
+		that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
 	}, "mapConfig");
 }
 
@@ -959,15 +980,31 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 		if(typeof(overrides) != "undefined") for(var key in overrides) {
 			config[key] = overrides[key];
 		}
-		that.imap.setConfig(config);
-		for(var key in that.imap.registered) {
-			var val = that.imap.registered[key];
-			if(val != null && val.setConfig != null) {
-				val.setConfig(config);
-			}
-		}
+		that._fromConfigObj(config);
 	}, "mapConfig");
 }
+
+
+org.sarsoft.view.CookieConfigWidget = function(imap) {
+	org.sarsoft.view.BaseConfigWidget.call(this, imap, true);
+}
+org.sarsoft.view.CookieConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
+
+org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function() {
+	var config = {};
+	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
+	if(config.base == null) config = {}; // keep mis-set cookies from screwing everything up
+	this._toConfigObj(config);
+	YAHOO.util.Cookie.set("org.sarsoft.mapConfig", YAHOO.lang.JSON.stringify(config));
+}
+
+org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function() {
+	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) {
+		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
+		this._fromConfigObj(config);
+	}
+}
+
 
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;

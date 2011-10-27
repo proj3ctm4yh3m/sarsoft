@@ -89,6 +89,9 @@ org.sarsoft.Loader.queue(function() {
 
 	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
 	imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
+	setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
+	configWidget = new org.sarsoft.view.CookieConfigWidget(imap);
+	configWidget.loadConfig();
 
 	newMarkerDialog = new YAHOO.widget.Dialog("newMarkerDlg", {zIndex: "2000"});
 	var buttons = [ { text : "Create", handler: function() {
