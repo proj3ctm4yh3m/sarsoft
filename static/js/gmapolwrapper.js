@@ -412,6 +412,9 @@ GMap2.prototype.setZoom = function(zoom) {
 	this.ol.map.zoomTo(zoom);
 }
 
+GMap2.prototype.enableScrollWheelZoom = function() {
+}
+
 function GPoint(x, y) {
 	this.x = x;
 	this.y = y;
