@@ -411,7 +411,7 @@ org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
 	this._showUTM = "tickmark";
-	this.style = {major : 0.8, minor : 0.4, crosshatch : 0}
+	this.style = {major : 0.8, minor : 0.4, crosshatch : 0, latlng : "DDMMHH"}
 
 	this.utmgridlines = new Array();
 	this.text = new Array();
@@ -481,6 +481,7 @@ org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	if(config.UTMGridControl.major != null) this.style.major = config.UTMGridControl.major;
 	if(config.UTMGridControl.minor != null) this.style.minor = config.UTMGridControl.minor;
 	if(config.UTMGridControl.crosshatch != null) this.style.crosshatch = config.UTMGridControl.crosshatch;
+	if(config.UTMGridControl.latlng != null) this.style.latlng = config.UTMGridControl.latlng;
 	this._drawUTMGrid(true);
 }
 
@@ -490,6 +491,7 @@ org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
 	config.UTMGridControl.major = this.style.major;
 	config.UTMGridControl.minor = this.style.minor;
 	config.UTMGridControl.crosshatch = this.style.crosshatch;
+	config.UTMGridControl.latlng = this.style.latlng;
 	return config;
 }
 
@@ -499,7 +501,8 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 		this._mapForm = new org.sarsoft.view.EntityForm([
 		    {name : "major", label: "1km Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%"]},
 		    {name : "minor", label: "Minor Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%","None"]},
-		    {name : "crosshatch", label: "Crosshatch Size", type : ["Edge Tickmarks Only","20px"]}
+		    {name : "crosshatch", label: "Crosshatch Size", type : ["Edge Tickmarks Only","20px"]},
+		    {name : "latlng", label: "Lat/Long", type : ["Decimal Degree","DDMMHH"]}
 		]);
 		var node = jQuery('<div style="margin-top: 10px"><span style="font-weight: bold; text-decoration: underline">UTM Grid</span></div>')[0];
 		this._mapForm.create(node);
@@ -507,6 +510,7 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 			var obj = that._mapForm.read();
 			that.style.major = obj.major.substring(0, obj.major.length - 1)/100;
 			that.style.minor = (obj.minor == "None") ? 0 : obj.minor.substring(0, obj.minor.length - 1)/100;
+			that.style.latlng = (obj.latlng == "DDMMHH") ? "DDMMHH" : "DD";
 			if(obj.crosshatch == "20px") {
 				that.style.crosshatch = 20;
 			} else {
@@ -519,7 +523,8 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 	this._mapForm.write({
 		major : (this.style.major*100) + "%",
 		minor : (this.style.minor == 0) ? "None" : (this.style.minor*100) + "%",
-		crosshatch : (that.style.crosshatch == 0) ? "Edge Tickmarks Only" : "20px"
+		crosshatch : (this.style.crosshatch == 0) ? "Edge Tickmarks Only" : "20px",
+		latlng : (this.style.latlng == "DDMMHH") ? "DDMMHH" : "Decimal Degree"
 	});
 	return this._setupBlock;
 }
@@ -564,11 +569,16 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 }
 
 org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
+	var that = this;
 	var bounds = this.map.getBounds();
 	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getNorthEast()).x;
 	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	
 	function createText(deg) {
+		if(that.style.latlng == "DD") {
+			deg = Math.abs(deg);
+			return "<div style=\"font-size: smaller; color: #000000; background: #FFFFFF\"><b>" + (Math.round(deg*100)/100) + "\u00B0</b></div>";
+		}
 		var neg = false;
 		if(deg < 0) {
 			neg = true;
@@ -583,38 +593,50 @@ org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
 		}		
 		return "<div style=\"font-size: smaller; color:#000000; background: #FFFFFF\"><b>" + d+"\u00B0"+m + (h == 50 ? ".5'" : "'") + "</b></div>";
 	}
+	
+	function computeSpacing(span, multiplier) {
+		if(multiplier == 6000) {
+			var spacing = 6000;
+			if(span < 80) spacing = 2000;
+			if(span < 50) spacing = 500;
+			if(span < 8) spacing = 100;
+			if(span  < 2) spacing = 50;
+			return spacing;
+		} else {
+			var spacing = 1000;
+			if(span < 80) spacing = 200;
+			if(span < 65) spacing = 100;
+			if(span < 8) spacing = 50;
+			if(span  < 5) spacing = 20;
+			return spacing;
+		}
+	}
 
-	var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())*60;
-	var spacing = 6000;
-	if(span < 80) spacing = 2000;
-	if(span < 50) spacing = 500;
-	if(span < 8) spacing = 100;
-	if(span  < 2) spacing = 50;
-	var lat = bounds.getSouthWest().lat();
-	var lng = Math.round(bounds.getSouthWest().lng()*6000/spacing)*spacing;
-	var east = bounds.getNorthEast().lng()*6000;
+	var multiplier = 6000;
+	if(this.style.latlng == "DD") multiplier = 1000;
+	var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())*60;	
+	var spacing = computeSpacing(span, multiplier);
+	var lat = GeoUtil.fromWGS84(bounds.getSouthWest()).lat();
+	var lng = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lng()*multiplier/spacing)*spacing;
+	var east = GeoUtil.fromWGS84(bounds.getNorthEast()).lng()*multiplier;
 	while(lng < east) {
-		var offset = this.map.fromLatLngToContainerPixel(new GLatLng(lat, lng/6000)).x;
+		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat, lng/multiplier))).x;
 		var point = new GPoint(offset, pymax-2);
-		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lng/6000), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
+		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lng/multiplier), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
 		this.map.addOverlay(label);
 		this.text.push(label);
 		lng = lng + spacing;
 	}
 
 	var span = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())*60;
-	var spacing = 6000;
-	if(span < 80) spacing = 2000;
-	if(span < 50) spacing = 500;
-	if(span < 8) spacing = 100;
-	if(span  < 2) spacing = 50;
-	var lng = bounds.getSouthWest().lng();
-	var lat = Math.round(bounds.getSouthWest().lat()*6000/spacing)*spacing;
-	var north = bounds.getNorthEast().lat()*6000;
+	var spacing = computeSpacing(span, multiplier);
+	var lng = GeoUtil.fromWGS84(bounds.getSouthWest()).lng();
+	var lat = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lat()*multiplier/spacing)*spacing;
+	var north = GeoUtil.fromWGS84(bounds.getNorthEast()).lat()*multiplier;
 	while(lat < north) {
-		var offset = this.map.fromLatLngToContainerPixel(new GLatLng(lat/6000, lng)).y;
+		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat/multiplier, lng))).y;
 		var point = new GPoint(0, offset);
-		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lat/6000), null, null, new GSize(0,-0.5));
+		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lat/multiplier), null, null, new GSize(0,-0.5));
 		this.map.addOverlay(label);
 		this.text.push(label);
 		lat = lat + spacing;
@@ -713,7 +735,11 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	}
 }
 
-org.sarsoft.PositionInfoControl = function() {
+org.sarsoft.PositionInfoControl = function(imap) {
+	if(imap != null) {
+		this.imap = imap;
+		imap.register("org.sarsoft.PositionInfoControl", this);
+	}
 }
 
 org.sarsoft.PositionInfoControl.prototype = new GControl();
@@ -724,30 +750,45 @@ org.sarsoft.PositionInfoControl.prototype.getDefaultPosition = function() { retu
 org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 	var that = this;
 	this.map = map;
+	this._show = true;
 	
-	var div = document.createElement("div");
-	div.style.backgroundColor="white";
-	div.style.fontWeight="bold";
-	div.style.textAlign="right";
-	div.className="noprint";
+	var div = jQuery('<div style="text-align: right; cursor: pointer" class="noprint"></div>');
+	var minmax = jQuery('<img src="/static/images/left.png" title="Show Coordinates" style="display: none"/>').appendTo(div);
+	var display = jQuery('<div style="background-color: white; font-weight: bold" title="Hide Coordinates"></div>').appendTo(div);
+
+	div.click(function(event) {
+		that._show = !that._show;
+		if(that._show) {
+			minmax.css("display", "none");
+			display.css("display", "block");
+		} else {
+			minmax.css("display", "inline");
+			display.css("display", "none");
+		}
+	});
 
 	GEvent.addListener(map, "mousemove", function(latlng) {
 		var datumll = GeoUtil.fromWGS84(latlng);
 		var utm = GeoUtil.GLatLngToUTM(datumll);
-		var e = "" + Math.round(utm.e);
-		var n = "" + Math.round(utm.n);
-		var e1 = e.substring(0, e.length-3);
-		var e2 = e.substring(e.length-3, e.length);
-		var n1 = n.substring(0, n.length-3);
-		var n2 = n.substring(n.length-3, n.length);
-
 		var message = utm.toHTMLString() + "<br/>";
-		message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
-		div.innerHTML = message;
+		if(that.imap != null && that.imap.registered["org.sarsoft.UTMGridControl"] != null && that.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DD") {
+			var dlat = Math.abs(datumll.lat());
+			var dlng = Math.abs(datumll.lng());
+			var lat = Math.floor(dlat);
+			lat = "" + lat + ("." + Math.round((dlat-lat)*10000) + "00000").substring(0, 5);
+			var lng = Math.floor(dlng);
+			lng = "" + lng + ("." + Math.round((dlng-lng)*10000) + "00000").substring(0, 5);
+			if(datumll.lat() < 0) lat = "-" + lat;
+			if(datumll.lng() < 0) lng = "-" + lng;
+			message = message + lat + ", " + lng;
+		} else {
+			message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
+		}
+		display.html(message);
 	});
 
-	map.getContainer().appendChild(div);
-	return div;
+	map.getContainer().appendChild(div[0]);
+	return div[0];
 }
 
 org.sarsoft.MapLabelWidget = function(imap) {
@@ -1046,7 +1087,8 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	
 	if(options == null) options = {};
 	if(options.positionWindow || options.standardControls) {
-		this.map.addControl(new org.sarsoft.PositionInfoControl());
+		this.positionInfoControl = new org.sarsoft.PositionInfoControl(this);
+		this.map.addControl(this.positionInfoControl);
 	}
 	if(!options.suppressPermissionWidget) {
 		new org.sarsoft.MapPermissionWidget(this);
