@@ -117,7 +117,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var tDiv = null;
 	this.opacityInput = jQuery('<input size="2" value="0"></input>');
 	var div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>').appendTo(map.getContainer());
-	div.append(this.extras, "base: ", this.typeSelect);
+	div.append(this.extras, this.typeSelect);
 
 	function handleLayerChange() {
 		var base = that.types[that.typeSelect.value];
@@ -1118,8 +1118,8 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		var sc = new org.sarsoft.MapSizeWidget(this);
 		var fc = new org.sarsoft.MapFindWidget(this);
 		var lc = new org.sarsoft.MapLabelWidget(this);
-		this.addMenuItem(document.createTextNode(" | "), 20);
-		this.addMenuItem(document.createTextNode(" | "), 100);
+		this.addMenuItem(document.createTextNode("\u00A0"), 20);
+		this.addMenuItem(document.createTextNode("\u00A0"), 100);
 	} else {
 		this.map.addControl(new org.sarsoft.UTMGridControl());
 	}
