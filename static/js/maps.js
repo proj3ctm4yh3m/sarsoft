@@ -753,17 +753,17 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 	this._show = true;
 	
 	var div = jQuery('<div style="text-align: right; cursor: pointer" class="noprint"></div>');
-	var minmax = jQuery('<img src="/static/images/left.png" title="Show Coordinates" style="display: none"/>').appendTo(div);
-	var display = jQuery('<div style="background-color: white; font-weight: bold" title="Hide Coordinates"></div>').appendTo(div);
+	this.minmax = jQuery('<img src="/static/images/left.png" title="Show Coordinates" style="display: none"/>').appendTo(div);
+	this.display = jQuery('<div style="background-color: white; font-weight: bold" title="Hide Coordinates"></div>').appendTo(div);
 
 	div.click(function(event) {
 		that._show = !that._show;
 		if(that._show) {
-			minmax.css("display", "none");
-			display.css("display", "block");
+			that.minmax.css("display", "none");
+			that.display.css("display", "block");
 		} else {
-			minmax.css("display", "inline");
-			display.css("display", "none");
+			that.minmax.css("display", "inline");
+			that.display.css("display", "none");
 		}
 	});
 
@@ -784,11 +784,29 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 		} else {
 			message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
 		}
-		display.html(message);
+		that.display.html(message);
 	});
 
 	map.getContainer().appendChild(div[0]);
 	return div[0];
+}
+
+org.sarsoft.PositionInfoControl.prototype.setConfig = function(config) {
+	if(config.PositionInfoControl == null) return;
+	this._show = config.PositionInfoControl.showPosition;
+	if(this._show) {
+		this.minmax.css("display", "none");
+		this.display.css("display", "block");
+	} else {
+		this.minmax.css("display", "inline");
+		this.display.css("display", "none");
+	}
+}
+
+org.sarsoft.PositionInfoControl.prototype.getConfig = function(config) {
+	if(config.PositionInfoControl == null) config.PositionInfoControl = new Object();
+	config.PositionInfoControl.showPosition = this._show;
+	return config;
 }
 
 org.sarsoft.MapLabelWidget = function(imap) {
