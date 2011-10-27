@@ -1002,6 +1002,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		}
 	});
 
+	this.map.enableScrollWheelZoom();
 	this.map._imap = this;
 	this.mapMessageControl = new org.sarsoft.MapMessageControl();
 	this.map.addControl(this.mapMessageControl);
