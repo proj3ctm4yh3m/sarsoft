@@ -1,0 +1,2 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>Id,Resource Type,Status,Size,Time Allocated<c:forEach var="assignment" items="${assignments}" varStatus="status">
+${assignment.id},${assignment.resourceType},${assignment.status},${assignment.formattedSize},${assignment.timeAllocated}</c:forEach>

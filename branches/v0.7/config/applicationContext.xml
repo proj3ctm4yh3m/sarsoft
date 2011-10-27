@@ -1,0 +1,118 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-2.5.xsd
+	       http://www.springframework.org/schema/mvc
+   	       http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd"
+        default-autowire="byName">
+
+	<mvc:resources mapping="/static/**" location="/static/"/>
+	<mvc:resources mapping="/favicon.ico" location="/static/images/"/>
+
+	<bean id="propertyConfigurer" class="org.sarsoft.common.util.PropertyConfigurer">
+		<property name="location">
+			<value>/WEB-INF/local.spring-config.properties</value>
+		</property>
+	</bean>
+
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+
+	<bean id="jsp-view-resolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass">
+			<value>org.springframework.web.servlet.view.JstlView</value>
+		</property>
+		<property name="suffix"><value>.jsp</value></property>
+		<property name="order" value="4"/>
+	</bean>
+
+	<bean id="tiles-view-resolver" class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.tiles2.TilesView"/>
+		<property name="order" value="3"/>
+	</bean>
+
+	<bean id="kml-view-resolver" class="org.springframework.web.servlet.view.xslt.XsltViewResolver">
+		<property name="sourceKey"><value>xml</value></property>
+		<property name="suffix"><value>.xsl</value></property>
+		<property name="contentType"><value>application/vnd.google-earth.kml+xml</value></property>
+		<property name="viewNames">
+			<list>
+				<value>/xsl/kml/*</value>
+			</list>
+		</property>
+		<property name="order" value="1"/>
+	</bean>
+	<bean id="gpx-view-resolver" class="org.springframework.web.servlet.view.xslt.XsltViewResolver">
+		<property name="sourceKey"><value>xml</value></property>
+		<property name="suffix"><value>.xsl</value></property>
+		<property name="contentType"><value>application/gpx+xml</value></property>
+		<property name="viewNames">
+			<list>
+				<value>/xsl/gpx/*</value>
+			</list>
+		</property>
+		<property name="order" value="1"/>
+	</bean>
+
+	<bean id="xslt-view-resolver" class="org.springframework.web.servlet.view.xslt.XsltViewResolver">
+		<property name="sourceKey"><value>xml</value></property>
+		<property name="suffix"><value>.xsl</value></property>
+		<property name="contentType"><value>text/xml</value></property>
+		<property name="viewNames">
+			<list>
+				<value>/xsl/*</value>
+			</list>
+		</property>
+		<property name="order" value="2"/>
+	</bean>
+
+	<bean id="searchDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${hibernate.driverClass}"/>
+		<property name="jdbcUrl" value="${hibernate.jdbcUrl}"/>
+		<property name="user" value="${hibernate.username}"/>
+		<property name="password" value="${hibernate.password}"/>
+		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
+	</bean>
+
+	<bean id="searchSessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="packagesToScan">
+			<list>
+				<value>org.sarsoft.common.model</value>
+				<value>org.sarsoft.plans.model</value>
+				<value>org.sarsoft.ops.model</value>
+				<value>org.sarsoft.markup.model</value>
+			</list>
+		</property>
+
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+			</props>
+		</property>
+
+		<property name="dataSource" ref="searchDataSource"/>
+		<property name="configLocation" value="/WEB-INF/hibernate.cfg.xml"/>
+	</bean>
+
+	<context:annotation-config/>
+	<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+		<property name="alwaysUseFullPath" value="true"/>
+	</bean>
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="alwaysUseFullPath" value="true"/>
+	</bean>
+	<context:component-scan base-package="org.sarsoft"/>
+
+	<bean name="genericDAO" class="org.sarsoft.common.dao.GenericHibernateDAO">
+		<property name="sessionFactory" ref="searchSessionFactory"/>
+	</bean>
+
+</beans>

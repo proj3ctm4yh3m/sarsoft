@@ -1,0 +1,2 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>Name,Type,Agency,Callsign,SPOT ID,Spot Password<c:forEach var="resource" items="${resources}" varStatus="status">
+${resource.name},${resource.type},${resource.agency},${resource.callsign},${resource.spotId},${resource.spotPassword}</c:forEach>

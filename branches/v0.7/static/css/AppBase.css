@@ -1,0 +1,73 @@
+@page {
+	margin: 0.25in;
+}
+
+a {
+	text-decoration: none;
+}
+
+div.header a {
+	color: black;
+}
+
+body, html {
+	padding: 0px;
+	margin: 0px;
+	border: 0px;
+	width: 100%;
+	height: 100%;
+}
+
+div.item label, div.item span.label {
+	float: left;
+	margin-right: 5px;
+	width: 120px;
+}
+
+.yui-skin-sam .clickableyuitable .yui-dt-body {
+	cursor: pointer;
+}
+
+textarea.entityform {
+	width: 350px;
+	height: 150px
+}
+
+.hint {
+	color: #666666;
+	text-decoration: italic;
+	font-size: smaller
+}
+
+.printonly {
+	display: none;
+}
+
+.maplabelnormal .maplabel {
+}
+
+.maplabelbacklit .maplabel {
+	background-color: white;
+}
+	
+.maplabelhidden .maplabel {
+	display: none;
+}
+
+@media print {
+	.noprint {
+		display: none;
+	}
+	.printonly {
+		display: block !important;
+	}
+	img.olTileImage {
+		position: absolute !important;
+	}
+	img.olAlphaImage {
+		position: absolute !important;
+	}
+	div.olAlphaImage {
+		position: absolute !important;
+	}
+}
