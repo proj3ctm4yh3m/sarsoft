@@ -1,7 +1,9 @@
 package org.sarsoft.common.controller;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -49,6 +51,7 @@ public abstract class JSONBaseController {
 	private List<MapSource> mapSources;
 	private Properties properties;
 	private String header = null;
+	private String welcomeHTML;
 	
 	@Autowired
 	protected ServletContext context;
@@ -218,10 +221,30 @@ public abstract class JSONBaseController {
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		model.addAttribute("head", getCommonHeader());
 		model.addAttribute("version", getProperty("sarsoft.version"));
+		model.addAttribute("friendlyName", getProperty("sarsoft.name"));
 		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
 		String objects = getProperty("sarsoft.objects");
 		if(objects == null) objects = "map,search";
 		model.addAttribute("objects", objects);
+		
+		if(RuntimeProperties.getProperty("sarsoft.ui.welcome.html") != null) {
+			if(welcomeHTML == null) synchronized(this) {
+				try {
+					StringBuffer fileData = new StringBuffer(1000);
+					BufferedReader reader = new BufferedReader(new FileReader(RuntimeProperties.getProperty("sarsoft.ui.welcome.html")));
+					char[] buf = new char[1024];
+					int numRead=0;
+					while((numRead=reader.read(buf)) != -1){
+						String readData = String.valueOf(buf, 0, numRead);
+						fileData.append(readData);
+						buf = new char[1024];
+					}
+					reader.close();
+					welcomeHTML = fileData.toString();
+		        	} catch (Exception e) {}
+			}
+			model.addAttribute("welcomeHTML", welcomeHTML);
+		}
 		return "Pages.Welcome";
 	}
 
@@ -231,6 +254,7 @@ public abstract class JSONBaseController {
 		model.addAttribute("hosted", isHosted());
 		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
 		model.addAttribute("version", getProperty("sarsoft.version"));
+		model.addAttribute("friendlyName", getProperty("sarsoft.name"));
 		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
 		String objects = getProperty("sarsoft.objects");
 		if(objects == null) objects = "map,search";
