@@ -14,6 +14,15 @@ org.sarsoft.Loader.queue(function() {
 	configWidget = new org.sarsoft.view.CookieConfigWidget(imap);
 	configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity});
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
+
+	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
+		window.location = "/";		
+	});
+	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
+	GEvent.addDomListener(goback, "click", function() {
+		leaveDlg.show();
+	});
+	imap.addMenuItem(goback, 40);
 	
 });
 }

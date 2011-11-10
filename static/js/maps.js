@@ -869,9 +869,7 @@ org.sarsoft.MapPermissionWidget = function(imap) {
 	}
 }
 
-
 org.sarsoft.MapFindWidget = function(imap) {
-	var that = this;
 	var that = this;
 	this.imap = imap;
 
@@ -1692,6 +1690,15 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
 	this.lat = jQuery('<input type="text" size="8"/>').appendTo(td);
 	td.append(", ");
 	this.lng = jQuery('<input type="text" size="8"/>').appendTo(td);
+	if(typeof(navigator.geolocation) != "undefined") {
+		this.geoloc = jQuery('<button style="margin-left: 10px">My Location</button>').appendTo(td);
+		this.geoloc.click(function() {
+			navigator.geolocation.getCurrentPosition(function(pos) {
+				that.lat.val(pos.coords.latitude);
+				that.lng.val(pos.coords.longitude);
+		}, function() { alert("Unable to determine your location.")});
+		});
+	}
 	td.append('<br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span>');
 	
 	tr = jQuery('<tr><td valign="top">Address</td></tr>').appendTo(tbody);
