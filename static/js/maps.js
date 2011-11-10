@@ -590,11 +590,11 @@ org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
 	if(span < 50) spacing = 500;
 	if(span < 8) spacing = 100;
 	if(span  < 2) spacing = 50;
-	var lat = bounds.getSouthWest().lat();
-	var lng = Math.round(bounds.getSouthWest().lng()*6000/spacing)*spacing;
-	var east = bounds.getNorthEast().lng()*6000;
+	var lat = GeoUtil.fromWGS84(bounds.getSouthWest()).lat();
+	var lng = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lng()*6000/spacing)*spacing;
+	var east = GeoUtil.fromWGS84(bounds.getNorthEast()).lng()*6000;
 	while(lng < east) {
-		var offset = this.map.fromLatLngToContainerPixel(new GLatLng(lat, lng/6000)).x;
+		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat, lng/6000))).x;
 		var point = new GPoint(offset, pymax-2);
 		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lng/6000), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
 		this.map.addOverlay(label);
@@ -608,11 +608,11 @@ org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
 	if(span < 50) spacing = 500;
 	if(span < 8) spacing = 100;
 	if(span  < 2) spacing = 50;
-	var lng = bounds.getSouthWest().lng();
-	var lat = Math.round(bounds.getSouthWest().lat()*6000/spacing)*spacing;
-	var north = bounds.getNorthEast().lat()*6000;
+	var lng = GeoUtil.fromWGS84(bounds.getSouthWest()).lng();
+	var lat = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lat()*6000/spacing)*spacing;
+	var north = GeoUtil.fromWGS84(bounds.getNorthEast()).lat()*6000;
 	while(lat < north) {
-		var offset = this.map.fromLatLngToContainerPixel(new GLatLng(lat/6000, lng)).y;
+		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat/6000, lng))).y;
 		var point = new GPoint(0, offset);
 		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lat/6000), null, null, new GSize(0,-0.5));
 		this.map.addOverlay(label);
