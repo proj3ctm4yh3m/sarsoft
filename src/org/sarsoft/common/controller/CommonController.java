@@ -17,6 +17,9 @@ public class CommonController extends JSONBaseController {
 
 	@RequestMapping(value="/map.html", method = RequestMethod.GET)
 	public String showMap(Model model, HttpServletRequest request) {
+		if(RuntimeProperties.getProperty("sarsoft.ui.quickmap.message") != null) {
+			model.addAttribute("uimessage", RuntimeProperties.getProperty("sarsoft.ui.quickmap.message"));
+		}
 		return app(model, "/map");
 	}
 	

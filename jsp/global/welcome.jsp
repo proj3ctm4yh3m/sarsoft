@@ -1,7 +1,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<h2>Welcome<c:if test="${account ne null}">, ${account.email}.  (<a href="/app/logout">Logout</a>)</c:if></h2>
+<h2>Welcome to ${friendlyName}<c:if test="${account ne null}">, ${account.email}.  (<a href="/app/logout">Logout</a>)</c:if></h2>
 <div>
 ${welcomeMessage}
 
@@ -29,6 +29,33 @@ The page you are trying to reach is password protected.  Please enter it below:<
 Continue working on: <a href="${url}">${tenant.description}</a>.
 </div>
 </c:if>
+
+
+<c:choose>
+<c:when test="${hosted eq true and account eq null}">
+<div style="float: left; clear: both; padding-left: 10px">
+<c:choose>
+<c:when test="${fn:length(welcomeHTML) gt 0}">
+${welcomeHTML}
+</c:when>
+<c:otherwise>
+<p>You need to log in with a Google or Yahoo account to create new objects.  If someone's shared a URL with you, you can visit it directly
+without logging in.
+</p>
+<p>
+Log in using your:
+<ul>
+<li><a href="/app/openidrequest?domain=google">Google account</a></li>
+<li><a href="/app/openidrequest?domain=yahoo">Yahoo account</a></li>
+</ul>
+</p>
+</div>
+</c:otherwise>
+</c:choose>
+</c:when>
+
+
+<c:otherwise>
 <div style="padding-bottom: 20px; border-bottom: 1px solid #CCCCCC">
 You can always use the <a href="/map.html">Quick Map Viewer</a> to browse map layers if you don't need to save anything.
 </div>
@@ -77,23 +104,6 @@ You can always use the <a href="/map.html">Quick Map Viewer</a> to browse map la
 
 <div style="float: left; margin-left: 50px; padding-left: 10px; border-left: 1px solid #CCCCCC">
 
-<c:choose>
-<c:when test="${hosted eq true and account eq null}">
-<div style="float: left; clear: both">
-<p>You need to log in with a Google or Yahoo account to create new objects.  If someone's shared a URL with you, you can visit it directly
-without logging in.
-</p>
-<p>
-Log in using your:
-<ul>
-<li><a href="/app/openidrequest?domain=google">Google account</a></li>
-<li><a href="/app/openidrequest?domain=yahoo">Yahoo account</a></li>
-</ul>
-</p>
-</div>
-
-</c:when>
-<c:otherwise>
 <form action="/search" method="post" id="newsearch">
 <p>
 <b>Create a new object</b><br/><br/>
@@ -112,8 +122,6 @@ Log in using your:
 <c:if test="${fn:contains(objects, 'search')}"><button onclick="createSearch()">Create Search</button></c:if>
 <c:if test="${fn:contains(objects, 'map')}"><button onclick="createMap()">Create Map</button></c:if>
 </div>
-</c:otherwise>
-</c:choose>
 </div>
 
 <script>
@@ -174,3 +182,6 @@ function createSearch() {
 	})) document.forms["newsearch"].submit();
 }
 </script>
+</c:otherwise>
+</c:choose>
+
