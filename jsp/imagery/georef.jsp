@@ -7,7 +7,6 @@ ${head}
 function doload() {
 org.sarsoft.Loader.queue(function() {
   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
-
   map2 = org.sarsoft.EnhancedGMap.createMap(document.getElementById('combined_canvas'));
 
   searchDAO = new org.sarsoft.SearchDAO();
@@ -114,8 +113,8 @@ geooverlay = null;
 function updateCombinedView() {
 	georef = parameterForm.read();
 	var geotype = {name : "Georef Overlay", id: "${image.id}", angle: georef.angle, scale: georef.scale, originx: georef.originx, originy: georef.originy, originlat: georef.originlat, originlng: georef.originlng, width: georef.width, height: georef.height};
-	egm2.geoRefImages = egm.setGeoRefImages([geotype]);
-
+	map2.geoRefImages = [geotype];
+	
 	if(map2._overlaydropdownmapcontrol._overlays != null && map2._overlaydropdownmapcontrol._overlays[0].angle != null) {
 		map2.removeOverlay(map2._overlaydropdownmapcontrol._overlays[0]);
 	}
