@@ -88,6 +88,8 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var that = this;
 	map._overlaydropdownmapcontrol = this;
 	this.map = map;
+	
+	this.baseName = map.getCurrentMapType().getName();
 
 	this.types = new Array();  // georef images get added to this list; need to shallow copy
 	var alphaTypes = new Array();
@@ -410,7 +412,7 @@ org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
-	this._showUTM = "tickmark";
+	this._showUTM = false;
 	this.style = {major : 0.8, minor : 0.4, crosshatch : 0, latlng : "DDMMHH"}
 
 	this.utmgridlines = new Array();
@@ -1058,9 +1060,12 @@ org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function() {
 	YAHOO.util.Cookie.set("org.sarsoft.mapConfig", YAHOO.lang.JSON.stringify(config));
 }
 
-org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function() {
+org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) {
 		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
+		if(typeof(overrides) != "undefined") for(var key in overrides) {
+			config[key] = overrides[key];
+		}
 		this._fromConfigObj(config);
 	}
 }
@@ -1114,15 +1119,17 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	}
 	var dc = new org.sarsoft.MapDatumWidget(this, options.switchableDatum);
 	var mn = new org.sarsoft.MapDeclinationWidget(this);
-	if(options.standardControls) {
-		this.map.addControl(new org.sarsoft.UTMGridControl(this));
-		var sc = new org.sarsoft.MapSizeWidget(this);
-		var fc = new org.sarsoft.MapFindWidget(this);
-		var lc = new org.sarsoft.MapLabelWidget(this);
-		this.addMenuItem(document.createTextNode("\u00A0"), 20);
-		this.addMenuItem(document.createTextNode("\u00A0"), 100);
+	if(options.standardControls || options.UTM) {
+		 this.map.addControl(new org.sarsoft.UTMGridControl(this));
 	} else {
 		this.map.addControl(new org.sarsoft.UTMGridControl());
+	}
+	if(options.standardControls || options.size) var sc = new org.sarsoft.MapSizeWidget(this);
+	if(options.standardControls || options.find) var fc = new org.sarsoft.MapFindWidget(this);
+	if(options.standardControls || options.label) var lc = new org.sarsoft.MapLabelWidget(this);
+	if(options.standardControls || options.separators) {
+		this.addMenuItem(document.createTextNode("\u00A0"), 20);
+		this.addMenuItem(document.createTextNode("\u00A0"), 100);
 	}
 
 }
@@ -1503,6 +1510,95 @@ org.sarsoft.InteractiveMap.prototype.setMapInfo = function(classname, order, mes
 	}
 	
 	this._mapInfoControl.setMessage(info);
+}
+
+org.sarsoft.MapURLHashWidget = function(imap) {
+	var that = this;
+	this.imap = imap;
+	this.ignorehash = false;
+	this.lasthash = "";
+	this.track = true;
+	
+	imap.register("org.sarsoft.MapURLHashWidget", this);
+
+	this.toggle = new org.sarsoft.ToggleControl("URL", "Toggle URL updates as map changes", function(value) {
+		that.track = value;
+		if(!that.track) {
+			window.location.hash="";
+		} else {
+			that.saveMap();
+		}
+	});
+	this.toggle.setValue(this.track);
+	imap.addMenuItem(this.toggle.node, 18);
+		
+	GEvent.addListener(imap.map, "moveend", function() {
+		if(!that.ignorehash && that.track) that.saveMap();
+		});
+	GEvent.addListener(imap.map, "zoomend", function() {
+		if(!that.ignorehash && that.track) that.saveMap();
+	});
+	this.checkhashupdate();
+	window.setInterval(function() {that.checkhashupdate()}, 500);
+}
+
+org.sarsoft.MapURLHashWidget.prototype.saveMap = function() {
+	var center = this.imap.map.getCenter();
+	var hash = "center=" + Math.round(center.lat()*100000)/100000 + "," + Math.round(center.lng()*100000)/100000 + "&zoom=" + map.getZoom();
+	var config = this.imap.getConfig();
+	hash = hash + "&base=" + config.base;
+	if(config.opacity != null  && config.opacity > 0) {
+		hash = hash + "&opacity=" + config.opacity;
+		if(config.overlay != null) hash = hash + "&overlay=" + config.overlay;
+	}
+	if(config.alphaOverlays != null) hash = hash + "&alphaOverlays=" + config.alphaOverlays;
+	this.ignorehash=true;
+	window.location.hash=hash;
+	this.lasthash=window.location.hash
+	this.ignorehash=false;
+}
+
+org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
+	this.ignorehash=true;
+	this.lasthash = window.location.hash;
+	var hash = this.lasthash.slice(1);
+	var props = hash.split("&");
+	var config = new Object();
+	for(var i = 0; i < props.length; i++) {
+		var prop = props[i].split("=");
+		if(prop[0] == "center") {
+			var latlng = prop[1].split(",");
+			map.setCenter(new GLatLng(latlng[0], latlng[1]));
+		}
+		if(prop[0] == "zoom") this.imap.map.setZoom(1*prop[1]);
+		if(prop[0] == "base") config.base = prop[1];
+		if(prop[0] == "overlay") config.overlay = prop[1];
+		if(prop[0] == "opacity") config.opacity = prop[1];
+		if(prop[0] == "alphaOverlays") config.alphaOverlays = prop[1];
+	}
+	if(config.overlay == null) config.overlay = config.base;
+	if(config.opacity == null) config.opacity = 0;
+	if(config.base != null) this.imap.setConfig(config);
+	this.config = config;
+	this.ignorehash=false;
+}
+
+org.sarsoft.MapURLHashWidget.prototype.checkhashupdate = function() {
+	if(this.lasthash != window.location.hash) {
+		this.loadMap();
+	}
+}
+
+org.sarsoft.MapURLHashWidget.prototype.setConfig = function(config) {
+	if(config.MapURLHashWidget == null) return;
+	this.track = config.MapURLHashWidget.track;
+	this.toggle.setValue(this.track);
+}
+
+org.sarsoft.MapURLHashWidget.prototype.getConfig = function(config) {
+	if(config.MapURLHashWidget == null) config.MapURLHashWidget = new Object();
+	config.MapURLHashWidget.track = this.track;
+	return config;
 }
 
 
