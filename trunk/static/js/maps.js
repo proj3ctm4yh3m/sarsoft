@@ -972,12 +972,13 @@ org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
 	this.blocks = null;
 }
 
-org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
+org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 	var that = this;
 	if(imap != null) {
+		if(message == null) message = "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.";
 		this.imap = imap;
 		if(persist) {
-			var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.", "Save", "Cancel", function() {
+			var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", message, "Save", "Cancel", function() {
 				that.saveConfig();
 			});
 			var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Save Map Settings."/>')[0];
