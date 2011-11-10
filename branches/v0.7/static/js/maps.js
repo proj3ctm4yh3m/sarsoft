@@ -238,7 +238,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		this.alphaOverlayPlus.innerHTML = "+" + ((extras == 0) ? "" : extras);
 		if(infoString.length > 0 && this.map._imap != null)  {
 			this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, infoString);
-		} else {
+		} else if(this.map._imap != null) {
 			this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, null);
 		}
 
