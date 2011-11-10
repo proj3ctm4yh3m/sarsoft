@@ -1,3 +1,4 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <html>
@@ -168,7 +169,7 @@ Start by selecting two points on the image, then select the same two points on a
 <div id="tabs" class="yui-navset">
 <ul class="yui-nav">
 	<li class="selected"><a href="#image"><em>Image</em></a></li>
-	<li><a href="#map"><em>Map</em></a></li>
+	<li><a href="#mapcontainer"><em>Map</em></a></li>
 	<li><a href="#combined"><em>Result</em></a></li>
 	<li><a href="#parameters"><em>Parameters</em></a></li>
 </ul>
@@ -183,7 +184,7 @@ you can rotate it without causing any cropping, you may need to scroll to see it
 </div>
 </div>
 
-<div id="map">
+<div id="mapcontainer">
 Please <b>right-click</b> on the map to identify the location of your two reference points.
 <div id="map_canvas" style="width: 800px; height: 500px"></div>
 </div>
