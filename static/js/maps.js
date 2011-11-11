@@ -53,8 +53,9 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 			}
 			mapTypes.push(type);
 			map.addMapType(type);
+			if(i == 0) map.setMapType(type);
 		}
-
+		
 		map.geoRefImages = org.sarsoft.EnhancedGMap.geoRefImages.slice(0);
 
 		if(center == null) center = new GLatLng(org.sarsoft.map._default.lat, org.sarsoft.map._default.lng);
@@ -104,6 +105,9 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 		}
 	}
 	this.typeSelect = this._createSelect(baseTypes);
+	for(var i = 0; i < this.types.length; i++) {
+		if(this.types[i] == map.getCurrentMapType()) this.typeSelect.value = i;
+	}
 	if(alphaTypes.length > 0) {
 		this.overlaySelect = this._createSelect(baseTypes);
 	} else {
