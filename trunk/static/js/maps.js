@@ -201,19 +201,21 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 
 		var infoString = "";
 		if(base._info != null && base._info.length > 0) infoString += base._info + ". ";
-		if(overlay._info != null && overlay._info.length > 0 && base != overlay && opacity > 0) infoString += overlay._info + ". ";		
 		
-		if(overlay.angle != null) {
-			this._overlays[0] = new GeoRefImageOverlay(new GPoint(1*overlay.originx, 1*overlay.originy), new GLatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new GSize(1*overlay.width, 1*overlay.height), opacity);
-			this.map.addOverlay(this._overlays[0]);
-			this.overlayName = overlay.name;
-		} else {
-			var layers = realOverlay.getTileLayers();
-			for(var i = 0; i < layers.length; i++) {
-				this._overlays[i] = new GTileLayerOverlay(new org.sarsoft.GAlphaTileLayerWrapper(realOverlay.getTileLayers()[i], realOpacity));
-				this.map.addOverlay(this._overlays[i]);
+		if(realOpacity > 0) {
+			if(overlay._info != null && overlay._info.length > 0 && base != overlay && opacity > 0) infoString += overlay._info + ". ";		
+			if(overlay.angle != null) {
+				this._overlays[0] = new GeoRefImageOverlay(new GPoint(1*overlay.originx, 1*overlay.originy), new GLatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new GSize(1*overlay.width, 1*overlay.height), opacity);
+				this.map.addOverlay(this._overlays[0]);
+				this.overlayName = overlay.name;
+			} else {
+				var layers = realOverlay.getTileLayers();
+				for(var i = 0; i < layers.length; i++) {
+					this._overlays[i] = new GTileLayerOverlay(new org.sarsoft.GAlphaTileLayerWrapper(realOverlay.getTileLayers()[i], realOpacity));
+					this.map.addOverlay(this._overlays[i]);
+				}
+				this.overlayName = overlay.getName();
 			}
-			this.overlayName = overlay.getName();
 		}
 		if(alphaOverlays != null) {
 			this.alphaOverlays="";
@@ -1050,7 +1052,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 
 
 org.sarsoft.view.CookieConfigWidget = function(imap) {
-	org.sarsoft.view.BaseConfigWidget.call(this, imap, true);
+	org.sarsoft.view.BaseConfigWidget.call(this, imap, true, "Save map settings for future page loads?");
 }
 org.sarsoft.view.CookieConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
 
@@ -1548,12 +1550,12 @@ org.sarsoft.MapURLHashWidget.prototype.saveMap = function() {
 	var center = this.imap.map.getCenter();
 	var hash = "center=" + Math.round(center.lat()*100000)/100000 + "," + Math.round(center.lng()*100000)/100000 + "&zoom=" + map.getZoom();
 	var config = this.imap.getConfig();
-	hash = hash + "&base=" + config.base;
+	hash = hash + "&base=" + encodeURIComponent(config.base);
 	if(config.opacity != null  && config.opacity > 0) {
 		hash = hash + "&opacity=" + config.opacity;
-		if(config.overlay != null) hash = hash + "&overlay=" + config.overlay;
+		if(config.overlay != null) hash = hash + "&overlay=" + encodeURIComponent(config.overlay);
 	}
-	if(config.alphaOverlays != null) hash = hash + "&alphaOverlays=" + config.alphaOverlays;
+	if(config.alphaOverlays != null) hash = hash + "&alphaOverlays=" + encodeURIComponent(config.alphaOverlays);
 	this.ignorehash=true;
 	window.location.hash=hash;
 	this.lasthash=window.location.hash
@@ -1573,10 +1575,10 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 			map.setCenter(new GLatLng(latlng[0], latlng[1]));
 		}
 		if(prop[0] == "zoom") this.imap.map.setZoom(1*prop[1]);
-		if(prop[0] == "base") config.base = prop[1];
-		if(prop[0] == "overlay") config.overlay = prop[1];
+		if(prop[0] == "base") config.base = decodeURIComponent(prop[1]);
+		if(prop[0] == "overlay") config.overlay = decodeURIComponent(prop[1]);
 		if(prop[0] == "opacity") config.opacity = prop[1];
-		if(prop[0] == "alphaOverlays") config.alphaOverlays = prop[1];
+		if(prop[0] == "alphaOverlays") config.alphaOverlays = decodeURIComponent(prop[1]);
 	}
 	if(config.overlay == null) config.overlay = config.base;
 	if(config.opacity == null) config.opacity = 0;
