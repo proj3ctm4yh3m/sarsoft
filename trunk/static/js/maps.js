@@ -493,7 +493,7 @@ org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
 	this._showUTM = false;
-	this.style = {major : 0.8, minor : 0.4, crosshatch : 0, latlng : "DDMMHH"}
+	this.style = {major : 0.8, minor : 0.4, crosshatch : 100, latlng : "DDMMHH"}
 
 	this.utmgridlines = new Array();
 	this.text = new Array();
@@ -502,9 +502,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 	if(imap != null) {
 			this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Toggle UTM grid", function(value) {
 				that.setValue(value);
-			}, [{value : true, style : ""},
-			 {value : "tickmark", style : "color: white; background-color: red"},
-			 {value : false, style : "text-decoration: line-through"}]);
+			});
 			this._UTMToggle.setValue(this._showUTM);
 			imap.addMenuItem(this._UTMToggle.node, 10);
 			imap.register("org.sarsoft.UTMGridControl", this);
@@ -579,11 +577,14 @@ org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
 
 org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 	var that = this;
+	
+	var lineTypes = {0: "Edge Tickmarks Only", 20: "Crosshatches", 100: "Solid Lines"}
+	
 	if(this._mapForm == null) {
 		this._mapForm = new org.sarsoft.view.EntityForm([
-		    {name : "major", label: "1km Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%"]},
-		    {name : "minor", label: "Minor Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%","None"]},
-		    {name : "crosshatch", label: "Crosshatch Size", type : ["Edge Tickmarks Only","20px"]},
+		    {name : "major", label: "1km Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%"], hint: "Opacity, 100% to 10%"},
+		    {name : "minor", label: "100m Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%","None"], hint: "Visible at high zoom levels only"},
+		    {name : "crosshatch", label: "Show UTM Grid as", type : ["Solid Lines", "Crosshatches", "Edge Tickmarks Only"]},
 		    {name : "latlng", label: "Lat/Long", type : ["Decimal Degree","DDMMHH"]}
 		]);
 		var node = jQuery('<div style="margin-top: 10px"><span style="font-weight: bold; text-decoration: underline">UTM Grid</span></div>')[0];
@@ -593,7 +594,9 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 			that.style.major = obj.major.substring(0, obj.major.length - 1)/100;
 			that.style.minor = (obj.minor == "None") ? 0 : obj.minor.substring(0, obj.minor.length - 1)/100;
 			that.style.latlng = (obj.latlng == "DDMMHH") ? "DDMMHH" : "DD";
-			if(obj.crosshatch == "20px") {
+			if(obj.crosshatch == "Solid Lines") {
+				that.style.crosshatch = 100;
+			} else if(obj.crosshatch == "Crosshatches") {
 				that.style.crosshatch = 20;
 			} else {
 				that.style.crosshatch = 0;
@@ -605,7 +608,7 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 	this._mapForm.write({
 		major : (this.style.major*100) + "%",
 		minor : (this.style.minor == 0) ? "None" : (this.style.minor*100) + "%",
-		crosshatch : (this.style.crosshatch == 0) ? "Edge Tickmarks Only" : "20px",
+		crosshatch : lineTypes[this.style.crosshatch],
 		latlng : (this.style.latlng == "DDMMHH") ? "DDMMHH" : "Decimal Degree"
 	});
 	return this._setupBlock;
@@ -636,7 +639,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	var pxspan = Math.sqrt(Math.pow(px1.x-px2.x, 2) + Math.pow(px1.y-px2.y, 2));
 	scale = span/pxspan;
 	var spacing = 100;
-	if(this._showUTM != true) spacing = 1000;
+	if(this.style.crosshatch < 100) spacing = 1000;
 	if(scale > 2) spacing = 1000;
 	if(scale > 20) spacing = 10000;
 	if(scale > 200) spacing = 100000;
@@ -778,7 +781,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 		var start = GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: sw.n, zone: zone}));
 
 		if(west < start.lng() && start.lng() < east) {
-			if(this._showUTM == true) {
+			if(this.style.crosshatch == 100) {
 				this._drawGridLine(new UTM(easting, sw.n, zone), new UTM(easting, ne.n, zone), (easting % 1000 == 0));
 			} else if(this.style.crosshatch > 0) {
 				var northing = Math.round(sw.n / spacing) * spacing;
@@ -802,7 +805,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	
 	var northing = Math.round(sw.n / spacing) * spacing;
 	while(northing < ne.n) {
-		if(this._showUTM == true) {
+		if(this.style.crosshatch == 100) {
 			this._drawGridLine(new UTM(sw.e, northing, zone), new UTM(ne.e, northing, zone), (northing % 1000 == 0), zone);
 		}
 
