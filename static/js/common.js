@@ -304,6 +304,7 @@ org.sarsoft.view.EntityForm.prototype._createField = function(field) {
 	}
 	this.elements[field.name] = elt;
 	div.appendChild(elt);
+	if(field.hint != null) jQuery('<span class="hint" style="padding-left: 10px">' + field.hint + '</span>').appendTo(div);
 	return div;
 }
 
