@@ -382,7 +382,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	} else if(marker.url.indexOf('#') == 0) {
 		config.color = marker.url;
 	} else if(marker.url.indexOf('/') == -1 && marker.url.indexOf('.') == -1) {
-		config.icon = org.sarsoft.MapUtil.createIcon(24, "/static/images/icons/" + marker.url + ".png");
+		config.icon = org.sarsoft.MapUtil.createIcon(20, "/static/images/icons/" + marker.url + ".png");
 	} else {
 		config.icon = org.sarsoft.MapUtil.createIcon(20, marker.url);
 	}
