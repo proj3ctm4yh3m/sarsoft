@@ -164,7 +164,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	
 	var items = [{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
 	    {text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: false}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
-	    {text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: true}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
+	    {text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
 
 	if(nestMenuItems) {
 		items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
