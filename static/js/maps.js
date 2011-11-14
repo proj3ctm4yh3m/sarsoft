@@ -302,23 +302,91 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 	var that = this;
 	this.map = map;
 
-	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">Adjust the page size for printing.  Remember to specify units (e.g. 11in, 20cm); sizes do not include margins.  Restore map to original size by setting width and height to 100%.</div></div>');
+	this.presets = [{name: "fullscreen", description: "Full Screen (no printing)", width: "100%", height: "100%", margin: "0.25in"},
+	                {name: "letter", description: "Letter", width: "8.5in", height: "11in", margin: "0.25in"}, 
+	                {name: "bletter", description: "Letter - Borderless", width: "8.5in", height: "11in", margin: "0in"},
+	                {name: "lletter", description: "Letter - Landscape", width: "11in", height: "8.5in", margin: "0.25in"},
+	                {name: "blletter", description: "Letter - Borderless Landscape", width: "11in", height: "8.5in", margin: "0in"}
+	                ];
+	
+	updateToPreset = function() {
+		var presetName = that.presetInput.val();
+		for(var i = 0; i < that.presets.length; i++) {
+			var preset = that.presets[i];
+			if(presetName == preset.name) {
+				that.widthInput.val(preset.width);
+				that.heightInput.val(preset.height);
+				that.marginInput.val(preset.margin);
+			}
+		}
+	}
+	
+	updatePresetInput = function() {
+		that.presetInput.val('--');
+		var width = that.widthInput.val();
+		var height = that.heightInput.val();
+		var margin = that.marginInput.val();
+		for(var i = 0; i < that.presets.length; i++) {
+			var preset = that.presets[i];
+			if(preset.width==width && preset.height==height && preset.margin==margin) {
+				that.presetInput.val(preset.name);
+			}
+		}
+	}
+	
+	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">This will set the visible map size, allowing accurate full-page prints.  You will also need to set the page size in your browser\'s print dialog.</div></div>');
+	bd.append(document.createTextNode("Default Sizes: "));
+	this.presetInput = jQuery('<select><option value="--">--</option></select>').appendTo(bd).change(updateToPreset);
+	for(var i = 0; i < this.presets.length; i++) {
+		jQuery('<option value="' + this.presets[i].name + '">' + this.presets[i].description + '</option>').appendTo(this.presetInput);
+	}
+	jQuery('<br/><br/>').appendTo(bd);
 	bd.append(document.createTextNode("Width: "));
-	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();});
+	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();}).change(updatePresetInput);
 	bd.append(document.createTextNode("   Height: "));
-	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();});
+	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();}).change(updatePresetInput);
 	bd.append(document.createElement("br"));
 	bd.append(document.createElement("br"));
 	bd.append(document.createTextNode("Margin: ")).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();});
-	this.marginInput = jQuery('<input type="text" size="8"/>').appendTo(bd);
+	this.marginInput = jQuery('<input type="text" size="8"/>').appendTo(bd).change(updatePresetInput);
 	bd.append(document.createTextNode(" (not supported on Firefox)"));
 
 	this.dialog = org.sarsoft.view.CreateDialog("Map Size", bd[0], "Update", "Cancel", function() {
 		var center = that.map.getCenter();
-		that.map.getContainer().style.width=that.widthInput.val();
-		that.map.getContainer().style.height=that.heightInput.val();
+		var width = that.widthInput.val().replace(' ', '');
+		var height = that.heightInput.val().replace(' ', '');
+		var margin = that.marginInput.val().replace(' ', '')
+		
+		if(width.indexOf("in") > 0 && height.indexOf("in") > 0) {
+			var nWidth = width.replace("in", "");
+			var nHeight = height.replace("in", "");
+			var nMargin = 0;
+			if(margin.indexOf("in") > 0) {
+				nMargin = margin.replace("in", "");
+			} else if(margin.indexOf("cm") > 0) {
+				nMargin = 2.54*margin.replace("cm", "");
+			}
+			width = (nWidth - nMargin*2) + "in";
+			height = (nHeight - nMargin*2) + "in";
+		}
+		
+		if(width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
+			var nWidth = width.replace("cm", "");
+			var nHeight = height.replace("cm", "");
+			var nMargin = 0;
+			if(margin.indexOf("cm") > 0) {
+				nMargin = margin.replace("cm", "");
+			} else if(margin.indexOf("in") > 0) {
+				nMargin = margin.replace("in", "")/2.54;
+			}
+			width = (nWidth - nMargin*2) + "cm";
+			height = (nHeight - nMargin*2) + "cm";
+		}
+
+		that.map.getContainer().style.width=width;
+		that.map.getContainer().style.height=height;
 		var rule = that._getMarginRule();
-		if(rule != null) rule.style.setProperty('margin',that.marginInput.val());
+		if(rule != null) rule.style.setProperty('margin', margin);
 		that.map.checkResize();
 		that.map.setCenter(center);
 		}, {width: "350px"});
@@ -340,6 +408,12 @@ org.sarsoft.view.MapSizeDlg.prototype.show = function() {
 	this.heightInput.val(this.map.getContainer().style.height);
 	var rule = this._getMarginRule();
 	if(rule != null) this.marginInput.val(rule.style.getPropertyValue('margin'));
+	for(var i = 0; i < this.presets.length; i++) {
+		var preset = this.presets[i];
+		if(this.widthInput.val()==preset.width && this.heightInput.val()==preset.height && this.marginInput.val()==preset.margin) {
+			this.presetInput.val(preset.name);
+		}
+	}
 	this.dialog.show();
 }
 
