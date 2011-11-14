@@ -37,26 +37,21 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
 	
 	div = jQuery('<div class="item"><label for="image">Image:</label></div>').appendTo(form);
-	this.imageInput = jQuery('<input name="image" type="text" size="15"/>').appendTo(div);
+	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px"/>').appendTo(div);
+	div.append(document.createTextNode("  or color:"));
+	this.imageInput = jQuery('<input name="image" type="text" size="8"/>').appendTo(div);
 
-	var imgSwatch = jQuery('<img style="width: 20px; height: 20px"/>').appendTo(div);
 	this.imageInput.change(function() {
-		var url = that.imageInput.val();
-		if(url == null) url = "";
-		if(url.indexOf('#') == 0) {
-			url = '/resource/imagery/icons/circle/' + url.substr(1) + '.png';
-		} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
-			url = '/static/images/icons/' + url + '.png';
-		}
-		imgSwatch.attr("src", url);
-		});
+		that.imageUrl = that.imageInput.val();
+		that.handleChange();
+	});
 
 	var imageContainer = jQuery('<div></div>').appendTo(form);
 	var images = ["nps-4wd","nps-climbing","nps-dirtbike","nps-diving","nps-firstaid","nps-gas","nps-lookout","nps-phone","nps-picnic","nps-roadbike","nps-rockfall","nps-scramble","nps-shelter","nps-shower","nps-snowmobile","nps-water","warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","tent","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"];
 	for(var i = 0; i < images.length; i++) {
 		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + images[i] + '.png"/>').appendTo(imageContainer);
 		swatch.click(function() { var j = i; return function() {
-			that.imageInput.val(images[j]); that.imageInput.trigger('change');}}());
+			that.imageInput.val(""); that.imageUrl = images[j]; that.handleChange();}}());
 	}
 	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
 	for(var i = 0; i < colors.length; i++) {
@@ -65,14 +60,32 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	}
 }
 
+
+org.sarsoft.view.MarkerForm.prototype.handleChange = function() {
+	var url = this.imageUrl;
+	if(url == null) url = "";
+	if(url.indexOf('#') == 0) {
+		url = '/resource/imagery/icons/circle/' + url.substr(1) + '.png';
+	} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
+		url = '/static/images/icons/' + url + '.png';
+	}
+	this.imgSwatch.attr("src", url);
+}
+
 org.sarsoft.view.MarkerForm.prototype.read = function() {
-	return {label : this.labelInput.val(), url: this.imageInput.val()};
+	return {label : this.labelInput.val(), url: this.imageUrl};
 }
 
 org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.labelInput.val(obj.label);
-	this.imageInput.val(obj.url);
-	this.imageInput.trigger('change');}
+	this.imageUrl = obj.url;
+	if(this.imageUrl != null && this.imageUrl.indexOf("#")==0) {
+		this.imageInput.val(obj.url);
+	} else {
+		this.imageInput.val("");
+	}
+	this.handleChange();
+}
 
 org.sarsoft.view.ShapeForm = function() {
 }
@@ -163,8 +176,8 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
 	
 	var items = [{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
-	    {text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: false}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
-	    {text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 1, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
+	    {text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
+	    {text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
 
 	if(nestMenuItems) {
 		items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
@@ -351,8 +364,9 @@ org.sarsoft.controller.MarkupMapController.prototype.getMarkerIdFromWpt = functi
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.getShapeIdFromWay = function(way) {
+	if(way == null) return null;
 	for(var key in this.shapes) {
-		if(this.shapes[key] != null && this.shapes[key].way == way) return key;
+		if(this.shapes[key] != null && this.shapes[key].way.id == way.id) return key;
 	}
 }
 
