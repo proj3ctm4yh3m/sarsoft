@@ -15,8 +15,8 @@ org.sarsoft.ShapeDAO.prototype.getWaypoints = function(handler, shape, precision
 	this._doGet("/" + shape.id + "/way?precision=" + precision, handler);
 }
 
-org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints) {
-	this._doPost("/" + shape.id + "/way", function() {}, waypoints);
+org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handler) {
+	this._doPost("/" + shape.id + "/way", (handler == null) ? function() {} : handler, waypoints);
 }
 
 org.sarsoft.MarkerDAO = function(errorHandler, baseURL) {
@@ -302,7 +302,7 @@ org.sarsoft.controller.MarkupMapController.prototype.getShapeAttr = function(sha
 
 org.sarsoft.controller.MarkupMapController.prototype.saveShape = function(shape) {
 	shape.way.waypoints = this.imap.save(shape.way.id);
-	this.shapeDAO.saveWaypoints(shape, shape.way.waypoints);
+	this.shapeDAO.saveWaypoints(shape, shape.way.waypoints, function(obj) { shape.way = obj});
 	this.setShapeAttr(shape, "inedit", false);
 }
 
