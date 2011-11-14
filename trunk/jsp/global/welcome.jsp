@@ -1,8 +1,8 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
+<div style="padding-left: 10px">
 <h2>Welcome to ${friendlyName}<c:if test="${account ne null}">, ${account.email}.  (<a href="/app/logout">Logout</a>)</c:if></h2>
-<div>
 ${welcomeMessage}
 
 <c:if test="${message ne null}">
@@ -33,7 +33,6 @@ Continue working on: <a href="${url}">${tenant.description}</a>.
 
 <c:choose>
 <c:when test="${hosted eq true and account eq null}">
-<div style="float: left; clear: both; padding-left: 10px">
 <c:choose>
 <c:when test="${fn:length(welcomeHTML) gt 0}">
 ${welcomeHTML}
@@ -49,39 +48,45 @@ Log in using your:
 <li><a href="/app/openidrequest?domain=yahoo">Yahoo account</a></li>
 </ul>
 </p>
-</div>
 </c:otherwise>
 </c:choose>
 </c:when>
 
 
 <c:otherwise>
-<div style="padding-bottom: 20px; border-bottom: 1px solid #CCCCCC">
-You can always use the <a href="/map.html">Quick Map Viewer</a> to browse map layers if you don't need to save anything.
-</div>
-
-<div style="float: left">
-<c:if test="${tenantSubclasses['org.sarsoft.plans.model.Search']}">
+<div style="height: 2px; width: 100%; border-bottom: 1px solid #CCCCCC"></div>
+<div style="float: left; max-width: 20%">
+<c:if test="${fn:contains(objects, 'search')}">
 <p><b>Your Searches</b>
 <ul>
+<c:set var="tenantFound" value="${false}"/>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">
+<c:set var="tenantFound" value="${true}"/>
 <li><a href="/search?id=${tenant.name}">${tenant.description}</a></li>
 </c:if>
 </c:forEach>
 </ul>
+<c:if test="${tenantFound eq false}">
+Create a search to get started.
+</c:if>
 </p>
 </c:if>
 
-<c:if test="${tenantSubclasses['org.sarsoft.markup.model.CollaborativeMap']}">
+<c:if test="${fn:contains(objects, 'map')}">
 <p><b>Your Maps</b>
 <ul>
+<c:set var="tenantFound" value="${false}"/>
 <c:forEach var="tenant" items="${tenants}">
 <c:if test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">
+<c:set var="tenantFound" value="${true}"/>
 <li><a href="/map?id=${tenant.name}">${tenant.description}</a></li>
 </c:if>
 </c:forEach>
 </ul>
+<c:if test="${tenantFound eq false}">
+Create a map to get started.
+</c:if>
 </p>
 </c:if>
 
@@ -89,7 +94,7 @@ You can always use the <a href="/map.html">Quick Map Viewer</a> to browse map la
 <p><b>Recently Viewed Searches</b>
 <ul id="recentlyLoadedSearchUl">
 </ul>
-<a href="javascript:clearRecentSearches()">Clear</a>
+<a href="javascript:clearRecentSearches()">Clear Recent Searches</a>
 </p>
 </div>
 
@@ -97,16 +102,25 @@ You can always use the <a href="/map.html">Quick Map Viewer</a> to browse map la
 <p><b>Recently Viewed Maps</b>
 <ul id="recentlyLoadedMapUl">
 </ul>
-<a href="javascript:clearRecentMaps()">Clear</a>
+<a href="javascript:clearRecentMaps()">Clear Recent Maps</a>
 </p></div>
 
 </div>
 
-<div style="float: left; margin-left: 50px; padding-left: 10px; border-left: 1px solid #CCCCCC">
+<div style="float: left; margin-left: 50px; padding-left: 10px; border-left: 1px solid #CCCCCC; max-width: 60%">
 
 <form action="/search" method="post" id="newsearch">
+<c:set var="objname">
+<c:choose><c:when test="${objects eq 'map'}">map</c:when><c:otherwise>object</c:otherwise></c:choose></c:set>
 <p>
-<b>Create a new object</b><br/><br/>
+<b style="text-transform: capitalize">create a new ${objname}</b><br/>
+Get started working with ${friendlyName} by creating a new ${objname} (you can change this
+information later).<c:if test="${hosted eq true}">  New ${objname}s will be accessible (read-only) by others,
+but only if you give them the URL.  You can control this on the admin page (inside the setup dialog for maps).
+</c:if>  You can back up ${objname}s by exporting to the GPX file format.  ${friendlyName} will store additional
+ metadata in the GPX file so that all everything can be recreated when the GPX is imported.
+
+<br/><br/>
 <label for="name">Name</label><input type="text" size="15" name="name" id="name"/>
 
 <input type="hidden" id="lat" name="lat"/>
@@ -185,3 +199,4 @@ function createSearch() {
 </c:otherwise>
 </c:choose>
 
+</div>

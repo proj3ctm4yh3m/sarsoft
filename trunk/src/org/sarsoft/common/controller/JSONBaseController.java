@@ -213,11 +213,6 @@ public abstract class JSONBaseController {
 			tenants = dao.getAllTenants();
 		}
 		model.addAttribute("tenants", tenants);
-		Map<String, Boolean> tenantSubclasses = new HashMap<String, Boolean>();
-		for(Tenant tenant : tenants) {
-			tenantSubclasses.put(tenant.getClass().getName(), true);
-		}
-		model.addAttribute("tenantSubclasses", tenantSubclasses);
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		model.addAttribute("head", getCommonHeader());
 		model.addAttribute("version", getProperty("sarsoft.version"));
