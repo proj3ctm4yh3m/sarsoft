@@ -1462,15 +1462,16 @@ org.sarsoft.InteractiveMap.prototype.edit = function(id) {
 	this.polys[id].overlay.enableEditing();
 }
 
-org.sarsoft.InteractiveMap.prototype.redraw = function(id) {
+org.sarsoft.InteractiveMap.prototype.redraw = function(id, callback) {
 	var that = this;
 	var label = this.polys[id].overlay.label;
 	this._removeOverlay(this.polys[id].overlay);
 	this.polys[id].overlay = this._addOverlay({id : id, polygon: this.polys[id].way.polygon}, this.polys[id].config);
 	this.polys[id].overlay.label = label;
 	this.polys[id].overlay.enableDrawing();
+	if(callback == null) callback = function() { that.edit(id); }
 	GEvent.addListener(this.polys[id].overlay, "endline", function() {
-		window.setTimeout(function() { that.edit(id);}, 200);
+		window.setTimeout(callback, 200);
 	});
 	GEvent.addListener(this.polys[id], "cancelline", function() {
 		that.discard(id);

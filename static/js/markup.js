@@ -104,14 +104,10 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 			'<option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>' +
 			'<option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>' +
 			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
-
-	this.freehandDiv = jQuery('<div class="item"><label for="freehand">Freehand Draw:</label></div>').appendTo(form);
-	this.freehandInput = jQuery('<input name="freehand" type="checkbox"/>').appendTo(this.freehandDiv);
-
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
-	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val(), freehand : this.freehandInput.attr("checked")};
+	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val()};
 }
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
@@ -121,7 +117,6 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.weightInput.val(obj.weight);
 	this.labelInput.val(obj.label);
 	if(obj.way != null) this.fillDiv.css("display", (obj.way.polygon ? "block" : "none"));
-	this.freehandDiv.css("display", (obj.create ? "block" : "none"));
 }
 
 org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
@@ -162,7 +157,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 			shape.way.waypoints = that.imap.getNewWaypoints(that.shapeDlg.point, that.shapeDlg.polygon);
 			that.shapeDAO.create(function(obj) {
 				that.refreshShapes([obj]);
-				if(shape.freehand) that.redrawShape(obj);
+				that.redrawShape(obj, function() { that.saveShape(obj); });
 			}, shape);
 		}});
 	form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
@@ -316,8 +311,8 @@ org.sarsoft.controller.MarkupMapController.prototype.discardShape = function(sha
 	this.setShapeAttr(shape, "inedit", false);
 }
 
-org.sarsoft.controller.MarkupMapController.prototype.redrawShape = function(shape) {
-	this.imap.redraw(shape.way.id);
+org.sarsoft.controller.MarkupMapController.prototype.redrawShape = function(shape, callback) {
+	this.imap.redraw(shape.way.id, callback);
 	this.setShapeAttr(shape, "inedit", true);
 }
 
