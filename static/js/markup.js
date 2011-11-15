@@ -505,3 +505,35 @@ org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
 
 	return this._findBlock;
 }
+
+org.sarsoft.controller.MapToolsController = function(imap) {
+	var that = this;
+	this.imap = imap;
+	this.imap.register("org.sarsoft.controller.MapToolsController", this);
+
+	var items = [{text: "Measure \u2192", applicable: function(obj) { return obj == null }, items:
+		[{text: "Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, false);}},
+		 {text: "Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, true);}}]
+	}];
+	
+	this.imap.addContextMenuItems(items);
+}
+	
+org.sarsoft.controller.MapToolsController.prototype.measure = function(point, polygon) {
+	var that = this;
+	var poly = (polygon) ? new GPolygon([], "#FF0000",2,1,"#FF0000",0.2) : new GPolyline([], "#FF0000", 2, 1);
+	this.imap.map.addOverlay(poly);
+	poly.enableDrawing();
+	poly.enableDrawing();
+	GEvent.addListener(poly, "endline", function() {
+		if(polygon) {
+			alert("Area is " + (Math.round(poly.getArea()/1000)/1000) + " sq km");
+		} else {
+			alert("Distance is " + (Math.round(poly.getLength())/1000) + " km");
+		}
+		that.imap.map.removeOverlay(poly);
+	});
+	GEvent.addListener(poly, "cancelline", function() {
+		that.imap.map.removeOverlay(poly);
+	});
+}
