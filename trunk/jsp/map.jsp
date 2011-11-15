@@ -14,6 +14,8 @@ org.sarsoft.Loader.queue(function() {
     urlwidget = new org.sarsoft.MapURLHashWidget(imap);
 	configWidget = new org.sarsoft.view.CookieConfigWidget(imap);
 	configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity});
+	toolsController = new org.sarsoft.controller.MapToolsController(imap);
+	
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
