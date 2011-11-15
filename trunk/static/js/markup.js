@@ -210,14 +210,16 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 		this.gps.form.append("<br/><br/>");
 
 		this.gps.exp = jQuery('<div></div>').appendTo(this.gps.form);
-		this.gps.exportAll = jQuery('<input type="radio" name="gpsexport" value="all" checked="yes">The entire map</input>').appendTo(this.gps.exp);
-		this.gps.exp.append("<br/>");
-		this.gps.exportShape = jQuery('<input type="radio" name="gpsexport" value="shape">A single shape:</input>').appendTo(this.gps.exp);
-		this.gps.shape = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.exp);
-		this.gps.exp.append("<br/>");
-		this.gps.exportMarker = jQuery('<input type="radio" name="gpsexport" value="marker">A single marker:</input>').appendTo(this.gps.exp);
-		this.gps.marker = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.exp);
-		this.gps.exp.append("<br/><br/>to:");
+		var d1 = jQuery('<div></div>').appendTo(this.gps.exp);
+		this.gps.exportAll = jQuery('<input type="radio" name="gpsexport" value="all" checked="yes">The entire map</input>').appendTo(d1);
+		this.gps.shapeDiv = jQuery('<div></div>').appendTo(this.gps.exp);
+		this.gps.exportShape = jQuery('<input type="radio" name="gpsexport" value="shape">A single shape:</input>').appendTo(this.gps.shapeDiv);
+		this.gps.shape = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.shapeDiv);
+
+		this.gps.markerDiv = jQuery('<div></div>').appendTo(this.gps.exp);
+		this.gps.exportMarker = jQuery('<input type="radio" name="gpsexport" value="marker">A single marker:</input>').appendTo(this.gps.markerDiv);
+		this.gps.marker = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.markerDiv);
+		this.gps.exp.append("<br/>to:");
 		this.gps.expFormat = jQuery('<select style="margin-left: 15px"><option value="GPX">GPX</option><option value="KML">KML</option><option value="GPS">Garmin GPS</option></select>').appendTo(this.gps.exp);
 		
 		this.gps.imp = jQuery('<div style="display: none"></div>').appendTo(this.gps.form);
@@ -270,9 +272,19 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 			for(var key in that.shapes) {
 				if(that.shapes[key].label != null && that.shapes[key].label.length > 0) that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + that.shapes[key].label + '</option>')
 			}
+			if(that.gps.shape.children().length == 0) {
+				that.gps.shapeDiv.css("display", "none");
+			} else {
+				that.gps.shapeDiv.css("display", "block");
+			}
 			that.gps.marker.empty();
 			for(var key in that.markers) {
 				if(that.markers[key].label != null && that.markers[key].label.length > 0) that.gps.marker.append('<option value="' + that.markers[key].id + '">' + that.markers[key].label + '</option>')
+			}
+			if(that.gps.marker.children().length == 0) {
+				that.gps.markerDiv.css("display", "none");
+			} else {
+				that.gps.markerDiv.css("display", "block");
 			}
 			that.gps.dlg.show();
 		});
@@ -463,6 +475,7 @@ org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
 			jQuery('<option value="' + id + '">' + label + '</option>').appendTo(select1);
 		}
 	}
+	if(select1.children().length == 1) node1.css("display", "none");
 
 	var node2 = jQuery('<div>Shape:</div>').appendTo(node);
 	var select2 = jQuery('<select><option value="--">--</option></select>').appendTo(node2);
@@ -472,6 +485,7 @@ org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
 			jQuery('<option value="' + id + '">' + label + '</option>').appendTo(select2);
 		}
 	}
+	if(select2.children().length == 1) node2.css("display", "none");
 
 	this._findBlock = {order : 10, node : node[0], handler : function() {
 		var id = select1.val();
