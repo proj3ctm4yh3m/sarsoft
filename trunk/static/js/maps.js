@@ -930,7 +930,7 @@ org.sarsoft.PositionInfoControl.prototype.getConfig = function(config) {
 org.sarsoft.MapLabelWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
-	this.label = "normal";
+	this.label = "backlit";
 	this.toggle = new org.sarsoft.ToggleControl("LBL", "Toggle label display", function(value) {
 			that.label = value;
 			that.handleConfigChange();
@@ -938,6 +938,8 @@ org.sarsoft.MapLabelWidget = function(imap) {
 		[{value : "normal", style : ""},
 		 {value : "backlit", style : "color: white; background-color: red"},
 		 {value : "hidden", style : "text-decoration: line-through"}]);
+	this.toggle.setValue(this.label);
+	this.handleConfigChange();
 	imap.addMenuItem(this.toggle.node, 15);
 	imap.register("org.sarsoft.MapLabelWidget", this);
 }
