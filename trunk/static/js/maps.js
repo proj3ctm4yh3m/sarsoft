@@ -461,7 +461,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	imap.register("org.sarsoft.MapDatumWidget", this);
 
 	this.datumControl = jQuery('<div style="z-index: 2000; position: absolute; bottom: 0px; left: 0px; background: white"></div>').appendTo(imap.map.getContainer());
-	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '</span>').appendTo(this.datumControl);
+	this.datumDisplay = jQuery('<span class="noprint">' + org.sarsoft.map.datum + '</span>').appendTo(this.datumControl);
 	
 	if(switchable) {
 		this.datumSwitcher = jQuery('<a style="cursor: pointer" class="noprint">+</a>').appendTo(this.datumControl)[0];
