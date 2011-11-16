@@ -24,7 +24,7 @@ org.sarsoft.Loader.queue(function() {
   setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
-  setInterval("imap.timer()", ${refreshInterval});
+  collabWidget = new org.sarsoft.MapCollaborationWidget(imap);
 
   imap.message("Right click on map background to create shapes", 30000);
 
