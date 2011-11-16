@@ -12,7 +12,7 @@ ${welcomeMessage}
 <c:if test="${targetDest ne null}">
 <div>
 <form action="/cachepassword" method="POST">
-The page you are trying to reach is password protected.  Please enter it below:<br/>
+<span style="font-weight: bold; color: red">The page you are trying to reach is password protected.</span>  Please enter it below:<br/>
 <label for="password">Password:</label>
 <input type="password" name="password" size="10"/>
 <input type="hidden" name="dest" value="${targetDest}"/>
