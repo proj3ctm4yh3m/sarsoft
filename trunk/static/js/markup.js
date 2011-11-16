@@ -58,6 +58,9 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/resource/imagery/icons/circle/' + colors[i].substr(1) + '.png"></div>').appendTo(imageContainer);
 		swatch.click(function() { var j = i; return function() {that.imageInput.val(colors[j]); that.imageInput.trigger('change');}}());
 	}
+
+	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
+
 }
 
 
@@ -83,6 +86,11 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 		this.imageInput.val(obj.url);
 	} else {
 		this.imageInput.val("");
+	}
+	if(obj.updated != null) {
+		this.specsDiv.html("Last updated on " + new Date(1*obj.updated).toDateString());
+	} else {
+		this.specsDiv.html("");
 	}
 	this.handleChange();
 }
@@ -117,6 +125,8 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 			'<option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>' +
 			'<option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>' +
 			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
+	
+	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
@@ -130,6 +140,11 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.weightInput.val(obj.weight);
 	this.labelInput.val(obj.label);
 	if(obj.way != null) this.fillDiv.css("display", (obj.way.polygon ? "block" : "none"));
+	if(obj.formattedSize != null) {
+		this.specsDiv.html("Size is " + obj.formattedSize + "<br/>" + "Last updated on " + new Date(1*obj.updated).toDateString());
+	} else {
+		this.specsDiv.html("");
+	}
 }
 
 org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
