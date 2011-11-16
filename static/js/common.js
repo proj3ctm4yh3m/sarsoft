@@ -412,6 +412,27 @@ org.sarsoft.view.CreateDialog = function(title, bodynode, yes, no, handler, styl
 	return dialog;
 }
 
+org.sarsoft.view.AlertDialog = function(title, bodynode, style) {
+	var dlgStyle = {width: "350px", position: "absolute", top: "100px", left: "100px", "z-index": "2500"};
+	if(style != null) for(var key in style) {
+		dlgStyle[key] = style[key];
+	}
+	
+	if(typeof(bodynode)=="string") bodynode = jQuery('<div>' + bodynode + '</div>')[0];
+	
+	var dlg = jQuery('<div><div class="hd">' + title + '</div></div>');
+	dlg.css(dlgStyle);
+	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
+	this.bd.append(bodynode);
+	
+	var dialog = null;
+	var buttons = [{ text : "OK", handler: function() { dialog.hide(); }, isDefault: true}];
+	dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
+	dialog.render(document.body);
+	dialog.hide();
+	return dialog;
+}
+
 org.sarsoft.PasswordDialog = function() {
 	var bodynode = jQuery('<form action="/password" method="post">This will reload the page you are on.<br/>' +
 			'<input type="hidden" name="dest" value="' + window.location + '"/><label for="password">Password:</label><input type="password" name="password" length="10"/></form>');

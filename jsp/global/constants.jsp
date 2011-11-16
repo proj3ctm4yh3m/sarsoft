@@ -1,9 +1,11 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@page import="org.sarsoft.common.util.RuntimeProperties"%>
 <%@page contentType="text/javascript" %>
 <%@page import="org.sarsoft.common.model.MapSource"%>
 <% pageContext.setAttribute("tile", MapSource.Type.TILE); %>
-
+<% pageContext.setAttribute("refreshInterval", RuntimeProperties.getProperty("sarsoft.refresh.interval")); %>
+<% pageContext.setAttribute("autoRefresh", RuntimeProperties.getProperty("sarsoft.refresh.auto")); %>
 
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
@@ -15,6 +17,8 @@ org.sarsoft.map._default = new Object();
 org.sarsoft.map._default.zoom = ${defaultZoom};
 org.sarsoft.map._default.lat = ${defaultLat};
 org.sarsoft.map._default.lng = ${defaultLng};
+org.sarsoft.map.refreshInterval = ${refreshInterval};
+org.sarsoft.map.autoRefresh = ${autoRefresh};
 
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = function() {}
 <c:set var="first" value="${true}"/>

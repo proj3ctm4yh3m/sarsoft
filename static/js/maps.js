@@ -1716,6 +1716,36 @@ org.sarsoft.MapURLHashWidget.prototype.getConfig = function(config) {
 	return config;
 }
 
+org.sarsoft.MapCollaborationWidget = function(imap) {
+	var that = this;
+	this.imap = imap;
+	this.collaborate = false;
+	
+	this.dlg = new org.sarsoft.view.AlertDialog("Sync Enabled", "This page will automatically sync with changes made by other users for the next hour.");
+	
+	if(org.sarsoft.map.autoRefresh) {
+		this.timer = setInterval(function() {imap.timer();}, org.sarsoft.map.refreshInterval);
+	} else {
+		this.toggle = new org.sarsoft.ToggleControl("SYNC", "Sync to changes made by others.", function(value) {
+			that.collaborate = value;
+			if(that.timer != null) {
+				clearInterval(that.timer);
+				that.timer = null;
+			}
+			if(that.killswitch != null) {
+				clearTimeout(that.killswitch);
+				that.killswitch = null;
+			}
+			if(that.collaborate) {
+				that.dlg.show();
+				that.timer = setInterval(function() {that.imap.timer();}, 10000);
+				that.killswitch = setTimeout(function() { that.toggle.setValue(false); clearInterval(that.timer); that.timer = null; that.killswitch = null}, 3600000)
+			}
+		});
+		this.toggle.setValue(this.collaborate);
+		this.imap.addMenuItem(this.toggle.node, 19);
+	}
+}
 
 org.sarsoft.MapInfoControl = function() {
 }
@@ -2356,7 +2386,6 @@ org.sarsoft.MapUtil.createFlatCircleIcon = function (size, color) {
 
   return icon;
 }
-
 
 function ELabel(point, html, style, pixelOffset, centerOffset) {
   this._olcapable = true;
