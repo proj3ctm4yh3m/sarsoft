@@ -1,6 +1,21 @@
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 
+org.sarsoft.EScaleControl = function() {
+	GScaleControl.call(this);
+}
+
+org.sarsoft.EScaleControl.prototype = new GScaleControl();
+
+org.sarsoft.EScaleControl.prototype.getDefaultPosition = function() {
+	var position = GScaleControl.prototype.getDefaultPosition.call(this);
+	return new GControlPosition(position.anchor, new GSize(120,position.offset.height));
+}
+
+org.sarsoft.EScaleControl.prototype.printable = function() {
+	return true;
+}
+
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = new Object();
 
 org.sarsoft.EnhancedGMap._createTileLayers = function(config) {
@@ -63,7 +78,6 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		map.setCenter(center, zoom);
 		map.addControl(new OverlayDropdownMapControl());
 		map.addControl(new GLargeMapControl3D());
-		map.addControl(new GScaleControl());
 		return map;
 	}
 }
@@ -493,7 +507,7 @@ org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
 	this._showUTM = false;
-	this.style = {major : 0.8, minor : 0.4, crosshatch : 100, latlng : "DDMMHH"}
+	this.style = {major : 0.8, minor : 0.4, crosshatch : 100, latlng : "DDMMHH", scale : false}
 
 	this.utmgridlines = new Array();
 	this.text = new Array();
@@ -521,6 +535,7 @@ org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 	var fn = function() {
 		if(that.utminitialized == false) {
 			that._drawUTMGrid();
+			that._drawScale();
 			GEvent.addListener(map, "moveend", function() { that._drawUTMGrid(); });
 			GEvent.addListener(map, "zoomend", function(foo, bar) { that._drawUTMGrid(); });
 			GEvent.addListener(map, "dragstart", function() {
@@ -555,6 +570,17 @@ org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
 	}
 }
 
+org.sarsoft.UTMGridControl.prototype._drawScale = function() {
+	if(this._scaleControl != null) {
+		this.imap.map.removeControl(this._scaleControl);
+		this._scaleControl = null;
+	}
+	if(this.style.scale) {
+		this._scaleControl = new org.sarsoft.EScaleControl(true);
+		this.imap.map.addControl(this._scaleControl);
+	}
+}
+
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	if(config.UTMGridControl == null) return;
 	this.setValue(config.UTMGridControl.showUTM);
@@ -562,7 +588,9 @@ org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	if(config.UTMGridControl.minor != null) this.style.minor = config.UTMGridControl.minor;
 	if(config.UTMGridControl.crosshatch != null) this.style.crosshatch = config.UTMGridControl.crosshatch;
 	if(config.UTMGridControl.latlng != null) this.style.latlng = config.UTMGridControl.latlng;
+	if(config.UTMGridControl.scale != null) this.style.scale = config.UTMGridControl.scale;
 	this._drawUTMGrid(true);
+	this._drawScale();
 }
 
 org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
@@ -572,6 +600,7 @@ org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
 	config.UTMGridControl.minor = this.style.minor;
 	config.UTMGridControl.crosshatch = this.style.crosshatch;
 	config.UTMGridControl.latlng = this.style.latlng;
+	config.UTMGridControl.scale = this.style.scale;
 	return config;
 }
 
@@ -585,7 +614,8 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 		    {name : "major", label: "1km Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%"], hint: "Opacity, 100% to 10%"},
 		    {name : "minor", label: "100m Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%","None"], hint: "Visible at high zoom levels only"},
 		    {name : "crosshatch", label: "Show UTM Grid as", type : ["Solid Lines", "Crosshatches", "Edge Tickmarks Only"]},
-		    {name : "latlng", label: "Lat/Long", type : ["Decimal Degree","DDMMHH"]}
+		    {name : "latlng", label: "Lat/Long", type : ["Decimal Degree","DDMMHH"]},
+		    {name : "scale", label: "Show Scale", type : "boolean"}
 		]);
 		var node = jQuery('<div style="margin-top: 10px"><span style="font-weight: bold; text-decoration: underline">UTM Grid</span></div>')[0];
 		this._mapForm.create(node);
@@ -594,6 +624,7 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 			that.style.major = obj.major.substring(0, obj.major.length - 1)/100;
 			that.style.minor = (obj.minor == "None") ? 0 : obj.minor.substring(0, obj.minor.length - 1)/100;
 			that.style.latlng = (obj.latlng == "DDMMHH") ? "DDMMHH" : "DD";
+			that.style.scale = obj.scale;
 			if(obj.crosshatch == "Solid Lines") {
 				that.style.crosshatch = 100;
 			} else if(obj.crosshatch == "Crosshatches") {
@@ -602,6 +633,7 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 				that.style.crosshatch = 0;
 			}
 			that._drawUTMGrid(true);
+			that._drawScale();
 		}};
 	}
 
@@ -609,7 +641,8 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 		major : (this.style.major*100) + "%",
 		minor : (this.style.minor == 0) ? "None" : (this.style.minor*100) + "%",
 		crosshatch : lineTypes[this.style.crosshatch],
-		latlng : (this.style.latlng == "DDMMHH") ? "DDMMHH" : "Decimal Degree"
+		latlng : (this.style.latlng == "DDMMHH") ? "DDMMHH" : "Decimal Degree",
+		scale : this.style.scale
 	});
 	return this._setupBlock;
 }
