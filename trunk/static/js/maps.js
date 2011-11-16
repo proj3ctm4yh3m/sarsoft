@@ -1006,6 +1006,9 @@ org.sarsoft.MapFindWidget = function(imap) {
 		that.locationEntryForm.clear();
 		that.initializeDlg();
 		that.dialog.show();
+		if(typeof GClientGeocoder != 'undefined') {
+			that.locationEntryForm.address.focus();
+		}
 	});
 	imap.addMenuItem(find, 26);
 }
