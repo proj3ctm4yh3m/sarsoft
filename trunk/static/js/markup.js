@@ -60,7 +60,6 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	}
 
 	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
-
 }
 
 
@@ -525,6 +524,9 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 	var that = this;
 	this.imap = imap;
 	this.imap.register("org.sarsoft.controller.MapToolsController", this);
+	
+	this.alertDiv = document.createElement("div");
+	this.dlg = new org.sarsoft.view.AlertDialog("Measure", this.alertDiv);
 
 	var items = [{text: "Measure \u2192", applicable: function(obj) { return obj == null }, items:
 		[{text: "Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, false);}},
@@ -542,11 +544,12 @@ org.sarsoft.controller.MapToolsController.prototype.measure = function(point, po
 	poly.enableDrawing();
 	GEvent.addListener(poly, "endline", function() {
 		if(polygon) {
-			alert("Area is " + (Math.round(poly.getArea()/1000)/1000) + " sq km");
+			that.alertDiv.innerHTML = "Area is " + (Math.round(poly.getArea()/1000)/1000) + " sq km";
 		} else {
-			alert("Distance is " + (Math.round(poly.getLength())/1000) + " km");
+			that.alertDiv.innerHTML = "Distance is " + (Math.round(poly.getLength())/1000) + " km";
 		}
 		that.imap.map.removeOverlay(poly);
+		that.dlg.show();
 	});
 	GEvent.addListener(poly, "cancelline", function() {
 		that.imap.map.removeOverlay(poly);
