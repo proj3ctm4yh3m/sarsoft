@@ -529,8 +529,8 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 	this.dlg = new org.sarsoft.view.AlertDialog("Measure", this.alertDiv);
 
 	var items = [{text: "Measure \u2192", applicable: function(obj) { return obj == null }, items:
-		[{text: "Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, false);}},
-		 {text: "Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, true);}}]
+		[{text: "Distance", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, false);}},
+		 {text: "Area", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, true);}}]
 	}];
 	
 	this.imap.addContextMenuItems(items);
