@@ -240,7 +240,9 @@ public abstract class JSONBaseController {
 			}
 			model.addAttribute("welcomeHTML", welcomeHTML);
 		}
-		return "Pages.Welcome";
+		if(model.asMap().containsKey("targetDest")) return "Pages.Password";
+		if(isHosted() && account == null) return "Pages.Splash";
+		return "Pages.Splash";
 	}
 
 	protected String app(Model model, String view) {
@@ -259,9 +261,9 @@ public abstract class JSONBaseController {
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
 		model.addAttribute("head", getCommonHeader());
-		if(RuntimeProperties.getTenant() == null && !"/map".equals(view)) {
+/*		if(RuntimeProperties.getTenant() == null && !"/map".equals(view)) {
 			return bounce(model);
-		}
+		} */
 		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
 		return view;
 	}

@@ -68,7 +68,7 @@ Password:
 <script>
 org.sarsoft.Loader.queue(function() {
 	deleteDlg = new YAHOO.widget.Dialog("deleteObject", {zIndex: "2500", width: "300px"});
-	deleteDlg.cfg.queueProperty("buttons", [ { text: "Cancel", isDefault: true, handler: function() { deleteDlg.hide(); }}, { text : "Delete", handler: function() { window.location="/admin/delete?id=${tenant.name}" } }]);
+	deleteDlg.cfg.queueProperty("buttons", [ { text : "Delete", handler: function() { window.location="/admin/delete?id=${tenant.name}" } }, { text: "Cancel", isDefault: true, handler: function() { deleteDlg.hide(); }} ]);
 	deleteDlg.render(document.body);
 	deleteDlg.hide();
 });

@@ -71,14 +71,6 @@ org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.SearchDAO.prototype = new org.sarsoft.BaseDAO();
 
-org.sarsoft.TenantDAO = function(errorHandler, baseURL) {
-	if(typeof baseURL == "undefined") baseURL = "/rest/tenant";
-	this.baseURL = baseURL;
-	this.errorHandler = errorHandler;
-}
-
-org.sarsoft.TenantDAO.prototype = new org.sarsoft.BaseDAO();
-
 org.sarsoft.Loader = new Object();
 org.sarsoft.Loader._tasks = new Array();
 org.sarsoft.Loader.queue = function(task) {
@@ -204,6 +196,12 @@ org.sarsoft.view.EntityTable.prototype.create = function(container) {
 			that.click(args.record);
 		});
 	}
+}
+
+org.sarsoft.view.EntityTable.prototype.clear = function() {
+	this.table.set("sortedBy", null);
+	var rs = this.table.getRecordSet();
+	while(rs.getLength() > 0) this.table.deleteRow(0);
 }
 
 org.sarsoft.view.EntityTable.prototype.update = function(records) {
@@ -366,6 +364,54 @@ org.sarsoft.view.EntityForm.prototype._setValue = function(node, value) {
 		}
 	}
 }
+
+org.sarsoft.TenantDAO = function(errorHandler, baseURL) {
+	if(typeof baseURL == "undefined") baseURL = "/rest/tenant";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+}
+
+org.sarsoft.TenantDAO.prototype = new org.sarsoft.BaseDAO();
+
+org.sarsoft.TenantDAO.prototype.loadByClassName = function(className, handler) {
+	this._doGet("/?className=" + className, handler);
+}
+
+org.sarsoft.TenantDAO.prototype.loadRecent = function(handler) {
+	this._doGet("/recent", handler);
+}
+
+org.sarsoft.view.TenantTable = function() {
+	
+	var permissionFormatter = function(cell, record, column, data) {
+		var tenant = record.getData();
+		var value = "N/A";
+		if(tenant.allPerm == "WRITE") value = "Edit with URL";
+		else if(tenant.passwordPerm == "WRITE" && tenant.allPerm == "READ") value = "View with URL, Edit with Password";
+		else if(tenant.passwordPerm == "WRITE") value = "Edit with Password";
+		else if(tenant.passwordPerm == "READ" && tenant.allPerm == "NONE") value = "View with Password";
+		else if(tenant.allPerm == "READ") value = "View with URL";
+		else if(tenant.passwordPerm == "NONE" && tenant.allPerm == "NONE") value = "Private";
+		cell.innerHTML = value;
+	}
+
+	var coldefs = [
+		{ key : "publicName", label : "Name", sortable : true, formatter : function(cell, record, column, data) { cell.innerHTML = '<a href="javascript:window.location=\'/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '\'">' + data + '</a>' }},
+		{ key : "owner", label: "Owner"},
+		{ key : "allPerm", label : "Sharing", formatter : permissionFormatter },
+		{ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
+			var owner = record.getData().owner;
+			var share = '<a href="javascript:alert(\'You can share this map with others by giving them the following URL: ' + window.location.href.replace(window.location.pathname, "") + '/map?id=' + record.getData().name + '\')">Share</a>';
+			if(owner == "N/A" || owner == "You") {
+				cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map")+ '?id=' + record.getData().name + '&dest=admin.html">Admin</a>,&nbsp;' + share;
+			} else {
+				cell.innerHTML = share;
+			}
+		}}
+	];
+	org.sarsoft.view.EntityTable.call(this, coldefs, {});
+}
+org.sarsoft.view.TenantTable.prototype = new org.sarsoft.view.EntityTable();
 
 org.sarsoft.view.EntityCreateDialog = function(title, entityform, handler) {
 	var that = this;

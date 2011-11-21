@@ -1,9 +1,11 @@
 package org.sarsoft.common.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -47,6 +49,11 @@ public class AdminController extends JSONBaseController {
 	private OIDConsumer consumer = null;
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
+	
+	@RequestMapping(value="/", method = RequestMethod.GET)
+	public String getHomePage(Model model) {
+		return bounce(model);
+	}
 	
 	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
 	public String getConstants(Model model) {
@@ -210,7 +217,7 @@ public class AdminController extends JSONBaseController {
 			RuntimeProperties.setUsername(account.getName());
 			request.getSession(true).removeAttribute("tenantid");
 			RuntimeProperties.setTenant(null);
-			return "redirect:/";
+			return "redirect:/maps";
 		} catch (Exception e) {
 			logger.error("Exception encountered handling OpenID response", e);
 			return "error";
@@ -301,6 +308,75 @@ public class AdminController extends JSONBaseController {
 		RuntimeProperties.setTenant(null);
 		request.getSession(true).removeAttribute("tenantid");
 		return bounce(model);
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Map jsonifyTenant(Tenant tenant, String type) {
+		Map m = new HashMap();
+		m.put("publicName", tenant.getPublicName());
+		m.put("name", tenant.getName());
+		m.put("allPerm", tenant.getAllUserPermission());
+		m.put("passwordPerm", tenant.getPasswordProtectedUserPermission());
+		if(type != null) m.put("type", type);
+		String owner = "N/A";
+		if(tenant.getAccount() != null) {
+			String email = tenant.getAccount().getEmail();
+			if(email != null) email = email.substring(0,Math.min(3, email.length())) + email.replaceAll(".*?@", "...@").replaceAll("(.com|.org|.net)", "");
+			owner = tenant.getAccount().getName().equals(RuntimeProperties.getUsername()) ? "You" : email;
+		}
+		m.put("owner", owner);
+		return m;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value="/rest/tenant/", method = RequestMethod.GET)
+	public String getTenantList(Model model, @RequestParam(value="className", required=false) String className) {
+		List<Tenant> tenants = new ArrayList<Tenant>();
+		String user = RuntimeProperties.getUsername();
+		UserAccount account = null;
+		if(user != null) account = dao.getByPk(UserAccount.class, user);
+		if(isHosted()) {
+			if(account != null) {
+				if(account.getTenants() != null) tenants.addAll(account.getTenants());
+			}
+		} else {
+			tenants = dao.getAllTenants();
+		}
+		List<Map> list = new ArrayList<Map>();
+		for(Tenant tenant : tenants) {
+			if(className == null || className.equals(tenant.getClass().getName())) {
+				list.add(jsonifyTenant(tenant, className));
+			}
+		}
+		return json(model, list);
+	}
+	
+	private void loadRecentTenantsFromCookie(Cookie cookie, String className, List<Map> list) {
+		String value = cookie.getValue();
+		String[] values = value.split(",");
+		for(String val : values) {
+			String name = val;
+			if(name.indexOf('=') > 0) name = name.substring(0, name.indexOf('='));
+			Tenant tenant = dao.getByAttr(Tenant.class, "name", name);
+			if(tenant != null) {
+				list.add(jsonifyTenant(tenant, className));
+			}
+		}
+	}
+	
+	@SuppressWarnings({ "rawtypes" })
+	@RequestMapping(value="/rest/tenant/recent", method = RequestMethod.GET)
+	public String getRecentTenantList(Model model, HttpServletRequest request) {
+		Cookie[] cookies = request.getCookies();
+		List<Map> list = new ArrayList<Map>();
+		if(cookies != null) for(Cookie cookie : cookies) {
+			if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName())) {
+				loadRecentTenantsFromCookie(cookie, "org.sarsoft.markup.model.CollaborativeMap", list);
+			} else if("org.sarsoft.recentlyLoadedSearches".equals(cookie.getName())) {
+				loadRecentTenantsFromCookie(cookie, "org.sarsoft.plans.model.Search", list);
+			}
+		}
+		return json(model, list);
 	}
 	
 	@RequestMapping(value ="/rest/tenant/mapConfig", method = RequestMethod.GET)

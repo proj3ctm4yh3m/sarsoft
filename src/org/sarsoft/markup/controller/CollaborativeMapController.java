@@ -62,14 +62,15 @@ public class CollaborativeMapController extends JSONBaseController {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 	}
 
-	@RequestMapping(value="/", method = RequestMethod.GET)
+	@SuppressWarnings("unused")
+	@RequestMapping(value="/maps", method = RequestMethod.GET)
 	public String homePage(Model model) {
 		String tenant = RuntimeProperties.getTenant();
 		if(tenant != null) {
+			// Pre-load map object so that it gets instantiated as a CollaborativeMap and not as a Tenant
 			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", tenant);
-			if(map != null) return bounce(model);
 		}
-		return searchController.homePage(model);
+		return app(model, "Pages.Maps");
 	}
 	
 	private Map<String, Object> gpxifyMap(){
@@ -89,6 +90,9 @@ public class CollaborativeMapController extends JSONBaseController {
 			String val = adminController.setTenant(model, id, CollaborativeMap.class, request);
 			if(val != null) return val;
 		}
+		
+		if(request.getParameter("dest") != null)
+			return "redirect:" + request.getParameter("dest");
 
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		Tenant tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
@@ -111,7 +115,7 @@ public class CollaborativeMapController extends JSONBaseController {
 				}
 				if(myCookie != null && myCookie.getValue() != null) {
 					String value = myCookie.getValue();
-					value = value.replaceAll("(^|,)" + id + "=.*?(,|$)", ",");
+					value = value.replaceAll("(^|,)" + id + "(,|$)", ",");
 					value = value.replaceAll(",,", ",");
 					if(value.length() > 0 && !value.endsWith(",")) value = value + ",";
 					if(value.startsWith(",")) value = value.substring(1);
@@ -119,7 +123,7 @@ public class CollaborativeMapController extends JSONBaseController {
 				} else {
 					myCookie = new Cookie("org.sarsoft.recentlyLoadedMaps","");
 				}
-				myCookie.setValue(myCookie.getValue() + id + "=" + tenant.getDescription().replaceAll(",", ""));
+				myCookie.setValue(myCookie.getValue() + id);
 				myCookie.setMaxAge(7776000);
 				response.addCookie(myCookie);
 			}
