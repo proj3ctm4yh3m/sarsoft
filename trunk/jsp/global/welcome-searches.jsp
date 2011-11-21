@@ -8,16 +8,16 @@
 
 <div style="float: left; max-width: 15%; padding-top: 15px; margin-right: 20px; padding-right: 20px; border-right: 1px solid #5a8ed7; min-height: 60%">
 <div id="newLink" class="lmenu"><span style="padding-right: 5px" id="newArrow">&#x25B8;</span><a href="javascript:setPane('new')">New</a></div>
-<div id="yourLink" class="lmenu"><span style="padding-right: 5px" id="yourArrow">&#x25B8;</span><a href="javascript:setPane('your')">Your Maps</a></div>
+<div id="yourLink" class="lmenu"><span style="padding-right: 5px" id="yourArrow">&#x25B8;</span><a href="javascript:setPane('your')">Your Searches</a></div>
 <div id="recentLink" class="lmenu"><span style="padding-right: 5px" id="recentArrow">&#x25B8;</span><a href="javascript:setPane('recent')">Recent</a></div>
 </div>
 
 <div style="float: left; padding-top: 10px; width: 80%">
 
 <div id="newContent">
-<form action="/map" method="post" id="newmapform">
+<form action="/search" method="post" id="newsearchform">
 <p>
-<h2 style="color: #5a8ed7">Create a New Map</h2>
+<h2 style="color: #5a8ed7">Create a New Search</h2>
 
 <table border="0"><tbody>
 <tr><td valign="top">Name</td><td><input type="text" size="30" id="name" name="name"/></td></tr>
@@ -34,12 +34,9 @@
 </div>
 
 <div style="padding-top: 15px">
-<button onclick="createMap()">Create Map</button>
+<button onclick="createSearch()">Create Search</button>
 </div>
 
-<p style="padding-top: 2em;">
-Creating a map allows you to draw routes, mark waypoints, transfer data to a GPS, share with others and more.  Once the map is created, right-click anywhere on the map to begin.
-</p>
 </div>
 
 <div id="yourContent" style="display: none;">
@@ -75,11 +72,11 @@ function setPane(pane) {
 }
 
 function clearRecentCookie() {
-	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedMaps");
+	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedSearches");
 	recentTable.clear();
 }
 
-function createMap() {
+function createSearch() {
 	var searchname = document.getElementById('name').value;
 	if(searchname == null || searchname.length == 0) {
 		alert('Please enter a name for this map.');
@@ -90,8 +87,8 @@ function createMap() {
 			document.getElementById('lat').value = gll.lat();
 			document.getElementById('lng').value = gll.lng();
 		}
-		document.forms["newmapform"].submit();
-	})) document.forms["newmapform"].submit();
+		document.forms["newsearchform"].submit();
+	})) document.forms["newsearchform"].submit();
 }
 
 org.sarsoft.Loader.queue(function() {
@@ -106,7 +103,7 @@ org.sarsoft.Loader.queue(function() {
 		recentTable.update(rows);
 		if(rows != null && rows.length > 0) $('#clearRecent').css("visibility", "visible");
 	});
-	tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
+	tenantDAO.loadByClassName("org.sarsoft.plans.model.Search", function(rows) {
 		yourTable.update(rows);
 		if(rows == null || rows.length == 0) setPane('new');
 	});

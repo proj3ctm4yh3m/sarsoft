@@ -3,7 +3,6 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 
 
-<div style="padding-left: 10px">
 ${welcomeMessage}
 
 <c:if test="${message ne null}">

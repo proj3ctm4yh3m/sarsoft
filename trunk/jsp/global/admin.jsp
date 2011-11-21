@@ -9,8 +9,6 @@
 <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose>
 </c:set>
 
-<div style="padding-left: 1.5em">
-
 <h2><c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">Search</c:when><c:otherwise>Map</c:otherwise></c:choose> Admin</h2>
 
 <c:if test="${message ne null}">
@@ -68,8 +66,6 @@ You can also <a href="javascript:deleteDlg.show()">delete this <c:choose><c:when
 	<div class="bd">
 	Are you sure you want to delete ${tenant.description}?  This action cannot be undone.
 	</div>
-</div>
-
 </div>
 
 <script>

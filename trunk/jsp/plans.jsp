@@ -18,7 +18,7 @@ org.sarsoft.Loader.queue(function() {
   plansController.setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
-  setInterval("imap.timer()", ${refreshInterval});
+  setInterval("imap.timer()", org.sarsoft.map.refreshInterval);
 });
 }
 </script>
