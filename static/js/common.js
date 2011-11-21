@@ -386,26 +386,23 @@ org.sarsoft.view.TenantTable = function() {
 	var permissionFormatter = function(cell, record, column, data) {
 		var tenant = record.getData();
 		var value = "N/A";
-		if(tenant.allPerm == "WRITE") value = "Edit with URL";
-		else if(tenant.passwordPerm == "WRITE" && tenant.allPerm == "READ") value = "View with URL, Edit with Password";
-		else if(tenant.passwordPerm == "WRITE") value = "Edit with Password";
-		else if(tenant.passwordPerm == "READ" && tenant.allPerm == "NONE") value = "View with Password";
-		else if(tenant.allPerm == "READ") value = "View with URL";
+		if(tenant.allPerm == "WRITE") value = '<span style="white-space: nowrap">Edit with URL</span>';
+		else if(tenant.passwordPerm == "WRITE" && tenant.allPerm == "READ") value = '<span style="white-space: nowrap">View with URL</span>, <span style="white-space: nowrap">Edit with Password</span>';
+		else if(tenant.passwordPerm == "WRITE") value = '<span style="white-space: nowrap">Edit with Password</span>';
+		else if(tenant.passwordPerm == "READ" && tenant.allPerm == "NONE") value = '<span style="white-space: nowrap">View with Password</span>';
+		else if(tenant.allPerm == "READ") value = '<span style="white-space: nowrap">View with URL</span>';
 		else if(tenant.passwordPerm == "NONE" && tenant.allPerm == "NONE") value = "Private";
 		cell.innerHTML = value;
 	}
 	
-	var alertBody = document.createElement('div');
-	var alertDlg = org.sarsoft.view.AlertDialog("Sharing", alertBody);
-
 	var coldefs = [
 		{ key : "publicName", label : "Name", sortable : true, 
-			formatter : function(cell, record, column, data) { cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '">' + data + '</a>' },
+			formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap"}); cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '">' + data + '</a>' },
 			sortOptions: {sortFunction: function(a, b, desc) { 
 				return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); 
 				}} },
 		{ key : "owner", label: "Owner", sortable : true},
-		{ key : "comments", label: "Comments", sortable: true, formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "30em"}); cell.innerHTML = data;}},
+		{ key : "comments", label: "Comments", sortable: true, formatter : function(cell, record, column, data) { /*$(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "30em"});*/ cell.innerHTML = data;}},
 		{ key : "allPerm", label : "Sharing", formatter : permissionFormatter },
 		{ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
 			var owner = record.getData().owner;
