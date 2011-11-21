@@ -210,7 +210,7 @@ org.sarsoft.view.EntityTable.prototype.update = function(records) {
 	var rs = this.table.getRecordSet();
 	for(var i = 0; i < records.length; i++) {
 		for(var j = 0; j < rs.getLength(); j++) {
-			if(rs.getRecord(j).getData().id == records[i].id) {
+			if(rs.getRecord(j).getData().id == records[i].id && typeof records[i].id != "undefined") {
 				this.table.deleteRow(j);
 			}
 		}
@@ -394,20 +394,26 @@ org.sarsoft.view.TenantTable = function() {
 		else if(tenant.passwordPerm == "NONE" && tenant.allPerm == "NONE") value = "Private";
 		cell.innerHTML = value;
 	}
+	
+	var alertBody = document.createElement('div');
+	var alertDlg = org.sarsoft.view.AlertDialog("Sharing", alertBody);
 
 	var coldefs = [
-		{ key : "publicName", label : "Name", sortable : true, formatter : function(cell, record, column, data) { cell.innerHTML = '<a href="javascript:window.location=\'/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '\'">' + data + '</a>' }},
+		{ key : "publicName", label : "Name", sortable : true, 
+			formatter : function(cell, record, column, data) { cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '">' + data + '</a>' },
+			sortOptions: {sortFunction: function(a, b, desc) { 
+				return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); 
+				}} },
 		{ key : "owner", label: "Owner"},
 		{ key : "comments", label: "Comments", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "30em"}); cell.innerHTML = data;}},
 		{ key : "allPerm", label : "Sharing", formatter : permissionFormatter },
 		{ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
 			var owner = record.getData().owner;
-			var share = '<a href="javascript:alert(\'You can share this map with others by giving them the following URL: ' + window.location.href.replace(window.location.pathname, "") + '/map?id=' + record.getData().name + '\')">Share</a>';
 			if(owner == "N/A" || owner == "You") {
-				cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map")+ '?id=' + record.getData().name + '&dest=admin.html">Admin</a>,&nbsp;' + share;
-			} else {
-				cell.innerHTML = share;
+				cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map")+ '?id=' + record.getData().name + '&dest=admin.html">Admin</a>,&nbsp;';
 			}
+			var share = jQuery('<a href="javascript:return false;">Share</a>').appendTo(cell);
+			share.click(function() { alertBody.innerHTML = "You can share this map with others by giving them the following URL:<br/><br/>" + window.location.href.replace(window.location.pathname, "") + "/map?id=" + record.getData().name; alertDlg.show();});
 		}}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, {});

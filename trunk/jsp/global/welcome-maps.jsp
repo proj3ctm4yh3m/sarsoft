@@ -6,13 +6,13 @@
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>
 
-<div style="float: left; max-width: 20%; padding-top: 15px; padding-left: 1.5em; margin-right: 20px; padding-right: 20px; border-right: 1px solid #5a8ed7; min-height: 60%">
+<div style="float: left; max-width: 15%; padding-top: 15px; padding-left: 1.5em; margin-right: 20px; padding-right: 20px; border-right: 1px solid #5a8ed7; min-height: 60%">
 <div id="newLink" class="lmenu"><span style="padding-right: 5px" id="newArrow">&#x25B8;</span><a href="javascript:setPane('new')">New</a></div>
 <div id="yourLink" class="lmenu"><span style="padding-right: 5px" id="yourArrow">&#x25B8;</span><a href="javascript:setPane('your')">Your Maps</a></div>
 <div id="recentLink" class="lmenu"><span style="padding-right: 5px" id="recentArrow">&#x25B8;</span><a href="javascript:setPane('recent')">Recent</a></div>
 </div>
 
-<div style="float: left; padding-top: 10px; max-width: 75%">
+<div style="float: left; padding-top: 10px; width: 80%">
 
 <div id="newContent">
 <form action="/map" method="post" id="newmapform">
@@ -43,12 +43,12 @@ Creating a map allows you to draw routes, mark waypoints, transfer data to a GPS
 </div>
 
 <div id="yourContent" style="display: none;">
-<div id="yourList">
+<div id="yourList" class="growYUITable">
 </div>
 </div>
 
 <div id="recentContent" style="display: none;">
-<div id="recentList">
+<div id="recentList" class="growYUITable">
 </div>
 <span id="clearRecent" style="visibility: hidden">
 <br/>
@@ -101,19 +101,20 @@ org.sarsoft.Loader.queue(function() {
 	yourTable.create(document.getElementById("yourList"));
 	recentTable = new org.sarsoft.view.TenantTable();
 	recentTable.create(document.getElementById("recentList"));
-
+	
 	tenantDAO.loadRecent(function(rows) {
-		recentTable.table.addRows(rows);
+		recentTable.update(rows);
 		if(rows != null && rows.length > 0) $('#clearRecent').css("visibility", "visible");
 	});
 	tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
-		yourTable.table.addRows(rows);
+		yourTable.update(rows);
+		if(rows == null || rows.length == 0) setPane('new');
 	});
 		
 	locform = new org.sarsoft.LocationEntryForm();
 	locform.create(document.getElementById('searchlocation'));
 	
-	setPane('new');
+	setPane('your');
 });
 
 </script>

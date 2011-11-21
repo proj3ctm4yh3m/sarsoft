@@ -222,6 +222,12 @@ public abstract class JSONBaseController {
 		if(objects == null) objects = "map,search";
 		model.addAttribute("objects", objects);
 		
+		if(model.asMap().containsKey("targetDest")) return "Pages.Password";
+		if(isHosted() && account == null) return splash(model);
+		return "Pages.Maps";
+	}
+	
+	protected String splash(Model model) {
 		if(RuntimeProperties.getProperty("sarsoft.ui.welcome.html") != null) {
 			if(welcomeHTML == null) synchronized(this) {
 				try {
@@ -240,9 +246,8 @@ public abstract class JSONBaseController {
 			}
 			model.addAttribute("welcomeHTML", welcomeHTML);
 		}
-		if(model.asMap().containsKey("targetDest")) return "Pages.Password";
-		if(isHosted() && account == null) return "Pages.Splash";
-		return "Pages.Splash";
+		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
+		return app(model, "Pages.Splash");
 	}
 
 	protected String app(Model model, String view) {

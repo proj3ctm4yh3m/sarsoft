@@ -85,6 +85,10 @@ textarea.entityform {
 	display: none;
 }
 
+.growYUITable table {
+	width: 100%;
+}
+
 @media print {
 	.noprint {
 		display: none;
