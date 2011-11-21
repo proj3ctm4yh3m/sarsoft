@@ -38,17 +38,22 @@ function toggleAcctDropdown() {
 <div style="padding-left: 1.5em"><div style="font-weight: bold; font-size: 200%"><c:if test="${fn:length(app) gt 0}">${tenant.description}</c:if>&nbsp;</div></div>
 </div>
 	<div style="background: #f8f8f8; border-bottom: 1px solid 5a8ed7; height: 2em">
-	<c:if test="${account ne null}">
 		<div style="position: absolute; right: 20px; padding-top: 0.5em; z-index: 1">
-		${account.email}&nbsp;<span style="cursor: pointer; font-weight: bold; color: red; position: relative" onclick="toggleAcctDropdown();">&darr;
-			<div id="acctinfo" style="visibility: hidden; background: #f8f8f8; position: absolute; right: 0; top: 0.5em; padding-top: 1em; width: 10em; z-index: -1">
-				<div style="color: black; font-weight: normal">
-					<a style="float: right" href="/app/logout">Logout</a>
+		<c:choose>
+		<c:when test="${account ne null}">
+			${account.email}&nbsp;<span style="cursor: pointer; font-weight: bold; color: red; position: relative" onclick="toggleAcctDropdown();">&darr;
+				<div id="acctinfo" style="visibility: hidden; background: #f8f8f8; position: absolute; right: 0; top: 0.5em; padding-top: 1em; width: 10em; z-index: -1">
+					<div style="color: black; font-weight: normal">
+						<a style="float: right" href="/app/logout">Logout</a>
+					</div>
 				</div>
-			</div>
-		</span>
+			</span>
+		</c:when>
+		<c:when test="${hosted eq true}">
+		Sign in: <a href="/app/openidrequest?domain=google">Google</a>, <a href="/app/openidrequest?domain=yahoo">Yahoo</a>
+		</c:when>
+		</c:choose>
 		</div>
-	</c:if>
 	<c:choose>
 		<c:when test="${subHeader eq 'splash'}">
 			<div class="subheader active"><span><a href="/"><c:choose><c:when test="${fn:length(app) eq 0}">&#x25BE;</c:when><c:otherwise>&#x25B8;</c:otherwise></c:choose> Home</a></span></div>
