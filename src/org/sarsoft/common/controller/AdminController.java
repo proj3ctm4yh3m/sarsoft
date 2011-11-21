@@ -372,13 +372,19 @@ public class AdminController extends JSONBaseController {
 	
 	@SuppressWarnings({ "rawtypes" })
 	@RequestMapping(value="/rest/tenant/recent", method = RequestMethod.GET)
-	public String getRecentTenantList(Model model, HttpServletRequest request) {
+	public String getRecentTenantList(Model model, @RequestParam(value="className", required=false) String className, HttpServletRequest request) {
+		boolean maps = true;
+		boolean searches = true;
+		if(className != null) {
+			if("org.sarsoft.markup.model.CollaborativeMap".equals(className)) searches = false;
+			else if("org.sarsoft.plans.model.Search".equals(className)) maps = false;
+		}
 		Cookie[] cookies = request.getCookies();
 		List<Map> list = new ArrayList<Map>();
 		if(cookies != null) for(Cookie cookie : cookies) {
-			if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName())) {
+			if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName()) && maps) {
 				loadRecentTenantsFromCookie(cookie, "org.sarsoft.markup.model.CollaborativeMap", list);
-			} else if("org.sarsoft.recentlyLoadedSearches".equals(cookie.getName())) {
+			} else if("org.sarsoft.recentlyLoadedSearches".equals(cookie.getName()) && searches) {
 				loadRecentTenantsFromCookie(cookie, "org.sarsoft.plans.model.Search", list);
 			}
 		}

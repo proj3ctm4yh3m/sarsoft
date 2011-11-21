@@ -102,7 +102,7 @@ org.sarsoft.Loader.queue(function() {
 	recentTable = new org.sarsoft.view.TenantTable();
 	recentTable.create(document.getElementById("recentList"));
 	
-	tenantDAO.loadRecent(function(rows) {
+	tenantDAO.loadRecent("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
 		recentTable.update(rows);
 		if(rows != null && rows.length > 0) $('#clearRecent').css("visibility", "visible");
 	});
