@@ -31,6 +31,7 @@ public abstract class Tenant {
 	private Permission passwordProtectedUserPermission;
 	private String password;
 	private String description;
+	private String comments;
 	private UserAccount account;
 	private String mapConfig;
 	
@@ -65,6 +66,12 @@ public abstract class Tenant {
 	}
 	public String getDescription() {
 		return description;
+	}
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+	public String getComments() {
+		return comments;
 	}
 	@Transient
 	public String getPublicName() {

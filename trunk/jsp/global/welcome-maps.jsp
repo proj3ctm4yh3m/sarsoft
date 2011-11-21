@@ -6,19 +6,23 @@
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>
 
-<div style="float: left; max-width: 20%; padding-top: 15px; padding-left: 1.5em; margin-right: 20px; padding-right: 20px; border-right: 1px solid #5a8ed7; min-height: 300px">
+<div style="float: left; max-width: 20%; padding-top: 15px; padding-left: 1.5em; margin-right: 20px; padding-right: 20px; border-right: 1px solid #5a8ed7; min-height: 60%">
 <div id="newLink" class="lmenu"><span style="padding-right: 5px" id="newArrow">&#x25B8;</span><a href="javascript:setPane('new')">New</a></div>
 <div id="yourLink" class="lmenu"><span style="padding-right: 5px" id="yourArrow">&#x25B8;</span><a href="javascript:setPane('your')">Your Maps</a></div>
 <div id="recentLink" class="lmenu"><span style="padding-right: 5px" id="recentArrow">&#x25B8;</span><a href="javascript:setPane('recent')">Recent</a></div>
 </div>
 
-<div style="float: left; padding-top: 10px; max-width: 60%">
+<div style="float: left; padding-top: 10px; max-width: 75%">
 
 <div id="newContent">
 <form action="/map" method="post" id="newmapform">
 <p>
 <h2 style="color: #5a8ed7">Create a New Map</h2>
-<label for="name">Name</label><input type="text" size="15" name="name" id="name" style="margin-left: 2em"/>
+
+<table border="0"><tbody>
+<tr><td valign="top">Name</td><td><input type="text" size="30" id="name" name="name"/></td></tr>
+<tr><td valign="top">Comments</td><td><textarea cols="60" rows="5" id="comments" name="comments"></textarea></td></tr>
+</tbody></table>
 
 <input type="hidden" id="lat" name="lat"/>
 <input type="hidden" id="lng" name="lng"/>
