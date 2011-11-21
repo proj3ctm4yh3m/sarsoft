@@ -404,8 +404,8 @@ org.sarsoft.view.TenantTable = function() {
 			sortOptions: {sortFunction: function(a, b, desc) { 
 				return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); 
 				}} },
-		{ key : "owner", label: "Owner"},
-		{ key : "comments", label: "Comments", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "30em"}); cell.innerHTML = data;}},
+		{ key : "owner", label: "Owner", sortable : true},
+		{ key : "comments", label: "Comments", sortable: true, formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "30em"}); cell.innerHTML = data;}},
 		{ key : "allPerm", label : "Sharing", formatter : permissionFormatter },
 		{ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
 			var owner = record.getData().owner;
