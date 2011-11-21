@@ -377,8 +377,8 @@ org.sarsoft.TenantDAO.prototype.loadByClassName = function(className, handler) {
 	this._doGet("/?className=" + className, handler);
 }
 
-org.sarsoft.TenantDAO.prototype.loadRecent = function(handler) {
-	this._doGet("/recent", handler);
+org.sarsoft.TenantDAO.prototype.loadRecent = function(className, handler) {
+	this._doGet("/recent?className=" + className, handler);
 }
 
 org.sarsoft.view.TenantTable = function() {
