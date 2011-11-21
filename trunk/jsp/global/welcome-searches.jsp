@@ -15,9 +15,8 @@
 <div style="float: left; padding-top: 10px; width: 80%">
 
 <div id="newContent">
+<div style="color: #5a8ed7; font-size: 1.5em; font-weight: bold; padding-bottom: 5px">Create a New Search</div>
 <form action="/search" method="post" id="newsearchform">
-<p>
-<h2 style="color: #5a8ed7">Create a New Search</h2>
 
 <table border="0"><tbody>
 <tr><td valign="top">Name</td><td><input type="text" size="30" id="name" name="name"/></td></tr>
@@ -49,7 +48,7 @@
 </div>
 <span id="clearRecent" style="visibility: hidden">
 <br/>
-<a href="javascript:clearRecentCookie()">clear this list</a>
+Searches recently viewed with this browser.  <a href="javascript:clearRecentCookie()">Clear this list</a>.
 </span>
 </div>
 </div>
