@@ -23,6 +23,11 @@ public class CommonController extends JSONBaseController {
 		return app(model, "/map");
 	}
 	
+	@RequestMapping(value="/tools.html", method = RequestMethod.GET)
+	public String showTools(Model model) {
+		return app(model, "Pages.Tools");
+	}
+	
 	@RequestMapping(value="/app/togarmin", method = RequestMethod.GET)
 	public String toGarmin(Model model, HttpServletRequest request) {
 		model.addAttribute("file", request.getParameter("file"));
