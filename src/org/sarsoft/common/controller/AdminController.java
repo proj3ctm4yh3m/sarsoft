@@ -52,7 +52,7 @@ public class AdminController extends JSONBaseController {
 	
 	@RequestMapping(value="/", method = RequestMethod.GET)
 	public String getHomePage(Model model) {
-		return bounce(model);
+		return splash(model);
 	}
 	
 	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
