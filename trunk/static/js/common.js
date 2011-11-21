@@ -413,7 +413,8 @@ org.sarsoft.view.TenantTable = function() {
 				cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map")+ '?id=' + record.getData().name + '&dest=admin.html">Admin</a>,&nbsp;';
 			}
 			var share = jQuery('<a href="javascript:return false;">Share</a>').appendTo(cell);
-			share.click(function() { alertBody.innerHTML = "You can share this map with others by giving them the following URL:<br/><br/>" + window.location.href.replace(window.location.pathname, "") + "/map?id=" + record.getData().name; alertDlg.show();});
+			share.click(function() { alertBody.innerHTML = "You can share this map with others by giving them the following URL:<br/><br/>" + window.location.href.replace(window.location.pathname, "") + "/" +
+				((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + "?id=" + record.getData().name; alertDlg.show();});
 		}}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, {});
