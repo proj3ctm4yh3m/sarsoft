@@ -267,7 +267,7 @@ public abstract class JSONBaseController {
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
 		model.addAttribute("head", getCommonHeader());
 		// bounce users from pages that only make sense with tenants
-		if(RuntimeProperties.getTenant() == null && !("/map".equals(view) || "Pages.Maps".equals(view) || "Pages.Searches".equals(view) || "Pages.Splash".equals(view))) {
+		if(RuntimeProperties.getTenant() == null && !("/map".equals(view) || "Pages.Maps".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view))) {
 			return bounce(model);
 		}
 		// bounce users from listing pages unless they're logged in

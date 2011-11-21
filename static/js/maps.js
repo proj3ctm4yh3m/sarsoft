@@ -890,15 +890,7 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 		var utm = GeoUtil.GLatLngToUTM(datumll);
 		var message = utm.toHTMLString() + "<br/>";
 		if(that.imap != null && that.imap.registered["org.sarsoft.UTMGridControl"] != null && that.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DD") {
-			var dlat = Math.abs(datumll.lat());
-			var dlng = Math.abs(datumll.lng());
-			var lat = Math.floor(dlat);
-			lat = "" + lat + ("." + Math.round((dlat-lat)*10000) + "00000").substring(0, 5);
-			var lng = Math.floor(dlng);
-			lng = "" + lng + ("." + Math.round((dlng-lng)*10000) + "00000").substring(0, 5);
-			if(datumll.lat() < 0) lat = "-" + lat;
-			if(datumll.lng() < 0) lng = "-" + lng;
-			message = message + lat + ", " + lng;
+			message = message + GeoUtil.formatDD(datumll.lat()) + ", " + GeoUtil.formatDD(datumll.lng());
 		} else {
 			message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
 		}
@@ -995,7 +987,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 	this.dialog = org.sarsoft.view.CreateDialog("Find", this.body, "Find", "Cancel", function() {
 		var entry = that.locationEntryForm.read(function(gll) { that.imap.map.setCenter(gll, 14);});
 		if(!entry) that.checkBlocks();
-		}, {width: "450px"});
+		}, {width: "500px"});
 
 	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
 	this.locationEntryForm.create(this.body, function() {
@@ -1837,13 +1829,17 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
 	this.utmform = new org.sarsoft.UTMEditForm();
 	this.utmform.create(this.utmcontainer);
 	
-	tr = jQuery('<tr><td valign="top">Lat/Lng</td></tr>').appendTo(tbody);
-	var td = jQuery("<td/>").appendTo(tr);
-	this.lat = jQuery('<input type="text" size="8"/>').appendTo(td);
-	td.append(", ");
-	this.lng = jQuery('<input type="text" size="8"/>').appendTo(td);
+	tr = jQuery('<tr></tr>').appendTo(tbody);
+	var td = jQuery('<td valign="top"></td>').appendTo(tr);
+	this.select = jQuery('<select><option value="DD" selected="selected">Degrees</option><option value="DDMMHH">DDMMHH</option><option value="DDMMSS">DDMMSS</option></select').appendTo(td);
+	
+	td = jQuery("<td/>").appendTo(tr);
+	var dd = jQuery('<div></div>').appendTo(td);
+	this.lat = jQuery('<input type="text" size="8"/>').appendTo(dd);
+	dd.append(", ");
+	this.lng = jQuery('<input type="text" size="8"/>').appendTo(dd);
 	if(typeof(navigator.geolocation) != "undefined") {
-		this.geoloc = jQuery('<button style="margin-left: 10px">My Location</button>').appendTo(td);
+		this.geoloc = jQuery('<button style="margin-left: 10px">My Location</button>').appendTo(dd);
 		this.geoloc.click(function() {
 			navigator.geolocation.getCurrentPosition(function(pos) {
 				that.lat.val(pos.coords.latitude);
@@ -1851,7 +1847,50 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
 		}, function() { alert("Unable to determine your location.")});
 		});
 	}
-	td.append('<br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span>');
+	dd.append('<br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span>');
+	
+	var ddmmhh = jQuery('<div style="display: none"></div>').appendTo(td);
+	this.DDMMHH = new Object();
+	this.DDMMHH.latDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmhh);
+	ddmmhh.append("\u00B0");
+	this.DDMMHH.latMM = jQuery('<input type="text" size="5"/>').appendTo(ddmmhh);
+	ddmmhh.append("', ");
+	this.DDMMHH.lngDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmhh);
+	ddmmhh.append("\u00B0");
+	this.DDMMHH.lngMM = jQuery('<input type="text" size="5"/>').appendTo(ddmmhh);
+	ddmmhh.append('\'<br/><span class="hint">WGS84 degree minutes, e.g. 39\u00B020.66\', -120\u00B012.32\'</span>');
+
+	var ddmmss = jQuery('<div style="display: none"></div>').appendTo(td);
+	this.DDMMSS = new Object();
+	this.DDMMSS.latDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmss);
+	ddmmss.append("\u00B0");
+	this.DDMMSS.latMM = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append("'");
+	this.DDMMSS.latSS = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append("'', ");
+	this.DDMMSS.lngDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmss);
+	ddmmss.append("\u00B0");
+	this.DDMMSS.lngMM = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append("'");
+	this.DDMMSS.lngSS = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append('\'\'<br/><span class="hint">WGS84 degree minute seconds, e.g. 39\u00B020\'39\'\', -120\u00B012\'19\'\'</span>');
+
+	this.select.change(function() {
+		var type = that.select.val();
+		if(type == "DD") {
+			dd.css("display", "block");
+			ddmmhh.css("display", "none");
+			ddmmss.css("display", "none");
+		} else if(type == "DDMMHH"){
+			dd.css("display", "none");
+			ddmmhh.css("display", "block");
+			ddmmss.css("display", "none");
+		} else {
+			dd.css("display", "none");
+			ddmmhh.css("display", "none");
+			ddmmss.css("display", "block");
+		}
+	});
 	
 	tr = jQuery('<tr><td valign="top">Address</td></tr>').appendTo(tbody);
 	td = jQuery("<td/>").appendTo(tr);
@@ -1874,17 +1913,40 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
 org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
 	var utm = this.utmform.read();
 	var addr = this.address.val();
-	var lat = this.lat.val();
-	var lng = this.lng.val();
+	var type = this.select.val();
 	if(utm != null) {
 		callback(GeoUtil.UTMToGLatLng(utm));
 	} else if(addr != null && addr.length > 0 && typeof GClientGeocoder != 'undefined') {
 		var gcg = new GClientGeocoder();
 		gcg.getLatLng(addr, callback);
-	} else if(lat != null && lat.length > 0 && lng != null && lng.length > 0) {
-		callback(new GLatLng(1*lat, 1*lng));
+	} else if(type == "DD"){
+		var lat = this.lat.val();
+		var lng = this.lng.val();
+		if(lat != null && lat.length > 0 && lng != null && lng.length > 0) {
+			callback(new GLatLng(1*lat, 1*lng));
+		} else {
+			return false;
+		}
+	} else if(type == "DDMMHH") {
+		var latneg = (1*this.DDMMHH.latDD.val() < 0) ? true : false;
+		var lngneg = (1*this.DDMMHH.lngDD.val() < 0) ? true : false;
+		
+		var lat = Math.abs(this.DDMMHH.latDD.val()) + (this.DDMMHH.latMM.val()/60);
+		var lng = Math.abs(this.DDMMHH.lngDD.val()) + (this.DDMMHH.lngMM.val()/60);
+		if(isNaN(lat) || isNaN(lng)) return false;
+		if(latneg) lat = -1*lat;
+		if(lngneg) lng = -1*lng;
+		callback(new GLatLng(lat, lng));
 	} else {
-		return false;
+		var latneg = (1*this.DDMMSS.latDD.val() < 0) ? true : false;
+		var lngneg = (1*this.DDMMSS.lngDD.val() < 0) ? true : false;
+
+		var lat = Math.abs(this.DDMMSS.latDD.val()) + (this.DDMMSS.latMM.val()/60) + (this.DDMMSS.latSS.val()/3600);
+		var lng = Math.abs(this.DDMMSS.lngDD.val()) + (this.DDMMSS.lngMM.val()/60) + (this.DDMMSS.lngSS.val()/3600);
+		if(isNaN(lat) || isNaN(lng)) return false;
+		if(latneg) lat = -1*lat;
+		if(lngneg) lng = -1*lng;
+		callback(new GLatLng(lat, lng));
 	}
 	return true;
 }
@@ -1894,6 +1956,16 @@ org.sarsoft.LocationEntryForm.prototype.clear = function() {
 	this.address.val("");
 	this.lat.val("");
 	this.lng.val("");
+	this.DDMMHH.latDD.val("");
+	this.DDMMHH.latMM.val("");
+	this.DDMMHH.lngDD.val("");
+	this.DDMMHH.lngMM.val("");
+	this.DDMMSS.latDD.val("");
+	this.DDMMSS.latMM.val("");
+	this.DDMMSS.latSS.val("");
+	this.DDMMSS.lngDD.val("");
+	this.DDMMSS.lngMM.val("");
+	this.DDMMSS.lngSS.val("");
 }
 
 function UTM(e, n, zone) {
@@ -1924,6 +1996,14 @@ UTM.prototype.toHTMLString = function() {
 }
 
 GeoUtil = new Object();
+
+GeoUtil.formatDD = function(deg) {
+	var dec = Math.abs(deg);
+	var val = Math.floor(dec);
+	val = "" + val + ("." + Math.round((dec-val)*10000) + "00000").substring(0, 5);
+	if(deg < 0) val = "-" + val;
+	return val;
+}
 
 GeoUtil.formatDDMMHH = function(deg) {
 	var neg = false;

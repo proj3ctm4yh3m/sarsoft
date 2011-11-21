@@ -69,6 +69,10 @@
 		<put-attribute name="subHeader" value="splash"/>
 		<put-attribute name="content" value="/global/splash.jsp"/>
 	</definition>
+	<definition name="Pages.Tools" extends="App.Base">
+		<put-attribute name="subHeader" value="tools"/>
+		<put-attribute name="content" value="/global/tools.jsp"/>
+	</definition>
 	<definition name="Pages.Password" extends="App.Base">
 		<put-attribute name="content" value="/global/password.jsp"/>
 	</definition>
