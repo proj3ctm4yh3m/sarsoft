@@ -266,9 +266,12 @@ public abstract class JSONBaseController {
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
 		model.addAttribute("head", getCommonHeader());
-/*		if(RuntimeProperties.getTenant() == null && !"/map".equals(view)) {
+		// bounce users from pages that only make sense with tenants
+		if(RuntimeProperties.getTenant() == null && !("/map".equals(view) || "Pages.Maps".equals(view) || "Pages.Searches".equals(view) || "Pages.Splash".equals(view))) {
 			return bounce(model);
-		} */
+		}
+		// bounce users from listing pages unless they're logged in
+		if(isHosted() && username == null && ("Pages.Maps".equals(view) || "Pages.Searches".equals(view))) return bounce(model);
 		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
 		return view;
 	}
