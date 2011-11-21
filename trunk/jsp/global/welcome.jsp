@@ -1,126 +1,31 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-
-<div style="padding-left: 10px">
-<h2>Welcome to ${friendlyName}<c:if test="${account ne null}">, ${account.email}.  (<a href="/app/logout">Logout</a>)</c:if></h2>
-${welcomeMessage}
+<%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 
 <c:if test="${message ne null}">
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>
 
-<c:if test="${targetDest ne null}">
-<div>
-<form action="/cachepassword" method="POST">
-<span style="font-weight: bold; color: red">The page you are trying to reach is password protected.</span>  Please enter it below:<br/>
-<label for="password">Password:</label>
-<input type="password" name="password" size="10"/>
-<input type="hidden" name="dest" value="${targetDest}"/>
-<button type="submit">Submit</button>
-</form>
-</div>
-</c:if>
-
-<c:if test="${tenant ne null}">
-<c:set var="url">
-<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">/map?id=${tenant.name}</c:when><c:otherwise>/search?id=${tenant.name}</c:otherwise></c:choose>
-</c:set>
-<div>
-Continue working on: <a href="${url}">${tenant.description}</a>.
-</div>
-</c:if>
-
-
-<c:choose>
-<c:when test="${hosted eq true and account eq null}">
-<c:choose>
-<c:when test="${fn:length(welcomeHTML) gt 0}">
-${welcomeHTML}
-</c:when>
-<c:otherwise>
-<p>You need to log in with a Google or Yahoo account to create new objects.  If someone's shared a URL with you, you can visit it directly
-without logging in.
-</p>
-<p>
-Log in using your:
-<ul>
-<li><a href="/app/openidrequest?domain=google">Google account</a></li>
-<li><a href="/app/openidrequest?domain=yahoo">Yahoo account</a></li>
-</ul>
-</p>
-</c:otherwise>
-</c:choose>
-</c:when>
-
-
-<c:otherwise>
-<div style="height: 2px; width: 100%; border-bottom: 1px solid #CCCCCC"></div>
 <div style="float: left; max-width: 20%">
 <c:if test="${fn:contains(objects, 'search')}">
-<p><b>Your Searches</b>
-<ul>
-<c:set var="tenantFound" value="${false}"/>
-<c:forEach var="tenant" items="${tenants}">
-<c:if test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">
-<c:set var="tenantFound" value="${true}"/>
-<li><a href="/search?id=${tenant.name}">${tenant.description}</a></li>
-</c:if>
-</c:forEach>
-</ul>
-<c:if test="${tenantFound eq false}">
-Create a search to get started.
-</c:if>
-</p>
+<p><a style="font-weight: bold" href="javascript:loadTenants('yourSearches')">Your Searches</a><span id="yourSearches" class="leftnav" style="visibility: hidden; padding-left: 5px">&rarr;</span></p>
 </c:if>
 
 <c:if test="${fn:contains(objects, 'map')}">
-<p><b>Your Maps</b>
-<ul>
-<c:set var="tenantFound" value="${false}"/>
-<c:forEach var="tenant" items="${tenants}">
-<c:if test="${tenant.class.name eq 'org.sarsoft.markup.model.CollaborativeMap'}">
-<c:set var="tenantFound" value="${true}"/>
-<li><a href="/map?id=${tenant.name}">${tenant.description}</a></li>
-</c:if>
-</c:forEach>
-</ul>
-<c:if test="${tenantFound eq false}">
-Create a map to get started.
-</c:if>
-</p>
+<p><a style="font-weight: bold" href="javascript:loadTenants('yourMaps')">Your Maps</a><span id="yourMaps" class="leftnav" style="visibility: hidden; padding-left: 5px">&rarr;</span></p>
 </c:if>
 
-<div id="recentlyLoadedSearchDiv" style="display: none">
-<p><b>Recently Viewed Searches</b>
-<ul id="recentlyLoadedSearchUl">
-</ul>
-<a href="javascript:clearRecentSearches()">Clear Recent Searches</a>
-</p>
+<c:if test="${fn:contains(objects, 'map')}">
+<p><a style="font-weight: bold" href="javascript:loadTenants('recentlyViewed')">Recently Viewed</a><span id="recentlyViewed" class="leftnav" style="visibility: hidden; padding-left: 5px">&rarr;</span></p>
+</c:if>
 </div>
 
-<div id="recentlyLoadedMapDiv" style="display: none">
-<p><b>Recently Viewed Maps</b>
-<ul id="recentlyLoadedMapUl">
-</ul>
-<a href="javascript:clearRecentMaps()">Clear Recent Maps</a>
-</p></div>
+<div style="float: left; margin-left: 50px; padding-left: 10px; padding-top: 10px; border-left: 1px solid #CCCCCC; max-width: 60%">
 
-</div>
-
-<div style="float: left; margin-left: 50px; padding-left: 10px; border-left: 1px solid #CCCCCC; max-width: 60%">
-
-<form action="/search" method="post" id="newsearch">
-<c:set var="objname">
-<c:choose><c:when test="${objects eq 'map'}">map</c:when><c:otherwise>object</c:otherwise></c:choose></c:set>
+<div id="newMap">
+<form action="/map" method="post" id="newmapform">
 <p>
-<b style="text-transform: capitalize">create a new ${objname}</b><br/>
-Get started working with ${friendlyName} by creating a new ${objname} (you can change this
-information later).<c:if test="${hosted eq true}">  New ${objname}s will be accessible (read-only) by others,
-but only if you give them the URL.  You can control this on the admin page (inside the setup dialog for maps).
-</c:if>  You can back up ${objname}s by exporting to the GPX file format.  ${friendlyName} will store additional
- metadata in the GPX file so that all everything can be recreated when the GPX is imported.
-
-<br/><br/>
+<b>Create a new Map</b><br/><br/>
 <label for="name">Name</label><input type="text" size="15" name="name" id="name"/>
 
 <input type="hidden" id="lat" name="lat"/>
@@ -128,63 +33,120 @@ but only if you give them the URL.  You can control this on the admin page (insi
 </p>
 </form>
 
-<div style="padding-top: 15px">If known, enter the starting location in UTM, Lat/Lng, or as an address:</div>
+<div style="padding-top: 15px">If known, enter the initial location in UTM, Lat/Lng, or as an address:</div>
 <div id="searchlocation">
 </div>
 
 <div style="padding-top: 15px">
-<c:if test="${fn:contains(objects, 'search')}"><button onclick="createSearch()">Create Search</button></c:if>
-<c:if test="${fn:contains(objects, 'map')}"><button onclick="createMap()">Create Map</button></c:if>
+<button onclick="createMap()">Create Map</button>
 </div>
 </div>
+
+<div id="newSearch">
+<form action="/search" method="post" id="newsearchform">
+<b>Create a new Search</b><br/><br/>
+<label for="name">Name</label><input type="text" size="15" name="name" id="name2"/>
+
+<input type="hidden" id="lat2" name="lat"/>
+<input type="hidden" id="lng2" name="lng"/>
+</p>
+</form>
+
+<div style="padding-top: 15px">If known, enter the starting location in UTM, Lat/Lng, or as an address:</div>
+<div id="searchlocation2">
+</div>
+
+<div style="padding-top: 15px">
+<button onclick="createSearch()">Create Search</button>
+</div>
+
+</div>
+
+<div id="existingObj" style="display: none;">
+<div id="tenantlistcontainer">
+</div>
+<span id="clearRecent" style="visibility: hidden">
+<br/>
+<a href="javascript:clearRecentCookie()">clear this list</a>
+</span>
+</div>
+
+</div>
+
 
 <script>
 org.sarsoft.Loader.queue(function() {
+	
+	tenantDAO = new org.sarsoft.TenantDAO();
+	tenantTable = new org.sarsoft.view.TenantTable();
+	tenantTable.create(document.getElementById("tenantlistcontainer"));
+	tenantDAO.loadAll(function(rows) {
+		if(rows != null && rows.length > 0) {
+			setPane('existingObj');
+			tenantTable.table.addRows(rows);
+			tenantTable.table.sortColumn(tenantTable.table.getColumn(tenantTable.coldefs[0].key), YAHOO.widget.DataTable.CLASS_ASC);
+		} else {
+			setPane('newMap');
+		}
+    });
+		
 	locform = new org.sarsoft.LocationEntryForm();
 	locform.create(document.getElementById('searchlocation'));
 
-	var recentlyLoaded = YAHOO.util.Cookie.get("org.sarsoft.recentlyLoadedMaps");
-	if(recentlyLoaded != null) {
-		if(recentlyLoaded.indexOf('"') == 0) recentlyLoaded = recentlyLoaded.substring(1, recentlyLoaded.length - 1);
-		$('#recentlyLoadedMapDiv').css("display","block");
-		var maps = recentlyLoaded.split(',');
-		for(var i = 0; i < maps.length; i++) {
-			var map = maps[i].split('=');
-			$('#recentlyLoadedMapUl').append('<li><a href="/map?id=' + map[0] + '">' + map[1] + '</a></li>');
-		}
-	}
+	locform2 = new org.sarsoft.LocationEntryForm();
+	locform2.create(document.getElementById('searchlocation2'));
 
-	recentlyLoaded = YAHOO.util.Cookie.get("org.sarsoft.recentlyLoadedSearches");
-	if(recentlyLoaded != null) {
-		if(recentlyLoaded.indexOf('"') == 0) recentlyLoaded = recentlyLoaded.substring(1, recentlyLoaded.length - 1);
-		$('#recentlyLoadedSearchDiv').css("display","block");
-		var searches = recentlyLoaded.split(',');
-		for(var i = 0; i < searches.length; i++) {
-			var search = searches[i].split('=');
-			$('#recentlyLoadedSearchUl').append('<li><a href="/search?id=' + search[0] + '">' + search[1] + '</a></li>');
-		}
-	}
 });
 
-function clearRecentMaps() {
-	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedMaps");
-	$('#recentlyLoadedMapDiv').css("display","none");
+function setPane(pane) {
+	$('#newMap').css("display", "none");
+	$('#newSearch').css("display", "none");
+	$('#existingObj').css("display", "none");
+	
+	$('#' + pane).css("display", "block");
+
+	if(pane == 'newMap' || pane == 'newSearch') {
+		$('.leftnav').css("visibility", "hidden");
+	}
 }
 
-function clearRecentSearches() {
+function loadTenants(type) {
+	var className = null;
+	if(type == 'yourSearches') className = 'org.sarsoft.plans.model.Search';
+	else if(type == 'yourMaps') className = 'org.sarsoft.markup.model.CollaborativeMap';
+	
+	$('.leftnav').css("visibility", "hidden");
+	$('#' + type).css("visibility", "visible");
+	$('#clearRecent').css("visibility", "hidden");
+
+	var handler = function(rows) {
+		tenantTable.clear();
+		if(rows != null && rows.length > 0) {
+			setPane('existingObj');
+			tenantTable.table.addRows(rows);
+			tenantTable.table.sortColumn(tenantTable.table.getColumn(tenantTable.coldefs[0].key), YAHOO.widget.DataTable.CLASS_ASC);
+		} else {
+			setPane((type == 'yourSearches') ? 'newSearch' : 'newMap');
+		}
+	}
+	
+	if(className != null) tenantDAO.loadByClassName(className, handler);
+	else {
+		tenantDAO.loadRecent(handler);
+		$('#clearRecent').css("visibility", "visible");
+	}
+}
+
+function clearRecentCookie() {
+	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedMaps");
 	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedSearches");
-	$('#recentlyLoadedSearchDiv').css("display","none");
+	loadTenants('recentlyViewed');
 }
 
 function createMap() {
-	document.forms["newsearch"].action="/map";
-	createSearch();
-}
-
-function createSearch() {
 	var searchname = document.getElementById('name').value;
 	if(searchname == null || searchname.length == 0) {
-		alert('Please enter a name for this search.');
+		alert('Please enter a name for this map.');
 		return;
 	}
 	if(!locform.read(function(gll) {
@@ -192,11 +154,23 @@ function createSearch() {
 			document.getElementById('lat').value = gll.lat();
 			document.getElementById('lng').value = gll.lng();
 		}
-		document.forms["newsearch"].submit();
-	})) document.forms["newsearch"].submit();
+		document.forms["newmapform"].submit();
+	})) document.forms["newmapform"].submit();
+}
+
+function createSearch() {
+	var searchname = document.getElementById('name2').value;
+	if(searchname == null || searchname.length == 0) {
+		alert('Please enter a name for this search.');
+		return;
+	}
+	if(!locform2.read(function(gll) {
+		if(gll != null) {
+			document.getElementById('lat2').value = gll.lat();
+			document.getElementById('lng2').value = gll.lng();
+		}
+		document.forms["newsearchform"].submit();
+	})) document.forms["newsearchform"].submit();
 }
 </script>
-</c:otherwise>
-</c:choose>
 
-</div>

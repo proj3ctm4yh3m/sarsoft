@@ -5,6 +5,7 @@
 
 	<definition name="App.Base" template="/global/AppTemplate.jsp">
 		<put-attribute name="breadcrumb" value="/plans/breadcrumb.jsp"/>
+		<put-attribute name="subHeader" value=""/>
 		<put-attribute name="app" value=""/>
 	</definition>
 	<definition name="Assignment.Details" extends="App.Base">
@@ -56,9 +57,18 @@
 	<definition name="Pages.Home" extends="App.Base">
 		<put-attribute name="content" value="/global/home.jsp"/>
 	</definition>
-	<definition name="Pages.Welcome" extends="App.Base">
-		<put-attribute name="content" value="/global/welcome.jsp"/>
+	<definition name="Pages.Maps" extends="App.Base">
+		<put-attribute name="subHeader" value="maps"/>
+		<put-attribute name="content" value="/global/welcome-maps.jsp"/>
 	</definition>
+	<definition name="Pages.Splash" extends="App.Base">
+		<put-attribute name="subHeader" value="splash"/>
+		<put-attribute name="content" value="/global/splash.jsp"/>
+	</definition>
+	<definition name="Pages.Password" extends="App.Base">
+		<put-attribute name="content" value="/global/password.jsp"/>
+	</definition>
+	
 	<definition name="Pages.Admin" extends="App.Base">
 		<put-attribute name="content" value="/global/admin.jsp"/>
 		<put-attribute name="app" value="admin"/>

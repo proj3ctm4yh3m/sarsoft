@@ -88,7 +88,7 @@ public class SearchController extends JSONBaseController {
 			}
 			if(myCookie != null && myCookie.getValue() != null) {
 				String value = myCookie.getValue();
-				value = value.replaceAll("(^|,)" + name + "=.*?(,|$)", ",");
+				value = value.replaceAll("(^|,)" + name + "(,|$)", ",");
 				value = value.replaceAll(",,", ",");
 				if(value.length() > 0 && !value.endsWith(",")) value = value + ",";
 				if(value.startsWith(",")) value = value.substring(1);
@@ -97,7 +97,7 @@ public class SearchController extends JSONBaseController {
 				myCookie = new Cookie("org.sarsoft.recentlyLoadedSearches","");
 			}
 			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
-			myCookie.setValue(myCookie.getValue() + name + "=" + tenant.getDescription().replaceAll(",", ""));
+			myCookie.setValue(myCookie.getValue() + name);
 			myCookie.setMaxAge(7776000);
 			response.addCookie(myCookie);
 		}

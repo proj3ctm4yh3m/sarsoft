@@ -24,6 +24,37 @@ div.item label, div.item span.label {
 	width: 120px;
 }
 
+div.subheader {
+	height: 2em;
+	float: left;
+}
+
+div.subheader span {
+	font-size: 1.5em;
+	padding-left: 1em;
+	padding-right: 1em;
+	color: #5a8ed7;
+	font-weight: bold;
+}
+
+div.subheader span a {
+	color: inherit;
+}
+
+div.subheader.active span {
+	color: #945e3b;
+}
+
+div.lmenu {
+	font-size: 1.5em;
+	padding-bottom: 10px;
+	color: #333333;
+}
+
+div.lmenu a {
+	color: inherit;
+}
+
 .yui-skin-sam .clickableyuitable .yui-dt-body {
 	cursor: pointer;
 }
