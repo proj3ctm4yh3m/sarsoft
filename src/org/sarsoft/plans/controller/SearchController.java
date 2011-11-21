@@ -13,18 +13,12 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.controller.AdminController;
-import org.sarsoft.common.controller.CommonController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
-import org.sarsoft.common.model.GeoRefImage;
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.Tenant;
-import org.sarsoft.common.model.Tenant.Permission;
-import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.plans.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.controller.OpsController;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
@@ -36,7 +30,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,6 +47,17 @@ public class SearchController extends JSONBaseController {
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
+	}
+	
+	@SuppressWarnings("unused")
+	@RequestMapping(value="/searches", method = RequestMethod.GET)
+	public String searchesPage(Model model) {
+		String tenant = RuntimeProperties.getTenant();
+		if(tenant != null) {
+			// Pre-load search object so that it gets instantiated as a Search and not as a Tenant
+			Search search = dao.getByAttr(Search.class, "name", tenant);
+		}
+		return app(model, "Pages.Searches");
 	}
 	
 	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)

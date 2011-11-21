@@ -61,6 +61,10 @@
 		<put-attribute name="subHeader" value="maps"/>
 		<put-attribute name="content" value="/global/welcome-maps.jsp"/>
 	</definition>
+	<definition name="Pages.Searches" extends="App.Base">
+		<put-attribute name="subHeader" value="searches"/>
+		<put-attribute name="content" value="/global/welcome-searches.jsp"/>
+	</definition>
 	<definition name="Pages.Splash" extends="App.Base">
 		<put-attribute name="subHeader" value="splash"/>
 		<put-attribute name="content" value="/global/splash.jsp"/>
