@@ -5,6 +5,12 @@
 <% pageContext.setAttribute("read", Permission.READ); %>
 <% pageContext.setAttribute("write", Permission.WRITE); %>
 
+<c:set var="tenanttype">
+<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose>
+</c:set>
+
+<div style="padding-left: 1.5em">
+
 <h2><c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">Search</c:when><c:otherwise>Map</c:otherwise></c:choose> Admin</h2>
 
 <c:if test="${message ne null}">
@@ -14,10 +20,10 @@
 
 <form action="/admin.html" method="POST">
 
-<p>
-<label for="description">Name</label>
-<input type="text" size="30" value="${tenant.publicName}" name="description"/>
-</p>
+<table border="0"><tbody>
+<tr><td valign="top">Name</td><td><input type="text" size="30" value="${tenant.publicName}" name="description"/></td></tr>
+<tr><td valign="top">Comments</td><td><textarea cols="60" rows="5" name="comments">${tenant.comments}</textarea></td></tr>
+</tbody></table>
 
 <c:if test="${hosted}">
 <p>
@@ -48,21 +54,22 @@ Password:
 </span>
 </p>
 </c:if>
-<input type="submit" value="Update"/>
+<input type="submit" value="Save Changes"/> &mdash; or, <a href="<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">/searches</c:when><c:otherwise>/maps</c:otherwise></c:choose>">return without saving.</a>
 </form>
 
 <c:if test="${deleteable}">
-<p style="padding-top: 20px">
-<a href="javascript:deleteDlg.show()">Delete this object</a>.
+<p style="padding-top: 30px">
+You can also <a href="javascript:deleteDlg.show()">delete this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose></a>.
 </p>
 </c:if>
-<p style="padding-top: 20px"><a href="/">Take me home.</a></p>
 
 <div id="deleteObject" style="top: 150px; left: 150px; position: absolute; z-index: 200; width: 300px;">
 	<div class="hd">Delete</div>
 	<div class="bd">
 	Are you sure you want to delete ${tenant.description}?  This action cannot be undone.
 	</div>
+</div>
+
 </div>
 
 <script>

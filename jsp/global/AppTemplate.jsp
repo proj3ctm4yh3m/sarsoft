@@ -35,7 +35,7 @@ function toggleAcctDropdown() {
 </c:choose>
 <div class="header" style="${headerStyle}">
 <div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</span></div>
-<h1 style="margin: 0; padding: 0; border: 0"><c:if test="${fn:length(app) gt 0}">${tenant.description}</c:if>&nbsp;</h1>
+<div style="padding-left: 1.5em"><div style="font-weight: bold; font-size: 200%"><c:if test="${fn:length(app) gt 0}">${tenant.description}</c:if>&nbsp;</div></div>
 </div>
 	<div style="background: #f8f8f8; border-bottom: 1px solid 5a8ed7; height: 2em">
 	<c:if test="${account ne null}">
@@ -89,7 +89,7 @@ function toggleAcctDropdown() {
 	 </c:when>
 	 <c:when test="${app eq 'admin'}">
 	 <div class="subheader">
-	  <span>&#x25B8; Administration & Sharing</span>
+	  <span>&#x25B8;&#x25B8; Administration & Sharing</span>
 	 </div>
 	 </c:when>
 	</c:choose>
