@@ -370,8 +370,9 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 		var width = that.widthInput.val().replace(' ', '');
 		var height = that.heightInput.val().replace(' ', '');
 		var margin = that.marginInput.val().replace(' ', '')
+		var rule = that._getMarginRule();
 		
-		if(width.indexOf("in") > 0 && height.indexOf("in") > 0) {
+		if(rule != null && width.indexOf("in") > 0 && height.indexOf("in") > 0) {
 			var nWidth = width.replace("in", "");
 			var nHeight = height.replace("in", "");
 			var nMargin = 0;
@@ -384,7 +385,7 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 			height = (1*nHeight - nMargin*2) + "in";
 		}
 		
-		if(width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
+		if(rule != null && width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
 			var nWidth = width.replace("cm", "");
 			var nHeight = height.replace("cm", "");
 			var nMargin = 0;
@@ -399,7 +400,6 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 
 		that.map.getContainer().style.width=width;
 		that.map.getContainer().style.height=height;
-		var rule = that._getMarginRule();
 		if(rule != null) rule.style.setProperty('margin', margin);
 		that.map.checkResize();
 		that.map.setCenter(center);
@@ -421,9 +421,10 @@ org.sarsoft.view.MapSizeDlg.prototype.show = function() {
 	var width = this.map.getContainer().style.width;
 	var height = this.map.getContainer().style.height;
 	var rule = this._getMarginRule();
-	var margin = rule.style.getPropertyValue('margin');
+	var margin = "";
+	if(rule != null) margin = rule.style.getPropertyValue('margin');
 
-	if(width.indexOf("in") > 0 && height.indexOf("in") > 0) {
+	if(rule != null && width.indexOf("in") > 0 && height.indexOf("in") > 0) {
 		var nWidth = width.replace("in", "");
 		var nHeight = height.replace("in", "");
 		var nMargin = 0;
@@ -436,7 +437,7 @@ org.sarsoft.view.MapSizeDlg.prototype.show = function() {
 		height = (1*nHeight + nMargin*2) + "in";
 	}
 	
-	if(width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
+	if(rule != null && width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
 		var nWidth = width.replace("cm", "");
 		var nHeight = height.replace("cm", "");
 		var nMargin = 0;
