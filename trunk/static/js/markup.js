@@ -274,6 +274,9 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 				var format = that.gps.impFormat.val();
 				if(format == "GPS") {
 					window.location="/app/fromgarmin?callbackurl=" + encodeURIComponent(window.location) + "&posturl=/map/restgpxupload";
+				} else if("" == that.gps.impFile.val()) {
+					that.gps.dlg.show();
+					alert("Please select a GPX file to import.");
 				} else {
 					that.gps.form.submit();
 				}
