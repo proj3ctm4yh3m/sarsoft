@@ -307,7 +307,7 @@ public abstract class JSONBaseController {
 			TransformerFactory factory = TransformerFactory.newInstance();
 			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream(template)));
 			StringWriter writer = new StringWriter();
-			if(gpx != null && gpx.indexOf("<?xml") == 3) gpx = gpx.substring(3);
+			if(gpx != null && gpx.indexOf("<?xml") > 0 && gpx.indexOf("<?xml") < 10) gpx = gpx.substring(gpx.indexOf("<?xml"));
 			transformer.transform(new StreamSource(new StringReader(gpx)), new StreamResult(writer));
 			String xml = writer.toString();
 			XMLSerializer serializer = new XMLSerializer();
