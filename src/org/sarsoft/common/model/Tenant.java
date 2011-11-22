@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
@@ -70,6 +71,7 @@ public abstract class Tenant {
 	public void setComments(String comments) {
 		this.comments = comments;
 	}
+	@Lob
 	public String getComments() {
 		return comments;
 	}
@@ -93,6 +95,7 @@ public abstract class Tenant {
 	}
 
 	@JSONSerializable
+	@Lob
 	public String getMapConfig() {
 		return mapConfig;
 	}
