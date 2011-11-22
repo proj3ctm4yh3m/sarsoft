@@ -262,12 +262,14 @@ public class AdminController extends JSONBaseController {
 
 		if(request.getParameter("description") != null && request.getParameter("description").length() > 0) {
 			tenant.setDescription(request.getParameter("description"));
-			dao.save(tenant);
 		}
 		if(request.getParameter("comments") != null && request.getParameter("comments").length() > 0) {
 			tenant.setComments(request.getParameter("comments"));
 			dao.save(tenant);
+		} else {
+			tenant.setComments("");
 		}
+		dao.save(tenant);
 		if(tenant.getAccount() != null) {
 			tenant.setAllUserPermission(Permission.valueOf(request.getParameter("allUsers")));
 			tenant.setPasswordProtectedUserPermission(Permission.valueOf(request.getParameter("passwordUsers")));
@@ -320,7 +322,11 @@ public class AdminController extends JSONBaseController {
 		Map m = new HashMap();
 		m.put("publicName", tenant.getPublicName());
 		m.put("name", tenant.getName());
-		m.put("comments", tenant.getComments());
+		if(tenant.getComments() != null) {
+			m.put("comments", tenant.getComments());
+		} else {
+			m.put("comments", "");
+		}
 		m.put("allPerm", tenant.getAllUserPermission());
 		m.put("passwordPerm", tenant.getPasswordProtectedUserPermission());
 		if(type != null) m.put("type", type);

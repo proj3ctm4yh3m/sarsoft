@@ -6,13 +6,15 @@
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>
 
-<div style="float: left; max-width: 15%; padding-top: 15px; margin-right: 20px; padding-right: 20px; border-right: 1px solid #5a8ed7; min-height: 60%">
+<div style="padding-left: 14em; padding-right: 1em; padding-top: 15px;">
+
+<div style="position: relative; float: left; width: 13em; margin-left: -14em; border-right: 1px solid #5a8ed7; height: 15em">
 <div id="newLink" class="lmenu"><span style="padding-right: 5px" id="newArrow">&#x25B8;</span><a href="javascript:setPane('new')">New</a></div>
 <div id="yourLink" class="lmenu"><span style="padding-right: 5px" id="yourArrow">&#x25B8;</span><a href="javascript:setPane('your')">Your Searches</a></div>
 <div id="recentLink" class="lmenu"><span style="padding-right: 5px" id="recentArrow">&#x25B8;</span><a href="javascript:setPane('recent')">Recent</a></div>
 </div>
 
-<div style="float: left; padding-top: 10px; width: 80%">
+<div style="position: relative; float: left; width: 100%">
 
 <div id="newContent">
 <div style="color: #5a8ed7; font-size: 1.5em; font-weight: bold; padding-bottom: 5px">Create a New Search</div>
@@ -53,6 +55,7 @@ Searches recently viewed with this browser.  <a href="javascript:clearRecentCook
 </div>
 </div>
 
+</div>
 
 <script>
 
@@ -67,7 +70,7 @@ function setPane(pane) {
 
 	$('#' + pane + 'Arrow').css("visibility", "visible");
 	$('#' + pane + 'Content').css("display", "block");
-	$('#' + pane + 'Link').css("color", "945e3b");
+	$('#' + pane + 'Link').css("color", "#945e3b");
 }
 
 function clearRecentCookie() {

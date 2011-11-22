@@ -6,11 +6,13 @@
 <div style="font-weight: bold; color: red">Error: ${message}</div>
 </c:if>
 
-<div style="float: left; max-width: 15%; padding-top: 15px; margin-right: 20px; padding-right: 20px; border-right: 1px solid #5a8ed7; min-height: 60%">
+<div style="padding-left: 11em; padding-right: 1em; padding-top: 15px;">
+
+<div style="position: relative; float: left; width: 10em; margin-left: -11em; border-right: 1px solid #5a8ed7; height: 15em">
 <div id="convertLink" class="lmenu"><span style="padding-right: 5px" id="newArrow">&#x25B8;</span><a href="javascript:setPane('convert')">Convert</a></div>
 </div>
 
-<div style="float: left; padding-top: 10px; width: 80%">
+<div style="position: relative; float: left; width: 100%">
 
 <div id="convertContent">
 <div style="color: #5a8ed7; font-size: 1.5em; font-weight: bold; padding-bottom: 5px">Convert Coordinates</div>
@@ -33,6 +35,7 @@
 </div>
 </div>
 
+</div>
 
 <script>
 
@@ -47,7 +50,7 @@ function setPane(pane) {
 
 	$('#' + pane + 'Arrow').css("visibility", "visible");
 	$('#' + pane + 'Content').css("display", "block");
-	$('#' + pane + 'Link').css("color", "945e3b");
+	$('#' + pane + 'Link').css("color", "#945e3b");
 }
 
 function doConvert() {
