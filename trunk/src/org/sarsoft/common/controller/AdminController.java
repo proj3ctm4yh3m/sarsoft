@@ -314,7 +314,8 @@ public class AdminController extends JSONBaseController {
 		}
 		RuntimeProperties.setTenant(null);
 		request.getSession(true).removeAttribute("tenantid");
-		return bounce(model);
+		if("org.sarsoft.plans.model.Search".equals(tenant.getClass().getName())) return "redirect:/searches";
+		return "redirect:/maps";
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
