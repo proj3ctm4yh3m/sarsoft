@@ -337,9 +337,9 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 	
 	updatePresetInput = function() {
 		that.presetInput.val('--');
-		var width = that.widthInput.val();
-		var height = that.heightInput.val();
-		var margin = that.marginInput.val();
+		var width = that.widthInput.val().replace(' ', '');
+		var height = that.heightInput.val().replace(' ', '');
+		var margin = that.marginInput.val().replace(' ', '');
 		for(var i = 0; i < that.presets.length; i++) {
 			var preset = that.presets[i];
 			if(preset.width==width && preset.height==height && preset.margin==margin) {
@@ -380,8 +380,8 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 			} else if(margin.indexOf("cm") > 0) {
 				nMargin = 2.54*margin.replace("cm", "");
 			}
-			width = (nWidth - nMargin*2) + "in";
-			height = (nHeight - nMargin*2) + "in";
+			width = (1*nWidth - nMargin*2) + "in";
+			height = (1*nHeight - nMargin*2) + "in";
 		}
 		
 		if(width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
@@ -393,8 +393,8 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 			} else if(margin.indexOf("in") > 0) {
 				nMargin = margin.replace("in", "")/2.54;
 			}
-			width = (nWidth - nMargin*2) + "cm";
-			height = (nHeight - nMargin*2) + "cm";
+			width = (1*nWidth - nMargin*2) + "cm";
+			height = (1*nHeight - nMargin*2) + "cm";
 		}
 
 		that.map.getContainer().style.width=width;
@@ -418,13 +418,44 @@ org.sarsoft.view.MapSizeDlg.prototype._getMarginRule = function() {
 }
 
 org.sarsoft.view.MapSizeDlg.prototype.show = function() {
-	this.widthInput.val(this.map.getContainer().style.width);
-	this.heightInput.val(this.map.getContainer().style.height);
+	var width = this.map.getContainer().style.width;
+	var height = this.map.getContainer().style.height;
 	var rule = this._getMarginRule();
-	if(rule != null) this.marginInput.val(rule.style.getPropertyValue('margin'));
+	var margin = rule.style.getPropertyValue('margin');
+
+	if(width.indexOf("in") > 0 && height.indexOf("in") > 0) {
+		var nWidth = width.replace("in", "");
+		var nHeight = height.replace("in", "");
+		var nMargin = 0;
+		if(margin.indexOf("in") > 0) {
+			nMargin = margin.replace("in", "");
+		} else if(margin.indexOf("cm") > 0) {
+			nMargin = 2.54*margin.replace("cm", "");
+		}
+		width = (1*nWidth + nMargin*2) + "in";
+		height = (1*nHeight + nMargin*2) + "in";
+	}
+	
+	if(width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
+		var nWidth = width.replace("cm", "");
+		var nHeight = height.replace("cm", "");
+		var nMargin = 0;
+		if(margin.indexOf("cm") > 0) {
+			nMargin = margin.replace("cm", "");
+		} else if(margin.indexOf("in") > 0) {
+			nMargin = margin.replace("in", "")/2.54;
+		}
+		width = (1*nWidth + nMargin*2) + "cm";
+		height = (1*nHeight + nMargin*2) + "cm";
+	}
+		
+	this.widthInput.val(width);
+	this.heightInput.val(height);
+	if(rule != null) this.marginInput.val(margin);
+	
 	for(var i = 0; i < this.presets.length; i++) {
 		var preset = this.presets[i];
-		if(this.widthInput.val()==preset.width && this.heightInput.val()==preset.height && this.marginInput.val()==preset.margin) {
+		if(width==preset.width && height==preset.height && margin==preset.margin) {
 			this.presetInput.val(preset.name);
 		}
 	}
