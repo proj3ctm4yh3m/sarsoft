@@ -395,7 +395,10 @@ org.sarsoft.view.TenantTable = function() {
 		cell.innerHTML = value;
 	}
 	
-	var coldefs = [
+    var alertBody = document.createElement('div');
+    var alertDlg = org.sarsoft.view.AlertDialog("Sharing", alertBody);	
+
+    var coldefs = [
 		{ key : "publicName", label : "Name", sortable : true, 
 			formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap"}); cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '">' + data + '</a>' },
 			sortOptions: {sortFunction: function(a, b, desc) { 
