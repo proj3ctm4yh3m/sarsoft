@@ -18,7 +18,9 @@
 <markers class="array">
 	<xsl:for-each select="gpx:wpt">
 		<e class="object">
-		<xsl:call-template name="GpxToWaypoint"/>
+		<xsl:call-template name="GpxToWaypoint">
+			<xsl:with-param name="copyMetaData" select="true()"/>
+		</xsl:call-template>
 		</e>
 	</xsl:for-each>
 </markers>
@@ -54,10 +56,11 @@
 </xsl:template>
 
 <xsl:template name="GpxToWaypoint">
+	<xsl:param name="copyMetaData" select="false()"/>
 	<lat type="number"><xsl:value-of select="@lat"/></lat>
 	<lng type="number"><xsl:value-of select="@lon"/></lng>
-	<xsl:if test="string-length(gpx:name | gpx0:name) &gt; 0 and not(starts-with(normalize-space(gpx:name | gpx0:name), '-'))"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
-	<xsl:if test="string-length(gpx:desc | gpx0:desc) &gt; 0"><desc type="string"><xsl:value-of select="gpx:desc | gpx0:desc"/></desc></xsl:if>
+	<xsl:if test="$copyMetaData and string-length(gpx:name | gpx0:name) &gt; 0 and not(starts-with(normalize-space(gpx:name | gpx0:name), '-'))"><name type="string"><xsl:value-of select="gpx:name | gpx0:name"/></name></xsl:if>
+	<xsl:if test="$copyMetaData and string-length(gpx:desc | gpx0:desc) &gt; 0"><desc type="string"><xsl:value-of select="gpx:desc | gpx0:desc"/></desc></xsl:if>
 </xsl:template>
 
 </xsl:stylesheet>
