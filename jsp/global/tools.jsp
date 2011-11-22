@@ -23,6 +23,7 @@
 </table>
 
 <button onclick="doConvert()" style="margin-top: 10px">Convert</button>
+<button onclick="locform.clear()" style="margin-top: 10px; margin-left: 10px">Clear Form</button>
 
 <div style="padding-top: 20px">
 <table>
