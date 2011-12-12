@@ -149,6 +149,22 @@ public class CollaborativeMapController extends JSONBaseController {
 		}
 		return val;
 	}
+
+	@RequestMapping(value="/guide", method = RequestMethod.GET)
+	public String guide(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request) {
+		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
+			String val = adminController.setTenant(model, id, CollaborativeMap.class, request);
+			if(val != null) return val;
+		}
+		
+		Tenant tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		if(tenant == null) tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		
+		model.addAttribute("shapes", dao.loadAll(Shape.class));
+		model.addAttribute("markers", dao.loadAll(Marker.class));
+
+		return app(model, "Map.Guide");
+	}
 	
 	@RequestMapping(value="/map/restgpxupload", method = RequestMethod.POST)
 	public String restGpxUpload(JSONForm params, Model model, HttpServletRequest request) {

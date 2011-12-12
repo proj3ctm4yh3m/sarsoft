@@ -116,6 +116,11 @@ function toggleAcctDropdown() {
 	  <span>&#x25B8;&#x25B8; Administration & Sharing</span>
 	 </div>
 	 </c:when>
+	 <c:when test="${app eq 'guide'}">
+	 <div class="subheader">
+	  <span>&#x25B8;&#x25B8; Guide</span>
+	 </div>
+	 </c:when>
 	</c:choose>
 	<c:choose>
 	 <c:when test="${assignment ne null}">

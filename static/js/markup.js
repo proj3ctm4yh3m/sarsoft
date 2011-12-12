@@ -432,6 +432,20 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	this.imap.addWaypoint(marker.position, config, tooltip, marker.label);
 }
 
+org.sarsoft.controller.MarkupMapController.getRealURLForMarker = function(url) {
+	if(url == null || url.length == 0) {
+		url  = "#FF0000";
+	}
+	if(url.indexOf('#') == 0) {
+		url = url.substring(1);
+		return "/resource/imagery/icons/circle/" + url + ".png"
+	} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
+		return "/static/images/icons/" + url + ".png";
+	} else {
+		return url;
+	}
+}
+
 org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape) {
 	if(this.shapes[shape.id] != null) this.imap.removeWay(this.shapes[shape.id].way);
 	if(shape.way == null) return;
