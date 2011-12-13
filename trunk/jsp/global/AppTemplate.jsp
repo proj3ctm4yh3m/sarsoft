@@ -34,11 +34,11 @@ function toggleAcctDropdown() {
 <c:when test="${not empty account or hosted eq false}"><c:set var="loggedin" value="${true}"/></c:when>
 <c:otherwise><c:set var="loggedin" value="${false}"/></c:otherwise>
 </c:choose>
-<div class="header" style="${headerStyle}">
+<div class="header noprint" style="${headerStyle}">
 <div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</span></div>
 <div style="padding-left: 1.5em"><div style="font-weight: bold; font-size: 200%"><c:if test="${fn:length(app) gt 0}">${tenant.description}</c:if>&nbsp;</div></div>
 </div>
-	<div style="background: #f8f8f8; border-bottom: 1px solid 5a8ed7; height: 2em">
+	<div style="background: #f8f8f8; border-bottom: 1px solid 5a8ed7; height: 2em" class="noprint">
 		<div style="position: absolute; right: 20px; padding-top: 0.5em; z-index: 1">
 		<c:choose>
 		<c:when test="${account ne null}">
