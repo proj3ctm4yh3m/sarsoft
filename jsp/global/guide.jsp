@@ -10,7 +10,7 @@ Show:<input type="checkbox" id="markercb" onchange="showhidemarkers()" style="pa
 </div>
 
 <div style="padding-bottom: 1em" class="printonly">
-<span style="font-size: 1.5em; color: #945e3b">Map Guide for ${tenant.description}</span><br/>
+<span style="font-size: 1.5em; color: #945e3b">${tenant.description} Guide</span><br/>
 ${tenant.comments}
 </div>
 
@@ -19,12 +19,13 @@ ${tenant.comments}
 <div style="font-size: 1.5em; font-weight: bold">Markers</div>
 <div class="printonly" style="font-size: smaller; font-style: italic">Positions shown using <span id="printDatum">WGS84</span> datum.</div>
 
-<c:forEach var="marker" items="${markers}">
+<c:forEach var="marker" items="${markers}" varStatus="status">
+<c:if test="${status.index % 2 eq 0}"><div style="clear: both"></div></c:if>
 <div style="padding-top: 1em; float: left; width: 45%; min-height: 7em">
 <div><img id="m${marker.id}" style="vertical-align: middle; padding-right: 0.5em"/><span style="font-weight: bold; color: #945e3b">${marker.label}</span></div>
 <c:if test="${fn:length(marker.comments) gt 0}">
 <div>
-<table style="border: 0">
+<table style="border: 0; padding-right: 1em">
 <tbody><tr><td style="border-left: 1px solid #945e3b; padding-left: 1ex">${marker.htmlFriendlyComments}</td></tr></tbody>
 </table>
 </div>
@@ -38,7 +39,8 @@ ${tenant.comments}
 <div class="showShapes">
 
 <div style="font-size: 1.5em; font-weight: bold; width: 90%; float: left; padding-top: 1em">Shapes</div>
-<c:forEach var="shape" items="${shapes}">
+<c:forEach var="shape" items="${shapes}" varStatus="status">
+<c:if test="${status.index % 2 eq 0}"><div style="clear: both"></div></c:if>
 <div style="padding-top: 1em; float: left; width: 45%">
 <div style="min-height: 1.2em">
 <c:choose>
@@ -55,7 +57,7 @@ ${tenant.comments}
 
 <span style="font-weight: bold; color: #945e3b">${shape.label}</span></div>
 <c:if test="${fn:length(shape.comments) gt 0}">
-<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex">
+<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex; padding-right: 1em">
 ${shape.htmlFriendlyComments}
 </div>
 </c:if>
