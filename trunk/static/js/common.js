@@ -2,8 +2,9 @@ if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
-org.sarsoft.htmlescape = function(str) {
-	return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g, "<br/>");
+org.sarsoft.htmlescape = function(str, newline) {
+	if(newline) return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g, "<br/>");
+	return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
 org.sarsoft.BaseDAO = function() {
