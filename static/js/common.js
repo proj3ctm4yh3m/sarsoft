@@ -2,6 +2,10 @@ if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
+org.sarsoft.htmlescape = function(str) {
+	return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g, "<br/>");
+}
+
 org.sarsoft.BaseDAO = function() {
 //	this._timestamp = 0;
 }

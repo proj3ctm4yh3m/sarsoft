@@ -23,6 +23,7 @@ import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.markup.model.Marker;
+import org.sarsoft.markup.model.MarkupLatitudeComparator;
 import org.sarsoft.markup.model.Shape;
 import org.sarsoft.plans.controller.SearchController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,6 +151,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		return val;
 	}
 
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/guide", method = RequestMethod.GET)
 	public String guide(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request) {
 		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
@@ -160,8 +162,12 @@ public class CollaborativeMapController extends JSONBaseController {
 		Tenant tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 		if(tenant == null) tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		
-		model.addAttribute("shapes", dao.loadAll(Shape.class));
-		model.addAttribute("markers", dao.loadAll(Marker.class));
+		List<Shape> shapes = dao.loadAll(Shape.class);
+		Collections.sort(shapes, new MarkupLatitudeComparator());
+		model.addAttribute("shapes", shapes);
+		List<Marker> markers = dao.loadAll(Marker.class);
+		Collections.sort(markers, new MarkupLatitudeComparator());
+		model.addAttribute("markers", markers);
 
 		return app(model, "Map.Guide");
 	}

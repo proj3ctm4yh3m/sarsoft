@@ -22,6 +22,13 @@ ${tenant.comments}
 <c:forEach var="marker" items="${markers}">
 <div style="padding-top: 1em; float: left; width: 45%; min-height: 7em">
 <div><img id="m${marker.id}" style="vertical-align: middle; padding-right: 0.5em"/><span style="font-weight: bold; color: #945e3b">${marker.label}</span></div>
+<c:if test="${fn:length(marker.comments) gt 0}">
+<div>
+<table style="border: 0">
+<tbody><tr><td style="border-left: 1px solid #945e3b; padding-left: 1ex">${marker.htmlFriendlyComments}</td></tr></tbody>
+</table>
+</div>
+</c:if>
 <div id="mw${marker.id}">
 </div>
 </div>
@@ -33,7 +40,7 @@ ${tenant.comments}
 <div style="font-size: 1.5em; font-weight: bold; width: 90%; float: left; padding-top: 1em">Shapes</div>
 <c:forEach var="shape" items="${shapes}">
 <div style="padding-top: 1em; float: left; width: 45%">
-<div>
+<div style="min-height: 1.2em">
 <c:choose>
 <c:when test="${shape.way.polygon}">
 <div style="float: left; height: 0.6em; width: 1.5em; margin-right: 0.5em; border-top: ${shape.weight}px solid ${shape.color}; border-bottom: ${shape.weight}px solid ${shape.color}">
@@ -47,9 +54,15 @@ ${tenant.comments}
 </c:choose>
 
 <span style="font-weight: bold; color: #945e3b">${shape.label}</span></div>
-<div>
+<c:if test="${fn:length(shape.comments) gt 0}">
+<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex">
+${shape.htmlFriendlyComments}
+</div>
+</c:if>
+<div style="clear: both">
 <c:choose><c:when test="${shape.way.polygon}">Area:</c:when><c:otherwise>Length:</c:otherwise></c:choose> ${shape.formattedSize}
 </div>
+
 </div>
 </c:forEach>
 </div>
