@@ -53,6 +53,7 @@ public class ShapeController extends JSONBaseController {
 			shape.setColor(updated.getColor());
 			shape.setFill(updated.getFill());
 			shape.setWeight(updated.getWeight());
+			shape.setComments(updated.getComments());
 			shape.setLabel(updated.getLabel());
 			dao.save(shape);
 			break;

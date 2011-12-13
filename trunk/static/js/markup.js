@@ -58,6 +58,9 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/resource/imagery/icons/circle/' + colors[i].substr(1) + '.png"></div>').appendTo(imageContainer);
 		swatch.click(function() { var j = i; return function() {that.imageInput.val(colors[j]); that.imageInput.trigger('change');}}());
 	}
+	
+	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
+	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(form);
 
 	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
 }
@@ -75,7 +78,7 @@ org.sarsoft.view.MarkerForm.prototype.handleChange = function() {
 }
 
 org.sarsoft.view.MarkerForm.prototype.read = function() {
-	return {label : this.labelInput.val(), url: this.imageUrl};
+	return {label : this.labelInput.val(), url: this.imageUrl, comments: this.comments.val()};
 }
 
 org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
@@ -86,6 +89,7 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	} else {
 		this.imageInput.val("");
 	}
+	this.comments.val(obj.comments);
 	if(obj.updated != null) {
 		this.specsDiv.html("Last updated on " + new Date(1*obj.updated).toDateString());
 	} else {
@@ -124,12 +128,15 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 			'<option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>' +
 			'<option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>' +
 			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
-	
+
+	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
+	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(form);
+
 	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
-	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val()};
+	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val(), comments: this.comments.val()};
 }
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
@@ -138,6 +145,7 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.fillInput.val(obj.fill);
 	this.weightInput.val(obj.weight);
 	this.labelInput.val(obj.label);
+	this.comments.val(obj.comments);
 	if(obj.way != null) this.fillDiv.css("display", (obj.way.polygon ? "block" : "none"));
 	if(obj.formattedSize != null) {
 		this.specsDiv.html("Size is " + obj.formattedSize + "<br/>" + "Last updated on " + new Date(1*obj.updated).toDateString());
@@ -156,7 +164,9 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this.shapes = new Object();
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
-
+	this.alertDlgDiv = document.createElement("div");
+	this.alertDlg = org.sarsoft.view.AlertDialog("Comments", this.alertDlgDiv)
+	
 	var form = new org.sarsoft.view.MarkerForm();
 	this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", form, function(marker) {
 		if(that.markerDlg.marker != null) {
@@ -208,6 +218,13 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
     		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
     		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
      		]));
+	} else if(nestMenuItems != "none") {
+		this.imap.addContextMenuItems([
+            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var mrkid = that.getMarkerIdFromWpt(obj); if(mrkid == null) return false; var mrk = that.markers[mrkid]; return mrk.comments != null && mrk.comments.length > 0}, 
+            	handler: function(data) { var mrkid = that.getMarkerIdFromWpt(data.subject); var mrk=that.markers[mrkid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(mrk.comments)); that.alertDlg.show()}},
+            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var shpid = that.getShapeIdFromWay(obj); if(shpid == null) return false; var shp = that.shapes[shpid]; return shp.comments != null && shp.comments.length > 0}, 
+            	handler: function(data) { var shpid = that.getShapeIdFromWay(data.subject); var shp=that.shapes[shpid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(shp.comments)); that.alertDlg.show()}}
+            ]);
 	}
 
 	var showHide = new org.sarsoft.ToggleControl("MRK", "Show/Hide Markup", function(value) {
@@ -419,6 +436,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 
 	var config = new Object();	
 	var tooltip = marker.label;
+	if(marker.comments != null && marker.comments.length > 0) tooltip = marker.comments;
 	
 	if(marker.url == null || marker.url.length == 0) {
 		config.color = "#FF0000";

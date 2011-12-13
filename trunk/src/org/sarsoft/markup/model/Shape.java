@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
@@ -28,6 +29,7 @@ public class Shape extends SarModelObject implements IPreSave {
 	private Float weight;
 	private Float fill;
 	private String label;
+	private String comments;
 	private Date updated;
 
 	@SuppressWarnings("rawtypes")
@@ -99,6 +101,26 @@ public class Shape extends SarModelObject implements IPreSave {
 	public void setUpdated(Date updated) {
 		this.updated = updated;
 	}
+	
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+	@Lob
+	@JSONSerializable
+	public String getComments() {
+		return comments;
+	}
+	
+	@Transient
+	public String getHtmlFriendlyComments() {
+		if(comments == null) return "";
+		comments = comments.replaceAll("&", "&amp;");
+		comments = comments.replaceAll("<", "&lt;");
+		comments = comments.replaceAll(">", "&gt;");
+		comments = comments.replaceAll("\n", "<br/>");
+		return comments;
+	}
+	
 	public void preSave() {
 		setUpdated(new Date());
 	}

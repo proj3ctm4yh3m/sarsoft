@@ -3,7 +3,9 @@ package org.sarsoft.markup.model;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 import net.sf.json.JSONObject;
 
@@ -20,6 +22,7 @@ public class Marker extends SarModelObject implements IPreSave {
 	
 	private Waypoint position;
 	private String label;
+	private String comments;
 	private String url;
 	private Date updated;
 
@@ -63,6 +66,27 @@ public class Marker extends SarModelObject implements IPreSave {
 	public void setUpdated(Date updated) {
 		this.updated = updated;
 	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+	
+	@Lob
+	@JSONSerializable
+	public String getComments() {
+		return comments;
+	}
+	
+	@Transient
+	public String getHtmlFriendlyComments() {
+		if(comments == null) return "";
+		comments = comments.replaceAll("&", "&amp;");
+		comments = comments.replaceAll("<", "&lt;");
+		comments = comments.replaceAll(">", "&gt;");
+		comments = comments.replaceAll("\n", "<br/>");
+		return comments;
+	}
+
 	public void preSave() {
 		setUpdated(new Date());
 	}
