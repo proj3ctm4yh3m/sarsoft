@@ -304,7 +304,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 		GEvent.addDomListener(icon, "click", function() {
 			that.gps.shape.empty();
 			for(var key in that.shapes) {
-				if(that.shapes[key].label != null && that.shapes[key].label.length > 0) that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + that.shapes[key].label + '</option>')
+				if(that.shapes[key].label != null && that.shapes[key].label.length > 0) that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + org.sarsoft.htmlescape(that.shapes[key].label) + '</option>')
 			}
 			if(that.gps.shape.children().length == 0) {
 				that.gps.shapeDiv.css("display", "none");
@@ -313,7 +313,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 			}
 			that.gps.marker.empty();
 			for(var key in that.markers) {
-				if(that.markers[key].label != null && that.markers[key].label.length > 0) that.gps.marker.append('<option value="' + that.markers[key].id + '">' + that.markers[key].label + '</option>')
+				if(that.markers[key].label != null && that.markers[key].label.length > 0) that.gps.marker.append('<option value="' + that.markers[key].id + '">' + org.sarsoft.htmlescape(that.markers[key].label) + '</option>')
 			}
 			if(that.gps.marker.children().length == 0) {
 				that.gps.markerDiv.css("display", "none");
@@ -435,8 +435,8 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
 
 	var config = new Object();	
-	var tooltip = marker.label;
-	if(marker.comments != null && marker.comments.length > 0) tooltip = marker.comments;
+	var tooltip = org.sarsoft.htmlescape(marker.label);
+	if(marker.comments != null && marker.comments.length > 0) tooltip = org.sarsoft.htmlescape(marker.comments);
 	
 	if(marker.url == null || marker.url.length == 0) {
 		config.color = "#FF0000";
@@ -447,7 +447,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	} else {
 		config.icon = org.sarsoft.MapUtil.createIcon(20, marker.url);
 	}
-	this.imap.addWaypoint(marker.position, config, tooltip, marker.label);
+	this.imap.addWaypoint(marker.position, config, tooltip, org.sarsoft.htmlescape(marker.label));
 }
 
 org.sarsoft.controller.MarkupMapController.getRealURLForMarker = function(url) {
@@ -469,10 +469,10 @@ org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape)
 	if(shape.way == null) return;
 	this.shapes[shape.id] = shape;
 	shape.way.waypoints = shape.way.zoomAdjustedWaypoints;
-	shape.way.displayMessage = shape.label + " (" + shape.formattedSize + ")";
+	shape.way.displayMessage = org.sarsoft.htmlescape(shape.label) + " (" + shape.formattedSize + ")";
 	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
 
-	this.imap.addWay(shape.way, {clickable : true, fill: shape.fill, color: shape.color, weight: shape.weight}, shape.label);
+	this.imap.addWay(shape.way, {clickable : true, fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.refreshMarkers = function(markers) {
@@ -521,7 +521,7 @@ org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
 	for(var id in this.markers) {
 		var label = this.markers[id].label;
 		if(label != null && label.length > 0) {
-			jQuery('<option value="' + id + '">' + label + '</option>').appendTo(select1);
+			jQuery('<option value="' + id + '">' + org.sarsoft.htmlescape(label) + '</option>').appendTo(select1);
 		}
 	}
 	if(select1.children().length == 1) node1.css("display", "none");
@@ -531,7 +531,7 @@ org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
 	for(var id in this.shapes) {
 		var label = this.shapes[id].label;
 		if(label != null && label.length > 0) {
-			jQuery('<option value="' + id + '">' + label + '</option>').appendTo(select2);
+			jQuery('<option value="' + id + '">' + org.sarsoft.htmlescape(label) + '</option>').appendTo(select2);
 		}
 	}
 	if(select2.children().length == 1) node2.css("display", "none");

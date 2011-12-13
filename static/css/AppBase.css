@@ -18,6 +18,10 @@ body, html {
 	height: 100%;
 }
 
+.pre {
+	white-space: pre-line;
+}
+
 div.item label, div.item span.label {
 	float: left;
 	margin-right: 5px;
