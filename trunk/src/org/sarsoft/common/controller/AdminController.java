@@ -32,6 +32,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.HtmlUtils;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
@@ -324,7 +325,7 @@ public class AdminController extends JSONBaseController {
 		m.put("publicName", tenant.getPublicName());
 		m.put("name", tenant.getName());
 		if(tenant.getComments() != null) {
-			m.put("comments", tenant.getComments());
+			m.put("comments", HtmlUtils.htmlEscape(tenant.getComments()));
 		} else {
 			m.put("comments", "");
 		}

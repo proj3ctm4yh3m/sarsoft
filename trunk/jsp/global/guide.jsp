@@ -5,14 +5,13 @@
 <div style="padding-top: 15px">
 
 <div style="padding-bottom: 1em" class="noprint">
-Show:<input type="checkbox" id="markercb" onchange="showhidemarkers()" style="padding-left: 1em" checked="checked" value="Markers"/>Markers <input type="checkbox" id="shapecb" onchange="showhideshapes()" checked="checked" value="Shapes" style="padding-left: 1em"/>Shapes
+Show:<input type="checkbox" id="commentcb" onchange="showhidecomments()" style="padding-left: 1em" checked="checked" value="Comments"/>Map Description <input type="checkbox" id="markercb" onchange="showhidemarkers()" style="padding-left: 1em" checked="checked" value="Markers"/>Markers <input type="checkbox" id="shapecb" onchange="showhideshapes()" checked="checked" value="Shapes" style="padding-left: 1em"/>Shapes
 <div class="showMarkers">Show positions as: <select id="datumDropDown"><option value="WGS84">WGS84</option><option value="NAD27 CONUS">NAD27 CONUS</option></select></div>
 </div>
 
-<div style="padding-bottom: 1em" class="printonly">
-<span style="font-size: 1.5em; color: #945e3b">${tenant.description} Guide</span><br/>
-${tenant.comments}
-</div>
+<div style="font-size: 1.5em; color: #945e3b" class="printonly">${tenant.description} Guide</div>
+
+<div style="padding-bottom: 1em" class="showComments pre"><c:out value="${tenant.comments}"/></div>
 
 <div class="showMarkers">
 
@@ -22,11 +21,11 @@ ${tenant.comments}
 <c:forEach var="marker" items="${markers}" varStatus="status">
 <c:if test="${status.index % 2 eq 0}"><div style="clear: both"></div></c:if>
 <div style="padding-top: 1em; float: left; width: 45%; min-height: 7em">
-<div><img id="m${marker.id}" style="vertical-align: middle; padding-right: 0.5em"/><span style="font-weight: bold; color: #945e3b">${marker.label}</span></div>
+<div><img id="m${marker.id}" style="vertical-align: middle; padding-right: 0.5em"/><span style="font-weight: bold; color: #945e3b"><c:out value="${marker.label}"/></span></div>
 <c:if test="${fn:length(marker.comments) gt 0}">
 <div>
 <table style="border: 0; padding-right: 1em">
-<tbody><tr><td style="border-left: 1px solid #945e3b; padding-left: 1ex">${marker.htmlFriendlyComments}</td></tr></tbody>
+<tbody><tr><td style="border-left: 1px solid #945e3b; padding-left: 1ex" class="pre"><c:out value="${marker.comments}"/></td></tr></tbody>
 </table>
 </div>
 </c:if>
@@ -55,11 +54,9 @@ ${tenant.comments}
 </c:otherwise>
 </c:choose>
 
-<span style="font-weight: bold; color: #945e3b">${shape.label}</span></div>
+<span style="font-weight: bold; color: #945e3b"><c:out value="${shape.label}"/></span></div>
 <c:if test="${fn:length(shape.comments) gt 0}">
-<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex; padding-right: 1em">
-${shape.htmlFriendlyComments}
-</div>
+<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex; padding-right: 1em" class="pre"><c:out value="${shape.comments}"/></div>
 </c:if>
 <div style="clear: both">
 <c:choose><c:when test="${shape.way.polygon}">Area:</c:when><c:otherwise>Length:</c:otherwise></c:choose> ${shape.formattedSize}
@@ -85,6 +82,11 @@ function showhidemarkers() {
 function showhideshapes() {
 	var show = $('#shapecb').prop('checked');
 	$('.showShapes').css("display", show ? "block" : "none");
+}
+
+function showhidecomments() {
+	var show = $('#commentcb').prop('checked');
+	$('.showComments').css("display", show ? "block" : "none");
 }
 
 <c:choose>

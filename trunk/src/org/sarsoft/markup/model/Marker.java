@@ -15,6 +15,7 @@ import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Waypoint;
+import org.springframework.web.util.HtmlUtils;
 
 @JSONAnnotatedEntity
 @Entity
@@ -77,16 +78,6 @@ public class Marker extends SarModelObject implements IPreSave {
 		return comments;
 	}
 	
-	@Transient
-	public String getHtmlFriendlyComments() {
-		if(comments == null) return "";
-		comments = comments.replaceAll("&", "&amp;");
-		comments = comments.replaceAll("<", "&lt;");
-		comments = comments.replaceAll(">", "&gt;");
-		comments = comments.replaceAll("\n", "<br/>");
-		return comments;
-	}
-
 	public void preSave() {
 		setUpdated(new Date());
 	}

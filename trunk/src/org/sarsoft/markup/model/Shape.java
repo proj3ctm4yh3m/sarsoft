@@ -19,6 +19,7 @@ import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
+import org.springframework.web.util.HtmlUtils;
 
 @JSONAnnotatedEntity
 @Entity
@@ -108,16 +109,6 @@ public class Shape extends SarModelObject implements IPreSave {
 	@Lob
 	@JSONSerializable
 	public String getComments() {
-		return comments;
-	}
-	
-	@Transient
-	public String getHtmlFriendlyComments() {
-		if(comments == null) return "";
-		comments = comments.replaceAll("&", "&amp;");
-		comments = comments.replaceAll("<", "&lt;");
-		comments = comments.replaceAll(">", "&gt;");
-		comments = comments.replaceAll("\n", "<br/>");
 		return comments;
 	}
 	

@@ -13,6 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cascade;
+import org.springframework.web.util.HtmlUtils;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
