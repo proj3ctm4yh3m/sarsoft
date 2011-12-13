@@ -221,9 +221,9 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	} else if(nestMenuItems != "none") {
 		this.imap.addContextMenuItems([
             {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var mrkid = that.getMarkerIdFromWpt(obj); if(mrkid == null) return false; var mrk = that.markers[mrkid]; return mrk.comments != null && mrk.comments.length > 0}, 
-            	handler: function(data) { var mrkid = that.getMarkerIdFromWpt(data.subject); var mrk=that.markers[mrkid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(mrk.comments)); that.alertDlg.show()}},
+            	handler: function(data) { var mrkid = that.getMarkerIdFromWpt(data.subject); var mrk=that.markers[mrkid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(mrk.comments, true)); that.alertDlg.show()}},
             {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var shpid = that.getShapeIdFromWay(obj); if(shpid == null) return false; var shp = that.shapes[shpid]; return shp.comments != null && shp.comments.length > 0}, 
-            	handler: function(data) { var shpid = that.getShapeIdFromWay(data.subject); var shp=that.shapes[shpid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(shp.comments)); that.alertDlg.show()}}
+            	handler: function(data) { var shpid = that.getShapeIdFromWay(data.subject); var shp=that.shapes[shpid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(shp.comments, true)); that.alertDlg.show()}}
             ]);
 	}
 
