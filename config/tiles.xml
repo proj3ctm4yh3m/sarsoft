@@ -93,6 +93,7 @@
 
 	<definition name="Pages.Account" extends="App.Base">
 		<put-attribute name="content" value="/global/account.jsp"/>
+		<put-attribute name="subHeader" value="splash"/>
 		<put-attribute name="app" value="admin"/>
 	</definition>
 	

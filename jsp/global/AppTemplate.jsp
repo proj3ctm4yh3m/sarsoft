@@ -120,7 +120,7 @@ function toggleAcctDropdown() {
 	 </c:when>
 	 <c:when test="${app eq 'admin'}">
 	 <div class="subheader">
-	  <span>&#x25B8;&#x25B8; Administration & Sharing</span>
+	  <span>&#x25B8;&#x25B8; Admin</span>
 	 </div>
 	 </c:when>
 	 <c:when test="${app eq 'guide'}">
