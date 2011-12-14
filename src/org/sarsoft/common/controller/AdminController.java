@@ -134,6 +134,7 @@ public class AdminController extends JSONBaseController {
 
 		Permission permission = Permission.NONE;
 		if(tenant.getAccount() == null) permission = Permission.ADMIN;
+		else if(account != null && account.getAdmin() != null && account.getAdmin()) permission = Permission.ADMIN;
 		else if(account != null && tenant.getAccount().getName().equals(account.getName())) permission = Permission.ADMIN;
 		else if(request.getSession(true).getAttribute("cachedPassword") == null) permission = tenant.getAllUserPermission();
 		else {

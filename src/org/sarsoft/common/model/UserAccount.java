@@ -17,6 +17,7 @@ public class UserAccount {
 	private String email;
 	private String alias;
 	private Set<Tenant> tenants;
+	private Boolean admin;
 
 	@Id
 	public String getName() {
@@ -45,6 +46,13 @@ public class UserAccount {
 	}
 	public void setAlias(String alias) {
 		this.alias = alias;
+	}
+	public Boolean getAdmin() {
+		return admin;
+	}
+	
+	public void setAdmin(Boolean admin) {
+		this.admin = admin;
 	}
 	
 	@Transient
