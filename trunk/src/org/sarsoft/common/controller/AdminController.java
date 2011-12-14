@@ -113,9 +113,11 @@ public class AdminController extends JSONBaseController {
 		String pane = "all";
 		if(keyword != null) {
 			model.addAttribute("tenants", dao.getSharedTenants(keyword, null));
+			model.addAttribute("keyword", keyword);
 			pane = "key";
 		} else if(user != null) {
 			model.addAttribute("tenants", dao.getSharedTenants(null, user));
+			model.addAttribute("user", user);
 			pane = "user";
 		} else {
 			model.addAttribute("tenants", dao.getSharedTenants(null, null));

@@ -26,12 +26,12 @@
 <c:if test="${hosted}">
 <p>
 <h3>Sharing</h3>
-<input type="checkbox" name="shared" value="true"<c:if test="${tenant.shared}"> checked="checked"</c:if>/> Publish this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose> so that others can find it.<br/>
+<input type="checkbox" name="shared" value="true" id="sharedcb"<c:if test="${tenant.shared}"> checked="checked"</c:if>/> Publish this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose> so that others can find it.<br/>
 <label for="allUsers">All Users can</label>
-<select name="allUsers">
+<select name="allUsers" id="allusersdd">
   <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>Nothing</option>
   <option value="READ"<c:if test="${tenant.allUserPermission eq read}"> selected="selected"</c:if>>View this map</option>
-  <option value="WRITE"<c:if test="${tenant.allUserPermission eq write}"> selected="selected"</c:if>>Edit this map<option>
+  <option value="WRITE"<c:if test="${tenant.allUserPermission eq write}"> selected="selected"</c:if>>Edit this map</option>
 </select>
 <br/>
 
@@ -39,7 +39,7 @@
 <select name="passwordUsers">
  <option value="NONE"<c:if test="${tenant.passwordProtectedUserPermission eq none}"> selected="selected"</c:if>>Nothing</option>
  <option value="READ"<c:if test="${tenant.passwordProtectedUserPermission eq read}"> selected="selected"</c:if>>View this map</option>
- <option value="WRITE"<c:if test="${tenant.passwordProtectedUserPermission eq write}"> selected="selected"</c:if>>Edit this map<option>
+ <option value="WRITE"<c:if test="${tenant.passwordProtectedUserPermission eq write}"> selected="selected"</c:if>>Edit this map</option>
 </select>
 <br/>
 
@@ -76,4 +76,6 @@ org.sarsoft.Loader.queue(function() {
 	deleteDlg.render(document.body);
 	deleteDlg.hide();
 });
+$('#allusersdd').change(function() { var val = $('#sharedcb').prop('checked'); var val2 = $('#allusersdd').val(); if(val && val2 == 'NONE') $('#sharedcb').prop('checked', false)});
+$('#sharedcb').change(function() { var val = $('#sharedcb').prop('checked'); var val2 = $('#allusersdd').val(); if(val && val2 == 'NONE') $('#allusersdd').val('READ')});
 </script>
