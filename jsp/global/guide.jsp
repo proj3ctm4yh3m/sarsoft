@@ -54,13 +54,12 @@ Show:<input type="checkbox" id="commentcb" onchange="showhidecomments()" style="
 </c:otherwise>
 </c:choose>
 
-<span style="font-weight: bold; color: #945e3b"><c:out value="${shape.label}"/></span></div>
+<span style="font-weight: bold; color: #945e3b"><c:out value="${shape.label}"/></span>
+<span style="padding-left: 1em">${shape.formattedSize}</span>
+</div>
 <c:if test="${fn:length(shape.comments) gt 0}">
 <div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex; padding-right: 1em" class="pre"><c:out value="${shape.comments}"/></div>
 </c:if>
-<div style="clear: both">
-<c:choose><c:when test="${shape.way.polygon}">Area:</c:when><c:otherwise>Length:</c:otherwise></c:choose> ${shape.formattedSize}
-</div>
 
 </div>
 </c:forEach>

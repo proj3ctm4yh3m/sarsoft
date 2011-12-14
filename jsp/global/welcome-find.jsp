@@ -103,7 +103,15 @@ org.sarsoft.Loader.queue(function() {
 				return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); 
 				}} },
 		{key:"owner",label:"Owner",sortable:true, formatter : function(cell, record, column, data) { cell.innerHTML = '<a href="/find?user=' + data + '">' + data + '</a>';}},
-		{ key : "comments", label: "Comments", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "4em", "max-width": "30em"}); cell.innerHTML = data;}}
+		{ key : "comments", label: "Comments", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "4em", "max-width": "30em"}); cell.innerHTML = data;}},
+		{ key : "type", label: "Actions", formatter : function(cell, record, column, data) {
+			if(record.getData().type == "org.sarsoft.markup.model.CollaborativeMap") {
+				var guide = jQuery('<span><a href="/guide?id=' + record.getData().name + '">View Guide</a>,  &nbsp;</span>').appendTo(cell);
+			}
+			var share = jQuery('<a href="javascript:return false;">Share</a>').appendTo(cell);
+			share.click(function() { alertBody.innerHTML = "You can share this map with others by giving them the following URL:<br/><br/>" + window.location.href.replace(window.location.pathname, "") + "/" +
+				((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + "?id=" + record.getData().name; alertDlg.show();});
+		}}
 		]
     var ds = new YAHOO.util.DataSource(YAHOO.util.Dom.get("tenantTable"));
     ds.responseType = YAHOO.util.DataSource.TYPE_HTMLTABLE;
@@ -113,6 +121,8 @@ org.sarsoft.Loader.queue(function() {
 });
 
 panes = ["all","key","user"];
+var alertBody = document.createElement('div');
+var alertDlg = org.sarsoft.view.AlertDialog("Sharing", alertBody);	
 
 function setPane(pane) {
 	for(var i = 0; i < panes.length; i++) {

@@ -417,6 +417,9 @@ org.sarsoft.view.TenantTable = function() {
 			if(owner == "N/A" || owner == "You") {
 				cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map")+ '?id=' + record.getData().name + '&dest=admin.html">Admin</a>,&nbsp;';
 			}
+			if(record.getData().type == "org.sarsoft.markup.model.CollaborativeMap") {
+				var guide = jQuery('<span><a href="/guide?id=' + record.getData().name + '">View Guide</a>,&nbsp;</span>').appendTo(cell);
+			}
 			var share = jQuery('<a href="javascript:return false;">Share</a>').appendTo(cell);
 			share.click(function() { alertBody.innerHTML = "You can share this map with others by giving them the following URL:<br/><br/>" + window.location.href.replace(window.location.pathname, "") + "/" +
 				((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + "?id=" + record.getData().name; alertDlg.show();});
