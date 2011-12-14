@@ -1,5 +1,6 @@
 package org.sarsoft.markup.controller;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,9 @@ import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.markup.model.Marker;
 import org.sarsoft.markup.model.MarkupLatitudeComparator;
 import org.sarsoft.markup.model.Shape;
+import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.controller.SearchController;
+import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -77,11 +80,48 @@ public class CollaborativeMapController extends JSONBaseController {
 	private Map<String, Object> gpxifyMap(){
 		Map<String, Object> map = new HashMap<String, Object>();
 		List<Shape> shapes = dao.loadAll(Shape.class);
+		List<Map<String, Object>> fakeShapes = new ArrayList<Map<String, Object>>();
 		if(shapes != null) for(Shape shape : shapes) {
 			shape.getWay().setPrecision(0);
-		}
-		map.put("shapes", shapes);
-		map.put("markers", dao.loadAll(Marker.class));
+			fakeShapes.add(gpxifyShape(shape));
+		}		
+		map.put("shapes", fakeShapes);
+		List<Marker> markers = dao.loadAll(Marker.class);
+		List<Map<String, Object>> fakeMarkers = new ArrayList<Map<String, Object>>();
+		if(markers != null) for(Marker marker : markers) {
+			fakeMarkers.add(gpxifyMarker(marker));
+		}		
+		map.put("markers", fakeMarkers);
+		return map;
+	}
+	
+	private Map<String, Object> gpxifyShape(Shape shp) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("id", shp.getId());
+		map.put("label", shp.getLabel());
+		map.put("way", shp.getWay());
+		
+		Map<String, String> attrs = new HashMap<String, String>();
+		attrs.put("color", shp.getColor());
+		attrs.put("weight", Float.toString(shp.getWeight()));
+		attrs.put("fill", Float.toString(shp.getFill()));
+		attrs.put("comments", shp.getComments());
+		
+		map.put("desc", SearchAssignmentGPXHelper.encodeAttrs(attrs));
+		return map;
+	}
+
+	private Map<String, Object> gpxifyMarker(Marker mrk) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("id", mrk.getId());
+		map.put("label", mrk.getLabel());
+		map.put("position", mrk.getPosition());
+		
+		Map<String, String> attrs = new HashMap<String, String>();
+		attrs.put("url", mrk.getUrl());
+		attrs.put("comments", mrk.getComments());
+		
+		map.put("desc", SearchAssignmentGPXHelper.encodeAttrs(attrs));
 		return map;
 	}
 
@@ -197,6 +237,8 @@ public class CollaborativeMapController extends JSONBaseController {
 			Way way = new Way();
 			way.setWaypoints((List<Waypoint>) mapobj.get("waypoints"));
 			way.setType(WayType.valueOf((String) mapobj.get("type")));
+			List<Waypoint> wpts = way.getWaypoints();
+			if(way.getType() == WayType.ROUTE && wpts.get(0).equals(wpts.get(wpts.size() - 1))) way.setPolygon(true);
 			Shape shape = new Shape();
 			shape.setWay(way);
 			List<Shape> shapes = dao.loadAll(Shape.class);
@@ -210,15 +252,12 @@ public class CollaborativeMapController extends JSONBaseController {
 			shape.setWeight(2);
 			shape.setFill(0);
 			shape.setColor("#FF0000");
-			if(desc != null && desc.indexOf("&") > 0 && desc.indexOf("=") > 0) {
-				String[] pairs = desc.split("&");
-				for(String pair : pairs) {
-					String[] kv = pair.split("=");
-					if("weight".equals(kv[0])) shape.setWeight(Float.parseFloat(kv[1]));
-					if("fill".equals(kv[0])) shape.setFill(Float.parseFloat(kv[1]));
-					if("color".equals(kv[0])) shape.setColor(kv[1]);
-				}
-			}
+
+			Map<String, String> attrs = (Map<String, String>) SearchAssignmentGPXHelper.decodeAttrs(desc);
+			if(attrs.containsKey("weight")) shape.setWeight(Float.parseFloat(attrs.get("weight")));
+			if(attrs.containsKey("fill")) shape.setFill(Float.parseFloat(attrs.get("fill")));
+			if(attrs.containsKey("color")) shape.setColor(attrs.get("color"));
+			if(attrs.containsKey("comments")) shape.setComments(attrs.get("comments"));
 			
 			boolean exists = false;
 			shapes = dao.loadAll(Shape.class);
@@ -253,7 +292,11 @@ public class CollaborativeMapController extends JSONBaseController {
 			marker.setId(maxId+1);
 
 			marker.setLabel((String) mapobj.get("name"));
-			marker.setUrl((String) mapobj.get("desc"));
+			if(mapobj.get("desc") != null) {
+				Map<String, String> attrs = (Map<String, String>) SearchAssignmentGPXHelper.decodeAttrs((String) mapobj.get("desc"));
+				if(attrs.containsKey("url")) marker.setUrl(attrs.get("url"));
+				if(attrs.containsKey("comments")) marker.setComments(attrs.get("comments"));
+			}
 			if(marker.getUrl() == null || marker.getUrl().length() == 0) marker.setUrl("#FF0000");
 			
 			boolean exists = false;

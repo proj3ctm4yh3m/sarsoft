@@ -132,7 +132,7 @@
 		</xsl:otherwise>
 	</xsl:choose>
 	</xsl:variable>
-	<xsl:variable name="desc" select="concat('color=', json:color, '&amp;weight=', json:weight, '&amp;fill=', json:fill)"/>
+	<xsl:variable name="desc" select="json:desc"/>
 	<xsl:for-each select="json:way">
 		<xsl:call-template name="WayToGpx">
 			<xsl:with-param name="name" select="$label"/>
@@ -155,7 +155,7 @@
 	<xsl:for-each select="json:position">
 		<xsl:call-template name="WaypointToWpt">
 			<xsl:with-param name="name" select="$label"/>
-			<xsl:with-param name="desc" select="$marker/json:url"/>
+			<xsl:with-param name="desc" select="$marker/json:desc"/>
 		</xsl:call-template>
 	</xsl:for-each>
 </xsl:template>

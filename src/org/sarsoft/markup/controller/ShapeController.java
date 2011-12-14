@@ -118,27 +118,5 @@ public class ShapeController extends JSONBaseController {
 	public String getMaerkersSince(Model model, @PathVariable("date") long date) {
 		return json(model, dao.loadSince(Shape.class, new Date(date)));
 	}
-
-	@RequestMapping(value="/rest/shape/{assignmentId}", method = RequestMethod.GET)
-	public String getAssignmentRest(@PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request, HttpServletResponse response) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
-		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
-		switch (format) {
-		case GPX :
-			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".gpx");
-			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-			Map<String, Object> m = new HashMap<String, Object>();
-			m.put("assignment", assignment);
-			if(search.getLkp() != null) m.put("lkp", search.getLkp());
-			if(search.getPls() != null) m.put("pls", search.getPls());
-			if(search.getCP() != null) m.put("cp", search.getCP());
-			return gpx(model, m, "SearchAssignment");
-		case KML :
-			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".kml");
-			return kml(model, assignment, "SearchAssignment");
-		default :
-			return json(model, assignment);
-		}
-	}
 	
 }
