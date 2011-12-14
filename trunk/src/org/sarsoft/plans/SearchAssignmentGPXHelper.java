@@ -195,7 +195,7 @@ public class SearchAssignmentGPXHelper {
 		return map;
 	}
 	
-	private static String encodeAttrs(Map<String, String> attrs) {
+	public static String encodeAttrs(Map<String, String> attrs) {
 		StringBuffer encoded = new StringBuffer();
 		for(String key : attrs.keySet()) {
 			String value = attrs.get(key);
@@ -296,7 +296,7 @@ public class SearchAssignmentGPXHelper {
 		
 	}
 	
-	private static Map<String, String> decodeAttrs(String encoded) {
+	public static Map<String, String> decodeAttrs(String encoded) {
 		Map<String, String> attrs = new HashMap<String, String>();
 		if(encoded == null) return attrs;
 		for(String pair : encoded.split("&")) {
