@@ -220,8 +220,8 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
 			public Object doInHibernate(final Session session) throws HibernateException {
 				Criteria c = session.createCriteria(Tenant.class).add(Restrictions.eq("shared", Boolean.TRUE));
-				if(keyword != null) c.add(Restrictions.or(Restrictions.like("description", keyword, MatchMode.ANYWHERE).ignoreCase(),
-						Restrictions.like("comments", keyword, MatchMode.ANYWHERE).ignoreCase()));
+				if(keyword != null) c.add(Restrictions.or(Restrictions.ilike("description", keyword, MatchMode.ANYWHERE),
+						Restrictions.ilike("comments", keyword, MatchMode.ANYWHERE)));
 				if(handle != null) c.createAlias("account", "acct").add(Restrictions.or(
 						Restrictions.eq("acct.alias", handle).ignoreCase(),
 						Restrictions.and(
