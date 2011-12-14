@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
@@ -11,9 +12,6 @@ import javax.persistence.InheritanceType;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
-
-import org.hibernate.annotations.Cascade;
-import org.springframework.web.util.HtmlUtils;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
@@ -36,6 +34,7 @@ public abstract class Tenant {
 	private String comments;
 	private UserAccount account;
 	private String mapConfig;
+	private Boolean shared;
 	
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -115,6 +114,14 @@ public abstract class Tenant {
 
 	public void setPasswordProtectedUserPermission(Permission passwordProtectedUserPermission) {
 		this.passwordProtectedUserPermission = passwordProtectedUserPermission;
+	}
+	
+	public Boolean getShared() {
+		return shared;
+	}
+	
+	public void setShared(Boolean shared) {
+		this.shared = shared;
 	}
 
 	@SuppressWarnings("rawtypes")

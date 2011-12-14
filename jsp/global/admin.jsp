@@ -26,6 +26,7 @@
 <c:if test="${hosted}">
 <p>
 <h3>Sharing</h3>
+<input type="checkbox" name="shared" value="true"<c:if test="${tenant.shared}"> checked="checked"</c:if>/> Publish this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose> so that others can find it.<br/>
 <label for="allUsers">All Users can</label>
 <select name="allUsers">
   <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>Nothing</option>

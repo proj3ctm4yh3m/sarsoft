@@ -405,7 +405,7 @@ org.sarsoft.view.TenantTable = function() {
 
     var coldefs = [
 		{ key : "publicName", label : "Name", sortable : true, 
-			formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap"}); cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '">' + data + '</a>' },
+			formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap"}); cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '">' + org.sarsoft.htmlescape(data) + '</a>' },
 			sortOptions: {sortFunction: function(a, b, desc) { 
 				return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); 
 				}} },

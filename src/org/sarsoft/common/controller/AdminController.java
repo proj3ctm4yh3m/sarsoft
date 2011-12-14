@@ -20,6 +20,7 @@ import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.markup.model.Marker;
 import org.sarsoft.markup.model.Shape;
 import org.sarsoft.plans.Constants;
@@ -72,6 +73,56 @@ public class AdminController extends JSONBaseController {
 		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
 		return "/global/constants";
 	}
+	
+	@RequestMapping(value="/account.html", method = RequestMethod.GET)
+	public String getAccount(Model model) {
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(account == null) {
+			model.addAttribute("message", "Account not found");
+			return bounce(model);
+		}
+		model.addAttribute("account", account);
+		return app(model, "Pages.Account");
+	}
+	
+	@RequestMapping(value="/account.html", method = RequestMethod.POST)
+	public String updateAccount(Model model, @RequestParam(value="alias", required=false) String alias) {
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(account == null) {
+			model.addAttribute("message", "Account not found");
+			return bounce(model);
+		}
+		if(alias != null && alias.length() == 0) alias = null;
+		if(alias != null && !alias.equalsIgnoreCase(account.getAlias())) {
+			alias = alias.trim().replaceAll("\\s+", " ");
+			alias = alias.replaceAll("[^a-zA-Z0-9_ ]", "");
+			Object obj = dao.getByCaselessAttr(UserAccount.class, "alias", alias);
+			if(obj != null) {
+				model.addAttribute("message", "Username already taken");
+				return getAccount(model);
+			}
+		}
+		account.setAlias(alias);
+		dao.superSave(account);
+		model.addAttribute("account", account);
+		return app(model, "Pages.Account");
+	}
+	
+	@RequestMapping(value="/find", method = RequestMethod.GET)
+	public String find(Model model, @RequestParam(value="key", required=false) String keyword, @RequestParam(value="user", required=false) String user) {
+		String pane = "all";
+		if(keyword != null) {
+			model.addAttribute("tenants", dao.getSharedTenants(keyword, null));
+			pane = "key";
+		} else if(user != null) {
+			model.addAttribute("tenants", dao.getSharedTenants(null, user));
+			pane = "user";
+		} else {
+			model.addAttribute("tenants", dao.getSharedTenants(null, null));
+		}
+		model.addAttribute("pane", pane);
+		return app(model, "Pages.Find");
+	}	
 
 	public String setTenant(Model model, String name, Class<? extends Tenant> cls, HttpServletRequest request) {
 		Tenant tenant = dao.getByAttr(cls, "name", name);
@@ -272,6 +323,7 @@ public class AdminController extends JSONBaseController {
 		}
 		dao.save(tenant);
 		if(tenant.getAccount() != null) {
+			tenant.setShared(Boolean.valueOf(request.getParameter("shared")));
 			tenant.setAllUserPermission(Permission.valueOf(request.getParameter("allUsers")));
 			tenant.setPasswordProtectedUserPermission(Permission.valueOf(request.getParameter("passwordUsers")));
 			if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
@@ -334,9 +386,7 @@ public class AdminController extends JSONBaseController {
 		if(type != null) m.put("type", type);
 		String owner = "N/A";
 		if(tenant.getAccount() != null) {
-			String email = tenant.getAccount().getEmail();
-			if(email != null) email = email.substring(0,Math.min(3, email.length())) + email.replaceAll(".*?@", "...@").replaceAll("(.com|.org|.net)", "");
-			owner = tenant.getAccount().getName().equals(RuntimeProperties.getUsername()) ? "You" : email;
+			owner = tenant.getAccount().getName().equals(RuntimeProperties.getUsername()) ? "You" : tenant.getAccount().getHandle();
 		}
 		m.put("owner", owner);
 		return m;
