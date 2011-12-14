@@ -34,6 +34,7 @@ function toggleAcctDropdown() {
 <c:when test="${not empty account or hosted eq false}"><c:set var="loggedin" value="${true}"/></c:when>
 <c:otherwise><c:set var="loggedin" value="${false}"/></c:otherwise>
 </c:choose>
+<c:if test="${(subHeader eq 'maps' or subHeader eq 'Search') and loggedin eq false}"><c:set var="subHeader" value="splash"/></c:if>
 <div class="header noprint" style="${headerStyle}">
 <div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</span></div>
 <div style="padding-left: 1.5em"><div style="font-weight: bold; font-size: 200%"><c:if test="${fn:length(app) gt 0}">${tenant.description}</c:if>&nbsp;</div></div>
