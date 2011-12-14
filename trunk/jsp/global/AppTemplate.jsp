@@ -45,7 +45,8 @@ function toggleAcctDropdown() {
 			${account.email}&nbsp;<span style="cursor: pointer; font-weight: bold; color: red; position: relative" onclick="toggleAcctDropdown();">&darr;
 				<div id="acctinfo" style="visibility: hidden; background: #f8f8f8; position: absolute; right: 0; top: 0.5em; padding-top: 1em; width: 10em; z-index: -1">
 					<div style="color: black; font-weight: normal">
-						<a style="float: right" href="/app/logout">Logout</a>
+						<a style="float: right" href="/account.html">Account</a>
+						<a style="float: right; clear: both" href="/app/logout">Logout</a>
 					</div>
 				</div>
 			</span>
@@ -71,7 +72,8 @@ function toggleAcctDropdown() {
 		<c:when test="${fn:length(app) eq 0}">
 			<div class="subheader"><span><a href="/maps">Maps</a></span></div>
 		</c:when>
-	</c:choose></c:if>
+	</c:choose>
+	</c:if>
 	<c:if test="${fn:contains(objects, 'search')}"><c:choose>
 		<c:when test="${subHeader eq 'searches' and fn:length(app) eq 0}">
 			<div class="subheader active"><span><a href="/searches">&#x25BE; Searches</a></span></div>
@@ -83,11 +85,16 @@ function toggleAcctDropdown() {
 			<div class="subheader"><span><a href="/searches">Searches</a></span></div>
 		</c:when>
 	</c:choose></c:if>
-	<c:if test="${fn:contains(objects, 'search')}"><c:choose>
+	</c:if>
+	<c:if test="${hosted eq true and fn:length(app) eq 0}">
+		<c:choose>
 		<c:when test="${subHeader eq 'find'}">
-			<div class="subheader active"><span><c:choose><c:when test="${fn:length(app) eq 0}">&#x25BE;</c:when><c:otherwise>&#x25B8;</c:otherwise></c:choose> Find</span></div>
+			<div class="subheader active"><span><a href="/find">&#x25BE; Find</a></span></div>
 		</c:when>
-	</c:choose></c:if>
+		<c:otherwise>
+			<div class="subheader"><span><a href="/find">Find</a></span></div>
+		</c:otherwise>
+		</c:choose>
 	</c:if>
 	<c:if test="${fn:length(app) eq 0}">
 		<c:choose>
@@ -102,7 +109,7 @@ function toggleAcctDropdown() {
 
 	<c:choose>
 	 <c:when test="${app eq 'plans'}">
-	 <div class="subheader">
+	 <div class="subheader">	
 	  <span><a href="/app/operationalperiod">&#x25B8;&#x25B8; Plans</a></span>
 	 </div>
 	 </c:when>

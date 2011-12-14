@@ -66,6 +66,10 @@
 		<put-attribute name="subHeader" value="maps"/>
 		<put-attribute name="content" value="/global/welcome-maps.jsp"/>
 	</definition>
+	<definition name="Pages.Find" extends="App.Base">
+		<put-attribute name="subHeader" value="find"/>
+		<put-attribute name="content" value="/global/welcome-find.jsp"/>
+	</definition>
 	<definition name="Pages.Searches" extends="App.Base">
 		<put-attribute name="subHeader" value="searches"/>
 		<put-attribute name="content" value="/global/welcome-searches.jsp"/>
@@ -84,6 +88,11 @@
 	
 	<definition name="Pages.Admin" extends="App.Base">
 		<put-attribute name="content" value="/global/admin.jsp"/>
+		<put-attribute name="app" value="admin"/>
+	</definition>
+
+	<definition name="Pages.Account" extends="App.Base">
+		<put-attribute name="content" value="/global/account.jsp"/>
 		<put-attribute name="app" value="admin"/>
 	</definition>
 	

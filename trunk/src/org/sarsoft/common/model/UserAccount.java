@@ -5,14 +5,17 @@ import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.util.RuntimeProperties;
 
 @Entity
 public class UserAccount {
 
 	private String name;
 	private String email;
+	private String alias;
 	private Set<Tenant> tenants;
 
 	@Id
@@ -36,6 +39,20 @@ public class UserAccount {
 	}
 	public void setEmail(String email) {
 		this.email = email;
+	}
+	public String getAlias() {
+		return alias;
+	}
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
+	
+	@Transient
+	public String getHandle() {
+		if(alias != null) return alias;
+		String handle = email;
+		if(handle != null) handle = handle.substring(0,Math.min(3, handle.length())) + handle.replaceAll(".*?@", "...@").replaceAll("(.com|.org|.net)", "");
+		return handle;
 	}
 
 }

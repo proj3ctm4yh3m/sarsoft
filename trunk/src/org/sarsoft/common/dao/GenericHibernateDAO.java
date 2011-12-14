@@ -8,6 +8,7 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.SarModelObject;
@@ -172,6 +173,17 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		return null;
 	}
 
+	@SuppressWarnings({"unchecked"})
+	public <T> T getByCaselessAttr(final Class <T> T, final String key, final String value) {
+		List<T> list = getHibernateTemplate().executeFind(new HibernateCallback<List<T>>() {
+			public List<T> doInHibernate(final Session session) throws HibernateException {
+				return addTenantRestriction(T, session.createCriteria(T).add(Restrictions.eq(key, value).ignoreCase())).list();
+			}
+		});
+		if(list.size() > 0) return list.get(0);
+		return null;
+	}	
+	
 	@SuppressWarnings({"unchecked","rawtypes"})
 	public <T> List<T> getAllByAttr(final Class <T> T, final String key, final Enum value) {
 		List<T> list = getHibernateTemplate().executeFind(new HibernateCallback<List<T>>() {
@@ -202,4 +214,23 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		});
 		return (List<Tenant>) list;
 	}
+
+	@SuppressWarnings({"unchecked","rawtypes"})
+	public List<Tenant> getSharedTenants(final String keyword, final String handle) {
+		List list = getHibernateTemplate().executeFind(new HibernateCallback() {
+			public Object doInHibernate(final Session session) throws HibernateException {
+				Criteria c = session.createCriteria(Tenant.class).add(Restrictions.eq("shared", Boolean.TRUE));
+				if(keyword != null) c.add(Restrictions.or(Restrictions.like("description", keyword, MatchMode.ANYWHERE).ignoreCase(),
+						Restrictions.like("comments", keyword, MatchMode.ANYWHERE).ignoreCase()));
+				if(handle != null) c.createAlias("account", "acct").add(Restrictions.or(
+						Restrictions.eq("acct.alias", handle).ignoreCase(),
+						Restrictions.and(
+								Restrictions.isNull("acct.alias"),
+								Restrictions.like("acct.email", handle.replaceAll("\\.\\.\\.", "%") + "%", MatchMode.START).ignoreCase())));
+				return c.list();
+			}
+		});
+		return (List<Tenant>) list;
+	}
+
 }
