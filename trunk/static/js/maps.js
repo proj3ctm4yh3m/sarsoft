@@ -484,7 +484,7 @@ org.sarsoft.MapDeclinationWidget.prototype.refresh = function() {
 		dir = "W";
 	}
 	declination = Math.round(declination);
-	this.imap.setMapInfo("org.sarsoft.MapDeclinationWidget", 1, "MN " + declination + "\u00B0 " + dir);
+	this.imap.setMapInfo("org.sarsoft.MapDeclinationWidget", 1, "N<span style='font-size: smaller; vertical-align: top'>\u2191</span>. MN " + declination + "\u00B0 " + dir);
 }
 
 org.sarsoft.MapDatumWidget = function(imap, switchable) {
