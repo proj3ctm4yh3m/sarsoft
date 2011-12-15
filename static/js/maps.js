@@ -2053,6 +2053,10 @@ GeoUtil.formatDDMMHH = function(deg) {
 		h = 0;
 		m = m + 1;
 	}
+	if(m == 60) {
+		m = 0;
+		d = d + 1;
+	}
 	return (neg ? "-" : "") + d+"\u00B0"+m+"."+((h < 10) ? "0" + h : h) +"'";
 }
 
