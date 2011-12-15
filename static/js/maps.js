@@ -1960,21 +1960,28 @@ org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
 			return false;
 		}
 	} else if(type == "DDMMHH") {
-		var latneg = (1*this.DDMMHH.latDD.val() < 0) ? true : false;
-		var lngneg = (1*this.DDMMHH.lngDD.val() < 0) ? true : false;
-		
-		var lat = Math.abs(this.DDMMHH.latDD.val()) + (this.DDMMHH.latMM.val()/60);
-		var lng = Math.abs(this.DDMMHH.lngDD.val()) + (this.DDMMHH.lngMM.val()/60);
+		var latdd = this.DDMMHH.latDD.val();
+		var lngdd = this.DDMMHH.lngDD.val();
+		if(latdd == null || latdd.length == 0 || lngdd == null || lngdd.length == 0) return false; 
+
+		var latneg = (1*latdd < 0) ? true : false;
+		var lngneg = (1*lngdd < 0) ? true : false;		
+		var lat = Math.abs(latdd) + (this.DDMMHH.latMM.val()/60);
+		var lng = Math.abs(lngdd) + (this.DDMMHH.lngMM.val()/60);
 		if(isNaN(lat) || isNaN(lng)) return false;
 		if(latneg) lat = -1*lat;
 		if(lngneg) lng = -1*lng;
 		callback(new GLatLng(lat, lng));
 	} else {
-		var latneg = (1*this.DDMMSS.latDD.val() < 0) ? true : false;
-		var lngneg = (1*this.DDMMSS.lngDD.val() < 0) ? true : false;
+		var latdd = this.DDMMSS.latDD.val();
+		var lngdd = this.DDMMSS.lngDD.val();
+		if(latdd == null || latdd.length == 0 || lngdd == null || lngdd.length == 0) return false; 
 
-		var lat = Math.abs(this.DDMMSS.latDD.val()) + (this.DDMMSS.latMM.val()/60) + (this.DDMMSS.latSS.val()/3600);
-		var lng = Math.abs(this.DDMMSS.lngDD.val()) + (this.DDMMSS.lngMM.val()/60) + (this.DDMMSS.lngSS.val()/3600);
+		var latneg = (1*latdd < 0) ? true : false;
+		var lngneg = (1*lngdd < 0) ? true : false;
+
+		var lat = Math.abs(latdd) + (this.DDMMSS.latMM.val()/60) + (this.DDMMSS.latSS.val()/3600);
+		var lng = Math.abs(lngdd) + (this.DDMMSS.lngMM.val()/60) + (this.DDMMSS.lngSS.val()/3600);
 		if(isNaN(lat) || isNaN(lng)) return false;
 		if(latneg) lat = -1*lat;
 		if(lngneg) lng = -1*lng;
