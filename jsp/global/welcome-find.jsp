@@ -18,6 +18,7 @@
 
 <div id="allContent">
 <div style="color: #5a8ed7; font-size: 1.5em; font-weight: bold">All Maps</div>
+<div style="padding-top: 1ex">Share your own maps with other CalTopo users by checking the Publish box under Sharing on the map's admin page.</div>
 <c:if test="${pane eq 'all'}">
 <div id="tenantContainer" class="growYUITable">
 <table id="tenantTable">
@@ -102,7 +103,7 @@ org.sarsoft.Loader.queue(function() {
 			sortOptions: {sortFunction: function(a, b, desc) { 
 				return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); 
 				}} },
-		{key:"owner",label:"Owner",sortable:true, formatter : function(cell, record, column, data) { cell.innerHTML = '<a href="/find?user=' + data + '">' + data + '</a>';}},
+		{key:"owner",label:"Created By",sortable:true, formatter : function(cell, record, column, data) { cell.innerHTML = '<a href="/find?user=' + data + '">' + data + '</a>';}},
 		{ key : "comments", label: "Comments", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "4em", "max-width": "30em"}); cell.innerHTML = data;}},
 		{ key : "type", label: "Actions", formatter : function(cell, record, column, data) {
 			if(record.getData().type == "org.sarsoft.markup.model.CollaborativeMap") {
