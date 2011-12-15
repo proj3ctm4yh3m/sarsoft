@@ -2037,11 +2037,7 @@ UTM.prototype.toHTMLString = function() {
 GeoUtil = new Object();
 
 GeoUtil.formatDD = function(deg) {
-	var dec = Math.abs(deg);
-	var val = Math.floor(dec);
-	val = "" + val + ("." + Math.round((dec-val)*10000) + "00000").substring(0, 5);
-	if(deg < 0) val = "-" + val;
-	return val;
+	return deg.toFixed(4);
 }
 
 GeoUtil.formatDDMMHH = function(deg) {
