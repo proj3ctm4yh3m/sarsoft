@@ -18,7 +18,10 @@
 
 <div id="newContent">
 <div style="color: #5a8ed7; font-size: 1.5em; font-weight: bold; padding-bottom: 5px">Create a New Map</div>
-<form action="/map" method="post" id="newmapform">
+<div>
+Creating a map allows you to draw routes, mark waypoints, send data to a GPS and share with others.<br/>Once the map is created, right-click anywhere on it to begin.
+</div>
+<form action="/map" method="post" id="newmapform" style="padding-top: 1ex">
 
 <table border="0"><tbody>
 <tr><td valign="top">Name</td><td><input type="text" size="30" id="name" name="name"/></td></tr>
@@ -38,9 +41,6 @@
 <button onclick="createMap()">Create Map</button>
 </div>
 
-<p style="padding-top: 2em;">
-Creating a map allows you to draw routes, mark waypoints, transfer data to a GPS, share with others and more.  Once the map is created, right-click anywhere on the map to begin.
-</p>
 </div>
 
 <div id="yourContent" style="display: none;">
