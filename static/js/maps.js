@@ -212,6 +212,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		this._overlays = new Array();
 		this.baseName = base.getName();
 		this.opacity = opacity;
+		this.alphaOverlays = null;
 
 		var infoString = "";
 		if(base._info != null && base._info.length > 0) infoString += base._info + ". ";
@@ -1315,6 +1316,8 @@ org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 			var ao = this.map._overlaydropdownmapcontrol.alphaOverlays.split(',');
 			for(var i = 0; i < ao.length; i++) ao[i] = this.nameToAlias(ao[i]);
 			config.alphaOverlays = ao.join(",");
+		} else {
+			config.alphaOverlays = null;
 		}
 	}
 	return config;
