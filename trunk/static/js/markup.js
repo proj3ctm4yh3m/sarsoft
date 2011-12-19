@@ -154,7 +154,7 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	}
 }
 
-org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
+org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embedded) {
 	var that = this;
 	this.imap = imap;
 	this.imap.register("org.sarsoft.controller.MarkupMapController", this);
@@ -164,67 +164,69 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this.shapes = new Object();
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
-	this.alertDlgDiv = document.createElement("div");
-	this.alertDlg = org.sarsoft.view.AlertDialog("Comments", this.alertDlgDiv)
+	if(!embedded) {
+		this.alertDlgDiv = document.createElement("div");
+		this.alertDlg = org.sarsoft.view.AlertDialog("Comments", this.alertDlgDiv)
 	
-	var form = new org.sarsoft.view.MarkerForm();
-	this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", form, function(marker) {
-		if(that.markerDlg.marker != null) {
-			marker.position = that.markerDlg.marker.position;
-			that.markerDAO.save(that.markerDlg.marker.id, marker, function(obj) {
-				that.refreshMarkers([obj]);
-			});
-		} else {
-			var wpt = this.imap.map.fromContainerPixelToLatLng(new GPoint(that.markerDlg.point.x, that.markerDlg.point.y));
-			marker.position = {lat: wpt.lat(), lng: wpt.lng()};
-			that.markerDAO.create(function(obj) {
-				that.refreshMarkers([obj]);
-			}, marker);
-		}});
-	form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.markerDlg.dialog.ok();});
-
-	form = new org.sarsoft.view.ShapeForm();
-	this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details",form , function(shape) {
-		if(that.shapeDlg.shape != null) {
-			that.shapeDAO.save(that.shapeDlg.shape.id, shape, function(obj) {
-				that.refreshShapes([obj]);
-			});
-		} else {
-			shape.way = {polygon: that.shapeDlg.polygon};
-			shape.way.waypoints = that.imap.getNewWaypoints(that.shapeDlg.point, that.shapeDlg.polygon);
-			that.shapeDAO.create(function(obj) {
-				that.refreshShapes([obj]);
-				that.redrawShape(obj, function() { that.saveShape(obj); });
-			}, shape);
-		}});
-	form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
+		var form = new org.sarsoft.view.MarkerForm();
+		this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", form, function(marker) {
+			if(that.markerDlg.marker != null) {
+				marker.position = that.markerDlg.marker.position;
+				that.markerDAO.save(that.markerDlg.marker.id, marker, function(obj) {
+					that.refreshMarkers([obj]);
+				});
+			} else {
+				var wpt = this.imap.map.fromContainerPixelToLatLng(new GPoint(that.markerDlg.point.x, that.markerDlg.point.y));
+				marker.position = {lat: wpt.lat(), lng: wpt.lng()};
+				that.markerDAO.create(function(obj) {
+					that.refreshMarkers([obj]);
+				}, marker);
+			}});
+		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.markerDlg.dialog.ok();});
 	
-	var items = [{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
-	    {text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
-	    {text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
-
-	if(nestMenuItems) {
-		items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
-	}
-
-	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
-		this.imap.addContextMenuItems(items.concat([
-    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
-    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
-    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
-    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
-    		{text : "Redraw", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.redrawShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
-    		{text : "Save Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.saveShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
-    		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
-    		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
-     		]));
-	} else if(nestMenuItems != "none") {
-		this.imap.addContextMenuItems([
-            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var mrkid = that.getMarkerIdFromWpt(obj); if(mrkid == null) return false; var mrk = that.markers[mrkid]; return mrk.comments != null && mrk.comments.length > 0}, 
-            	handler: function(data) { var mrkid = that.getMarkerIdFromWpt(data.subject); var mrk=that.markers[mrkid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(mrk.comments, true)); that.alertDlg.show()}},
-            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var shpid = that.getShapeIdFromWay(obj); if(shpid == null) return false; var shp = that.shapes[shpid]; return shp.comments != null && shp.comments.length > 0}, 
-            	handler: function(data) { var shpid = that.getShapeIdFromWay(data.subject); var shp=that.shapes[shpid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(shp.comments, true)); that.alertDlg.show()}}
-            ]);
+		form = new org.sarsoft.view.ShapeForm();
+		this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details",form , function(shape) {
+			if(that.shapeDlg.shape != null) {
+				that.shapeDAO.save(that.shapeDlg.shape.id, shape, function(obj) {
+					that.refreshShapes([obj]);
+				});
+			} else {
+				shape.way = {polygon: that.shapeDlg.polygon};
+				shape.way.waypoints = that.imap.getNewWaypoints(that.shapeDlg.point, that.shapeDlg.polygon);
+				that.shapeDAO.create(function(obj) {
+					that.refreshShapes([obj]);
+					that.redrawShape(obj, function() { that.saveShape(obj); });
+				}, shape);
+			}});
+		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
+		
+		var items = [{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
+		    {text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
+		    {text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
+	
+		if(nestMenuItems) {
+			items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
+		}
+	
+		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
+			this.imap.addContextMenuItems(items.concat([
+	    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
+	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
+	    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
+	    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
+	    		{text : "Redraw", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.redrawShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
+	    		{text : "Save Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.saveShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
+	    		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
+	    		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
+	     		]));
+		} else if(nestMenuItems != "none") {
+			this.imap.addContextMenuItems([
+	            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var mrkid = that.getMarkerIdFromWpt(obj); if(mrkid == null) return false; var mrk = that.markers[mrkid]; return mrk.comments != null && mrk.comments.length > 0}, 
+	            	handler: function(data) { var mrkid = that.getMarkerIdFromWpt(data.subject); var mrk=that.markers[mrkid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(mrk.comments, true)); that.alertDlg.show()}},
+	            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var shpid = that.getShapeIdFromWay(obj); if(shpid == null) return false; var shp = that.shapes[shpid]; return shp.comments != null && shp.comments.length > 0}, 
+	            	handler: function(data) { var shpid = that.getShapeIdFromWay(data.subject); var shp=that.shapes[shpid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(shp.comments, true)); that.alertDlg.show()}}
+	            ]);
+		}
 	}
 
 	var showHide = new org.sarsoft.ToggleControl("MRK", "Show/Hide Markup", function(value) {
@@ -234,7 +236,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems) {
 	this.showHide = showHide;
 	this.imap.addMenuItem(showHide.node, 19);
 
-	if(!nestMenuItems) {
+	if(!nestMenuItems && !embedded) {
 		this.gps = new Object();
 		this.gps.form = jQuery('<form name="gpsform" action="/map/gpxupload" enctype="multipart/form-data" method="post">I want to:</form>');
 		this.gps.io = jQuery('<select style="margin-left: 15px"><option value="export">Export</option>' + ((org.sarsoft.userPermissionLevel != "READ") ? '<option value="import">Import</option>' : '') + '</select').appendTo(this.gps.form);

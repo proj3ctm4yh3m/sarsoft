@@ -18,16 +18,19 @@ org.sarsoft.Loader.queue(function() {
    map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), new GLatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14);
   </c:otherwise>
   </c:choose>
-  imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
-  markupController = new org.sarsoft.controller.MarkupMapController(imap);
-  toolsController = new org.sarsoft.controller.MapToolsController(imap);
-  setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
-  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
+  var embed = !(window==top);
+  imap = new org.sarsoft.InteractiveMap(map, {standardControls : !embed, UTM: true, switchableDatum : true});
+  markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
+  if(!embed) {
+	toolsController = new org.sarsoft.controller.MapToolsController(imap);
+  	setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
+    collabWidget = new org.sarsoft.MapCollaborationWidget(imap);
+  }
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
-  collabWidget = new org.sarsoft.MapCollaborationWidget(imap);
 
-  imap.message("Right click on map background to create shapes", 30000);
-
+  if(!embed) {
+	imap.message("Right click on map background to create shapes", 30000);
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", 'Leave map view and return to the home page?<br/><br/>You might also want to view <a href="/guide?id=${tenant.name}">this map\'s guide</a>.<br/><br/>', "Leave", "Cancel", function() {
 		window.location = "/maps";
 	});
@@ -48,6 +51,7 @@ org.sarsoft.Loader.queue(function() {
 			}
 		}
 	}
+  }
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 });
 }

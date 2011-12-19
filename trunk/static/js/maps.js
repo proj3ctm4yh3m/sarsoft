@@ -1688,34 +1688,38 @@ org.sarsoft.InteractiveMap.prototype.setMapInfo = function(classname, order, mes
 	this._mapInfoControl.setMessage(info);
 }
 
-org.sarsoft.MapURLHashWidget = function(imap) {
+org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	var that = this;
 	this.imap = imap;
 	this.ignorehash = false;
 	this.lasthash = "";
 	this.track = true;
 	
-	imap.register("org.sarsoft.MapURLHashWidget", this);
-
-	this.toggle = new org.sarsoft.ToggleControl("URL", "Toggle URL updates as map changes", function(value) {
-		that.track = value;
-		if(!that.track) {
-			window.location.hash="";
-		} else {
-			that.saveMap();
-		}
-	});
-	this.toggle.setValue(this.track);
-	imap.addMenuItem(this.toggle.node, 18);
-		
-	GEvent.addListener(imap.map, "moveend", function() {
-		if(!that.ignorehash && that.track) that.saveMap();
+	if(!readonce) {
+		imap.register("org.sarsoft.MapURLHashWidget", this);
+	
+		this.toggle = new org.sarsoft.ToggleControl("URL", "Toggle URL updates as map changes", function(value) {
+			that.track = value;
+			if(!that.track) {
+				window.location.hash="";
+			} else {
+				that.saveMap();
+			}
 		});
-	GEvent.addListener(imap.map, "zoomend", function() {
-		if(!that.ignorehash && that.track) that.saveMap();
-	});
+		this.toggle.setValue(this.track);
+		imap.addMenuItem(this.toggle.node, 18);
+			
+		GEvent.addListener(imap.map, "moveend", function() {
+			if(!that.ignorehash && that.track) that.saveMap();
+			});
+		GEvent.addListener(imap.map, "zoomend", function() {
+			if(!that.ignorehash && that.track) that.saveMap();
+		});
+	}
 	this.checkhashupdate();
-	window.setInterval(function() {that.checkhashupdate()}, 500);
+	if(!readonce) {
+		window.setInterval(function() {that.checkhashupdate()}, 500);
+	}
 }
 
 org.sarsoft.MapURLHashWidget.prototype.saveMap = function() {

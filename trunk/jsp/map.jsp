@@ -9,23 +9,28 @@ function doload() {
 org.sarsoft.Loader.queue(function() {
 
 	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
-	imap = new org.sarsoft.InteractiveMap(map, {positionWindow: true, UTM: true, size: true, find: true, separators: true, switchableDatum : true});
-	setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
-    urlwidget = new org.sarsoft.MapURLHashWidget(imap);
-	configWidget = new org.sarsoft.view.CookieConfigWidget(imap);
-	configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity});
-	toolsController = new org.sarsoft.controller.MapToolsController(imap);
+	var embed = !(window==top);
+	imap = new org.sarsoft.InteractiveMap(map, {positionWindow: !embed, UTM: true, size: !embed, find: !embed, separators: true, switchableDatum : true});
+	urlwidget = new org.sarsoft.MapURLHashWidget(imap, embed);
+	if(!embed) {
+		setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
+		configWidget = new org.sarsoft.view.CookieConfigWidget(imap);
+		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity});
+		toolsController = new org.sarsoft.controller.MapToolsController(imap);
+	}
 	
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 
-	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
-		window.location = "/";		
-	});
-	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
-	GEvent.addDomListener(goback, "click", function() {
-		leaveDlg.show();
-	});
-	imap.addMenuItem(goback, 40);
+	if(!embed) {
+		var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
+			window.location = "/";		
+		});
+		var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
+		GEvent.addDomListener(goback, "click", function() {
+			leaveDlg.show();
+		});
+		imap.addMenuItem(goback, 40);
+	}
 	
 	<c:if test="${uimessage ne null}">
 	  imap.message('${uimessage}', 20000);
