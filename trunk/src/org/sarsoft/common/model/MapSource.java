@@ -17,6 +17,7 @@ public class MapSource {
 	}
 
 	private String name;
+	private String alias;
 	private Type type;
 	private String copyright;
 	private int minresolution;
@@ -37,6 +38,13 @@ public class MapSource {
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+	@JSONSerializable
+	public String getAlias() {
+		return alias;
+	}
+	public void setAlias(String alias) {
+		this.alias = alias;
 	}
 	@JSONSerializable
 	public String getCopyright() {

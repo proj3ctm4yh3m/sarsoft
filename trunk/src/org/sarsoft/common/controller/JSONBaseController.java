@@ -96,6 +96,9 @@ public abstract class JSONBaseController {
 				source.setName(getProperty("sarsoft.map.background." + name + ".name"));
 				source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
 				source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
+				String alias = getProperty("sarsoft.map.background." + name + ".alias");
+				if(alias == null) alias = name;
+				source.setAlias(alias);
 				if(source.getType() != MapSource.Type.NATIVE) {
 					source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
 					source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
