@@ -1286,20 +1286,49 @@ org.sarsoft.InteractiveMap.prototype.updateDatum = function() {
 }
 
 
+org.sarsoft.InteractiveMap.prototype.nameToAlias = function(name) {
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		if(name == org.sarsoft.EnhancedGMap.defaultMapTypes[i].name) return org.sarsoft.EnhancedGMap.defaultMapTypes[i].alias;
+	}
+	return name;
+}
+
+org.sarsoft.InteractiveMap.prototype.aliasToName = function(alias) {
+	if(alias == null) return null;
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		if(alias == org.sarsoft.EnhancedGMap.defaultMapTypes[i].alias) return org.sarsoft.EnhancedGMap.defaultMapTypes[i].name;
+	}
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		if(alias.replace(/ \(.*\)/, "") == org.sarsoft.EnhancedGMap.defaultMapTypes[i].name.replace(/ \(.*\)/, "")) return org.sarsoft.EnhancedGMap.defaultMapTypes[i].name;
+	}
+	return alias;
+}
+
+
 org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
-	config.base = this.map._overlaydropdownmapcontrol.baseName;
+	config.base = this.nameToAlias(this.map._overlaydropdownmapcontrol.baseName);
 	if(this.map._overlaydropdownmapcontrol != null) {
-		config.overlay = this.map._overlaydropdownmapcontrol.overlayName;
+		config.overlay = this.nameToAlias(this.map._overlaydropdownmapcontrol.overlayName);
 		config.opacity = this.map._overlaydropdownmapcontrol.opacity;
-		if(this.map._overlaydropdownmapcontrol.alphaOverlays != null) config.alphaOverlays = this.map._overlaydropdownmapcontrol.alphaOverlays;
+		if(this.map._overlaydropdownmapcontrol.alphaOverlays != null) {
+			var ao = this.map._overlaydropdownmapcontrol.alphaOverlays.split(',');
+			for(var i = 0; i < ao.length; i++) ao[i] = this.nameToAlias(ao[i]);
+			config.alphaOverlays = ao.join(",");
+		}
 	}
 	return config;
 }
 
 org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 	if(config == null) return;
-	this.setMapLayers(config.base, config.overlay, config.opacity, config.alphaOverlays);
+	var alphaOverlays = null;
+	if(config.alphaOverlays != null && config.alphaOverlays.length > 0) {
+		var ao = config.alphaOverlays.split(',');
+		for(var i = 0; i < ao.length; i++) ao[i] = this.aliasToName(ao[i]);
+		alphaOverlays = ao.join(",");
+	}
+	this.setMapLayers(this.aliasToName(config.base), this.aliasToName(config.overlay), config.opacity, alphaOverlays);
 }
 
 org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayName, opacity, alphaOverlays) {
@@ -1688,14 +1717,14 @@ org.sarsoft.MapURLHashWidget = function(imap) {
 
 org.sarsoft.MapURLHashWidget.prototype.saveMap = function() {
 	var center = this.imap.map.getCenter();
-	var hash = "center=" + Math.round(center.lat()*100000)/100000 + "," + Math.round(center.lng()*100000)/100000 + "&zoom=" + map.getZoom();
+	var hash = "ll=" + Math.round(center.lat()*100000)/100000 + "," + Math.round(center.lng()*100000)/100000 + "&z=" + map.getZoom();
 	var config = this.imap.getConfig();
-	hash = hash + "&base=" + encodeURIComponent(config.base);
+	hash = hash + "&b=" + encodeURIComponent(config.base);
 	if(config.opacity != null  && config.opacity > 0) {
-		hash = hash + "&opacity=" + config.opacity;
-		if(config.overlay != null) hash = hash + "&overlay=" + encodeURIComponent(config.overlay);
+		hash = hash + "&n=" + config.opacity;
+		if(config.overlay != null) hash = hash + "&o=" + encodeURIComponent(config.overlay);
 	}
-	if(config.alphaOverlays != null) hash = hash + "&alphaOverlays=" + encodeURIComponent(config.alphaOverlays);
+	if(config.alphaOverlays != null) hash = hash + "&a=" + encodeURIComponent(config.alphaOverlays);
 	this.ignorehash=true;
 	window.location.hash=hash;
 	this.lasthash=window.location.hash
@@ -1710,15 +1739,15 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 	var config = new Object();
 	for(var i = 0; i < props.length; i++) {
 		var prop = props[i].split("=");
-		if(prop[0] == "center") {
+		if(prop[0] == "center" || prop[0] == "ll") {
 			var latlng = prop[1].split(",");
 			map.setCenter(new GLatLng(latlng[0], latlng[1]));
 		}
-		if(prop[0] == "zoom") this.imap.map.setZoom(1*prop[1]);
-		if(prop[0] == "base") config.base = decodeURIComponent(prop[1]);
-		if(prop[0] == "overlay") config.overlay = decodeURIComponent(prop[1]);
-		if(prop[0] == "opacity") config.opacity = prop[1];
-		if(prop[0] == "alphaOverlays") config.alphaOverlays = decodeURIComponent(prop[1]);
+		if(prop[0] == "zoom" || prop[0] == "z") this.imap.map.setZoom(1*prop[1]);
+		if(prop[0] == "base" || prop[0] == "b") config.base = decodeURIComponent(prop[1]);
+		if(prop[0] == "overlay" || prop[0] == "o") config.overlay = decodeURIComponent(prop[1]);
+		if(prop[0] == "opacity" || prop[0] == "n") config.opacity = prop[1];
+		if(prop[0] == "alphaOverlays" || prop[0] == "a") config.alphaOverlays = decodeURIComponent(prop[1]);
 	}
 	if(config.overlay == null) config.overlay = config.base;
 	if(config.opacity == null) config.opacity = 0;
