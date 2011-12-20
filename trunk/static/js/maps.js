@@ -67,13 +67,17 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 			map.addMapType(G_PHYSICAL_MAP);
 		}
 
-		var mapTypes = new Array(), type = null;
+		var mapTypes = new Array(), type = null, bkgset = false;
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 			var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
 			if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.name) >= 0) {
 				type = org.sarsoft.EnhancedGMap.createMapType(config);
 				mapTypes.push(type);
 				map.addMapType(type);
+				if(bkgset == false) {
+					map.setMapType(type);
+					bkgset = true;
+				}
 			}
 		}
 		
@@ -140,7 +144,6 @@ OverlayDropdownMapControl.prototype.addBaseType = function(type) {
 	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.typeSelect);
 	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.overlaySelect);
 	this.types[idx] = type;
-	if(idx == 0) this.map.setMapType(type);
 }
 
 OverlayDropdownMapControl.prototype.addOverlayType = function(type) {
@@ -195,7 +198,9 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	this.div.appendTo(map.getContainer());
 	
 	this.hasAlphaOverlays = false;
+	this.updateMap(map.getCurrentMapType(), this.types[0], 0);
 	return this.div[0];
+	
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
