@@ -56,19 +56,25 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		}
 
 		var mapTypes = new Array(), type = null;
+		var bkgset = false;
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 			var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-			if(config.type == "NATIVE") {
-				type = eval(config.template);
-			} else {
-				var layers = org.sarsoft.EnhancedGMap._createTileLayers(config);
-			    type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "", tileSize: config.tilesize ? config.tilesize : 256 } );
-			    if(config.alphaOverlay) type._alphaOverlay = true;
-			    type._info = config.info;
+			if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.name) >= 0) {
+				if(config.type == "NATIVE") {
+					type = eval(config.template);
+				} else {
+					var layers = org.sarsoft.EnhancedGMap._createTileLayers(config);
+				    type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "", tileSize: config.tilesize ? config.tilesize : 256 } );
+				    if(config.alphaOverlay) type._alphaOverlay = true;
+				    type._info = config.info;
+				}
+				mapTypes.push(type);
+				map.addMapType(type);
+				if(bkgset == false) {
+					map.setMapType(type);
+					bkgset = true;
+				}
 			}
-			mapTypes.push(type);
-			map.addMapType(type);
-			if(i == 0) map.setMapType(type);
 		}
 		
 		map.geoRefImages = org.sarsoft.EnhancedGMap.geoRefImages.slice(0);
