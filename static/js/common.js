@@ -421,15 +421,16 @@ org.sarsoft.view.TenantTable = function() {
 				var guide = jQuery('<span><a href="/guide?id=' + record.getData().name + '">View Guide</a>,&nbsp;</span>').appendTo(cell);
 			}
 			var share = jQuery('<a href="javascript:return false;">Share</a>').appendTo(cell);
-			share.click(function() { var rooturl = window.location.href.replace(window.location.pathname, "") + "/"; var html = 'You can share this ';
+			share.click(function() { var rooturl = window.location.href.replace(window.location.pathname, "") + "/"; var html = 'Share this ';
 			if(record.getData().type == "org.sarsoft.plans.model.Search") {
-				html += 'search with others by giving them the following URL:<br/><br/>';
+				html += 'map by giving people the following URL:<br/><br/>';
 				var surl = rooturl + 'search?id=' + record.getData().name;
 				html += '<a href="' + surl + '">' + surl + '</a>';
 			} else {
-				html += 'map with others by giving them the following URL:<br/><br/>';
+				html += 'map by giving people the following URL:<br/><br/>';
 				var murl = rooturl + 'map?id=' + record.getData().name;
-				html += '<a href="' + murl + '">' + murl + '</a>';
+				html += '<a href="' + murl + '">' + murl + '</a><br/><br/>';
+				html += 'Embed it in a webpage or forum:<br/><br/><textarea rows="3" cols="45">&lt;iframe width="500px" height="500px" src="' + murl + '"/&gt;</textarea>';
 			}
 			alertBody.innerHTML = html; alertDlg.show();});
 			
