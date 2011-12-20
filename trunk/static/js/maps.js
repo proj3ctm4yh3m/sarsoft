@@ -46,6 +46,18 @@ org.sarsoft.EnhancedGMap._createTileLayers = function(config) {
 	}
 }
 
+org.sarsoft.EnhancedGMap.createMapType = function(config) {
+	if(config.type == "NATIVE") {
+		return eval(config.template);
+	} else {
+		var layers = org.sarsoft.EnhancedGMap._createTileLayers(config);
+	    var type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "", tileSize: config.tilesize ? config.tilesize : 256 } );
+	    if(config.alphaOverlay) type._alphaOverlay = true;
+	    type._info = config.info;
+	    return type;
+	}
+}
+
 org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
@@ -56,24 +68,12 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		}
 
 		var mapTypes = new Array(), type = null;
-		var bkgset = false;
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 			var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
 			if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.name) >= 0) {
-				if(config.type == "NATIVE") {
-					type = eval(config.template);
-				} else {
-					var layers = org.sarsoft.EnhancedGMap._createTileLayers(config);
-				    type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "", tileSize: config.tilesize ? config.tilesize : 256 } );
-				    if(config.alphaOverlay) type._alphaOverlay = true;
-				    type._info = config.info;
-				}
+				type = org.sarsoft.EnhancedGMap.createMapType(config);
 				mapTypes.push(type);
 				map.addMapType(type);
-				if(bkgset == false) {
-					map.setMapType(type);
-					bkgset = true;
-				}
 			}
 		}
 		
@@ -89,100 +89,37 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 }
  
 OverlayDropdownMapControl = function() {
-	this.extras = document.createElement("span");
-}
-
-OverlayDropdownMapControl.prototype = new GControl();
-OverlayDropdownMapControl.prototype.printable = function() { return false; }
-OverlayDropdownMapControl.prototype.selectable = function() { return false; }
-OverlayDropdownMapControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(0, 0)); }
-
-OverlayDropdownMapControl.prototype._createSelect = function(types) {
-	var select = document.createElement("select");
-	for(var i = 0; i < types.length; i++) {
-		jQuery('<option value="' + i + '">' + types[i].getName() + '</option>').appendTo(select);
-	}
-	return select;
-}
-
-OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var that = this;
-	map._overlaydropdownmapcontrol = this;
-	this.map = map;
-	
-	this.baseName = map.getCurrentMapType().getName();
-
 	this.types = new Array();  // georef images get added to this list; need to shallow copy
-	var alphaTypes = new Array();
-	var baseTypes = new Array();
-	
-	for(var i = 0; i < map.getMapTypes().length; i++) {
-		this.types[i] = map.getMapTypes()[i];
-		if(this.types[i]._alphaOverlay) {
-			alphaTypes.push(this.types[i]);
-		} else {
-			baseTypes.push(this.types[i]);
-		}
-	}
-	this.typeSelect = this._createSelect(baseTypes);
-	for(var i = 0; i < this.types.length; i++) {
-		if(this.types[i] == map.getCurrentMapType()) this.typeSelect.value = i;
-	}
-	if(alphaTypes.length > 0) {
-		this.overlaySelect = this._createSelect(baseTypes);
-	} else {
-		this.overlaySelect = this._createSelect(this.types);
-	}
-	
-	for(var i = 0; i < map.geoRefImages.length; i++) {
-		jQuery('<option value="' + this.types.length + '">' + map.geoRefImages[i].name + '</option>').appendTo(this.overlaySelect);
-		this.types.push(map.geoRefImages[i]);
-	}
-	
-	var tDivOverlay = null;
-	var tDiv = null;
-	this.opacityInput = jQuery('<input size="2" value="0"></input>');
-	var div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>').appendTo(map.getContainer());
-	div.append(this.extras, this.typeSelect);
-
-	function handleLayerChange() {
-		var base = that.types[that.typeSelect.value];
-		var overlay = that.types[that.overlaySelect.value];
-		opacity = Math.min(100, Math.max(0, that.opacityInput.val())) / 100;
-		var tt = new Array();
-		if(that.alphaOverlayBoxes != null) for(var i = 0; i < that.alphaOverlayBoxes.length; i++) {
-			if(that.alphaOverlayBoxes[i].checked) tt.push(that.alphaOverlayTypes[i]);
-		}
-		that.updateMap(that.types[that.typeSelect.value], that.types[that.overlaySelect.value], opacity, tt.length > 0 ? tt : null);
-	}
-	
-	this.opacityInput.change(handleLayerChange);
-	$(this.typeSelect).change(handleLayerChange);
-	$(this.overlaySelect).change(handleLayerChange);
-	this.opacityInput.keydown(function(event) {
-		if(event.keyCode == 13) if(tDiv != null) tDiv.css("visibility","hidden");
-	});
-	
 	this.alphaOverlayBoxes = new Array();
-	this.alphaOverlayTypes = alphaTypes;
-	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(div);
+	this.alphaOverlayTypes = new Array();
+
+	this.extras = document.createElement("span");
+	this.typeSelect = document.createElement("select");
+	this.overlaySelect = document.createElement("select");
+	this.opacityInput = jQuery('<input size="2" value="0"></input>');
+
+	this.div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>');
+	this.div.append(this.extras, this.typeSelect);
+	
+	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(this.div);
 	var tps = jQuery('<span style="cursor: pointer">+</span>').appendTo(tPlus);
 	this.alphaOverlayPlus = tps[0];
 
-	tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
-	tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
+	var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
+	var tDivOverlay = jQuery('<div style="color: black; font-weight: normal"></div>').appendTo(tDiv);
 
-	for(var i = 0; i < alphaTypes.length; i++) {
-		this.alphaOverlayBoxes[i] = jQuery('<input type="checkbox" value="' + i + '" name="' + alphaTypes[i].getName() + '"/>').appendTo(tDiv)[0];
-		tDiv.append(alphaTypes[i].getName());
-		$(this.alphaOverlayBoxes[i]).change(handleLayerChange);
-		if(i < alphaTypes.length - 1) tDiv.append(document.createElement("br"));
-	}
-	
+	this.opacityInput.change(function() { that.handleLayerChange() });
+	$(this.typeSelect).change(function() { that.handleLayerChange() });
+	$(this.overlaySelect).change(function() { that.handleLayerChange() });
+	this.opacityInput.keydown(function(event) {
+		if(event.keyCode == 13) if(tDiv != null) tDiv.css("visibility","hidden");
+	});
+
 	GEvent.addDomListener(tps[0], "click", function() {
 		if(tDiv.css("visibility")=="hidden") {
 			tDiv.css("visibility","visible");
-			div.css("z-index", 1001); // z-index gets overwritten by OpenLayers
+			that.div.css("z-index", 1001); // z-index gets overwritten by OpenLayers
 		} else {
 			tDiv.css("visibility", "hidden");
 		}
@@ -190,9 +127,75 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	tDivOverlay.append(this.overlaySelect, "@", this.opacityInput, "%");
 	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right">&uarr;</span>').appendTo(tDivOverlay);
 	upArrow.click(function() {tDiv.css("visibility", "hidden");});
+	this.tDiv = tDiv;	
+}
 
-	this.hasAlphaOverlays = (alphaTypes.length > 0);
-	return div[0];
+OverlayDropdownMapControl.prototype = new GControl();
+OverlayDropdownMapControl.prototype.printable = function() { return false; }
+OverlayDropdownMapControl.prototype.selectable = function() { return false; }
+OverlayDropdownMapControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(0, 0)); }
+
+OverlayDropdownMapControl.prototype.addBaseType = function(type) {
+	var idx = this.types.length;
+	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.typeSelect);
+	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.overlaySelect);
+	this.types[idx] = type;
+	if(idx == 0) this.map.setMapType(type);
+}
+
+OverlayDropdownMapControl.prototype.addOverlayType = function(type) {
+	var idx = this.types.length;
+	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.overlaySelect);
+	this.types[idx] = type;
+}
+
+OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
+	var that = this;
+	var idx = this.alphaOverlayBoxes.length;
+	if(idx > 0) this.tDiv.append(document.createElement("br"));
+	this.alphaOverlayBoxes[idx] = jQuery('<input type="checkbox" value="' + idx + '" name="' + type.getName() + '"/>').appendTo(this.tDiv)[0];
+	this.tDiv.append(type.getName());
+	$(this.alphaOverlayBoxes[idx]).change(function() { that.handleLayerChange() });
+	this.alphaOverlayTypes[idx] = type;
+	this.hasAlphaOverlays = true;
+}
+
+OverlayDropdownMapControl.prototype.handleLayerChange = function() {
+	var base = this.types[this.typeSelect.value];
+	var overlay = this.types[this.overlaySelect.value];
+	opacity = Math.min(100, Math.max(0, this.opacityInput.val())) / 100;
+	var tt = new Array();
+	if(this.alphaOverlayBoxes != null) for(var i = 0; i < this.alphaOverlayBoxes.length; i++) {
+		if(this.alphaOverlayBoxes[i].checked) tt.push(this.alphaOverlayTypes[i]);
+	}
+	this.updateMap(this.types[this.typeSelect.value], this.types[this.overlaySelect.value], opacity, tt.length > 0 ? tt : null);
+}
+
+OverlayDropdownMapControl.prototype.initialize = function(map) {
+	var that = this;
+	map._overlaydropdownmapcontrol = this;
+	this.map = map;
+	
+	var alphaTypes = new Array();
+	var baseTypes = new Array();
+	
+	for(var i = 0; i < map.getMapTypes().length; i++) {
+		var type = map.getMapTypes()[i];
+		if(type._alphaOverlay) {
+			this.addAlphaType(type);
+		} else {
+			this.addBaseType(type);
+		}
+	}
+	
+	for(var i = 0; i < map.geoRefImages.length; i++) {
+		this.addOverlayType(map.geoRefImages[i]);
+	}
+	
+	this.div.appendTo(map.getContainer());
+	
+	this.hasAlphaOverlays = false;
+	return this.div[0];
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
@@ -1359,7 +1362,32 @@ org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayNa
 			}
 		}
 	}
-	if(base != null && overlay != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity, (alphaTypes.length > 0) ? alphaTypes : null);
+	if(base == null) {
+		for(i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+			if(org.sarsoft.EnhancedGMap.defaultMapTypes[i].name == baseName) {
+				var type = org.sarsoft.EnhancedGMap.createMapType(org.sarsoft.EnhancedGMap.defaultMapTypes[i]);
+				this.map.addMapType(type);
+				this.map._overlaydropdownmapcontrol.addBaseType(type);
+				base = type;
+			}
+		}
+		for(var i = 0; i < types.length; i++) {
+			if(types[i].getName != null && types[i].getName() == overlayName) overlay = types[i];
+			if(types[i].name == overlayName) overlay = types[i];
+		}
+	}
+	if(overlay == null) {
+		for(i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+			if(org.sarsoft.EnhancedGMap.defaultMapTypes[i].name == overlayName) {
+				var type = org.sarsoft.EnhancedGMap.createMapType(org.sarsoft.EnhancedGMap.defaultMapTypes[i]);
+				this.map.addMapType(type);
+				this.map._overlaydropdownmapcontrol.addBaseType(type);
+				overlay = type;
+			}
+		}
+	}
+	if(overlay == null) overlay = base;
+	if(base != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity, (alphaTypes.length > 0) ? alphaTypes : null);
 }
 
 
