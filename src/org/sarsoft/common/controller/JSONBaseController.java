@@ -38,6 +38,7 @@ import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.model.GeoRefImage;
+import org.sarsoft.plans.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,8 +50,9 @@ public abstract class JSONBaseController {
 	protected static String APP = "app";
 	
 	private List<MapSource> mapSources;
-	private Properties properties;
+	private List<String> visibleMapSources;
 	private String header = null;
+	private String preheader = null;
 	private String welcomeHTML;
 	
 	@Autowired
@@ -83,6 +85,30 @@ public abstract class JSONBaseController {
 	protected String getProperty(String name) {
 		if(!RuntimeProperties.isInitialized()) RuntimeProperties.initialize(context);
 		return RuntimeProperties.getProperty(name);
+	}
+	
+	protected List<String> getVisibleMapSources(boolean checkTenant) {
+		if(checkTenant && RuntimeProperties.getTenant() != null) {
+			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
+			if(tenant.getLayers() != null) {
+				String[] layers = tenant.getLayers().split(",");
+				List<String> sources = new ArrayList<String>();
+				for(String layer : layers) {
+					sources.add(getProperty("sarsoft.map.background." + layer + ".name"));
+				}
+				return sources;
+			}
+		}
+		if(visibleMapSources != null) return visibleMapSources;
+		synchronized(this) {
+			visibleMapSources = new ArrayList<String>();
+			String defaults = getProperty("sarsoft.map.backgrounds.default");
+			if(defaults == null || defaults.length() == 0) defaults = getProperty("sarsoft.map.backgrounds");
+			for(String source : defaults.split(",")) {
+				visibleMapSources.add(getProperty("sarsoft.map.background." + source + ".name"));
+			}
+		}
+		return visibleMapSources;
 	}
 
 	protected List<MapSource> getMapSources() {
@@ -151,20 +177,94 @@ public abstract class JSONBaseController {
 		return sb.toString().toUpperCase();
 	}
 
-	protected String getCommonHeader() {
+	protected String getCommonHeader(boolean checkTenant) {
 		if(this.header != null) {
+			String header = "<script>" + preheader;
+	
+			header = header + "org.sarsoft.EnhancedGMap.geoRefImages = [";
+	
+			boolean first = true;
+			for(GeoRefImage image : dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE)) {
+				header = header + ((first) ? "" : ",") + "{name:\"" + image.getName() + "\", alias: \"" + image.getName() + "\", id: " + image.getId() + ", angle: " + image.getAngle() +
+					", scale: " + image.getScale() + ", originx: " + image.getOriginx() + ", originy: " + image.getOriginy() + ", originlat: " + image.getOriginlat() +
+					", originlng: " + image.getOriginlng() + ", width: " + image.getWidth() + ", height: " + image.getHeight() + "}";
+				first = false;
+			}
+			header = header + "];\n\norg.sarsoft.EnhancedGMap.visibleMapTypes = [\n";
+			first = true;
+			for(String source : getVisibleMapSources(checkTenant)) {
+				header = header + ((first) ? "" : ",") + "\"" + source + "\"";
+				first = false;
+			}
+			header = header + "];\n";
+			
+			String datum = "WGS84";
+			if(getProperty("sarsoft.map.datum") != null) datum = getProperty("sarsoft.map.datum");
+			
+			if(checkTenant && RuntimeProperties.getTenant() != null) {
+				Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
+				if(tenant.getDatum() != null) datum = tenant.getDatum();
+			}
+			header = header + "org.sarsoft.map.datum=\"" + datum + "\"\n" +
+				"org.sarsoft.userPermissionLevel=\"" + RuntimeProperties.getUserPermission() + "\"";
+			header = header + "</script>\n";
+				
 			if("google".equals(this.mapViewer)) {
-				return "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
+				return header + "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
 				getProperty("google.maps.apikey." + RuntimeProperties.getServerName()) + "\" type=\"text/javascript\"></script>" + this.header;
 			} else {
-				return "<script src=\"/static/js/openlayers.js\"></script>\n" +
+				return header + "<script src=\"/static/js/openlayers.js\"></script>\n" +
 				"<script src=\"/static/js/gmapolwrapper.js\"></script>" + this.header;
 			}
 		}
 		synchronized(this) {
+			String preheader = "if(typeof org == \"undefined\") org = new Object();\nif(typeof org.sarsoft == \"undefined\") org.sarsoft = new Object();\nif(typeof org.sarsoft.map == \"undefined\") org.sarsoft.map = new Object();" +
+			"org.sarsoft.Constants=" + JSONAnnotatedPropertyFilter.fromObject(Constants.all) + "\n" +
+			"org.sarsoft.map._default = new Object();\n" +
+			"org.sarsoft.map._default.zoom = " + getProperty("sarsoft.map.default.zoom") + ";\n" +
+			"org.sarsoft.map._default.lat = " + getProperty("sarsoft.map.default.lat") + ";\n" +
+			"org.sarsoft.map._default.lng = " + getProperty("sarsoft.map.default.lng") + ";\n" +
+			"org.sarsoft.map.refreshInterval = " + RuntimeProperties.getProperty("sarsoft.refresh.interval") + ";\n" +
+			"org.sarsoft.map.autoRefresh = " + RuntimeProperties.getProperty("sarsoft.refresh.auto") + ";\n" +
+			"org.sarsoft.map.datums = new Object();\n" +
+			"org.sarsoft.map.datums[\"NAD27 CONUS\"] = {a: 6378206.4, b: 6356583.8, f: 1/294.9786982, x : -8, y : 160, z : 176};\n" +
+			"org.sarsoft.map.datums[\"WGS84\"] = {a: 6378137.0, b: 6356752.314, f: 1/298.257223563, x : 0, y : 0, z : 0};\n" +
+			"if(typeof org.sarsoft.EnhancedGMap == \"undefined\") org.sarsoft.EnhancedGMap = function() {}\n" +
+			"org.sarsoft.EnhancedGMap.defaultMapTypes = [\n";
+			boolean first = true;
+			boolean tileCacheEnabled = Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled"));
+			for(MapSource source : getMapSources()) {
+				if(!source.isAlphaOverlay()) {
+					preheader = preheader + ((first) ? "" : ",") + "{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
+						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
+						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + source.getInfo() + "\", template: \"";
+					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
+						preheader = preheader + "/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png";
+					} else {
+						preheader = preheader + source.getTemplate();
+					}
+					preheader = preheader + "\"}";
+					first = false;
+				}
+			}
+			for(MapSource source : getMapSources()) {
+				if(source.isAlphaOverlay()) {
+					preheader = preheader + ",{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
+						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
+						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + source.getInfo() + "\", template: \"";
+					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
+						preheader = preheader + "/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png";
+					} else {
+						preheader = preheader + source.getTemplate();
+					}
+					preheader = preheader + "\"}\n";
+				}
+			}
+			preheader = preheader + "];\n";
+			this.preheader = preheader;
+
 			String header = "<script src=\"/static/js/yui.js\"></script>\n" +
 			"<script src=\"/static/js/jquery-1.6.4.js\"></script>\n" +
-			"<script src=\"/app/constants.js\"></script>\n" +
 			"<script src=\"/static/js/common.js\"></script>\n" +
 			"<script src=\"/static/js/maps.js\"></script>\n" +
 			"<script src=\"/static/js/plans.js\"></script>\n" +
@@ -181,7 +281,7 @@ public abstract class JSONBaseController {
 			"<![endif]-->\n";
 			this.header = header;
 		}
-		return getCommonHeader();
+		return getCommonHeader(checkTenant);
 	}
 	
 
@@ -217,7 +317,7 @@ public abstract class JSONBaseController {
 		}
 		model.addAttribute("tenants", tenants);
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
-		model.addAttribute("head", getCommonHeader());
+		model.addAttribute("head", getCommonHeader(false));
 		model.addAttribute("version", getProperty("sarsoft.version"));
 		model.addAttribute("friendlyName", getProperty("sarsoft.name"));
 		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
@@ -252,6 +352,10 @@ public abstract class JSONBaseController {
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 		return app(model, "Pages.Splash");
 	}
+	
+	protected boolean isTenantRestrictedPage(String view) {
+		return !("/map".equals(view) || "Pages.Maps".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Account".equals(view) || "Pages.Find".equals(view));
+	}
 
 	protected String app(Model model, String view) {
 		model.addAttribute("mapSources", getMapSources());
@@ -268,9 +372,9 @@ public abstract class JSONBaseController {
 		model.addAttribute("username", username);
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
-		model.addAttribute("head", getCommonHeader());
+		model.addAttribute("head", getCommonHeader(isTenantRestrictedPage(view)));
 		// bounce users from pages that only make sense with tenants
-		if(RuntimeProperties.getTenant() == null && !("/map".equals(view) || "Pages.Maps".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Account".equals(view) || "Pages.Find".equals(view))) {
+		if(RuntimeProperties.getTenant() == null && isTenantRestrictedPage(view)) {
 			return bounce(model);
 		}
 		// bounce users from listing pages unless they're logged in

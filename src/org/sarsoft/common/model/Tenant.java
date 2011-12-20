@@ -2,6 +2,7 @@ package org.sarsoft.common.model;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Column;
@@ -32,6 +33,7 @@ public abstract class Tenant {
 	private String password;
 	private String description;
 	private String comments;
+	private String layers;
 	private UserAccount account;
 	private String mapConfig;
 	private Boolean shared;
@@ -70,6 +72,12 @@ public abstract class Tenant {
 	}
 	public void setComments(String comments) {
 		this.comments = comments;
+	}
+	public String getLayers() {
+		return layers;
+	}
+	public void setLayers(String layers) {
+		this.layers = layers;
 	}
 	@Lob
 	public String getComments() {

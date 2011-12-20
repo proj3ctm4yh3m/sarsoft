@@ -40,11 +40,16 @@ public class RuntimeProperties {
 			String sarsoftPropertyName = "sarsoft.properties";
 			if(System.getProperty("sarsoft.properties") != null) sarsoftPropertyName = System.getProperty("sarsoft.properties");
 			try {
+				InputStream baseStream = context.getResourceAsStream("/WEB-INF/base.spring-config.properties");
+				properties.load(baseStream);
+				baseStream.close();
 				InputStream inputStream = context.getResourceAsStream(propertiesFileName);
 				properties.load(inputStream);
+				inputStream.close();
 				if(new File(sarsoftPropertyName).exists()) {
 					FileInputStream fis = new FileInputStream(sarsoftPropertyName);
 					properties.load(fis);
+					fis.close();
 				}
 				PropertyConfigurator.configure(properties);
 			} catch (IOException e) {

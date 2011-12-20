@@ -56,24 +56,7 @@ public class AdminController extends JSONBaseController {
 	public String getHomePage(Model model) {
 		return splash(model);
 	}
-	
-	@RequestMapping(value="/app/constants.js", method = RequestMethod.GET)
-	public String getConstants(Model model) {
-		model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(Constants.all));
-		model.addAttribute("mapSources", getMapSources());
-		model.addAttribute("tileCacheEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled")));
-		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
-		model.addAttribute("defaultZoom", getProperty("sarsoft.map.default.zoom"));
-		model.addAttribute("defaultLat", getProperty("sarsoft.map.default.lat"));
-		model.addAttribute("defaultLng", getProperty("sarsoft.map.default.lng"));
 		
-		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-		if(getProperty("sarsoft.map.datum") != null) model.addAttribute("datum", getProperty("sarsoft.map.datum"));
-		if(tenant != null && tenant.getDatum() != null) model.addAttribute("datum", tenant.getDatum());
-		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
-		return "/global/constants";
-	}
-	
 	@RequestMapping(value="/account.html", method = RequestMethod.GET)
 	public String getAccount(Model model) {
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
