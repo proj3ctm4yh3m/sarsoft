@@ -1369,10 +1369,11 @@ org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayNa
 	}
 	var alphaTypes = new Array();
 	if(alphaOverlays != null) {
+		var atypes = this.map._overlaydropdownmapcontrol.alphaOverlayTypes;
 		var names = alphaOverlays.split(",");
-		for (var i = 0; i < types.length; i++) {
+		for (var i = 0; i < atypes.length; i++) {
 			for(var j = 0; j < names.length; j++) {
-				if(types[i].getName != null && names[j] == types[i].getName()) alphaTypes.push(types[i]);
+				if(atypes[i].getName != null && names[j] == atypes[i].getName()) alphaTypes.push(atypes[i]);
 			}
 		}
 	}
