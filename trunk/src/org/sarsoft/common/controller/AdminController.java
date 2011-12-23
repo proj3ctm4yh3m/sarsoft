@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
 import org.sarsoft.common.model.GeoRefImage;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
@@ -306,6 +307,18 @@ public class AdminController extends JSONBaseController {
 			dao.save(tenant);
 		} else {
 			tenant.setComments("");
+		}
+		String layers = "";
+		for(MapSource source : this.getMapSources()) {
+			if(Boolean.valueOf(request.getParameter("ml_" + source.getAlias()))) {
+				if(layers.length() > 0) layers = layers + ",";
+				layers = layers + source.getAlias();
+			}
+		}
+		if(layers.length() > 0) {
+			tenant.setLayers(layers);
+		} else {
+			tenant.setLayers(null);
 		}
 		dao.save(tenant);
 		if(tenant.getAccount() != null) {

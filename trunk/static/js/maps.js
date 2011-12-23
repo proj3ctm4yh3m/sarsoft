@@ -59,6 +59,15 @@ org.sarsoft.EnhancedGMap.createMapType = function(config) {
 }
 
 org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
+	if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf == null) {
+		org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf = function(elt) {
+			for(var i = 0; i < this.length; i++) {
+				if(this[i] == elt) return i;
+			}
+			return -1;
+		}
+	}
+	
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
 		$(element).css({"z-index": 0, overflow: "hidden"});
