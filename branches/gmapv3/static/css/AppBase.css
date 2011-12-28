@@ -1,0 +1,112 @@
+@page {
+	margin: 0.25in;
+}
+
+a {
+	text-decoration: none;
+}
+
+div.header a {
+	color: black;
+}
+
+body, html {
+	padding: 0px;
+	margin: 0px;
+	border: 0px;
+	width: 100%;
+	height: 100%;
+}
+
+.pre {
+	white-space: pre-line;
+}
+
+div.item label, div.item span.label {
+	float: left;
+	margin-right: 5px;
+	width: 120px;
+}
+
+div.subheader {
+	height: 2em;
+	float: left;
+}
+
+div.subheader span {
+	font-size: 1.5em;
+	padding-left: 1em;
+	padding-right: 1em;
+	color: #5a8ed7;
+	font-weight: bold;
+}
+
+div.subheader span a {
+	color: inherit;
+}
+
+div.subheader.active span {
+	color: #945e3b;
+}
+
+div.lmenu {
+	font-size: 1.5em;
+	padding-bottom: 10px;
+	color: #333333;
+}
+
+div.lmenu a {
+	color: inherit;
+}
+
+.yui-skin-sam .clickableyuitable .yui-dt-body {
+	cursor: pointer;
+}
+
+textarea.entityform {
+	width: 350px;
+	height: 150px
+}
+
+.hint {
+	color: #666666;
+	text-decoration: italic;
+	font-size: smaller
+}
+
+.printonly {
+	display: none;
+}
+
+.maplabelnormal .maplabel {
+}
+
+.maplabelbacklit .maplabel {
+	background-color: white;
+}
+	
+.maplabelhidden .maplabel {
+	display: none;
+}
+
+.growYUITable table {
+	width: 100%;
+}
+
+@media print {
+	.noprint {
+		display: none;
+	}
+	.printonly {
+		display: block !important;
+	}
+	img.olTileImage {
+		position: absolute !important;
+	}
+	img.olAlphaImage {
+		position: absolute !important;
+	}
+	div.olAlphaImage {
+		position: absolute !important;
+	}
+}
