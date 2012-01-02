@@ -15,6 +15,8 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
@@ -57,24 +59,44 @@ public class ImageryController extends JSONBaseController {
 
 	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		InputStream in = null;
+		String tile =  layer + "/" + z + "/" + x + "/" + y + ".png";
 		if(EXTERNAL_TILE_DIR == null) EXTERNAL_TILE_DIR = getProperty("sarsoft.map.localTileStore");
-		File file = new File(EXTERNAL_TILE_DIR + "/" + layer + "/" + z + "/" + x + "/" + y + ".png");
-		if(!file.exists()) {
+		File file = new File(EXTERNAL_TILE_DIR + "/" + tile);
+		if(file.exists()) {
+			try {
+				in = new FileInputStream(file);
+			} catch (Exception e) {
+				in = null;
+			}
+		}
+		String parentDir = EXTERNAL_TILE_DIR;
+		while(in == null && tile.contains("/")) {
+			parentDir = parentDir + "/" + tile.substring(0, tile.indexOf("/"));
+			tile = tile.substring(tile.indexOf("/") + 1);
+			try {
+				ZipFile zipFile = new ZipFile(parentDir + ".zip");
+				ZipEntry entry = zipFile.getEntry(tile);
+				in = zipFile.getInputStream(entry);
+			} catch (Exception e) {
+				in = null;
+			}
+		}
+		if(in == null) {
 			try {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
 			} catch (IOException e) {
 			}
 		}
+
 		response.setContentType("image/png");
-		InputStream in = null;
 		OutputStream out = null;
 		byte[] bytes = new byte[512];
 		int bytesRead;
 		response.setHeader("Cache-Control", "max-age=3600, public");
 		
 		try {
-			in = new FileInputStream(file);
 			out = response.getOutputStream();
 			while ((bytesRead = in.read(bytes)) != -1) {
 			    out.write(bytes, 0, bytesRead);
