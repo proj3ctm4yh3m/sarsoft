@@ -29,7 +29,7 @@ public class ClueController extends JSONBaseController {
 		return app(model, "Clue.List");
 	}
 	
-	@RequestMapping(value="/app/clue/new", method = RequestMethod.POST)
+	@RequestMapping(value="/clue/new", method = RequestMethod.POST)
 	public String createClue(Model model, HttpServletRequest request,
 			@RequestParam(value="description", required=false) String description,
 			@RequestParam(value="summary", required=true) String summary,
@@ -71,20 +71,24 @@ public class ClueController extends JSONBaseController {
 			}
 		}
 
-		if(wptid != null) return getClue(model, "app", clue.getId());
-		return "redirect:/app/clue";
+		if(wptid != null) return getClue(model, clue.getId());
+		return "redirect:/clue";
 	}
 	
-	@RequestMapping(value="/{mode}/clue/{clueid}", method = RequestMethod.GET)
-	public String getClue(Model model, @PathVariable("mode") String mode, @PathVariable("clueid") long clueid) {
+	@RequestMapping(value="/clue/{clueid}", method = RequestMethod.GET)
+	public String getClue(Model model, @PathVariable("clueid") long clueid) {
 		Clue clue = dao.load(Clue.class, clueid);
-		if(REST.equals(mode)) return json(model, clue);
 		model.addAttribute("clue", clue);
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
 		return app(model, "Clue.Detail");
 	}
+
+	@RequestMapping(value="/rest/clue/{clueid}", method = RequestMethod.GET)
+	public String getRestClue(Model model, @PathVariable("clueid") long clueid) {
+		return json(model, dao.load(Clue.class, clueid));
+	}
 	
-	@RequestMapping(value="/app/clue/{clueid}/position", method = RequestMethod.POST)
+	@RequestMapping(value="/clue/{clueid}/position", method = RequestMethod.POST)
 	public String updateClueLocation(Model model, @PathVariable("clueid") long clueid,
 			@RequestParam(value="lat", required=true) Double lat,
 			@RequestParam(value="lng", required=true) Double lng) {
@@ -92,10 +96,10 @@ public class ClueController extends JSONBaseController {
 		Clue clue = dao.load(Clue.class, clueid);
 		clue.setPosition(new Waypoint(lat, lng));
 		dao.save(clue);
-		return "redirect:/app/clue/" + clueid;
+		return "redirect:/clue/" + clueid;
 	}
 	
-	@RequestMapping(value="/app/clue/{clueid}", method = RequestMethod.POST)
+	@RequestMapping(value="/clue/{clueid}", method = RequestMethod.POST)
 	public String updateClue(Model model, HttpServletRequest request, @PathVariable("clueid") long clueid,
 			@RequestParam(value="description", required=false) String description,
 			@RequestParam(value="summary", required=true) String summary,
@@ -129,7 +133,7 @@ public class ClueController extends JSONBaseController {
 		}
 		
 		dao.save(clue);
-		return "redirect:/app/clue/" + clueid;
+		return "redirect:/clue/" + clueid;
 	}
 	
 	@RequestMapping(value="/rest/clue", method = RequestMethod.GET)

@@ -33,7 +33,7 @@ function finalize() {
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
-			window.location='/app/assignment/${assignment.id}'
+			window.location='/assignment/${assignment.id}'
 		}, failure : function(response) {
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
@@ -45,7 +45,7 @@ function transition(state) {
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
-			window.location.href = '/app/assignment/${assignment.id}';
+			window.location.href = '/assignment/${assignment.id}';
 		}, failure : function(response) {
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
@@ -88,10 +88,10 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <c:if test="${assignment.status ne draft}">
 <ul>
 <c:if test="${assignment.status eq prepared}">
-<li>Print <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Maps</a> or <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=forms">SAR 104 Forms</a></li>
+<li>Print <a target="_new" href="/assignment/${assignment.id}?format=print&content=maps">Maps</a> or <a target="_new" href="/assignment/${assignment.id}?format=print&content=forms">SAR 104 Forms</a></li>
 </c:if>
 <c:if test="${assignment.status eq completed}">
-<li>Print <a target="_new" href="/app/assignment/${assignment.id}?format=print&content=maps">Debrief Map</a></li>
+<li>Print <a target="_new" href="/assignment/${assignment.id}?format=print&content=maps">Debrief Map</a></li>
 </c:if>
 <li>Export to: <a href="javascript:document.forms['togarmin'].submit()">Garmin GPS</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=kml">KML</a></li>
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
@@ -115,7 +115,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <div><i>This assignment is no longer in draft mode.  It may have been printed and copies or GPS routes may already be in the field.  If you revert it and make changes,
  you must track down any existing copies in order to avoid confusion.</i></div>
 </c:if>
-			<form name="assignment" action="/app/assignment/${assignment.id}" method="post">
+			<form name="assignment" action="/assignment/${assignment.id}" method="post">
 			<div style="float: left; width: 20em">
 			 <table border="0">
 			 <tr><td>Number</td><td>${assignment.id}</td></tr>
@@ -180,7 +180,7 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 			</form>
 		</div>
 		<div id="map">
-<div><i>Note: In order to modify the assignment's bounds, you must use the <a href="/app/operationalperiod/${assignment.operationalPeriod.id}/map">operational period map view</a>, so that
+<div><i>Note: In order to modify the assignment's bounds, you must use the <a href="/op/${assignment.operationalPeriod.id}/map">operational period map view</a>, so that
 you can see how it relates to neighboring assignments.</i></div>
 			<div id="mapview" style="width: 500px; height: 450px; float: left; margin-left: 20px;">
 			</div>
@@ -194,7 +194,7 @@ you can see how it relates to neighboring assignments.</i></div>
 				<div id="attachedwptcontainer">
 				</div>
 				<div style="display: none" id="wpt2cluediv">
-				<form style="display: none" action="/app/clue/new" method="POST" name="wpt2clue">
+				<form style="display: none" action="/clue/new" method="POST" name="wpt2clue">
 				<input type="hidden" name="lat" id="wpt2clue_lat"/>
 				<input type="hidden" name="lng" id="wpt2clue_lng"/>
 				<input type="hidden" name="summary" id="wpt2clue_summary"/>
@@ -206,10 +206,10 @@ you can see how it relates to neighboring assignments.</i></div>
 				<div style="padding-top: 10px">
 				<i>Clean Up Track Data:</i><br/>Remove all trackpoints and waypoints:
 				<ul>
-				<li><form name="cleanuptracksbydistance" method="POST" action="/app/assignment/${assignment.id}/cleantracks#tracks">
+				<li><form name="cleanuptracksbydistance" method="POST" action="/assignment/${assignment.id}/cleantracks#tracks">
 				more than <input name="radius" type="text" size="5" value="15"/>&nbsp;km from assignment.&nbsp;&nbsp;<input type="submit" value="GO"/>				
 				</form></li>
-				<li><form name="cleanuptracksbytime" method="POST" action="/app/assignment/${assignment.id}/cleantracks#tracks">
+				<li><form name="cleanuptracksbytime" method="POST" action="/assignment/${assignment.id}/cleantracks#tracks">
 				older than <input name="time" type="text" size="3" value="24"/>&nbsp;hours.&nbsp;&nbsp;<input type="submit" value="GO"/>				
 				</form></li>
 				</ul>
@@ -231,14 +231,14 @@ you can see how it relates to neighboring assignments.</i></div>
 		</div>
 		<div style="float: left; width: 30em">
 			<h4>Create a new resource</h4>
-<form method="POST" action="/app/resource/new#operations">
+<form method="POST" action="/resource/new#operations">
 Name:&nbsp;<input type="text" name="name" size="10" value=""/>&nbsp;&nbsp;
 Type:&nbsp;<select name="type"><option value="PERSON">PERSON</option><option value="EQUIPMENT">EQUIPMENT</option></select><br/>
 Agency:&nbsp;<input type="text" name="agency" value="" size="10"/>&nbsp;&nbsp;
 Callsign:&nbsp;<input type="text" name="callsign" value="" size="10"/><br/>
 SPOT Id:&nbsp;<input type="text" name="spotId" size="10" value=""/>&nbsp;&nbsp;
 SPOT Password:&nbsp;<input type="text" name="spotPassword" size="10" value="${resource.spotPassword}">
-<input type="hidden" name="redirect" value="/app/assignment/${assignment.id}"/>
+<input type="hidden" name="redirect" value="/assignment/${assignment.id}"/>
 <input type="hidden" name="assignmentId" value="${assignment.id}"/>
 <input type="submit" value="Create"/>
 </form>
@@ -296,14 +296,14 @@ function attachExistingResource() {
 		document.getElementById('assignmenttostealfrom').innerHTML = _resources[id];
 		stealDlg.show();
 	} else {
-		window.location="/app/resource/" + id + "/attach/${assignment.id}#operations";
+		window.location="/resource/" + id + "/attach/${assignment.id}#operations";
 	}
 }
 
 function stealResource() {
 	var select = document.getElementById("resources");
 	var id = select.options[select.selectedIndex].value
-	window.location="/app/resource/" + id + "/attach/${assignment.id}#operations";
+	window.location="/resource/" + id + "/attach/${assignment.id}#operations";
 }
 
 org.sarsoft.Loader.queue(function() {
@@ -347,7 +347,7 @@ org.sarsoft.Loader.queue(function() {
 
     resourcetable = new org.sarsoft.view.ResourceTable(null, function(record) {
     	var resource = record.getData();
-    	window.location="/app/resource/" + resource.id + "/detach/" + resource.assignmentId + "#operations";
+    	window.location="/resource/" + resource.id + "/detach/" + resource.assignmentId + "#operations";
 	});
 
     resourcetable.create(document.getElementById("attachedresourcecontainer"));

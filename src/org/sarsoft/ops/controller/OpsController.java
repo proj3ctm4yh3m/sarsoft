@@ -172,7 +172,7 @@ public class OpsController extends JSONBaseController {
 		return "redirect:/app/location/status";
 	}
 
-	@RequestMapping(value="/app/resource/new", method = RequestMethod.POST)
+	@RequestMapping(value="/resource/new", method = RequestMethod.POST)
 	public String createResource(Model model, HttpServletRequest request,
 		@RequestParam(value="name", required=true) String name, @RequestParam(value="type", required=true) String type, 
 		@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
@@ -220,10 +220,10 @@ public class OpsController extends JSONBaseController {
 		
 		String redirect = request.getParameter("redirect");
 		if(redirect != null && redirect.length() > 0) return "redirect:" + redirect;
-		return "redirect:/app/resource/" + resource.getId();
+		return "redirect:/resource/" + resource.getId();
 	}
 	
-	@RequestMapping(value="/app/resource", method = RequestMethod.POST)
+	@RequestMapping(value="/resource", method = RequestMethod.POST)
 	public String importResources(Model model, JSONForm params, HttpServletRequest request) {
 		String csv = params.getFile();
 		int NAME = 0;
@@ -275,10 +275,10 @@ public class OpsController extends JSONBaseController {
 				}
 			}
 		}
-		return "redirect:/app/resource/";
+		return "redirect:/resource/";
 	}
 
-	@RequestMapping(value="/app/resource/{resourceid}", method = RequestMethod.POST)
+	@RequestMapping(value="/resource/{resourceid}", method = RequestMethod.POST)
 	public String updateResource(Model model, HttpServletRequest request, HttpServletResponse response, @PathVariable("resourceid") long id, 
 			@RequestParam(value="name", required=true) String name, @RequestParam(value="type", required=true) String type, 
 			@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
@@ -305,10 +305,10 @@ public class OpsController extends JSONBaseController {
 		if(engines.aprst2 != null) engines.aprst2.updateFilter();
 
 		model.addAttribute("resource", resource);
-		return "redirect:/app/resource/" + id;
+		return "redirect:/resource/" + id;
 	}
 	
-	@RequestMapping(value="/app/resource/{resourceid}/position", method = RequestMethod.POST)
+	@RequestMapping(value="/resource/{resourceid}/position", method = RequestMethod.POST)
 	public String updateResourceLocation(Model model, @PathVariable("resourceid") long resourceid,
 			@RequestParam(value="lat", required=true) Double lat,
 			@RequestParam(value="lng", required=true) Double lng) {
@@ -352,7 +352,7 @@ public class OpsController extends JSONBaseController {
 		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());
 		if(engines.aprst2 != null) engines.aprst2.clearCallsigns();
 		if(engines.aprsLocal != null) engines.aprsLocal.clearCallsigns();
-		return "redirect:/app/resource";
+		return "redirect:/resource";
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -381,29 +381,40 @@ public class OpsController extends JSONBaseController {
 		return json(model, new Object());
 	}
 	
-	
-
-	@RequestMapping(value="/{mode}/resource/{resourceid}", method = RequestMethod.GET)
-	public String getResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid) {
+	@RequestMapping(value="/resource/{resourceid}", method = RequestMethod.GET)
+	public String getResource(Model model, @PathVariable("resourceid") long resourceid) {
 		Resource resource = dao.load(Resource.class, resourceid);
-		if(REST.equals(mode)) return json(model, resource);
 		model.addAttribute("resource", resource);
 		return app(model, "Resource.Detail");
-	}
+	}	
 
-	@RequestMapping(value="/{mode}/resource/{resourceid}/detach/{assignmentid}", method = RequestMethod.GET)
-	public String detachResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+	@RequestMapping(value="/rest/resource/{resourceid}", method = RequestMethod.GET)
+	public String getRestResource(Model model, @PathVariable("resourceid") long resourceid) {
+		Resource resource = dao.load(Resource.class, resourceid);
+		return json(model, resource);
+	}
+	
+	protected void detachResource(long resourceid, long assignmentid) {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentid);
 		Resource resource = dao.load(Resource.class, resourceid);
 		assignment.removeResource(resource);
 		dao.save(assignment);
 		dao.save(resource);
-		if(REST.equals(mode)) return json(model, null);
-		return "redirect:/app/assignment/" + assignment.getId();
 	}
 
-	@RequestMapping(value="/{mode}/resource/{resourceid}/attach/{assignmentid}", method = RequestMethod.GET)
-	public String assignResource(Model model, @PathVariable("mode") String mode, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+	@RequestMapping(value="/resource/{resourceid}/detach/{assignmentid}", method = RequestMethod.GET)
+	public String detachWebResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+		detachResource(resourceid, assignmentid);
+		return "redirect:/assignment/" + assignmentid;
+	}
+	
+	@RequestMapping(value="/rest/resource/{resourceid}/detach/{assignmentid}", method = RequestMethod.GET)
+	public String detachRestResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+		detachResource(resourceid, assignmentid);
+		return json(model, null);
+	}
+	
+	protected void attachResource(long resourceid, long assignmentid) {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentid);
 		Resource resource = dao.load(Resource.class, resourceid);
 		if(resource.getAssignment() != null) {
@@ -413,8 +424,18 @@ public class OpsController extends JSONBaseController {
 		}
 		assignment.addResource(resource);
 		dao.save(assignment);
-		if(REST.equals(mode)) return json(model, null);
-		return "redirect:/app/assignment/" + assignment.getId();
+	}
+
+	@RequestMapping(value="/resource/{resourceid}/attach/{assignmentid}", method = RequestMethod.GET)
+	public String assignResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+		attachResource(resourceid, assignmentid);
+		return "redirect:/assignment/" + assignmentid;
+	}
+
+	@RequestMapping(value="/rest/resource/{resourceid}/attach/{assignmentid}", method = RequestMethod.GET)
+	public String assignRestResource(Model model, @PathVariable("resourceid") long resourceid, @PathVariable("assignmentid") long assignmentid, HttpServletRequest request) {
+		attachResource(resourceid, assignmentid);
+		return json(model, null);
 	}
 
 	@RequestMapping(value="/rest/resource/since/{date}", method = RequestMethod.GET)

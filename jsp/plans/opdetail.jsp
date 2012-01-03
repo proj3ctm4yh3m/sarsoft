@@ -15,18 +15,12 @@ Show: <select id="whichOP">
 </select>
 
 <a href="javascript:$('#newOP').css('display','block')">New</a>&nbsp;|&nbsp;
-<c:choose>
- <c:when test="${fn:length(period.assignments) eq 0}">
- <a href="/app/operationalperiod/${period.id}?action=DELETE">Delete</a> (must not contain any assignments)
- </c:when>
- <c:otherwise>
- <a href="javascript:showrename()">Rename</a>
- </c:otherwise>
+<c:choose><c:when test="${fn:length(period.assignments) eq 0}"><a href="/op/${period.id}?action=DELETE">Delete</a> (must not contain any assignments)</c:when><c:otherwise><a href="javascript:showrename()">Rename</a></c:otherwise>
 </c:choose>
 
 
 <div id="newOP" style="display: none">
-<form method="POST" action="/app/operationalperiod">
+<form method="POST" action="/op">
 <table border="0">
 <tr><td>ID</td><td><input name="id" type="text" size="2"/></td></tr>
 <tr><td>Description</td><td><input name="description" type="text" size="15"/></td></tr>
@@ -45,7 +39,7 @@ Name: <input type="text" size="15" value="${period.description}" id="renamestr"/
 </div>
 
 <ul>
- <li><a href="/app/operationalperiod/${period.id}/map">Switch to a map view</a> to create assignments and edit segments.</li>
+ <li><a href="/op/${period.id}/map">Switch to a map view</a> to create assignments and edit segments.</li>
  <li style="padding-top: 1em">Export as:&nbsp;<a href="/rest/operationalperiod/${period.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=kml">KML</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=csv">CSV</a></li>
  <li><a href="javascript:showbulkupdate()">Update</a> or <a href="javascript:showbulkprint()">Print</a> multiple assignments at once.</li>
 </ul>
@@ -57,7 +51,7 @@ Name: <input type="text" size="15" value="${period.description}" id="renamestr"/
 you can not clear fields through bulk update.</p>
 
 
-			<form name="assignment" action="/app/assignment" method="post">
+			<form name="assignment" action="/assignment" method="post">
 			 <input type="hidden" value="" name="bulkIds" id="bulkIds"/>
 			 <input type="hidden" value="UPDATE" name="action" id="action"/>
 			 <table border="0">
@@ -125,7 +119,7 @@ you can not clear fields through bulk update.</p>
 
 <p>Print multiple assignments at once.  Use shift+click and ctrl+click to select assignments from the list, and choose the forms/maps you wish to print.</p>
 
-<form name="assignmentprint" action="/app/assignment" method="get">
+<form name="assignmentprint" action="/assignment" method="get">
 <input type="hidden" name="bulkIds" id="printBulkIds" value=""/>
 <input type="hidden" name="format" value="PRINT"/>
 <input type="checkbox" name="print104" id="print104">Print SAR 104 forms</input><br/><br/>
@@ -183,7 +177,7 @@ Total: ${fn:length(period.assignments)} assignments covering ${(area+((area%1 ge
 <script>
 
 org.sarsoft.Loader.queue(function() {
-  $('#whichOP').change(function() { window.location = "/plans/op/" + $('#whichOP').val()});
+  $('#whichOP').change(function() { window.location = "/op/" + $('#whichOP').val()});
   datatable = new org.sarsoft.view.SearchAssignmentTable();
   datatable.create(document.getElementById("listcontainer"));
   var dao = new org.sarsoft.OperationalPeriodDAO();
@@ -271,7 +265,7 @@ if(data.length == 0) {
 		value = value + data[i].id + ",";
 	}
 	document.getElementById('printBulkIds').value=value;
-//	var url = "/app/assignment?format=print&bulkIds=" + value;
+//	var url = "/assignment?format=print&bulkIds=" + value;
 //	url = url + "&print104=" + document.getElementById('print104').checked;
 //	for(var i = 1; i < 6; i++) {
 //    if(document.getElementById("printmap" + i).checked) {
@@ -296,6 +290,6 @@ function hiderename() {
 }
 
 function submitrename() {
-	window.location="/app/operationalperiod/${period.id}?action=UPDATE&name=" + document.getElementById("renamestr").value;
+	window.location="/op/${period.id}?action=UPDATE&name=" + document.getElementById("renamestr").value;
 }
 </script>
