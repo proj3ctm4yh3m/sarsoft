@@ -8,28 +8,32 @@
 </c:forEach>
 
 
-<h2>Operational Period ${period.id}: ${period.description}</h2>
+Show: <select id="whichOP">
+<c:forEach var="p" items="${periods}">
+<option value="${p.id}"<c:if test="${p.id eq period.id}"> selected="selected"</c:if>>${p.id}: ${p.description}</option>
+</c:forEach>
+</select>
 
-<c:set var="area" value="${period.area*10}"/>
-<c:set var="perimeter" value="${period.perimeter*10}"/>
-This period has ${fn:length(period.assignments)} assignments, covering ${(area+((area%1 ge 0.5)?(1-(area%1))%1:-(area%1)))/10} km&sup2; of grid searching,
- ${(perimeter+((perimeter%1 ge 0.5)?(1-(perimeter%1))%1:-(perimeter%1)))/10} km of trails and ${period.timeAllocated} team-hours.
-<c:set var="distance" value="${period.trackDistance*10}"/>
-<c:if test="${distance gt 0}">${(distance+((distance%1 ge 0.5)?(1-(distance%1))%1:-(distance%1)))/10} km of tracks have been downloaded.</c:if>  You can:<br/>
-
-<ul>
- <li><a href="/app/operationalperiod/${period.id}/map">Switch to a map view</a> to create assignments and edit segments.</li>
- <li>Export as:&nbsp;<a href="/rest/operationalperiod/${period.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=kml">KML</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=csv">CSV</a></li>
- <li><a href="javascript:showbulkupdate()">Update</a> or <a href="javascript:showbulkprint()">Print</a> multiple assignments at once.</li>
+<a href="javascript:$('#newOP').css('display','block')">New</a>&nbsp;|&nbsp;
 <c:choose>
  <c:when test="${fn:length(period.assignments) eq 0}">
- <li><a href="/app/operationalperiod/${period.id}?action=DELETE">Delete Operational Period</a> (must not contain any assignments).</li>
+ <a href="/app/operationalperiod/${period.id}?action=DELETE">Delete</a> (must not contain any assignments)
  </c:when>
  <c:otherwise>
- <li><a href="javascript:showrename()">Rename</a> this operational period.</li>
+ <a href="javascript:showrename()">Rename</a>
  </c:otherwise>
 </c:choose>
-</ul>
+
+
+<div id="newOP" style="display: none">
+<form method="POST" action="/app/operationalperiod">
+<table border="0">
+<tr><td>ID</td><td><input name="id" type="text" size="2"/></td></tr>
+<tr><td>Description</td><td><input name="description" type="text" size="15"/></td></tr>
+</table>
+<input type="submit" value="Create"/>&nbsp;<button onclick="$('#newOP').css('display', 'none')">Cancel</button>
+</form>
+</div>
 
 <div id="rename" style="display: none">
 <p>Rename this operational period.</p>
@@ -39,6 +43,12 @@ Name: <input type="text" size="15" value="${period.description}" id="renamestr"/
  &nbsp;&nbsp;
  <a style="left: 20px" href="javascript:hiderename()">Cancel</a>
 </div>
+
+<ul>
+ <li><a href="/app/operationalperiod/${period.id}/map">Switch to a map view</a> to create assignments and edit segments.</li>
+ <li style="padding-top: 1em">Export as:&nbsp;<a href="/rest/operationalperiod/${period.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=kml">KML</a>&nbsp;|&nbsp;<a href="/rest/operationalperiod/${period.id}?format=csv">CSV</a></li>
+ <li><a href="javascript:showbulkupdate()">Update</a> or <a href="javascript:showbulkprint()">Print</a> multiple assignments at once.</li>
+</ul>
 
 <div id="bulkupdate" style="display: none">
 <h3>Bulk Update Assignments</h3>
@@ -162,9 +172,18 @@ Additional Overlays:&nbsp;
 
 <div id="listcontainer">
 </div>
+<div class="hint"><c:set var="area" value="${period.area*10}"/>
+<c:set var="perimeter" value="${period.perimeter*10}"/>
+Total: ${fn:length(period.assignments)} assignments covering ${(area+((area%1 ge 0.5)?(1-(area%1))%1:-(area%1)))/10} km&sup2; of grid searching,
+ ${(perimeter+((perimeter%1 ge 0.5)?(1-(perimeter%1))%1:-(perimeter%1)))/10} km of trails and ${period.timeAllocated} team-hours.
+<c:set var="distance" value="${period.trackDistance*10}"/>
+<c:if test="${distance gt 0}">${(distance+((distance%1 ge 0.5)?(1-(distance%1))%1:-(distance%1)))/10} km of tracks have been downloaded.</c:if>
+</div>
 
 <script>
+
 org.sarsoft.Loader.queue(function() {
+  $('#whichOP').change(function() { window.location = "/plans/op/" + $('#whichOP').val()});
   datatable = new org.sarsoft.view.SearchAssignmentTable();
   datatable.create(document.getElementById("listcontainer"));
   var dao = new org.sarsoft.OperationalPeriodDAO();

@@ -37,7 +37,7 @@ function toggleAcctDropdown() {
 <c:if test="${(subHeader eq 'maps' or subHeader eq 'Search') and loggedin eq false}"><c:set var="subHeader" value="splash"/></c:if>
 <div class="header noprint" style="${headerStyle}">
 <div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</span></div>
-<div style="padding-left: 1.5em"><div style="font-weight: bold; font-size: 200%"><c:if test="${fn:length(app) gt 0}">${tenant.description}</c:if>&nbsp;</div></div>
+<div style="padding-left: 1.5em"><div style="font-weight: bold; font-size: 200%"><c:if test="${fn:length(app) gt 0}"></c:if>&nbsp;</div></div>
 </div>
 	<div style="background: #f8f8f8; border-bottom: 1px solid 5a8ed7; height: 2em" class="noprint">
 		<div style="position: absolute; right: 20px; padding-top: 0.5em; z-index: 1">
@@ -79,8 +79,11 @@ function toggleAcctDropdown() {
 		<c:when test="${subHeader eq 'searches' and fn:length(app) eq 0}">
 			<div class="subheader active"><span><a href="/searches">&#x25BE; Searches</a></span></div>
 		</c:when>
+		<c:when test="${subHeader eq 'searches' and app eq 'home'}">
+			<div class="subheader active"><span><a href="/searches">&#x25B8; Searches</a></span></div>
+		</c:when>
 		<c:when test="${subHeader eq 'searches'}">
-			<div class="subheader active"><span><a href="/search?id=${tenant.name}">&#x25B8; Searches</a></span></div>
+			<div class="subheader active" style="text-transform: capitalize"><span><a href="/search?id=${tenant.name}">&#x25B8; ${tenant.description}</a></span></div>
 		</c:when>
 		<c:when test="${fn:length(app) eq 0}">
 			<div class="subheader"><span><a href="/searches">Searches</a></span></div>
@@ -109,14 +112,9 @@ function toggleAcctDropdown() {
 	</c:if>
 
 	<c:choose>
-	 <c:when test="${app eq 'plans'}">
-	 <div class="subheader">	
-	  <span><a href="/app/operationalperiod">&#x25B8;&#x25B8; Plans</a></span>
-	 </div>
-	 </c:when>
-	 <c:when test="${app eq 'ops'}">
-	 <div class="subheader">
-	  <span><a href="/">&#x25B8;&#x25B8; Operations</a></span>
+	 <c:when test="${app eq 'home'}">
+	 <div class="subheader" style="text-transform: capitalize">
+	  <span>&#x25B8;&#x25B8; ${tenant.description}</span>
 	 </div>
 	 </c:when>
 	 <c:when test="${app eq 'admin'}">
@@ -132,24 +130,15 @@ function toggleAcctDropdown() {
 	</c:choose>
 	<c:choose>
 	 <c:when test="${assignment ne null}">
-	  <div class="subheader"><span>&#x25B8;&#x25B8; <a href="/app/operationalperiod/${assignment.operationalPeriod.id}">${assignment.operationalPeriod.description}</a></span></div>
+	  <div class="subheader"><span>&#x25B8;&#x25B8; <a href="/plans/op/${assignment.operationalPeriodId}">Plans</a></span></div>
 	  <div class="subheader"><span>&#x25B8;&#x25B8; Assignment ${assignment.id}</span></div>
 	 </c:when>
-	 <c:when test="${period ne null}">
-	 <div class="subheader"><span>&#x25B8;&#x25B8; ${period.description}</span></div>
-	 </c:when>
-	 <c:when test="${resources ne null}">
-	 	<div class="subheader"><span>&#x25B8;&#x25B8; Resources</span></div>
-	 </c:when>
 	 <c:when test="${resource ne null}">
-	 	<div class="subheader"><span>&#x25B8;&#x25B8; <a href="/app/resource/">Resources</a></span></div>
+	 	<div class="subheader"><span>&#x25B8;&#x25B8; <a href="/resource">Resources</a></span></div>
 	 	<div class="subheader"><span>&#x25B8;&#x25B8; ${resource.name}</span></div>
 	 </c:when>
-	 <c:when test="${clues ne null}">
-	  <div class="subheader"><span>&#x25B8;&#x25B8; Clue Log</span></div>
-	 </c:when>
 	 <c:when test="${clue ne null}">
-	 	<div class="subheader"><span>&#x25B8;&#x25B8; <a href="/app/clue">Clue Log</a></span></div>
+	 	<div class="subheader"><span>&#x25B8;&#x25B8; <a href="/clue">Clues</a></span></div>
 	 	<div class="subheader"><span>&#x25B8;&#x25B8; Clue ${clue.id}</span></div>
 	 </c:when>
 	</c:choose>

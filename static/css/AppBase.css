@@ -49,6 +49,13 @@ div.subheader.active span {
 	color: #945e3b;
 }
 
+div.phead {
+	color: #5a8ed7;
+	font-size: 1.5em;
+	font-weight: bold;
+	padding-bottom: 5px
+}
+
 div.lmenu {
 	font-size: 1.5em;
 	padding-bottom: 10px;
