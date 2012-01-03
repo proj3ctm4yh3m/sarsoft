@@ -563,7 +563,7 @@ org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
 	this._showUTM = false;
-	this.style = {major : 0.8, minor : 0.4, crosshatch : 100, latlng : "DDMMHH", scale : false}
+	this.style = {major : 0.8, minor : 0.4, crosshatch : 100, latlng : "DD", scale : false}
 
 	this.utmgridlines = new Array();
 	this.text = new Array();
