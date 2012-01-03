@@ -133,19 +133,15 @@ org.sarsoft.view.SearchAssignmentForm.prototype = new org.sarsoft.view.EntityFor
 
 org.sarsoft.view.SearchAssignmentForm.prototype.create = function(container) {
 	org.sarsoft.view.EntityForm.prototype.create.call(this, container);
-	this.freehandDiv = jQuery('<div class="item"><label for="freehand">Freehand:</label></div>').appendTo(this.form);
-	this.freehandInput = jQuery('<input name="freehand" type="checkbox"/>').appendTo(this.freehandDiv);
 }
 
 org.sarsoft.view.SearchAssignmentForm.prototype.read = function() {
 	var obj = org.sarsoft.view.EntityForm.prototype.read.call(this);
-	obj.freehand = this.freehandInput.attr("checked");
 	return obj;
 }
 
 org.sarsoft.view.SearchAssignmentForm.prototype.write = function(obj) {
 	org.sarsoft.view.EntityForm.prototype.write.call(this, obj);
-	this.freehandInput.attr("checked", false);
 }
 
 org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
@@ -565,8 +561,10 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 		}
 		that.assignmentDAO.create(function(obj) {
 			that.addAssignment(obj, function() {
-			if(assignment.freehand) that.redraw(obj)});
-		}, assignment);		
+				that.redraw(obj, function() {
+				that.save(obj);
+			})});
+		}, assignment);
 	});
 
 	this.assignmentDAO.loadAll(function(assignments) {
@@ -673,11 +671,11 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.discard = functi
 	this.setAssignmentAttr(assignment, "inedit", false);
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.redraw = function(assignment) {
+org.sarsoft.controller.OperationalPeriodMapController.prototype.redraw = function(assignment, callback) {
 	var found = false;
 	for(var i = 0; i < assignment.ways.length && found == false; i++) {
 		if(assignment.ways[i].type == "ROUTE") {
-			this.emap.redraw(assignment.ways[i].id);
+			this.emap.redraw(assignment.ways[i].id, callback);
 			found = true;
 		}
 	}
