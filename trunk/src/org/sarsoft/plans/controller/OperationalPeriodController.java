@@ -31,7 +31,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 	}
 
-	@RequestMapping(value="/plans/op/{periodId}", method = RequestMethod.GET)
+	@RequestMapping(value="/op/{periodId}", method = RequestMethod.GET)
 	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request, HttpServletResponse response) {
 		OperationalPeriod period = dao.load(OperationalPeriod.class, id);
 		model.addAttribute("period", period);
@@ -55,7 +55,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		return app(model, "OperationalPeriod.Detail");
 	}
 
-	@RequestMapping(value="/app/operationalperiod/{periodId}/map", method = RequestMethod.GET)
+	@RequestMapping(value="/op/{periodId}/map", method = RequestMethod.GET)
 	public String plansEditor(Model model, @PathVariable("periodId") long id) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
 		return app(model, "/plans");
@@ -96,7 +96,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		}
 	}
 
-	@RequestMapping(value="/app/operationalperiod", method = RequestMethod.POST)
+	@RequestMapping(value="/op", method = RequestMethod.POST)
 	public String createOperationalPeriod(JSONForm params, Model model, @RequestParam("id") Long id, @RequestParam(value="description",required=false) String description) {
 		OperationalPeriod period = new OperationalPeriod();
 		period.setId(id);
@@ -111,7 +111,7 @@ public class OperationalPeriodController extends JSONBaseController {
 			period.setId(id);
 		}
 		dao.save(period);
-		return "redirect:/plans/op/" + period.getId();
+		return "redirect:/op/" + period.getId();
 	}
 
 	@RequestMapping(value="/rest/operationalperiod/{periodId}/assignment", method = RequestMethod.GET)

@@ -69,7 +69,7 @@ org.sarsoft.view.OperationalPeriodTable = function() {
 		{ key : "timeAllocated", label : "Team Hours Allocated"}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Operational Periods" }, function(period) {
-		window.location="/app/operationalperiod/" + period.id;
+		window.location="/op/" + period.id;
 	});
 }
 org.sarsoft.view.OperationalPeriodTable.prototype = new org.sarsoft.view.EntityTable();
@@ -89,7 +89,7 @@ org.sarsoft.view.SearchAssignmentTable = function() {
 		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "40em"}); cell.innerHTML = data;}}
 	];
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Search Assignments" }, function(assignment) {
-		window.location="/app/assignment/" + assignment.id;
+		window.location="/assignment/" + assignment.id;
 	});
 }
 org.sarsoft.view.SearchAssignmentTable.prototype = new org.sarsoft.view.EntityTable();
@@ -153,7 +153,7 @@ org.sarsoft.view.SearchAssignmentGPXDlg = function(id) {
 	this.id = id;
 	var dao = new org.sarsoft.SearchAssignmentDAO();
 		
-	var body = jQuery('<form method="post" enctype="multipart/form-data" name="gpxupload" action="/app/assignment/' + id + '/way"><input type="file" name="file"/><input type="hidden" name="format" value="gpx"/></form>')[0];
+	var body = jQuery('<form method="post" enctype="multipart/form-data" name="gpxupload" action="/assignment/' + id + '/way"><input type="file" name="file"/><input type="hidden" name="format" value="gpx"/></form>')[0];
 
 	this.dialog = org.sarsoft.view.CreateDialog("Uload GPX File", body, "Import", "Cancel", function() {
 		}, {top: "200px", left: "200px", width: "420px"});
@@ -477,7 +477,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 			]);
 	}
 	this.emap.addContextMenuItems([
-		{text : "Details (opens new window)", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); if(assignment == null) assignment = that._getAssignmentFromWaypoint(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); if(assignment == null) assignment = that._getAssignmentFromWaypoint(data.subject); window.open('/app/assignment/' + assignment.id); }}
+		{text : "Details (opens new window)", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); if(assignment == null) assignment = that._getAssignmentFromWaypoint(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); if(assignment == null) assignment = that._getAssignmentFromWaypoint(data.subject); window.open('/assignment/' + assignment.id); }}
 		]);
 	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
 		this.emap.addContextMenuItems([
@@ -513,7 +513,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(emap, operation
 	}
 	
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.period.id + "?", "Leave", "Cancel", function() {
-		window.location = "/app/operationalperiod/" + that.period.id;		
+		window.location = "/op/" + that.period.id;		
 	});
 	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Back to operational period ' + this.period.id + '"/>')[0];
 	GEvent.addDomListener(goback, "click", function() {
@@ -784,7 +784,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 	for(var i = 0; i < ways.length; i++) {
 		var way = ways[i];
 		way.waypoints = way.zoomAdjustedWaypoints;
-		way.displayMessage = "Assignment " + assignment.id + ": " + assignment.status + " " + assignment.formattedSize + " " + assignment.timeAllocated + "hr " + assignment.resourceType + ".  <a href='/app/assignment/" + assignment.id + "' target='_new'>Details</a>";
+		way.displayMessage = "Assignment " + assignment.id + ": " + assignment.status + " " + assignment.formattedSize + " " + assignment.timeAllocated + "hr " + assignment.resourceType + ".  <a href='/assignment/" + assignment.id + "' target='_new'>Details</a>";
 		var label = null;
 		label = way.name;
 		if(way.type == "ROUTE") label = assignment.id
@@ -884,7 +884,7 @@ org.sarsoft.view.ClueTable = function(handler) {
 	];
 	if(handler == null) {
 		handler = function(clue) {
-			window.location = "/app/clue/" + clue.id;
+			window.location = "/clue/" + clue.id;
 		}
 	}
 	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Clues"}, handler);
@@ -926,7 +926,7 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 	this.showClues = true;
 	
 	this.imap.addContextMenuItems([
-     		{text : "Details (opens new window)", applicable : function(obj) { return obj != null && that.getClueIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/clue/' + that.getClueIdFromWpt(data.subject)); }}
+     		{text : "Details (opens new window)", applicable : function(obj) { return obj != null && that.getClueIdFromWpt(obj) != null}, handler : function(data) { window.open('/clue/' + that.getClueIdFromWpt(data.subject)); }}
      		]);
 	
 	var showHide = new org.sarsoft.ToggleControl("CLUE", "Show/Hide Clues", function(value) {

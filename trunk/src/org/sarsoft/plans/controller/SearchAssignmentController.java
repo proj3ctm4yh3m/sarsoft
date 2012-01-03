@@ -47,7 +47,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	}
 
 	// ASSIGNMENT APP
-	@RequestMapping(value="/app/assignment", method = RequestMethod.GET)
+	@RequestMapping(value="/assignment", method = RequestMethod.GET)
 	public String getAssignment(Model model, HttpServletRequest request) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		switch(format) {
@@ -109,7 +109,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 	}
 
-	@RequestMapping(value="/app/assignment/{assignmentId}", method = RequestMethod.GET)
+	@RequestMapping(value="/assignment/{assignmentId}", method = RequestMethod.GET)
 	public String getAssignment(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
@@ -128,7 +128,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 	}
 
-	@RequestMapping(value="/app/assignment", method = RequestMethod.POST)
+	@RequestMapping(value="/assignment", method = RequestMethod.POST)
 	public String setBulkAssignmentDetail(Model model, SearchAssignmentForm form, HttpServletRequest request, HttpServletResponse response) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		OperationalPeriod period = null;
@@ -155,10 +155,10 @@ public class SearchAssignmentController extends JSONBaseController {
 			}
 			dao.save(assignment);
  		}
-		return "redirect:/app/operationalperiod/" + period.getId();
+		return "redirect:/op/" + period.getId();
 	}
 
-	@RequestMapping(value="/app/assignment/{assignmentId}", method = RequestMethod.POST)
+	@RequestMapping(value="/assignment/{assignmentId}", method = RequestMethod.POST)
 	public String setAssignmentDetail(Model model, @PathVariable("assignmentId") long assignmentId, SearchAssignmentForm form) {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 //		assignment.setId(form.getId());
@@ -178,7 +178,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		return app(model, "Assignment.Details");
 	}
 
-	@RequestMapping(value="/app/assignment/{assignmentId}/cleantracks", method = RequestMethod.POST)
+	@RequestMapping(value="/assignment/{assignmentId}/cleantracks", method = RequestMethod.POST)
 	public String cleanTracks(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		if(request.getParameter("radius") != null && request.getParameter("radius").length() > 0) {
@@ -365,8 +365,17 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 		return json(model, ways);
 	}
+	
+	@RequestMapping(value = "/assignment/{assignmentId}/way", method= RequestMethod.POST)
+	public String addWayApp(JSONForm params, @PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
+		return addWay(params, "app", assignmentId, model, request);
+	}
+	
+	@RequestMapping(value = "/rest/assignment/{assignmentId}/way", method= RequestMethod.POST)
+	public String addWayRest(JSONForm params, @PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
+		return addWay(params, "rest", assignmentId, model, request);
+	}
 
-	@RequestMapping(value = "/{mode}/assignment/{assignmentId}/way", method= RequestMethod.POST)
 	public String addWay(JSONForm params, @PathVariable("mode") String mode, @PathVariable("assignmentId") long assignmentId, Model model, HttpServletRequest request) {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
@@ -415,7 +424,7 @@ public class SearchAssignmentController extends JSONBaseController {
 		dao.save(assignment);
 		if("rest".equalsIgnoreCase(mode))
 			return (ways.length == 1) ? json(model, ways[0]) : json(model, ways);
-		return "redirect:/app/assignment/" + assignmentId;
+		return "redirect:/assignment/" + assignmentId;
 	}
 
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/way/{wayId}", method = RequestMethod.POST)

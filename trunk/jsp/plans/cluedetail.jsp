@@ -13,7 +13,7 @@
 <div style="width: 30em; float: left">
 
 
-<form method="POST" action="/app/clue/${clue.id}">
+<form method="POST" action="/clue/${clue.id}">
 <table border="0">
 <tr><td valign="top">Summary:</td><td><input type="text" name="summary" size="20" value="${clue.summary}"/></td></tr>
 <tr><td valign="top">Description:</td><td><textarea rows="5" cols="40" name="description">${clue.description}</textarea></td></tr>
@@ -43,14 +43,14 @@ Location Found:<br/>
 <input type="text" size="2" name="utm_zone" id="utm_zone"/><span class="hint">zone</span>&nbsp;<input type="text" size="9" name="utm_e" id="utm_e"/><span class="hint">E</span>&nbsp;<input type="text" size="9" name="utm_n" id="utm_n"/><span class="hint">N</span>
 <button onclick="updateLocation()">Update Location</button>
 
-<form method="POST" action="/app/clue/${clue.id}/position" name="updatePosition">
+<form method="POST" action="/clue/${clue.id}/position" name="updatePosition">
 <input type="hidden" name="lat" id="lat"/>
 <input type="hidden" name="lng" id="lng"/>
 </form>
 <br/>
 <br/>
 You can delete Clue ${clue.id}, but this action cannot be undone.
-<form method="POST" action="/app/clue/${clue.id}">
+<form method="POST" action="/clue/${clue.id}">
 <input type="hidden" name="action" value="DELETE"/>
 <input type="hidden" name="summary" value="whatever"/>
 <input type="hidden" name="description" value="whatever"/>
@@ -60,8 +60,8 @@ You can delete Clue ${clue.id}, but this action cannot be undone.
 
 <br/>
 <br/>
-<c:if test="${clue.assignment ne null}"><a href="/app/assignment/${clue.assignment.id}">Return to assignment ${clue.assignment.id}</a><br/></c:if>
-<a href="/app/clue">Return to Clue Log</a><br/>
+<c:if test="${clue.assignment ne null}"><a href="/assignment/${clue.assignment.id}">Return to assignment ${clue.assignment.id}</a><br/></c:if>
+<a href="/clue">Return to Clue Log</a><br/>
 
 </div>
 

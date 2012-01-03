@@ -11,7 +11,7 @@
 
 <c:choose>
 <c:when test="${resource.assignment ne null}">
-Attached to <a href="/app/assignment/${resource.assignment.id}">assignment ${resource.assignment.id}</a>.  Please visit the assignment page to change its section.
+Attached to <a href="/assignment/${resource.assignment.id}">assignment ${resource.assignment.id}</a>.  Please visit the assignment page to change its section.
 </c:when>
 <c:otherwise>
 Not currently on assignment.
@@ -36,7 +36,7 @@ ${resource.name}'s location is unknown.
 
 <br/>
 
-<form method="POST" action="/app/resource/${resource.id}">
+<form method="POST" action="/resource/${resource.id}">
 <table border="0">
 <tr><td>Name:</td><td><input type="text" name="name" size="10" value="${resource.name}"/></td></tr>
 <tr><td>Type:</td><td><select name="type">
@@ -59,7 +59,7 @@ Current Location:<br/>
 <input type="text" size="2" name="utm_zone" id="utm_zone"/><span class="hint">zone</span>&nbsp;<input type="text" size="9" name="utm_e" id="utm_e"/><span class="hint">E</span>&nbsp;<input type="text" size="9" name="utm_n" id="utm_n"/><span class="hint">N</span>
 <button onclick="updateLocation()">Update Location</button>
 
-<form method="POST" action="/app/resource/${resource.id}/position" name="updatePosition">
+<form method="POST" action="/resource/${resource.id}/position" name="updatePosition">
 <input type="hidden" name="lat" id="lat"/>
 <input type="hidden" name="lng" id="lng"/>
 </form>
@@ -67,7 +67,7 @@ Current Location:<br/>
 <br/>
 
 You can delete ${resource.name}, but this action cannot be undone.
-<form method="POST" action="/app/resource/${resource.id}">
+<form method="POST" action="/resource/${resource.id}">
 <input type="hidden" name="action" value="DELETE"/>
 <input type="hidden" name="name" value="whatever"/>
 <input type="hidden" name="type" value="whatever"/>
@@ -77,7 +77,7 @@ You can delete ${resource.name}, but this action cannot be undone.
 <br/>
 <br/>
 <br/>
-<a href="/app/resource/">Return to List of All Resources</a><br/>
+<a href="/resource/">Return to List of All Resources</a><br/>
 
 </div>
 

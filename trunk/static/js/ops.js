@@ -20,7 +20,7 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete, caption) {
 	}
 	if(handler == null) {
 		handler = function(resource) {
-			window.location="/app/resource/" + resource.id;
+			window.location="/resource/" + resource.id;
 		}
 	}
 	if(caption == null) caption = "Resources";
@@ -42,7 +42,7 @@ org.sarsoft.ResourceDAO.prototype.detachResource = function(resource, assignment
 
 org.sarsoft.view.ResourceImportDlg = function(id) {
 	var that = this;
-	var body = jQuery("<div><p>Data should be a comma separated file without character escaping.  Column ordering should match the file created when selecting 'Export to CSV'.</p><form method='post' enctype='multipart/form-data' name='resourceupload' action='/app/resource/'><input type='file' name='file'/><input type='hidden' name='format' value='csv'/></form></div>")[0];
+	var body = jQuery("<div><p>Data should be a comma separated file without character escaping.  Column ordering should match the file created when selecting 'Export to CSV'.</p><form method='post' enctype='multipart/form-data' name='resourceupload' action='/resource/'><input type='file' name='file'/><input type='hidden' name='format' value='csv'/></form></div>")[0];
 	this.dialog = org.sarsoft.view.CreateDialog("Upload Resources as CSV", body, "Import", "Cancel", function() {
 		document.forms['resourceupload'].submit();
 		}, {width: "420px", left: "200px", top: "200px"});
@@ -81,7 +81,7 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	this.refreshCount=0;
 	
 	this.imap.addContextMenuItems([
-     		{text : "Details (opens new window)", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/app/resource/' + that.getResourceIdFromWpt(data.subject)); }}
+     		{text : "Details (opens new window)", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/resource/' + that.getResourceIdFromWpt(data.subject)); }}
      		]);
 	
 	var showHide = new org.sarsoft.ToggleControl("LOC", "Show/Hide Resource Locations", function(value) {

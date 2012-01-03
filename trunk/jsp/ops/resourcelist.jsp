@@ -17,11 +17,11 @@ Show:
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
   <li>Create new resource:&nbsp;<a href="javascript:showNewResourceForm()">Manually</a>&nbsp;|&nbsp;<a href="javascript:uploadDlg.dialog.show()">From CSV</a>
 </c:if>
-  <li id="expcsv">Export to <a href="/app/resource?format=CSV">CSV</a>.
+  <li id="expcsv">Export to <a href="/resource?format=CSV">CSV</a>.
 </ul>
 
 <div id="newresource" style="display: none">
-<form method="POST" action="/app/resource/new" name="newResource">
+<form method="POST" action="/resource/new" name="newResource">
 <table border="0">
 <tr><td>Name:</td><td><input type="text" id="new_name" name="name" size="10" value="${resource.name}"/></td></tr>
 <tr><td>Type:</td><td><select name="type"><option value="PERSON">PERSON</option><option value="EQUIPMENT">EQUIPMENT</option></select></td></tr>
@@ -30,7 +30,7 @@ Show:
 <tr><td>SPOT Id:</td><td><input type="text" name="spotId" size="10" value="${resource.spotId}"/></td></tr>
 <tr><td>SPOT Password:</td><td><input type="text" name="spotPassword" size="10" value="${resource.spotPassword}"></td></tr>
 </table>
-<input type="hidden" name="redirect" value="/app/resource"/>
+<input type="hidden" name="redirect" value="/resource"/>
 <a href="javascript:hideNewResourceForm()">Cancel</button>&nbsp;&nbsp;<a href="javascript:document.forms['newResource'].submit()">Create</a>
 </form>
 </div>

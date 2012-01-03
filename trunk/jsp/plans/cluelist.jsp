@@ -11,11 +11,11 @@
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
  <li><a href="javascript:showNewClueForm()">Report New Clue</a></li>
 </c:if>
- <li><a href="/app/clue?format=PRINT">Print</a> a clue log</li>
+ <li><a href="/clue?format=PRINT">Print</a> a clue log</li>
 </ul>
 
 <div id="newclue" style="display: none">
-<form method="POST" action="/app/clue/new" name="newClue">
+<form method="POST" action="/clue/new" name="newClue">
 <table border="0">
 <tr><td valign="top">Summary:</td><td><input type="text" name="summary" size="20"/></td></tr>
 <tr><td valign="top">Description:</td><td><textarea rows="5" cols="40" name="description"></textarea></td></tr>

@@ -80,7 +80,7 @@ GarminReadListener.prototype.onFinishReadFromDevice = function(obj) {
 </c:when>
 <c:otherwise>
     var dao = new org.sarsoft.SearchAssignmentDAO();
-    dao.createWaysFromGpx(function() { pass('post');start('done');pass('done'); window.location="/app/assignment/${id}#tracks"}, this.id, {gpx: gpx}, "TRACK");
+    dao.createWaysFromGpx(function() { pass('post');start('done');pass('done'); window.location="/assignment/${id}#tracks"}, this.id, {gpx: gpx}, "TRACK");
 </c:otherwise>
 </c:choose>
 	
