@@ -6,13 +6,18 @@
 <% pageContext.setAttribute("write", Permission.WRITE); %>
 <% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
-<h2>All Resources</h2>
+Show:
+
+<select id="resourceSwitcher">
+  <option value="resources" selected="selected">All Resources</option>
+  <option value="callsigns">Nearby Callsigns</option>
+</select>
 
 <ul>
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
   <li>Create new resource:&nbsp;<a href="javascript:showNewResourceForm()">Manually</a>&nbsp;|&nbsp;<a href="javascript:uploadDlg.dialog.show()">From CSV</a>
 </c:if>
-  <li>Export to <a href="/app/resource?format=CSV">CSV</a>.
+  <li id="expcsv">Export to <a href="/app/resource?format=CSV">CSV</a>.
 </ul>
 
 <div id="newresource" style="display: none">
@@ -30,18 +35,20 @@
 </form>
 </div>
 
-<p>A resource is anything that goes out on assignment; they are broadly categorized into people and equipment (e.g. vehicles, APRS transponders) and can be tracked via
-APRS transmissions or SPOT beacons.  This page allows you to create, track and delete resources; resource-assignment pairings should be managed from the assignment detail 
-page.  The table below lists all resources known to Sarsoft.</p>
-
+<div id="resourceContainer">
 <div id="resources">
 </div>
+<p class="hint">A resource is anything that goes out on assignment; they are broadly categorized into people and equipment (e.g. vehicles) and can be tracked via
+APRS transmissions or SPOT beacons.  This page allows you to create, track and delete resources; resource-assignment pairings should be managed from the assignment detail 
+page.</p>
+</div>
 
-<h2>Nearby Callsigns</h2>
-The following callsigns have been picked up near the search.  You can use them to identify resources you'd like to add to the search, or <a href="/app/callsign/clear">clear the list</a>.
-
+<div id="callsignContainer" style="display: none">
 <div id="callsigns">
 </div>
+<p class="hint">The following callsigns have been picked up near the search.  You can use them to identify resources you'd like to add to the search, or <a href="/app/callsign/clear">clear the list</a>.</p>
+</div>
+
 
 <script>
 
@@ -55,9 +62,8 @@ function hideNewResourceForm() {
 
 org.sarsoft.Loader.queue(function() {
   var tabView = new YAHOO.widget.TabView('tabs');
-  rtable = new org.sarsoft.view.ResourceTable();
+  rtable = new org.sarsoft.view.ResourceTable(null, null, 'Resources');
   rtable.create(document.getElementById("resources"));
-
   dao = new org.sarsoft.ResourceDAO();
   dao.loadAll(function(rows) {
   	rtable.table.showTableMessage("<i>No Resources Found</i>");
@@ -79,7 +85,7 @@ org.sarsoft.Loader.queue(function() {
 	  document.getElementById("new_name").value = resource.callsign;
 	  document.getElementById("new_callsign").value = resource.callsign;
 	  showNewResourceForm();
-  });
+  }, null, 'Callsigns');
   ctable.create(document.getElementById("callsigns"));
   cdao = new org.sarsoft.ResourceDAO(function() {}, "/rest/callsign");
   cdao.loadAll(function(rows) {
@@ -96,9 +102,21 @@ org.sarsoft.Loader.queue(function() {
   }
   cdao.mark();
   setInterval(callsignListTimer, 15000);
-  
-  
+
+
   uploadDlg = new org.sarsoft.view.ResourceImportDlg();
+  
+  $('#resourceSwitcher').change(function() {
+	 if($('#resourceSwitcher').val() == "resources") {
+		 $('#resourceContainer').css('display', 'block');
+		 $('#callsignContainer').css('display', 'none');
+		 $('#expcsv').css('display', 'list-item');
+	 } else {
+		 $('#resourceContainer').css('display', 'none');
+		 $('#callsignContainer').css('display', 'block');
+		 $('#expcsv').css('display', 'none');
+	 }
+  });
 });
 
 </script>

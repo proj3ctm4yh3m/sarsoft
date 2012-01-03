@@ -14,6 +14,14 @@
 	<definition name="Map.Base" extends="App.Base">
 		<put-attribute name="subHeader" value="maps"/>
 	</definition>
+	<definition name="Search.Setup.Sub" template="/global/home.jsp">
+		<put-attribute name="subcontent" value="/global/setup.jsp"/>
+		<put-attribute name="pane" value="setup"/>
+	</definition>
+	<definition name="Search.Setup" extends="Search.Base">
+		<put-attribute name="content" value="Search.Setup.Sub"/>
+		<put-attribute name="app" value="home"/>
+	</definition>	
 	<definition name="Assignment.Details" extends="Search.Base">
 		<put-attribute name="content" value="/plans/assignment.jsp"/>
 		<put-attribute name="app" value="plans"/>
@@ -22,18 +30,22 @@
 	<definition name="Assignment.PrintMaps" template="/plans/assignment-printmaps.jsp"/>
 	<definition name="Assignment.PrintBulk" template="/plans/assignment-printbulk.jsp"/>
 
-	<definition name="OperationalPeriod.List" extends="Search.Base">
-		<put-attribute name="content" value="/plans/oplist.jsp"/>
-		<put-attribute name="app" value="plans"/>
+	<definition name="OperationalPeriod.Detail.Sub" template="/global/home.jsp">
+		<put-attribute name="subcontent" value="/plans/opdetail.jsp"/>
+		<put-attribute name="pane" value="plans"/>
 	</definition>
 	<definition name="OperationalPeriod.Detail" extends="Search.Base">
-		<put-attribute name="content" value="/plans/opdetail.jsp"/>
-		<put-attribute name="app" value="plans"/>
+		<put-attribute name="content" value="OperationalPeriod.Detail.Sub"/>
+		<put-attribute name="app" value="home"/>
 	</definition>
 
+	<definition name="Clue.List.Sub" template="/global/home.jsp">
+		<put-attribute name="subcontent" value="/plans/cluelist.jsp"/>
+		<put-attribute name="pane" value="clues"/>
+	</definition>
 	<definition name="Clue.List" extends="Search.Base">
-		<put-attribute name="content" value="/plans/cluelist.jsp"/>
-		<put-attribute name="app" value="plans"/>
+		<put-attribute name="content" value="Clue.List.Sub"/>
+		<put-attribute name="app" value="home"/>
 	</definition>
 	<definition name="Clue.Log" extends="Search.Base">
 		<put-attribute name="content" value="/plans/cluelog.jsp"/>
@@ -43,11 +55,15 @@
 		<put-attribute name="content" value="/plans/cluedetail.jsp"/>
 		<put-attribute name="app" value="plans"/>
 	</definition>
-	
-	
+
+	<definition name="Resource.List.Sub" template="/global/home.jsp">
+		<put-attribute name="subcontent" value="/ops/resourcelist.jsp"/>
+		<put-attribute name="pane" value="resources"/>
+	</definition>
+
 	<definition name="Resource.List" extends="Search.Base">
-		<put-attribute name="content" value="/ops/resourcelist.jsp"/>
-		<put-attribute name="app" value="ops"/>
+		<put-attribute name="content" value="Resource.List.Sub"/>
+		<put-attribute name="app" value="home"/>
 	</definition>
 
 	<definition name="Resource.Detail" extends="Search.Base">
@@ -65,9 +81,6 @@
 		<put-attribute name="app" value="guide"/>
 	</definition>
 
-	<definition name="Pages.Home" extends="Search.Base">
-		<put-attribute name="content" value="/global/home.jsp"/>
-	</definition>
 	<definition name="Pages.Maps" extends="Map.Base">
 		<put-attribute name="content" value="/global/welcome-maps.jsp"/>
 	</definition>

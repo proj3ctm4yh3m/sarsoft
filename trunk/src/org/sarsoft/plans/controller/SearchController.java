@@ -60,20 +60,25 @@ public class SearchController extends JSONBaseController {
 		return app(model, "Pages.Searches");
 	}
 	
-	@RequestMapping(value="/app/index.html", method = RequestMethod.GET)
+	@RequestMapping(value="/plans", method = RequestMethod.GET)
 	public String homePage(Model model) {
 		OperationalPeriod lastPeriod = null;
 		List<OperationalPeriod> periods = dao.loadAll(OperationalPeriod.class);
 		for(OperationalPeriod period : periods) {
 			if(lastPeriod == null || lastPeriod.getId() < period.getId()) lastPeriod = period;
 		}
-		model.addAttribute("lastperiod", lastPeriod);
+		model.addAttribute("period", lastPeriod);
 		model.addAttribute("periods", periods);
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
+		opsController.checkLocators();
+		return app(model, "OperationalPeriod.Detail");
+	}
+	
+	@RequestMapping(value="/setup", method = RequestMethod.GET)
+	public String setup(Model model) {
 		model.addAttribute("imageUploadEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled")));
 		model.addAttribute("server", RuntimeProperties.getServerUrl());
-		opsController.checkLocators();
-		return app(model, "Pages.Home");
+		return app(model, "Search.Setup");
 	}
 
 	@RequestMapping(value="search", method = RequestMethod.GET)

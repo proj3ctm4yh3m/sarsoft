@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.multipart.support.StringMultipartFileEditor;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class OperationalPeriodController extends JSONBaseController {
@@ -30,23 +31,18 @@ public class OperationalPeriodController extends JSONBaseController {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 	}
 
-	// APP PERIOD
-	@RequestMapping(value="/app/operationalperiod", method = RequestMethod.GET)
-	public String getOperationalPeriodList(Model model, HttpServletRequest request) {
-		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
-		return app(model, "OperationalPeriod.List");
-	}
-
-	@RequestMapping(value="/app/operationalperiod/{periodId}", method = RequestMethod.GET)
+	@RequestMapping(value="/plans/op/{periodId}", method = RequestMethod.GET)
 	public String getAppOperationalPeriod(Model model, @PathVariable("periodId") long id, HttpServletRequest request, HttpServletResponse response) {
 		OperationalPeriod period = dao.load(OperationalPeriod.class, id);
 		model.addAttribute("period", period);
+		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
+
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		switch(action) {
 		case DELETE:
 				if(period.getAssignments() == null || period.getAssignments().size() == 0) {
 					dao.delete(period);
-					return getOperationalPeriodList(model, request);
+					return getAppOperationalPeriod(model, id-1, request, response);
 				}
 				break;
 		case UPDATE:
@@ -55,7 +51,6 @@ public class OperationalPeriodController extends JSONBaseController {
 				period.setDescription(name);
 				dao.save(period);
 			}
-			return app(model, "OperationalPeriod.Detail");
 		}
 		return app(model, "OperationalPeriod.Detail");
 	}
@@ -63,10 +58,8 @@ public class OperationalPeriodController extends JSONBaseController {
 	@RequestMapping(value="/app/operationalperiod/{periodId}/map", method = RequestMethod.GET)
 	public String plansEditor(Model model, @PathVariable("periodId") long id) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
-//		return app(model, "/olplans");
 		return app(model, "/plans");
 	}
-
 
 	// REST PERIOD
 	@RequestMapping(value="/rest/operationalperiod", method = RequestMethod.GET)
@@ -81,7 +74,7 @@ public class OperationalPeriodController extends JSONBaseController {
 			return json(model, dao.loadAll(OperationalPeriod.class));
 		}
 	}
-
+ 
 	@RequestMapping(value ="/rest/operationalperiod/{opid}", method = RequestMethod.GET)
 	public String getOperationalPeriod(Model model, @PathVariable("opid") long id, HttpServletRequest request, HttpServletResponse response) {
 		OperationalPeriod period = dao.load(OperationalPeriod.class, id);
@@ -103,12 +96,14 @@ public class OperationalPeriodController extends JSONBaseController {
 		}
 	}
 
-	@RequestMapping(value="/rest/operationalperiod", method = RequestMethod.POST)
-	public String createOperationalPeriod(JSONForm params, Model model) {
-		OperationalPeriod period = OperationalPeriod.createFromJSON(parseObject(params));
+	@RequestMapping(value="/app/operationalperiod", method = RequestMethod.POST)
+	public String createOperationalPeriod(JSONForm params, Model model, @RequestParam("id") Long id, @RequestParam(value="description",required=false) String description) {
+		OperationalPeriod period = new OperationalPeriod();
+		period.setId(id);
+		period.setDescription(description);
 		if(period.getId() == null) {
 			List<OperationalPeriod> periods = dao.loadAll(OperationalPeriod.class);
-			Long id = 0L;
+			id = 0L;
 			for(OperationalPeriod p : periods) {
 				id = Math.max(id, p.getId());
 			}
@@ -116,7 +111,7 @@ public class OperationalPeriodController extends JSONBaseController {
 			period.setId(id);
 		}
 		dao.save(period);
-		return json(model, period);
+		return "redirect:/plans/op/" + period.getId();
 	}
 
 	@RequestMapping(value="/rest/operationalperiod/{periodId}/assignment", method = RequestMethod.GET)

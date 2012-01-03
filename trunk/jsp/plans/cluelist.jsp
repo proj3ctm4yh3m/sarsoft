@@ -7,8 +7,6 @@
 <% pageContext.setAttribute("write", Permission.WRITE); %>
 <% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
-<h2>Clue Log</h2>
-
 <ul>
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
  <li><a href="javascript:showNewClueForm()">Report New Clue</a></li>

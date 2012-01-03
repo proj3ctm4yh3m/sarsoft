@@ -318,10 +318,10 @@ public class OpsController extends JSONBaseController {
 		wpt.setTime(new Date());
 		resource.setPosition(wpt);
 		dao.save(resource);
-		return "redirect:/app/resource/" + resourceid;
+		return "redirect:/resource/" + resourceid;
 	}
 	
-	@RequestMapping(value="/app/resource", method = RequestMethod.GET)
+	@RequestMapping(value="/resource", method = RequestMethod.GET)
 	public String getAppResources(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 

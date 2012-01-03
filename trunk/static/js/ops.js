@@ -3,7 +3,7 @@ if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Object();
 
-org.sarsoft.view.ResourceTable = function(handler, onDelete) {
+org.sarsoft.view.ResourceTable = function(handler, onDelete, caption) {
 	var coldefs = [
 	    { key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function(evt) {evt.cancelBubble = true; onDelete(record);} }},
 		{ key : "name", label : "Name", sortable : true},
@@ -23,7 +23,8 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete) {
 			window.location="/app/resource/" + resource.id;
 		}
 	}
-	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Resources" }, handler);
+	if(caption == null) caption = "Resources";
+	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: caption }, handler);
 }
 org.sarsoft.view.ResourceTable.prototype = new org.sarsoft.view.EntityTable();
 

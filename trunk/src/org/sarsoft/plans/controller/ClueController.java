@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class ClueController extends JSONBaseController {
 
-	@RequestMapping(value="/app/clue", method = RequestMethod.GET)
+	@RequestMapping(value="/clue", method = RequestMethod.GET)
 	public String getClueList(Model model, @RequestParam(value="format", required=false) Format format) {
 		model.addAttribute("clues", dao.loadAll(Clue.class));
 		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
