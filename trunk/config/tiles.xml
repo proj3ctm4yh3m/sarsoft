@@ -4,7 +4,6 @@
 	<definition name="error" template="/global/error.jsp"/>
 
 	<definition name="App.Base" template="/global/AppTemplate.jsp">
-		<put-attribute name="breadcrumb" value="/plans/breadcrumb.jsp"/>
 		<put-attribute name="subHeader" value="splash"/>
 		<put-attribute name="app" value=""/>
 	</definition>
