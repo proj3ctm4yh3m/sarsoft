@@ -550,4 +550,122 @@ org.sarsoft.ToggleControl.prototype.setValue = function(value) {
 	}
 }
 
+org.sarsoft.GPSDlg = function() {
+	var that = this;
+	var dlgStyle = {width: "410px", position: "absolute", top: "100px", left: "100px", "z-index": "2500"};
+		
+	var dlg = jQuery('<div><div class="hd">GPS Transfer</div></div>');
+	dlg.css(dlgStyle);
+	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
+	this.div = jQuery('<div style="width: 400px; height: 5em"></div>').appendTo(this.bd);
+	
+	var dialog = null;
+	var buttons = [{text : "Try Again", handler: function() {that.retry()}},{ text : "OK", handler: function() { that.dialog.hide(); }, isDefault: true}];
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
+	this.dialog.render(document.body);
+	this.dialog.hide();	
+}
+
+org.sarsoft.GPSDlg.prototype.console = function(str) {
+	  this.div.append(str + "<br/>");
+}
+
+org.sarsoft.GPSDlg.prototype.onFinishFindDevices = function() {
+	var devices = this.control.getDevices();
+	if(devices.length > 1) {
+		this.console('The following GPS devices were found.  <span class="warning">Please attach 1 GPS device at a time</span>:');
+	    for( var i=0; i < devices.length; i++ ) {
+	        this.console(devices[i].getDisplayName());
+	    }
+	    return;
+	}
+	if(devices.length == 0) {
+		this.console('No GPS found.  <span class="warning">Please attach a GPS and try again.</span>');
+	}
+	var device = devices[0];
+	if((this._write && !device._gpxType.writeAccess) || (!this._write && !device._gpxType.readAccess)) {
+		this.console('<span class="warning">Device does not support ' + (this._write ? "writing" : "reading") + '</span>');
+		return;
+	}
+	this.console((this._write ? "Writing data to " : "Reading data from ") + device.getDisplayName() + " . . .");
+	if(this._write) {
+		this.control.writeDataToDevice(Garmin.DeviceControl.FILE_TYPES.gpx, this.gpxstr, this.name);
+	} else {
+		this.control.readFromDevice();
+	}
+}
+
+org.sarsoft.GPSDlg.prototype.onFinishWriteToDevice = function() {
+	this.console('<span style="font-weight: bold; color: green">Done!</span>');
+}
+
+org.sarsoft.GPSDlg.prototype.onCancelWriteToDevice = function() {
+	this.console('<span class="warning">Operation Canceled</span>');
+}
+
+org.sarsoft.GPSDlg.prototype.onException = function() {
+	this.console('<span class="warning">GPS Exception: ' + this.control.msg + '</span>');
+}
+
+org.sarsoft.GPSDlg.prototype.onFinishReadFromDevice = function() {
+	var gpx = this.control.gpsDataString;
+	globalgpx = gpx;
+	this.console('<span style="font-weight: bold; color: green">Done!</span>');
+    var dao = new org.sarsoft.BaseDAO();
+    dao.baseURL = "";
+	dao._doPost(this._url, function() { window.location.reload(); }, {gpx:gpx}, this._poststr);
+}
+
+org.sarsoft.GPSDlg.prototype.retry = function() {
+	var that = this;
+	this.div.html("");
+	
+    if(this.control == null) {
+    	this.console("Initializing Garmin plugin . . .");
+		// TODO alert user if plugin doesn't exist
+		if(PluginDetect.detectGarminCommunicatorPlugin() && __garminPluginCreated == false) {
+			installGarminPlugin();
+		}
+		this.control = new Garmin.DeviceControl(this);
+	}
+
+	var unlocked = this.control.unlock( [org.sarsoft.garmin.hostName,org.sarsoft.garmin.deviceKey] );
+	if(!unlocked) {
+		this.console('<span class="warning">Unable to unlock Garmin plugin.</span>');
+		if(org.sarsoft.garmin.deviceKey == "null") this.console("No garmin device key found for hostname " + org.sarsoft.garmin.hostName + ".  You man need to update this server's configuration.");
+		return;
+	}
+
+	if(this._write) {
+		  this.console("Retrieving GPS data from server . . .");
+		  YAHOO.util.Connect.asyncRequest('GET', this._url, { success : function(response) {
+			  	that.gpxstr = response.responseText;
+				that.control.findDevices();
+			}, failure : function(response) {
+				that.console('<span class="warning">Error loading GPX file from server</span>');
+			}});
+		} else {
+			that.control.findDevices();
+		}
+}
+
+org.sarsoft.GPSDlg.prototype.show = function(write, url, name, handler, poststr) {
+	var that = this;
+	this._write = write;
+	this._url = url;
+	this._name = name;
+	this._poststr = poststr;
+	
+	if(typeof(__garminJSLoaded) == "undefined") {
+		jQuery.getScript("/static/js/garmin.js", function() {
+			that.show(write, url, name, handler, poststr);
+		});
+		return;
+	}
+
+	this.dialog.show();	
+	this.retry();
+
+}
+
 if(org.sarsoft.yuiloaded == true) org.sarsoft.Loader.execute();

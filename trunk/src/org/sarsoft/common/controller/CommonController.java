@@ -28,32 +28,6 @@ public class CommonController extends JSONBaseController {
 		return app(model, "Pages.Tools");
 	}
 	
-	@RequestMapping(value="/app/togarmin", method = RequestMethod.GET)
-	public String toGarmin(Model model, HttpServletRequest request) {
-		model.addAttribute("file", request.getParameter("file"));
-		model.addAttribute("name", request.getParameter("name"));
-		model.addAttribute("hostName", "http://" + RuntimeProperties.getServerName());
-		model.addAttribute("garminKey", getProperty("garmin.key." + RuntimeProperties.getServerName()));
-		model.addAttribute("version", getProperty("sarsoft.version"));
-		if(request.getParameter("callbackurl") != null) {
-			model.addAttribute("callbackurl", request.getParameter("callbackurl"));
-		}
-		return "/plans/togarmin";
-	}
-
-	@RequestMapping(value="/app/fromgarmin", method = RequestMethod.GET)
-	public String fromGarmin(Model model, HttpServletRequest request) {
-		model.addAttribute("id", request.getParameter("id"));
-		model.addAttribute("version", getProperty("sarsoft.version"));
-		model.addAttribute("hostName", "http://" + RuntimeProperties.getServerName());
-		model.addAttribute("garminKey", getProperty("garmin.key." + RuntimeProperties.getServerName()));
-		if(request.getParameter("posturl") != null) {
-			model.addAttribute("posturl", request.getParameter("posturl"));
-			model.addAttribute("callbackurl", request.getParameter("callbackurl"));
-		}
-		return "/plans/fromgarmin";
-	}
-
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/timestamp", method = RequestMethod.GET)
 	public String getTimestamp(Model model) {

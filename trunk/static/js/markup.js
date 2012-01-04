@@ -237,6 +237,8 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.imap.addMenuItem(showHide.node, 19);
 
 	if(!nestMenuItems && !embedded) {
+		this.garmindlg = new org.sarsoft.GPSDlg();
+		
 		this.gps = new Object();
 		this.gps.form = jQuery('<form name="gpsform" action="/map/gpxupload" enctype="multipart/form-data" method="post">I want to:</form>');
 		this.gps.io = jQuery('<select style="margin-left: 15px"><option value="export">Export</option>' + ((org.sarsoft.userPermissionLevel != "READ") ? '<option value="import">Import</option>' : '') + '</select').appendTo(this.gps.form);
@@ -274,7 +276,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 				window.location = url + format;
 			} else {
 				url = url + "GPX";
-				window.location = "/app/togarmin?name=Map%20Export&file=" + encodeURIComponent(url) + "&callbackurl=" + encodeURIComponent(window.location);
+				that.garmindlg.show(true, url, "");
 			}
 		}
 		this.gps.dlg = new org.sarsoft.view.CreateDialog("Import / Export", this.gps.form[0], "GO", "Cancel", function() {
@@ -292,7 +294,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			} else {
 				var format = that.gps.impFormat.val();
 				if(format == "GPS") {
-					window.location="/app/fromgarmin?callbackurl=" + encodeURIComponent(window.location) + "&posturl=/map/restgpxupload";
+					that.garmindlg.show(false, "/map/restgpxupload", "");
 				} else if("" == that.gps.impFile.val()) {
 					that.gps.dlg.show();
 					alert("Please select a GPX file to import.");
