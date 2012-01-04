@@ -1,23 +1,14 @@
 package org.sarsoft.common.controller;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -33,13 +24,13 @@ import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
 import org.apache.log4j.Logger;
-import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.dao.GenericHibernateDAO;
+import org.sarsoft.common.model.GeoRefImage;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.common.model.GeoRefImage;
 import org.sarsoft.plans.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
