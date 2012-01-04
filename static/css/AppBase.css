@@ -22,6 +22,11 @@ body, html {
 	white-space: pre-line;
 }
 
+.warning {
+	font-weight: bold;
+	color: red;
+}
+
 div.item label, div.item span.label {
 	float: left;
 	margin-right: 5px;

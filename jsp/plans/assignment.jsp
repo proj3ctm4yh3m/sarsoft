@@ -12,21 +12,6 @@
 <% pageContext.setAttribute("admin", Permission.ADMIN); %>
 
 <script type="text/javascript">
-function exportassignment() {
-  var select = document.getElementById('export');
-  var format = select.options[select.selectedIndex].value;
-  if(format == "gpx") window.location="/rest/assignment/${assignment.id}?format=gpx";
-  if(format == "kml") window.location="/rest/assignment/${assignment.id}?format=kml";
-  if(format == "garmin") document.forms['togarmin'].submit();
-}
-
-function importassignment() {
-  var select = document.getElementById('import');
-  var format = select.options[select.selectedIndex].value;
-  if(format == "gpx") gpxdlg.dialog.show();
-  if(format == "garmin") window.location="/app/fromgarmin?id=${assignment.id}";
-}
-
 function finalize() {
 	var postdata = "action=finalize&preparedby=" + encodeURIComponent(document.getElementById('dlgpreparedby').value);
 	YAHOO.util.Connect.resetDefaultHeaders();
@@ -93,9 +78,9 @@ This ${assignment.status} assignment covers ${assignment.formattedSize} with ${a
 <c:if test="${assignment.status eq completed}">
 <li>Print <a target="_new" href="/assignment/${assignment.id}?format=print&content=maps">Debrief Map</a></li>
 </c:if>
-<li>Export to: <a href="javascript:document.forms['togarmin'].submit()">Garmin GPS</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=kml">KML</a></li>
+<li>Export to: <a href="javascript:sendToGarmin()">Garmin GPS</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=gpx">GPX</a>&nbsp;|&nbsp;<a href="/rest/assignment/${assignment.id}?format=kml">KML</a></li>
 <c:if test="${userPermissionLevel eq write or userPermissionLevel eq admin}">
-<li>Import tracks from: <a href="/app/fromgarmin?id=${assignment.id}">Garmin GPS</a>&nbsp;|&nbsp;<a href="javascript:gpxdlg.dialog.show()">GPX</a></li>
+<li>Import tracks from: <a href="javascript:getFromGarmin()">Garmin GPS</a>&nbsp;|&nbsp;<a href="javascript:gpxdlg.dialog.show()">GPX</a></li>
 </c:if>
 </ul>
 </c:if>
@@ -255,13 +240,6 @@ SPOT Password:&nbsp;<input type="text" name="spotPassword" size="10" value="${re
 	</div>
 </div>
 
-<div style="display: none">
-<form name="togarmin" action="/app/togarmin" method="GET">
-	<input type="hidden" name="file" value="/rest/assignment/${assignment.id}?format=gpx"/>
-	<input type="hidden" name="name" value="Assignment ${assignment.id}"/>
-</form>
-</div>
-
 <div id="finalize" style="top: 150px; left: 150px; position: absolute; z-index: 200; width: 300px;">
 	<div class="hd">Prepare Assignment</div>
 	<div class="bd">
@@ -306,12 +284,22 @@ function stealResource() {
 	window.location="/resource/" + id + "/attach/${assignment.id}#operations";
 }
 
+function sendToGarmin() {
+	garmindlg.show(true, '/rest/assignment/${assignment.id}?format=gpx', "Assignment ${assignment.id}");
+}
+
+function getFromGarmin() {
+	garmindlg.show(false, "/rest/assignment/${assignment.id}/way", "", null, "format=gpx&type=TRACK");
+}
+
 org.sarsoft.Loader.queue(function() {
 	
 	<c:if test="${userPermissionLevel ne write and userPermissionLevel ne admin}">
 	$('input').attr("disabled", true);
 	$('textarea').attr("disabled", true);
 	</c:if>
+	
+	garmindlg = new org.sarsoft.GPSDlg();
 	
     tracktable = new org.sarsoft.view.WayTable(function(way) { avtc.highlight(way);}, function(record) {
     	var way = record.getData();

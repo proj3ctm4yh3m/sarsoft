@@ -1,9 +1,11 @@
 package org.sarsoft.common.controller;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -221,6 +223,8 @@ public abstract class JSONBaseController {
 		synchronized(this) {
 			String preheader = "if(typeof org == \"undefined\") org = new Object();\nif(typeof org.sarsoft == \"undefined\") org.sarsoft = new Object();\nif(typeof org.sarsoft.map == \"undefined\") org.sarsoft.map = new Object();" +
 			"org.sarsoft.Constants=" + JSONAnnotatedPropertyFilter.fromObject(Constants.all) + "\n" +
+			"org.sarsoft.garmin = new Object(); org.sarsoft.garmin.hostName=\"http://" + RuntimeProperties.getServerName() +  "\"\n" +
+			"org.sarsoft.garmin.deviceKey=\"" + this.getProperty("garmin.key." + RuntimeProperties.getServerName()) + "\"\n" +
 			"org.sarsoft.map._default = new Object();\n" +
 			"org.sarsoft.map._default.zoom = " + getProperty("sarsoft.map.default.zoom") + ";\n" +
 			"org.sarsoft.map._default.lat = " + getProperty("sarsoft.map.default.lat") + ";\n" +
@@ -416,6 +420,7 @@ public abstract class JSONBaseController {
 			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream(template)));
 			StringWriter writer = new StringWriter();
 			if(gpx != null && gpx.indexOf("<?xml") > 0 && gpx.indexOf("<?xml") < 10) gpx = gpx.substring(gpx.indexOf("<?xml"));
+			gpx = gpx.replaceAll("\u0004", "");
 			transformer.transform(new StreamSource(new StringReader(gpx)), new StreamResult(writer));
 			String xml = writer.toString();
 			XMLSerializer serializer = new XMLSerializer();
