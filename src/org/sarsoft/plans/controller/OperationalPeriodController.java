@@ -42,7 +42,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		case DELETE:
 				if(period.getAssignments() == null || period.getAssignments().size() == 0) {
 					dao.delete(period);
-					return getAppOperationalPeriod(model, id-1, request, response);
+					return "redirect:/op/" + (id-1);
 				}
 				break;
 		case UPDATE:
