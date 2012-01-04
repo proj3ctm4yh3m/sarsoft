@@ -130,15 +130,15 @@ function toggleAcctDropdown() {
 	</c:choose>
 	<c:choose>
 	 <c:when test="${assignment ne null}">
-	  <div class="subheader"><span>&#x25B8;&#x25B8; <a href="/op/${assignment.operationalPeriodId}">Plans</a></span></div>
+	  <div class="subheader"><span>&#x25B8; <a href="/op/${assignment.operationalPeriodId}">Plans</a></span></div>
 	  <div class="subheader"><span>&#x25B8;&#x25B8; Assignment ${assignment.id}</span></div>
 	 </c:when>
 	 <c:when test="${resource ne null}">
-	 	<div class="subheader"><span>&#x25B8;&#x25B8; <a href="/resource">Resources</a></span></div>
+	 	<div class="subheader"><span>&#x25B8; <a href="/resource">Resources</a></span></div>
 	 	<div class="subheader"><span>&#x25B8;&#x25B8; ${resource.name}</span></div>
 	 </c:when>
 	 <c:when test="${clue ne null}">
-	 	<div class="subheader"><span>&#x25B8;&#x25B8; <a href="/clue">Clues</a></span></div>
+	 	<div class="subheader"><span>&#x25B8; <a href="/clue">Clues</a></span></div>
 	 	<div class="subheader"><span>&#x25B8;&#x25B8; Clue ${clue.id}</span></div>
 	 </c:when>
 	</c:choose>
