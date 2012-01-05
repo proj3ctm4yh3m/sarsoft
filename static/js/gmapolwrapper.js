@@ -171,9 +171,11 @@ function GMap2(node) {
 	this.ol.modifyControl.activate();
 
 	this.ol.drawLineControl = new OpenLayers.Control.DrawFeature(this.ol.vectorLayer, OpenLayers.Handler.Path);
+	this.ol.drawLineControl.handler.dblclickTolerance=5
 	this.ol.map.addControl(this.ol.drawLineControl);
 
 	this.ol.drawPolygonControl = new OpenLayers.Control.DrawFeature(this.ol.vectorLayer, OpenLayers.Handler.Polygon);
+	this.ol.drawPolygonControl.handler.dblclickTolerance=5
 	this.ol.map.addControl(this.ol.drawPolygonControl);
 
 	this.ol.getFeatureFromEvent = function(evt) {
