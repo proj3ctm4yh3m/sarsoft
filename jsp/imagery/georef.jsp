@@ -112,14 +112,15 @@ function checkCombined() {
 geooverlay = null;
 
 function updateCombinedView() {
+	var odd = map2._overlaydropdownmapcontrol;
 	georef = parameterForm.read();
-	var geotype = {name : "Georef Overlay", id: "${image.id}", angle: georef.angle, scale: georef.scale, originx: georef.originx, originy: georef.originy, originlat: georef.originlat, originlng: georef.originlng, width: georef.width, height: georef.height};
+	var geotype = {getName : function() { return "Georef Overlay"}, name : "Georef Overlay", id: "${image.id}", angle: georef.angle, scale: georef.scale, originx: georef.originx, originy: georef.originy, originlat: georef.originlat, originlng: georef.originlng, width: georef.width, height: georef.height};
 	map2.geoRefImages = [geotype];
 	
-	if(map2._overlaydropdownmapcontrol._overlays != null && map2._overlaydropdownmapcontrol._overlays[0].angle != null) {
-		map2.removeOverlay(map2._overlaydropdownmapcontrol._overlays[0]);
+	if(odd._overlays != null && odd._overlays.length > 0 && odd._overlays[0].angle != null) {
+		map2.removeOverlay(odd._overlays[0]);
 	}
-	map2.removeControl(map2._overlaydropdownmapcontrol);
+	map2.removeControl(odd);
 	var dd = new OverlayDropdownMapControl();
 	map2.addControl(dd);
 	dd.updateMap(dd.types[dd.typeSelect.value], geotype, 1);

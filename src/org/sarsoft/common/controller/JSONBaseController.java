@@ -179,7 +179,7 @@ public abstract class JSONBaseController {
 	
 			boolean first = true;
 			for(GeoRefImage image : dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE)) {
-				header = header + ((first) ? "" : ",") + "{name:\"" + image.getName() + "\", alias: \"" + image.getName() + "\", id: " + image.getId() + ", angle: " + image.getAngle() +
+				header = header + ((first) ? "" : ",") + "{getName: function() { return \"" + image.getName() + "\"}, name:\"" + image.getName() + "\", alias: \"" + image.getName() + "\", id: " + image.getId() + ", angle: " + image.getAngle() +
 					", scale: " + image.getScale() + ", originx: " + image.getOriginx() + ", originy: " + image.getOriginy() + ", originlat: " + image.getOriginlat() +
 					", originlng: " + image.getOriginlng() + ", width: " + image.getWidth() + ", height: " + image.getHeight() + "}";
 				first = false;
