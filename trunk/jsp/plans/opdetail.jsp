@@ -134,7 +134,7 @@ Base&nbsp;<select name="map${num}f" id="map${num}f">
 ,&nbsp;&nbsp;Overlay&nbsp;
 <select name="map${num}b" id="map${num}b">
   <c:forEach var="source" items="${mapSources}">
-  <option value="${source.name}">${source.name}</option>
+  <c:if test="${not(source.alphaOverlay)}"><option value="${source.name}">${source.name}</option></c:if>
   </c:forEach>
   <c:forEach var="image" items="${geoRefImages}">
   <option value="${image.name}">${image.name}</option>
