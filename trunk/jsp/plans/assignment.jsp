@@ -195,7 +195,7 @@ you can see how it relates to neighboring assignments.</i></div>
 				more than <input name="radius" type="text" size="5" value="15"/>&nbsp;km from assignment.&nbsp;&nbsp;<input type="submit" value="GO"/>				
 				</form></li>
 				<li><form name="cleanuptracksbytime" method="POST" action="/assignment/${assignment.id}/cleantracks#tracks">
-				older than <input name="time" type="text" size="3" value="24"/>&nbsp;hours.&nbsp;&nbsp;<input type="submit" value="GO"/>				
+				older than <input name="time" type="text" size="3" value="24"/>&nbsp;hours (if timestamps recorded).&nbsp;&nbsp;<input type="submit" value="GO"/>				
 				</form></li>
 				</ul>
 				</div>			
