@@ -72,7 +72,7 @@
 	
 	<definition name="Location.Status" extends="Search.Base">
 		<put-attribute name="content" value="/ops/locationstatus.jsp"/>
-		<put-attribute name="app" value="ops"/>
+		<put-attribute name="app" value="setup-status"/>
 	</definition>
 	
 	<definition name="Map.Guide" extends="Map.Base">
@@ -105,7 +105,7 @@
 	<definition name="Pages.Admin" extends="App.Base">
 		<put-attribute name="content" value="/global/admin.jsp"/>
 		<put-attribute name="subHeader" value=""/>
-		<put-attribute name="app" value="admin"/>
+		<put-attribute name="app" value="setup-admin"/>
 	</definition>
 
 	<definition name="Pages.Account" extends="App.Base">
@@ -115,6 +115,7 @@
 	
 	<definition name="GeoRefImageList" extends="Search.Base">
 		<put-attribute name="content" value="/imagery/georefimagelist.jsp"/>
+		<put-attribute name="app" value="setup-imagery"/>
 	</definition>
 
 </tiles-definitions>
