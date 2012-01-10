@@ -239,7 +239,7 @@ public class SearchController extends JSONBaseController {
 		SearchAssignmentGPXHelper.updateSearch((JSONObject) obj, dao);
 
 		try {
-			response.sendRedirect("/app/index.html");
+			response.sendRedirect("/plans");
 		} catch (IOException e) {}
 	}
 
