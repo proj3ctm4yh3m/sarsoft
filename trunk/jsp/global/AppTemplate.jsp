@@ -117,11 +117,6 @@ function toggleAcctDropdown() {
 	  <span>&#x25B8;&#x25B8; ${tenant.description}</span>
 	 </div>
 	 </c:when>
-	 <c:when test="${app eq 'admin'}">
-	 <div class="subheader">
-	  <span>&#x25B8;&#x25B8; Admin</span>
-	 </div>
-	 </c:when>
 	 <c:when test="${app eq 'guide'}">
 	 <div class="subheader">
 	  <span>&#x25B8;&#x25B8; Guide</span>
@@ -140,6 +135,18 @@ function toggleAcctDropdown() {
 	 <c:when test="${clue ne null}">
 	 	<div class="subheader"><span>&#x25B8; <a href="/clue">Clues</a></span></div>
 	 	<div class="subheader"><span>&#x25B8;&#x25B8; Clue ${clue.id}</span></div>
+	 </c:when>
+	 <c:when test="${app eq 'setup-admin'}">
+	  <c:if test="${subHeader eq 'searches'}"><div class="subheader"><span>&#x25B8; <a href="/setup">Setup</a></span></div></c:if>
+	  <div class="subheader"><span>&#x25B8;&#x25B8; Admin</span></div>
+	 </c:when>
+	 <c:when test="${app eq 'setup-status'}">
+	  <div class="subheader"><span>&#x25B8; <a href="/setup">Setup</a></span></div>
+	  <div class="subheader"><span>&#x25B8;&#x25B8; Location Status</span></div>
+	 </c:when>
+	 <c:when test="${app eq 'setup-imagery'}">
+	  <div class="subheader"><span>&#x25B8; <a href="/setup">Setup</a></span></div>
+	  <div class="subheader"><span>&#x25B8;&#x25B8; Imagery</span></div>
 	 </c:when>
 	</c:choose>
 	</div>
