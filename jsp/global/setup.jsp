@@ -27,3 +27,10 @@
  <li><a href="javascript:gpxdlg2.dialog.show()">Import markup</a> from GPX</li>
 </c:if>
 </ul>
+
+<script language="javascript">
+org.sarsoft.Loader.queue(function() {
+	gpxdlg = new org.sarsoft.view.BulkGPXDlg();
+	gpxdlg2 = new org.sarsoft.view.BulkGPXDlg("gpximport2", "/map/gpxupload", "/");
+});
+</script>
