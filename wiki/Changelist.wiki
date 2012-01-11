@@ -1,5 +1,19 @@
 #summary Changelist and migration instructions
 
+= Version 0.8 =
+==Major changes for 0.8==
+ * Overhauled the non-map UI
+ * Added a Tools page for datum and unit conversion
+ * Added map guides
+
+==Minor changes for 0.8==
+ * Able to serve zipped map tiles
+ * Freehand draw is now only option for shape/assignment creation
+ * Added measurement tool to map view
+
+==Migration Instructions for 0.8==
+No data migration is required when moving from 0.7 to 0.8, however, you should back any searches up to .gpx just in case.
+
 = Version 0.7 =
 ==Major changes for 0.7==
  * Added map markup (icons, lines, polygons)
