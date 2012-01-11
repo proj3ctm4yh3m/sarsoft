@@ -235,7 +235,7 @@ public abstract class JSONBaseController {
 						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
 						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + "\", template: \"";
 					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
-						preheader = preheader + "/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png";
+						preheader = preheader + "/resource/imagery/tilecache/" + source.getName() + "/{Z}/{X}/{Y}.png";
 					} else {
 						preheader = preheader + source.getTemplate();
 					}
@@ -249,7 +249,7 @@ public abstract class JSONBaseController {
 						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
 						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + "\", template: \"";
 					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
-						preheader = preheader + "/resource/imagery/tilecache/${mapSource.name}/{Z}/{X}/{Y}.png";
+						preheader = preheader + "/resource/imagery/tilecache/" + source.getName() + "/{Z}/{X}/{Y}.png";
 					} else {
 						preheader = preheader + source.getTemplate();
 					}
