@@ -430,7 +430,7 @@ org.sarsoft.view.TenantTable = function() {
 				html += 'map by giving people the following URL:<br/><br/>';
 				var murl = rooturl + 'map?id=' + record.getData().name;
 				html += '<a href="' + murl + '">' + murl + '</a><br/><br/>';
-				html += 'Embed it in a webpage or forum:<br/><br/><textarea rows="3" cols="45">&lt;iframe width="500px" height="500px" src="' + murl + '"/&gt;</textarea>';
+				html += 'Embed it in a webpage or forum:<br/><br/><textarea rows="3" cols="45">&lt;iframe width="500px" height="500px" src="' + murl + '"&gt;&lt;/iframe&gt;</textarea>';
 			}
 			alertBody.innerHTML = html; alertDlg.show();});
 			
