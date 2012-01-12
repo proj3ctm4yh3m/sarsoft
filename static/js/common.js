@@ -626,7 +626,12 @@ org.sarsoft.GPSDlg.prototype.retry = function() {
 		if(PluginDetect.detectGarminCommunicatorPlugin() && __garminPluginCreated == false) {
 			installGarminPlugin();
 		}
-		this.control = new Garmin.DeviceControl(this);
+		try {
+			this.control = new Garmin.DeviceControl(this);
+		} catch (e) {
+			this.console('<span class="warning">Error initializing Garmin Communicator plugin.</span>');
+			this.console('Please visit <a href="http://www8.garmin.com/products/communicator/" target="_new">http://www8.garmin.com/products/communicator/</a> to install the plugin.');
+		}
 	}
 
 	var unlocked = this.control.unlock( [org.sarsoft.garmin.hostName,org.sarsoft.garmin.deviceKey] );
