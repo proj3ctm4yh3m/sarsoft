@@ -57,6 +57,12 @@ public class AdminController extends JSONBaseController {
 	public String getHomePage(Model model) {
 		return splash(model);
 	}
+	
+	@RequestMapping(value="/login", method = RequestMethod.GET)
+	public String login(Model model) {
+		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
+		return app(model, "Pages.Splash");
+	}
 		
 	@RequestMapping(value="/account.html", method = RequestMethod.GET)
 	public String getAccount(Model model) {
