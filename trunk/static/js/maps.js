@@ -116,7 +116,7 @@ OverlayDropdownMapControl = function() {
 	this.div.append(this.extras, this.typeSelect);
 	
 	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(this.div);
-	var tps = jQuery('<span style="cursor: pointer">+</span>').appendTo(tPlus);
+	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 2px">+</span>').appendTo(tPlus);
 	this.alphaOverlayPlus = tps[0];
 
 	var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
@@ -1062,7 +1062,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 			that.locationEntryForm.address.focus();
 		}
 	});
-	imap.addMenuItem(find, 26);
+	imap.addMenuItem(find, 25);
 }
 
 org.sarsoft.MapFindWidget.prototype.initializeDlg = function() {
@@ -1107,7 +1107,7 @@ org.sarsoft.view.MapSetupWidget = function(imap) {
 	GEvent.addDomListener(setup, "click", function() {
 		that.showDlg();
 	});
-	imap.addMenuItem(setup, 25);
+	imap.addMenuItem(setup, 26);
 
 }
 
@@ -1297,8 +1297,8 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options.standardControls || options.find) var fc = new org.sarsoft.MapFindWidget(this);
 	if(options.standardControls || options.label) var lc = new org.sarsoft.MapLabelWidget(this);
 	if(options.standardControls || options.separators) {
-		this.addMenuItem(document.createTextNode("\u00A0"), 20);
-		this.addMenuItem(document.createTextNode("\u00A0"), 100);
+		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 20);
+		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 100);
 	}
 
 }
