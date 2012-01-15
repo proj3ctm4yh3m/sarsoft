@@ -1,18 +1,24 @@
-''<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 
 <div style="padding-top: 15px">
 
 <div style="padding-bottom: 1em" class="noprint">
-Show:<input type="checkbox" id="commentcb" onchange="showhidecomments()" style="padding-left: 1em" checked="checked" value="Comments"/>Map Description <input type="checkbox" id="markercb" onchange="showhidemarkers()" style="padding-left: 1em" checked="checked" value="Markers"/>Markers <input type="checkbox" id="shapecb" onchange="showhideshapes()" checked="checked" value="Shapes" style="padding-left: 1em"/>Shapes
-<div class="showMarkers">Show positions as: <select id="datumDropDown"><option value="WGS84">WGS84</option><option value="NAD27 CONUS">NAD27 CONUS</option></select></div>
+Show:
+<c:if test="${fn:length(tenant.comments) gt 0}"><input type="checkbox" id="commentcb" onchange="showhidecomments()" style="padding-left: 1em" checked="checked" value="Comments"/>Map Description </c:if>
+<c:if test="${fn:length(markers) gt 0}"><input type="checkbox" id="markercb" onchange="showhidemarkers()" style="padding-left: 1em" checked="checked" value="Markers"/>Markers </c:if>
+<c:if test="${fn:length(shapes) gt 0}"><input type="checkbox" id="shapecb" onchange="showhideshapes()" checked="checked" value="Shapes" style="padding-left: 1em"/>Shapes </c:if>
+<c:if test="${fn:length(markers) gt 0}"><div class="showMarkers">Show positions as: <select id="datumDropDown"><option value="WGS84">WGS84</option><option value="NAD27 CONUS">NAD27 CONUS</option></select></div></c:if>
 </div>
 
-<div style="font-size: 1.5em; color: #945e3b" class="printonly">${tenant.description} Guide</div>
+<div style="font-size: 1.5em; color: #945e3b" class="printonly" style="text-transform: capitalize">${tenant.description} Guide</div>
 
+<c:if test="${fn:length(tenant.comments) gt 0}">
 <div style="padding-bottom: 1em" class="showComments pre"><c:out value="${tenant.comments}"/></div>
+</c:if>
 
+<c:if test="${fn:length(markers) gt 0}">
 <div class="showMarkers">
 
 <div style="font-size: 1.5em; font-weight: bold">Markers</div>
@@ -34,7 +40,9 @@ Show:<input type="checkbox" id="commentcb" onchange="showhidecomments()" style="
 </div>
 </c:forEach>
 </div>
+</c:if>
 
+<c:if test="${fn:length(shapes) gt 0}">
 <div class="showShapes">
 
 <div style="font-size: 1.5em; font-weight: bold; width: 90%; float: left; padding-top: 1em">Shapes</div>
@@ -64,6 +72,7 @@ Show:<input type="checkbox" id="commentcb" onchange="showhidecomments()" style="
 </div>
 </c:forEach>
 </div>
+</c:if>
 
 </div>
 
