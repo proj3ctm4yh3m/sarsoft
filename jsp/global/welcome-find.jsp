@@ -27,7 +27,9 @@
 </thead>
 <tbody>
 <c:forEach var="tenant" items="${tenants}">
-<tr><td><c:out value="${tenant.description}"/></td><td>${tenant.name}</td><td>${tenant.class.name}</td><td><c:out value="${tenant.account.handle}"/></td><td><c:out value="${tenant.comments}"/></td></tr>
+<c:set var="comments" value="${tenant.comments}"/>
+<c:if test="${fn:length(comments) gt 120}"><c:set var="comments" value="${fn:substring(comments, 0, 120)}..."/></c:if>
+<tr><td><c:out value="${tenant.description}"/></td><td>${tenant.name}</td><td>${tenant.class.name}</td><td><c:out value="${tenant.account.handle}"/></td><td><c:out value="${comments}"/></td></tr>
 </c:forEach>
 </tbody>
 </table>
@@ -53,7 +55,9 @@
 </thead>
 <tbody>
 <c:forEach var="tenant" items="${tenants}">
-<tr><td><c:out value="${tenant.description}"/></td><td>${tenant.name}</td><td>${tenant.class.name}</td><td><c:out value="${tenant.account.handle}"/></td><td><c:out value="${tenant.comments}"/></td></tr>
+<c:set var="comments" value="${tenant.comments}"/>
+<c:if test="${fn:length(comments) gt 120}"><c:set var="comments" value="${fn:substring(comments, 0, 120)}..."/></c:if>
+<tr><td><c:out value="${tenant.description}"/></td><td>${tenant.name}</td><td>${tenant.class.name}</td><td><c:out value="${tenant.account.handle}"/></td><td><c:out value="${comments}"/></td></tr>
 </c:forEach>
 </tbody>
 </table>
@@ -80,7 +84,9 @@
 </thead>
 <tbody>
 <c:forEach var="tenant" items="${tenants}">
-<tr><td><c:out value="${tenant.description}"/></td><td>${tenant.name}</td><td>${tenant.class.name}</td><td><c:out value="${tenant.account.handle}"/></td><td><c:out value="${tenant.comments}"/></td></tr>
+<c:set var="comments" value="${tenant.comments}"/>
+<c:if test="${fn:length(comments) gt 120}"><c:set var="comments" value="${fn:substring(comments, 0, 120)}..."/></c:if>
+<tr><td><c:out value="${tenant.description}"/></td><td>${tenant.name}</td><td>${tenant.class.name}</td><td><c:out value="${tenant.account.handle}"/></td><td><c:out value="${comments}"/></td></tr>
 </c:forEach>
 </tbody>
 </table>
