@@ -1144,7 +1144,7 @@ org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
 org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 	var that = this;
 	if(imap != null) {
-		if(message == null) message = "Save map settings?  Data is saved as you work on it; this only affects UTM gridlines, visible layers and such.";
+		if(message == null) message = "Save map settings (e.g. visible layers, UTM grid) for future page loads?  Data is automatically saved as you work on it.";
 		this.imap = imap;
 		if(persist) {
 			var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", message, "Save", "Cancel", function() {
