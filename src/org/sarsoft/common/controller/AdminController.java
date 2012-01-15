@@ -337,7 +337,7 @@ public class AdminController extends JSONBaseController {
 			dao.save(tenant);
 		}
 		
-		return getAdmin(model);
+		return "redirect:/" + ((tenant.getClass().getName() == "org.sarsoft.plans.model.Search") ? "setup" : "maps");
 	}
 
 	@RequestMapping(value="/admin/delete", method = RequestMethod.GET)
