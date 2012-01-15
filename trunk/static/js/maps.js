@@ -344,7 +344,9 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 	                {name: "letter", description: "Letter", width: "8.5in", height: "11in", margin: "0.25in"}, 
 	                {name: "bletter", description: "Letter - Borderless", width: "8.5in", height: "11in", margin: "0in"},
 	                {name: "lletter", description: "Letter - Landscape", width: "11in", height: "8.5in", margin: "0.25in"},
-	                {name: "blletter", description: "Letter - Borderless Landscape", width: "11in", height: "8.5in", margin: "0in"}
+	                {name: "blletter", description: "Letter - Borderless Landscape", width: "11in", height: "8.5in", margin: "0in"},
+	                {name: "1393", description: "Super B", width: "13in", height: "19in", margin: "0.25in"},
+	                {name: "1913", description: "Super B - Landscape", width: "19in", height: "13in", margin: "0.25in"}
 	                ];
 	
 	updateToPreset = function() {
