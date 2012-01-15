@@ -184,6 +184,17 @@ public class CollaborativeMapController extends JSONBaseController {
 					Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
 					map.setDefaultCenter(lkp);
 				}
+				Cookie[] cookies = request.getCookies();
+				if(cookies != null) for(Cookie cookie : cookies) {
+					if("org.sarsoft.mapConfig".equals(cookie.getName())) {
+						try {
+						System.out.println(java.net.URLDecoder.decode(cookie.getValue(), "UTF-8"));						
+						map.setMapConfig(java.net.URLDecoder.decode(cookie.getValue(), "UTF-8"));
+						} catch (Exception e){
+							// if we can't properly decode the mapConfig, don't worry about it
+						}
+					}
+				}
 				dao.save(map);
 			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
