@@ -135,13 +135,17 @@ public abstract class Tenant {
 	@SuppressWarnings("rawtypes")
 	@Transient
 	public String getDatum() {
-		JSON json = JSONSerializer.toJSON(mapConfig);
-		if(json instanceof JSONObject) {
-			Map m = (Map) JSONObject.toBean((JSONObject) json, HashMap.class, classHints);
-			if(m != null && m.containsKey("MapDatumWidget")) {
-				Map m2 = (Map) m.get("MapDatumWidget");
-				if(m2 != null) return (String) m2.get("datum");
+		try {
+			JSON json = JSONSerializer.toJSON(mapConfig);
+			if(json instanceof JSONObject) {
+				Map m = (Map) JSONObject.toBean((JSONObject) json, HashMap.class, classHints);
+				if(m != null && m.containsKey("MapDatumWidget")) {
+					Map m2 = (Map) m.get("MapDatumWidget");
+					if(m2 != null) return (String) m2.get("datum");
+				}
 			}
+		} catch (Exception e) {
+			// improperly formed mapConfig will generate a server-side exception that wipes out the JSP content
 		}
 		return null;
 	}
