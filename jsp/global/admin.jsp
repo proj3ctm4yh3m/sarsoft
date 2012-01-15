@@ -45,7 +45,7 @@ ${source.description}
 <c:if test="${hosted}">
 <p>
 <div style="font-size: larger; font-weight: bold">Sharing</div>
-<input type="checkbox" name="shared" value="true" id="sharedcb"<c:if test="${tenant.shared}"> checked="checked"</c:if>/> Publish this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose> so that others can find it.<br/>
+<input type="checkbox" name="shared" value="true" id="sharedcb"<c:if test="${tenant.shared}"> checked="checked"</c:if>/> <span style="font-weight: bold; color: #5a8ed7">Share this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose>.</span>  Allow others to find it on ${version}.<br/><br/>
 <label for="allUsers">All Users can</label>
 <select name="allUsers" id="allusersdd">
   <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>Nothing</option>

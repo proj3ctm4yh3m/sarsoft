@@ -18,7 +18,7 @@
 
 <div id="allContent">
 <div style="color: #5a8ed7; font-size: 1.5em; font-weight: bold">All Maps</div>
-<div style="padding-top: 1ex">Share your own maps with other CalTopo users by checking the Publish box under Sharing on the map's admin page.</div>
+<div style="padding-top: 1ex">Share your own maps with other ${version} users by checking the Share box on the map's admin page.</div>
 <c:if test="${pane eq 'all'}">
 <div id="tenantContainer" class="growYUITable">
 <table id="tenantTable">
