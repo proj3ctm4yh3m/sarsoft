@@ -72,7 +72,7 @@ Password:
 </span>
 </p>
 </c:if>
-<input type="submit" value="Save Changes"/> &mdash; or, <a href="<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">/searches</c:when><c:otherwise>/maps</c:otherwise></c:choose>">return without saving.</a>
+<input type="submit" value="Save Changes"/> &mdash; or, <a href="<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">/setup</c:when><c:otherwise>/maps</c:otherwise></c:choose>">return without saving.</a>
 </form>
 
 <c:if test="${deleteable}">
