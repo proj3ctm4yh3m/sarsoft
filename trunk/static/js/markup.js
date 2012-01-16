@@ -583,9 +583,11 @@ org.sarsoft.controller.MapToolsController.prototype.measure = function(point, po
 	poly.enableDrawing();
 	GEvent.addListener(poly, "endline", function() {
 		if(polygon) {
-			that.alertDiv.innerHTML = "Area is " + (Math.round(poly.getArea()/1000)/1000) + " sq km";
+			var area = poly.getArea();
+			that.alertDiv.innerHTML = "Area is " + (Math.round(area/1000)/1000) + " sq km / " + (Math.round(area/1000*0.3861)/1000) + " sq mi";
 		} else {
-			that.alertDiv.innerHTML = "Distance is " + (Math.round(poly.getLength())/1000) + " km";
+			var length = poly.getLength();
+			that.alertDiv.innerHTML = "Distance is " + (Math.round(length)/1000) + " km / " + (Math.round(length*0.62137)/1000) + " mi";
 		}
 		that.imap.map.removeOverlay(poly);
 		that.dlg.show();
