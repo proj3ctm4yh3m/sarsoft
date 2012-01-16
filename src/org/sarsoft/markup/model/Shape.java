@@ -120,9 +120,11 @@ public class Shape extends SarModelObject implements IPreSave {
 	@JSONSerializable
 	public String getFormattedSize() {
 		if(way.isPolygon()) {
-			return way.getArea() + " km&sup2;";
+			double area = way.getArea();
+			return area + " km&sup2; / " + (((double) Math.round(area*38.61))/100) + "mi&sup2;";
 		} else {
-			return way.getDistance() + " km";
+			double distance = way.getDistance();
+			return distance + " km / " + (((double) Math.round(distance*62.137))/100) + " mi";
 		}
 	}
 
