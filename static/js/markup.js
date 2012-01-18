@@ -37,26 +37,51 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
 	
 	div = jQuery('<div class="item"><label for="image">Image:</label></div>').appendTo(form);
-	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px"/>').appendTo(div);
-	div.append(document.createTextNode("  or color:"));
-	this.imageInput = jQuery('<input name="image" type="text" size="8"/>').appendTo(div);
+	this.imgDD = jQuery('<select><option value="color">color</option><option value="nps">NPS</option><option value="other">other</option></select>').appendTo(div);
+	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px; padding-left: 10px" valign="middle"/>').appendTo(div);
+	this.imageInput = jQuery('<input name="image" type="text" size="8" style="margin-left: 10px"/>').appendTo(div);
 
+	this.imgDDonChange = function() {
+		var val = that.imgDD.val();
+		for(var key in that.icDivs) {
+			if(key == val) {
+				that.icDivs[key].css('display', 'block');
+			} else {
+				that.icDivs[key].css('display', 'none');
+			}
+		}
+		if(val == "color") {
+			that.imageInput.css("display", "inline");
+		} else {
+			that.imageInput.css("display", "none");
+		}
+	}
+	this.imgDD.change(this.imgDDonChange);
 	this.imageInput.change(function() {
 		that.imageUrl = that.imageInput.val();
 		that.handleChange();
 	});
 
-	var imageContainer = jQuery('<div></div>').appendTo(form);
-	var images = ["nps-4wd","nps-climbing","nps-dirtbike","nps-diving","nps-firstaid","nps-gas","nps-lookout","nps-phone","nps-picnic","nps-roadbike","nps-rockfall","nps-scramble","nps-shelter","nps-shower","nps-snowmobile","nps-water","warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","tent","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"];
-	for(var i = 0; i < images.length; i++) {
-		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + images[i] + '.png"/>').appendTo(imageContainer);
-		swatch.click(function() { var j = i; return function() {
-			that.imageInput.val(""); that.imageUrl = images[j]; that.handleChange();}}());
-	}
-	var colors = ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"];
-	for(var i = 0; i < colors.length; i++) {
-		var swatch = jQuery('<img style="width: 20px; height: 20px" src="/resource/imagery/icons/circle/' + colors[i].substr(1) + '.png"></div>').appendTo(imageContainer);
-		swatch.click(function() { var j = i; return function() {that.imageInput.val(colors[j]); that.imageInput.trigger('change');}}());
+	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(form);
+	this.images = {nps : ["nps-parking","nps-4wd","nps-dirtbike","nps-snowmobile","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-shelter","nps-picnic",
+	                      "nps-shower","nps-water","nps-fire","nps-ski","nps-xc","nps-skate","nps-roadbike","nps-climbing","nps-scramble","nps-rockfall","nps-slip","nps-diving","nps-caving","nps-canoe","nps-anchor","nps-camera"],
+			other : ["warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","tent","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"],
+			color : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"]}
+	this.icDivs = {};
+	for(var key in this.images) {
+		var ic2 = jQuery('<div></div>').appendTo(imageContainer);
+		this.icDivs[key] = ic2;
+		for(var i = 0; i < this.images[key].length; i++) {
+			var url = this.images[key][i];
+			if(url.indexOf("#") == 0) {
+				var swatch = jQuery('<img style="width: 20px; height: 20px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
+				swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["color"][j]); that.imageInput.trigger('change');}}());
+			} else {
+				var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + url + '.png"/>').appendTo(ic2);
+				swatch.click(function() { var j = i; var l = key; return function() {
+					that.imageInput.val(""); that.imageUrl = that.images[l][j]; that.handleChange();}}());
+			}
+		}
 	}
 	
 	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
@@ -85,8 +110,18 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.labelInput.val(obj.label);
 	this.imageUrl = obj.url;
 	if(this.imageUrl != null && this.imageUrl.indexOf("#")==0) {
+		this.imgDD.val("color");
+		this.imgDDonChange();
 		this.imageInput.val(obj.url);
 	} else {
+		for(var key in this.images) {
+			for(var i = 0; i < this.images[key].length; i++) {
+				if(this.images[key][i] == this.imageUrl) {
+					this.imgDD.val(key);
+					this.imgDDonChange();
+				}
+			}
+		}
 		this.imageInput.val("");
 	}
 	this.comments.val(obj.comments);
@@ -107,29 +142,29 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	
 	var div = jQuery('<div class="item"><label for="label">Label:</label></div>').appendTo(form);
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);	
-	
-	div = jQuery('<div class="item"><label for="color">Color:</label></div>').appendTo(form);
-	this.colorInput = jQuery('<input name="color" type="text" size="8" style="float: left"/>').appendTo(div);
-	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left"></div>').appendTo(div);
-	this.colorInput.change(function() {colorSwatch.css('background-color', that.colorInput.val())});
-	
-	var colorContainer = jQuery('<div style="clear: both"></div>').appendTo(form);
-	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
-	for(var i = 0; i < colors.length; i++) {
-		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
-		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j]); that.colorInput.trigger('change');}}());
-	}
-	
+
 	div = jQuery('<div class="item" style="clear: both"><label for="color">Weight:</label></div>').appendTo(form);
 	this.weightInput = jQuery('<select name="weight"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>').appendTo(div);
-	
+
 	this.fillDiv = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
 	this.fillInput = jQuery('<select name="fill"><option value="0">None</option><option value="10">10%</option>' + 
 			'<option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>' +
 			'<option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>' +
 			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
 
-	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
+	div = jQuery('<div class="item"><label for="color">Color:</label></div>').appendTo(form);
+	this.colorInput = jQuery('<input name="color" type="text" size="8" style="float: left"/>').appendTo(div);
+	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left; margin-left: 10px"></div>').appendTo(div);
+	this.colorInput.change(function() {colorSwatch.css('background-color', that.colorInput.val())});
+	
+	var colorContainer = jQuery('<div style="clear: both; margin-top: 5px"></div>').appendTo(form);
+	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
+	for(var i = 0; i < colors.length; i++) {
+		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
+		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j]); that.colorInput.trigger('change');}}());
+	}	
+	
+	div = jQuery('<div class="item" style="padding-top: 5px; clear: both">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
 	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(form);
 
 	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
