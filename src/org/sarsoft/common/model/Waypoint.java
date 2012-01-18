@@ -93,8 +93,15 @@ public class Waypoint extends SarModelObject {
 	}
 
 	public double distanceFrom(Waypoint wpt) {
-		double[] offset = offsetFrom(wpt);
-		return Math.sqrt(Math.pow(offset[0], 2) + Math.pow(offset[1], 2));
+		double R = 6371;
+	    double pi = 3.14159265358979323;
+		double dLat = (wpt.lat-this.lat)/180*pi;
+		double dLon = (wpt.lng-this.lng)/180*pi; 
+		double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+		        Math.cos(this.lat/180*pi) * Math.cos(wpt.lat/180*pi) * 
+		        Math.sin(dLon/2) * Math.sin(dLon/2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		return R * c * 1000;
 	}
 
 	@Transient
