@@ -181,7 +181,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 				that.markerDAO.create(function(obj) {
 					that.refreshMarkers([obj]);
 				}, marker);
-			}});
+			}}, "OK");
 		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.markerDlg.dialog.ok();});
 	
 		form = new org.sarsoft.view.ShapeForm();
@@ -197,7 +197,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 					that.refreshShapes([obj]);
 					that.redrawShape(obj, function() { that.saveShape(obj); });
 				}, shape);
-			}});
+			}}, "OK");
 		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
 		
 		var items = [{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
