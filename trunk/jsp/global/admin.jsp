@@ -9,7 +9,7 @@
 <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose>
 </c:set>
 
-<h2><c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">Search</c:when><c:otherwise>Map</c:otherwise></c:choose> Admin</h2>
+<div class="phead" style="text-transform: capitalize">${tenant.description} Admin</div>
 
 <c:if test="${message ne null}">
 <p style="font-weight: bold; color: red">${message}</p>
@@ -18,27 +18,17 @@
 
 <form action="/admin.html" method="POST">
 
+<table border="0">
+<tbody>
+
+<tr><td valign="top">
+
+<div style="font-size: larger; font-weight: bold">General</div>
+
 <table border="0"><tbody>
 <tr><td valign="top">Name</td><td><input type="text" size="30" value="${tenant.publicName}" name="description"/></td></tr>
-<tr><td valign="top">Comments</td><td><textarea cols="60" rows="5" name="comments">${tenant.comments}</textarea></td></tr>
+<tr><td valign="top">Comments</td><td><textarea style="width: 30em; height: 15em" name="comments">${tenant.comments}</textarea></td></tr>
 </tbody></table>
-
-<p>
-<c:set var="myLayers" value=",${tenant.layers},"/>
-<div style="font-size: larger; font-weight: bold">Layers</div>
-<div style="padding-bottom: 1em">
-Control which layers are visible on this ${tenanttype}.  Uncheck all boxes to return to the ${friendlyName} defaults.
-</div>
-<c:forEach var="source" items="${mapSources}">
-<div style="width: 350px; float: left; padding-right: 1em; padding-bottom: 1em">
-<c:set var="thisLayer" value=",${source.alias},"/>
-<input type="checkbox" name="ml_${source.alias}" value="true" <c:if test="${fn:contains(myLayers, thisLayer)}">checked="checked"</c:if>/><b>${source.name}</b>
-<br/>
-${source.description}
-
-</div>
-</c:forEach>
-</p>
 
 <div style="clear: both; height: 2em"></div>
 
@@ -72,14 +62,39 @@ Password:
 </span>
 </p>
 </c:if>
-<input type="submit" value="Save Changes"/> &mdash; or, <a href="<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">/setup</c:when><c:otherwise>/maps</c:otherwise></c:choose>">return without saving.</a>
-</form>
 
+</td>
+<td style="padding-left: 20px" valign="top">
+<div>
+<c:set var="myLayers" value=",${tenant.layers},"/>
+<div style="font-size: larger; font-weight: bold">Layers</div>
+<div style="padding-bottom: 1em">
+Control which layers are visible on this ${tenanttype}.  Uncheck all boxes to return to the ${friendlyName} defaults.
+</div>
+<c:forEach var="source" items="${mapSources}">
+<div style="padding-top: 1ex">
+<c:set var="thisLayer" value=",${source.alias},"/>
+<input type="checkbox" name="ml_${source.alias}" value="true" <c:if test="${fn:contains(myLayers, thisLayer)}">checked="checked"</c:if>/><b>${source.name}</b>
+<c:if test="${fn:length(source.description) gt 0}">
+<br/>${source.description}
+</c:if>
+</div>
+</c:forEach>
+</div>
+
+</td></tr>
+</tbody></table>
+
+<div>
+<input type="submit" value="Save Changes"/> &mdash; or, <a href="<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">/setup</c:when><c:otherwise>/maps</c:otherwise></c:choose>">return without saving.</a>
 <c:if test="${deleteable}">
-<p style="padding-top: 30px">
+<p style="float: right; padding-right: 10px">
 You can also <a href="javascript:deleteDlg.show()">delete this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose></a>.
 </p>
 </c:if>
+</div>
+
+</form>
 
 <div id="deleteObject" style="top: 150px; left: 150px; position: absolute; z-index: 200; width: 300px;">
 	<div class="hd">Delete</div>
