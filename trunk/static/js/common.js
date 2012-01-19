@@ -671,7 +671,13 @@ org.sarsoft.GPSDlg.prototype.show = function(write, url, name, handler, poststr)
 
 	this.dialog.show();	
 	this.retry();
-
 }
 
-if(org.sarsoft.yuiloaded == true) org.sarsoft.Loader.execute();
+function sarsoftInit() {
+	if(typeof YAHOO != "undefined") {
+		org.sarsoft.Loader.execute();
+	} else {
+		window.setTimeout(250, sarsoftInit);
+	}
+}
+sarsoftInit();
