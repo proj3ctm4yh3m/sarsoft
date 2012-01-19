@@ -259,9 +259,15 @@ public abstract class JSONBaseController {
 			preheader = preheader + "];\n";
 			this.preheader = preheader;
 
-			String header = "<script src=\"/static/js/yui.js\"></script>\n" +
-			"<script src=\"/static/js/jquery-1.6.4.js\"></script>\n" +
-			"<script src=\"/static/js/common.js\"></script>\n" +
+			String header = "";
+			if("local".equals(getProperty("sarsoft.js.server"))) {
+				header = "<script src=\"/static/js/yui.js\"></script>\n" +
+				"<script src=\"/static/js/jquery-1.6.4.js\"></script>\n";
+			} else {
+				header = "<script type=\"text/javascript\" src=\"http://yui.yahooapis.com/combo?2.9.0/build/yahoo-dom-event/yahoo-dom-event.js&2.9.0/build/connection/connection-min.js&2.9.0/build/container/container-min.js&2.9.0/build/cookie/cookie-min.js&2.9.0/build/datasource/datasource-min.js&2.9.0/build/element/element-min.js&2.9.0/build/datatable/datatable-min.js&2.9.0/build/json/json-min.js&2.9.0/build/menu/menu-min.js&2.9.0/build/tabview/tabview-min.js\"></script>\n" +
+				"<script src=\"http://code.jquery.com/jquery-1.6.4.js\"></script>\n";
+			}
+			header = header + "<script src=\"/static/js/common.js\"></script>\n" +
 			"<script src=\"/static/js/maps.js\"></script>\n" +
 			"<script src=\"/static/js/plans.js\"></script>\n" +
 			"<script src=\"/static/js/ops.js\"></script>\n" +
