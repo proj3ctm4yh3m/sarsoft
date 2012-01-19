@@ -116,7 +116,7 @@ OverlayDropdownMapControl = function() {
 	this.div.append(this.extras, this.typeSelect);
 	
 	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(this.div);
-	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 2px">+</span>').appendTo(tPlus);
+	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 2px" title="Add More Layers">+</span>').appendTo(tPlus);
 	this.alphaOverlayPlus = tps[0];
 
 	var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
