@@ -232,7 +232,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 				shape.way.waypoints = that.imap.getNewWaypoints(that.shapeDlg.point, that.shapeDlg.polygon);
 				that.shapeDAO.create(function(obj) {
 					that.refreshShapes([obj]);
-					that.redrawShape(obj, function() { that.saveShape(obj); });
+					that.redrawShape(obj, function() { that.saveShape(obj); }, function() { that.removeShape(obj.id); that.shapeDAO.del(obj.id); });
 				}, shape);
 			}}, "OK");
 		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
@@ -251,7 +251,6 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
 	    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
-	    		{text : "Redraw", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.redrawShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Save Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.saveShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
@@ -411,8 +410,8 @@ org.sarsoft.controller.MarkupMapController.prototype.discardShape = function(sha
 	this.setShapeAttr(shape, "inedit", false);
 }
 
-org.sarsoft.controller.MarkupMapController.prototype.redrawShape = function(shape, callback) {
-	this.imap.redraw(shape.way.id, callback);
+org.sarsoft.controller.MarkupMapController.prototype.redrawShape = function(shape, onEnd, onCancel) {
+	this.imap.redraw(shape.way.id, onEnd, onCancel);
 	this.setShapeAttr(shape, "inedit", true);
 }
 
@@ -427,6 +426,7 @@ org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id)
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.removeShape = function(id) {
+	this.setShapeAttr(this.shapes[id], "inedit", false);
 	if(this.shapes[id] != null) this.imap.removeWay(this.shapes[id].way);
 	delete this.shapes[id];
 }
@@ -513,7 +513,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape)
 	shape.way.displayMessage = org.sarsoft.htmlescape(shape.label) + " (" + shape.formattedSize + ")";
 	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
 
-	this.imap.addWay(shape.way, {clickable : true, fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
+	this.imap.addWay(shape.way, {clickable : ((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") || (shape.comments != null && shape.comments.length > 0)), fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.refreshMarkers = function(markers) {
@@ -615,10 +615,22 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 org.sarsoft.controller.MapToolsController.prototype.measure = function(point, polygon) {
 	var that = this;
 	var poly = (polygon) ? new GPolygon([], "#FF0000",2,1,"#FF0000",0.2) : new GPolyline([], "#FF0000", 2, 1);
+	this.imap.lockContextMenu();
 	this.imap.map.addOverlay(poly);
 	poly.enableDrawing();
 	poly.enableDrawing();
+	
+	this.fn = function(e) {
+		if(e.which == 27) {
+			$(document).unbind("keydown", that.fn);
+			poly.disableEditing();
+			GEvent.trigger(poly, "endline");
+		}
+	}
+	$(document).bind("keydown", this.fn);
+
 	GEvent.addListener(poly, "endline", function() {
+		that.imap.unlockContextMenu();
 		if(polygon) {
 			var area = poly.getArea();
 			that.alertDiv.innerHTML = "Area is " + (Math.round(area/1000)/1000) + " sq km / " + (Math.round(area/1000*0.3861)/1000) + " sq mi";
@@ -630,6 +642,7 @@ org.sarsoft.controller.MapToolsController.prototype.measure = function(point, po
 		that.dlg.show();
 	});
 	GEvent.addListener(poly, "cancelline", function() {
+		that.imap.unlockContextMenu();
 		that.imap.map.removeOverlay(poly);
 	});
 }
