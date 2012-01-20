@@ -630,6 +630,7 @@ org.sarsoft.controller.MapToolsController.prototype.measure = function(point, po
 	$(document).bind("keydown", this.fn);
 
 	GEvent.addListener(poly, "endline", function() {
+		$(document).unbind("keydown", that.fn);
 		that.imap.unlockContextMenu();
 		if(polygon) {
 			var area = poly.getArea();
@@ -642,6 +643,7 @@ org.sarsoft.controller.MapToolsController.prototype.measure = function(point, po
 		that.dlg.show();
 	});
 	GEvent.addListener(poly, "cancelline", function() {
+		$(document).unbind("keydown", that.fn);
 		that.imap.unlockContextMenu();
 		that.imap.map.removeOverlay(poly);
 	});
