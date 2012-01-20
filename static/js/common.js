@@ -99,7 +99,7 @@ org.sarsoft.Loader.queue(function() {YAHOO.util.Event.throwErrors = true;});
 
 org.sarsoft.view.ContextMenu = function() {
 	var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;
-	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 9800, zIndex: "1000"});
+	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 500, showdelay : 0, zIndex: "1000"});
 	this.menu.render(document.body);
 }
 
@@ -117,7 +117,7 @@ org.sarsoft.view.ContextMenu.prototype._addItems = function(menu, items, subject
 	for(var i = 0; i < items.length; i++) {
 		if(items[i].applicable(subject)) {
 			if(items[i].items != null) {
-				var submenu = new YAHOO.widget.Menu("ContextMenu_" + org.sarsoft.view.ContextMenu._idx++, { hidedelay : 9800, zIndex : "1010"});
+				var submenu = new YAHOO.widget.Menu("ContextMenu_" + org.sarsoft.view.ContextMenu._idx++, { hidedelay : 750, showdelay : 0, zIndex : "1010"});
 				this._addItems(submenu, items[i].items, subject, data);
 				var item = menu.addItem(new YAHOO.widget.MenuItem(items[i].text, { submenu: submenu}));
 			} else {
