@@ -110,15 +110,15 @@ OverlayDropdownMapControl = function() {
 	this.extras = document.createElement("span");
 	this.typeSelect = document.createElement("select");
 	this.overlaySelect = document.createElement("select");
-	this.opacityInput = jQuery('<input style="width: 2em; margin-left: 5px" value="0"></input>');
+	this.opacityInput = jQuery('<input style="margin-left: 5px" size="2" value="0"></input>');
 	
-	var sliderbg = jQuery('<div style="border-bottom: 1px solid black; width: 58px; float: left; margin-left: 5px; font-size: larger"></div>');
-	var sliderthumb = jQuery('<div style="cursor: pointer; font-weight: bold">&darr;</div>').appendTo(sliderbg);
-	this.opacitySlider = YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, 50);
+	var sliderbg = jQuery('<div style="border-bottom: 1px solid #808080; width: 105px; float: left; margin-left: 5px; height: 6px"></div>');
+	var sliderthumb = jQuery('<div style="cursor: pointer; width: 5px; height: 12px; background-color: black">&#32;</div>').appendTo(sliderbg);
+	this.opacitySlider = YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, 100);
 	this.opacitySlider.subscribe('change', function() {
 		if(!that._inSliderSet) {
 			that._inSliderHandler = true;
-			that.opacityInput.val(that.opacitySlider.getValue()*2);
+			that.opacityInput.val(that.opacitySlider.getValue());
 			that.handleLayerChange();
 			that._inSliderHandler = false;
 		}
@@ -128,17 +128,14 @@ OverlayDropdownMapControl = function() {
 	this.div.append(this.extras, this.typeSelect);
 	
 	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(this.div);
-	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 2px" title="Add More Layers">+</span>').appendTo(tPlus);
+	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 2px" title="Additional Layers">+</span>').appendTo(tPlus);
 	this.alphaOverlayPlus = tps[0];
 
-	var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 22em"></div>').appendTo(tPlus);
+	var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
 
 	this.opacityInput.change(function() { that.handleLayerChange() });
 	$(this.typeSelect).change(function() { that.handleLayerChange() });
 	$(this.overlaySelect).change(function() { that.handleLayerChange() });
-	this.opacityInput.keydown(function(event) {
-		if(event.keyCode == 13) if(tDiv != null) tDiv.css("visibility","hidden");
-	});
 
 	GEvent.addDomListener(tps[0], "click", function() {
 		if(tDiv.css("visibility")=="hidden") {
@@ -149,10 +146,14 @@ OverlayDropdownMapControl = function() {
 		}
 		});
 	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>');
-	tDiv.append(jQuery('<div style="color: black; font-weight: normal"></div>').append(jQuery('<div style="float: left"></div>').append(this.overlaySelect, "@", this.opacityInput, "%"), sliderbg, upArrow));
+	tDiv.append(jQuery('<div style="color: black; font-weight: normal"></div>').append(
+			jQuery('<div style="float: left"></div>').append(this.overlaySelect, "@", this.opacityInput, "%"), 
+			upArrow).append(
+		jQuery('<div style="clear: both; height: 15px"></div>').append(
+				'<div style="float: left; margin-left: 2px">Enter % or: <span style="color: #606060; margin-left: 5px">0</span></div>', sliderbg, '<div style="float: left; margin-left: 5px; color: #606060">100</div>')));
 	upArrow.click(function() {tDiv.css("visibility", "hidden");});
-
-	this.aDiv = jQuery('<div style="clear: both"></div>').appendTo(tDiv);
+	
+	this.aDiv = jQuery('<div style="clear: both; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #808080"></div>').appendTo(tDiv);
 	this.tDiv = tDiv;
 }
 
@@ -282,7 +283,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		// update visual controls
 		this.opacityInput.val(Math.round(opacity*100));
 		this._inSliderSet = true;
-		if(!this._inSliderHandler) this.opacitySlider.setValue(opacity*50);
+		if(!this._inSliderHandler) this.opacitySlider.setValue(opacity*100);
 		this._inSliderSet = false;
 		for(var i = 0; i < this.types.length; i++) {
 			if(this.types[i] == base) this.typeSelect.value = i;
