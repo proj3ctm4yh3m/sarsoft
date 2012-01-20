@@ -1269,17 +1269,21 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
 	this._menuItems = [];
+	this._menuItemsOverride = null;
 	this.registered = new Object();
 	this._mapInfoMessages = new Object();
 	
 	if(typeof map == undefined) return;
 	GEvent.addListener(map, "singlerightclick", function(point, src, overlay) {
 		var obj = null;
-		if(overlay != null) {
-			if(that.polys[overlay.id] != null) obj = that.polys[overlay.id].way;
-			if(that.markers[overlay.id] != null) obj = that.markers[overlay.id].waypoint;
+		if(overlay != null && that.markers[overlay.id] != null) {
+			obj = that.markers[overlay.id].waypoint;
+		} else if(that._selected != null) {
+			obj = that._selected;
+		} else if(overlay != null && that.polys[overlay.id] != null) {
+			obj = that.polys[overlay.id].way;
 		}
-		if(that._menuItems.length > 0) {
+		if(that._menuItems.length > 0  && that._menuItemsOverride == null) {
 			that._contextMenu.setItems(that._menuItems)
 			that._contextMenu.show(point, obj);
 		}
@@ -1485,13 +1489,32 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 	poly.id = id;
 	poly.label = labelOverlay;
 	GEvent.addListener(poly, "mouseover", function() {
+		if(config.clickable) that.select(that.polys[id].way);
 		if(way.displayMessage == null) {
 			that._infomessage(way.name);
 		} else {
 			that._infomessage(way.displayMessage);
 		}
 	});
+	GEvent.addListener(poly, "mouseout", function() {
+		if(config.clickable) that.unselect(that.polys[id].way);
+	});
 	return poly;
+}
+
+org.sarsoft.InteractiveMap.prototype.select = function(way) {
+	if(this._selected != null) this.unselect(this._selected);
+	var overlay = this.polys[way.id].overlay;
+	var config = this.polys[way.id].config;
+	this._selected = way;
+	overlay.setStrokeStyle({weight: (config.weight != null) ? config.weight + 1 : 4});
+}
+
+org.sarsoft.InteractiveMap.prototype.unselect = function(way) {
+	var overlay = this.polys[way.id].overlay;
+	var config = this.polys[way.id].config;
+	this._selected = null;
+	overlay.setStrokeStyle({weight: (config.weight != null) ? config.weight : 3});
 }
 
 org.sarsoft.InteractiveMap.prototype.removeWay = function(way) {
@@ -1624,19 +1647,48 @@ org.sarsoft.InteractiveMap.prototype.edit = function(id) {
 	this.polys[id].overlay.enableEditing();
 }
 
-org.sarsoft.InteractiveMap.prototype.redraw = function(id, callback) {
+org.sarsoft.InteractiveMap.prototype.lockContextMenu = function(items) {
+	if(items == null) items = true;
+	this._menuItemsOverride = items;
+}
+
+org.sarsoft.InteractiveMap.prototype.unlockContextMenu = function() {
+	this._menuItemsOverride = null;
+}
+
+org.sarsoft.InteractiveMap.prototype.redraw = function(id, onEnd, onCancel) {
 	var that = this;
 	var label = this.polys[id].overlay.label;
 	this._removeOverlay(this.polys[id].overlay);
 	this.polys[id].overlay = this._addOverlay({id : id, polygon: this.polys[id].way.polygon}, this.polys[id].config);
 	this.polys[id].overlay.label = label;
 	this.polys[id].overlay.enableDrawing();
-	if(callback == null) callback = function() { that.edit(id); }
+	if(onEnd == null) onEnd = function() { that.edit(id); }
+	if(onCancel == null) onCancel = function() { that.discard(id); }
+	this.lockContextMenu();
+	
+	this.fn = function(e) {
+		if(e.which == 27) {
+			$(document).unbind("keydown", that.fn);
+			var overlay = that.polys[id].overlay;
+			overlay.disableEditing();
+			if((that.polys[id].way.polygon && overlay.getVertexCount() < 3) || overlay.getVertexCount() < 2) {
+				GEvent.trigger(overlay, "cancelline");
+			} else {
+				if(that.polys[id].way.polygon) overlay.insertVertex(overlay.getVertexCount(), overlay.getVertex(0));
+				GEvent.trigger(overlay, "endline");
+			}
+		}
+	}
+	$(document).bind("keydown", this.fn);
+
 	GEvent.addListener(this.polys[id].overlay, "endline", function() {
-		window.setTimeout(callback, 200);
+		that.unlockContextMenu();
+		window.setTimeout(onEnd, 200);
 	});
-	GEvent.addListener(this.polys[id], "cancelline", function() {
-		that.discard(id);
+	GEvent.addListener(this.polys[id].overlay, "cancelline", function() {
+		that.unlockContextMenu();
+		window.setTimeout(onCancel, 200);
 	});
 }
 
