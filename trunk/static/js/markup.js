@@ -37,7 +37,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
 	
 	div = jQuery('<div class="item"><label for="image">Image:</label></div>').appendTo(form);
-	this.imgDD = jQuery('<select><option value="color">color</option><option value="nps">NPS</option><option value="other">other</option></select>').appendTo(div);
+	this.imgDD = jQuery('<select><option value="color">Colors</option><option value="activities">Activities</option><option value="symbols">Symbols</option><option value="npsactivities">NPS Activities</option><option value="npssymbols">NPS Symbols</option><option value="arrows">Arrows</option></select>').appendTo(div);
 	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px; padding-left: 10px" valign="middle"/>').appendTo(div);
 	this.imageInput = jQuery('<input name="image" type="text" size="8" style="margin-left: 10px"/>').appendTo(div);
 
@@ -63,9 +63,11 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	});
 
 	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(form);
-	this.images = {nps : ["nps-parking","nps-4wd","nps-dirtbike","nps-snowmobile","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-shelter","nps-picnic",
-	                      "nps-shower","nps-water","nps-fire","nps-ski","nps-xc","nps-skate","nps-roadbike","nps-climbing","nps-scramble","nps-rockfall","nps-slip","nps-diving","nps-caving","nps-canoe","nps-anchor","nps-camera"],
-			other : ["warning","crossbones","avy1","fire","rescue","rocks","cp","clue","binoculars","car","drinkingwater","harbor","picnic","shelter","tent","wetland","waterfall","climbing","skiing","spelunking","hunting","snowmobile","motorbike"],
+	this.images = {npsactivities : ["nps-ski","nps-xc","nps-skate","nps-climbing","nps-scramble","nps-caving","nps-diving","nps-canoe","nps-roadbike","nps-dirtbike","nps-4wd","nps-snowmobile","nps-camera"],
+	        npssymbols : ["nps-parking","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-fire","nps-shower","nps-anchor","nps-rockfall","nps-slip","nps-shelter","nps-picnic","nps-water"],
+	        arrows : ["arr-sw","arr-w","arr-nw","arr-n","arr-ne","arr-e","arr-se","arr-s"],
+	        activities : ["skiing","xc","walking","snowshoe","climbing","spelunking","windsurf","snorkel","hunting","mountainbike","bike","motorbike","car","snowmobile","camera"],
+	        symbols : ["cp","clue","warning","crossbones","antenna","avy1","binoculars","fire","flag","plus","rescue","tent","waterfall","wetland","harbor","rocks","shelter","picnic","drinkingwater"],
 			color : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"]}
 	this.icDivs = {};
 	for(var key in this.images) {
