@@ -614,7 +614,7 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 	
 org.sarsoft.controller.MapToolsController.prototype.measure = function(point, polygon) {
 	var that = this;
-	var poly = (polygon) ? new GPolygon([], "#FF0000",2,1,"#FF0000",0.2) : new GPolyline([], "#FF0000", 2, 1);
+	var poly = (polygon) ? new GPolygon([], "#000000",2,1,"#000000",0.2) : new GPolyline([], "#000000", 2, 1);
 	this.imap.lockContextMenu();
 	this.imap.map.addOverlay(poly);
 	poly.enableDrawing();
