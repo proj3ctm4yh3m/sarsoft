@@ -1683,10 +1683,12 @@ org.sarsoft.InteractiveMap.prototype.redraw = function(id, onEnd, onCancel) {
 	$(document).bind("keydown", this.fn);
 
 	GEvent.addListener(this.polys[id].overlay, "endline", function() {
+		$(document).unbind("keydown", that.fn);
 		that.unlockContextMenu();
 		window.setTimeout(onEnd, 200);
 	});
 	GEvent.addListener(this.polys[id].overlay, "cancelline", function() {
+		$(document).unbind("keydown", that.fn);
 		that.unlockContextMenu();
 		window.setTimeout(onCancel, 200);
 	});
