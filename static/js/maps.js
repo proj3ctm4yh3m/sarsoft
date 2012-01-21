@@ -1502,19 +1502,38 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 	return poly;
 }
 
-org.sarsoft.InteractiveMap.prototype.select = function(way) {
+org.sarsoft.InteractiveMap.prototype.select = function(obj) {
+	if(this._selected != null && this._selected.lat != null) {
+		// if users mouseovers a way while still over a marker, cache it
+		this._cachedWaySelection = obj;
+		return;
+	}
+	var oldSelection = this._selected;
 	if(this._selected != null) this.unselect(this._selected);
-	var overlay = this.polys[way.id].overlay;
-	var config = this.polys[way.id].config;
-	this._selected = way;
-	overlay.setStrokeStyle({weight: (config.weight != null) ? config.weight + 1 : 4});
+	if(obj.lat != null) {
+		// can't select icons, but cache way for mouseout
+		this._selected = obj;
+		this._cachedWaySelection = oldSelection;
+	} else {
+		var overlay = this.polys[obj.id].overlay;
+		var config = this.polys[obj.id].config;
+		this._selected = obj;
+		this._cachedWaySelection = null;
+		overlay.setStrokeStyle({weight: (config.weight != null) ? config.weight + 1 : 4});
+	}
 }
 
-org.sarsoft.InteractiveMap.prototype.unselect = function(way) {
-	var overlay = this.polys[way.id].overlay;
-	var config = this.polys[way.id].config;
-	this._selected = null;
-	overlay.setStrokeStyle({weight: (config.weight != null) ? config.weight : 3});
+org.sarsoft.InteractiveMap.prototype.unselect = function(obj) {
+	if(obj.lat != null && obj == this._selected) {
+		// if unselecting a marker, check if we were also over a way
+		this._selected = null;
+		if(this._cachedWaySelection != null) this.select(this._cachedWaySelection);
+	} else {
+		var overlay = this.polys[obj.id].overlay;
+		var config = this.polys[obj.id].config;
+		if(obj == this._selected) this._selected = null;
+		overlay.setStrokeStyle({weight: (config.weight != null) ? config.weight : 3});
+	}
 }
 
 org.sarsoft.InteractiveMap.prototype.removeWay = function(way) {
@@ -1583,6 +1602,14 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 		labelOverlay = new ELabel(gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", new GSize(icon.iconSize.width*0.5, icon.iconSize.height*-0.5));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
+	}
+	if(config.clickable)  {
+		GEvent.addListener(marker, "mouseover", function() {
+			that.select(waypoint);
+		});
+		GEvent.addListener(marker, "mouseout", function() {
+			that.unselect(waypoint);
+		});
 	}
 	this.markers[waypoint.id] = { waypoint: waypoint, marker: marker, config: config, tooltip : tooltip, label : label};
 	return marker;
