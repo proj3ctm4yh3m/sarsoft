@@ -33,13 +33,13 @@ org.sarsoft.view.MarkerForm = function() {
 org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	var that = this;
 	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
-	var div = jQuery('<div class="item"><label for="label">Label:</label></div>').appendTo(form);
+	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(form);
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
 	
-	div = jQuery('<div class="item"><label for="image">Image:</label></div>').appendTo(form);
-	this.imgDD = jQuery('<select><option value="color">Colors</option><option value="activities">Activities</option><option value="symbols">Symbols</option><option value="npsactivities">NPS Activities</option><option value="npssymbols">NPS Symbols</option><option value="arrows">Arrows</option></select>').appendTo(div);
-	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px; padding-left: 10px" valign="middle"/>').appendTo(div);
-	this.imageInput = jQuery('<input name="image" type="text" size="8" style="margin-left: 10px"/>').appendTo(div);
+	div = jQuery('<div class="item"><label for="image" style="width: 80px">Image:</label>Currently:</div>').appendTo(form);
+	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px; padding-left: 5px; padding-right: 5px" valign="top"/>').appendTo(div);
+	div.append('<span style="padding-left: 5px; padding-right: 5px">Show me</span>');
+	this.imgDD = jQuery('<select><option value="circles">Circles</option><option value="activities">Activities</option><option value="symbols">Symbols</option><option value="npsactivities">NPS Activities</option><option value="npssymbols">NPS Symbols</option><option value="arrows">Arrows</option></select>').appendTo(div);
 
 	this.imgDDonChange = function() {
 		var val = that.imgDD.val();
@@ -50,17 +50,8 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 				that.icDivs[key].css('display', 'none');
 			}
 		}
-		if(val == "color") {
-			that.imageInput.css("display", "inline");
-		} else {
-			that.imageInput.css("display", "none");
-		}
 	}
 	this.imgDD.change(this.imgDDonChange);
-	this.imageInput.change(function() {
-		that.imageUrl = that.imageInput.val();
-		that.handleChange();
-	});
 
 	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(form);
 	this.images = {npsactivities : ["nps-ski","nps-xc","nps-skate","nps-climbing","nps-scramble","nps-caving","nps-diving","nps-canoe","nps-roadbike","nps-dirtbike","nps-4wd","nps-snowmobile","nps-camera"],
@@ -68,7 +59,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	        arrows : ["arr-sw","arr-w","arr-nw","arr-n","arr-ne","arr-e","arr-se","arr-s"],
 	        activities : ["skiing","xc","walking","snowshoe","climbing","spelunking","windsurf","snorkel","hunting","mountainbike","bike","motorbike","car","snowmobile","camera"],
 	        symbols : ["cp","clue","warning","crossbones","antenna","avy1","binoculars","fire","flag","plus","rescue","tent","waterfall","wetland","harbor","rocks","shelter","picnic","drinkingwater"],
-			color : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"]}
+			circles : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"]}
 	this.icDivs = {};
 	for(var key in this.images) {
 		var ic2 = jQuery('<div></div>').appendTo(imageContainer);
@@ -76,16 +67,25 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 		for(var i = 0; i < this.images[key].length; i++) {
 			var url = this.images[key][i];
 			if(url.indexOf("#") == 0) {
-				var swatch = jQuery('<img style="width: 20px; height: 20px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
-				swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["color"][j]); that.imageInput.trigger('change');}}());
+				var swatch = jQuery('<img style="width: 16px; height: 16px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
+				swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["circles"][j].substr(1)); that.imageInput.trigger('change');}}());
 			} else {
 				var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + url + '.png"/>').appendTo(ic2);
 				swatch.click(function() { var j = i; var l = key; return function() {
 					that.imageInput.val(""); that.imageUrl = that.images[l][j]; that.handleChange();}}());
 			}
 		}
+		if(key == "circles") {
+			ic2.append('<span style="padding-left: 5px">or color code</span>');
+			this.imageInput = jQuery('<input name="image" type="text" size="8" style="margin-left: 10px"/>').appendTo(ic2);
+		}
 	}
 	
+	this.imageInput.change(function() {
+		that.imageUrl = "#" + that.imageInput.val();
+		that.handleChange();
+	});
+
 	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
 	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(form);
 
@@ -96,11 +96,18 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 org.sarsoft.view.MarkerForm.prototype.handleChange = function() {
 	var url = this.imageUrl;
 	if(url == null) url = "";
+	var size = "20px";
+	var margin = "0px";
 	if(url.indexOf('#') == 0) {
+		size = "16px";
+		margin = "4px";
 		url = '/resource/imagery/icons/circle/' + url.substr(1) + '.png';
 	} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
 		url = '/static/images/icons/' + url + '.png';
 	}
+	this.imgSwatch.css("width", size);
+	this.imgSwatch.css("height", size);
+	this.imgSwatch.css("margin-right", margin);
 	this.imgSwatch.attr("src", url);
 }
 
@@ -112,9 +119,9 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.labelInput.val(obj.label);
 	this.imageUrl = obj.url;
 	if(this.imageUrl != null && this.imageUrl.indexOf("#")==0) {
-		this.imgDD.val("color");
+		this.imgDD.val("circles");
 		this.imgDDonChange();
-		this.imageInput.val(obj.url);
+		this.imageInput.val(obj.url.substr(1));
 	} else {
 		for(var key in this.images) {
 			for(var i = 0; i < this.images[key].length; i++) {
@@ -142,28 +149,29 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	var that = this;
 	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
 	
-	var div = jQuery('<div class="item"><label for="label">Label:</label></div>').appendTo(form);
+	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(form);
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);	
 
-	div = jQuery('<div class="item" style="clear: both"><label for="color">Weight:</label></div>').appendTo(form);
+	div = jQuery('<div class="item" style="clear: both"><label for="color" style="width: 80px">Weight:</label></div>').appendTo(form);
 	this.weightInput = jQuery('<select name="weight"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>').appendTo(div);
 
-	this.fillDiv = jQuery('<div class="item"><label for="color">Fill:</label></div>').appendTo(form);
+	this.fillDiv = jQuery('<div class="item"><label for="color" style="width: 80px">Fill:</label></div>').appendTo(form);
 	this.fillInput = jQuery('<select name="fill"><option value="0">None</option><option value="10">10%</option>' + 
 			'<option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>' +
 			'<option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>' +
 			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
 
-	div = jQuery('<div class="item"><label for="color">Color:</label></div>').appendTo(form);
-	this.colorInput = jQuery('<input name="color" type="text" size="8" style="float: left"/>').appendTo(div);
-	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left; margin-left: 10px"></div>').appendTo(div);
-	this.colorInput.change(function() {colorSwatch.css('background-color', that.colorInput.val())});
+	div = jQuery('<div class="item"><label for="color" style="width: 80px">Color:</label></div>').appendTo(form);
+	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left"></div>').appendTo(div);
+	div.append('<span style="float: left; margin-left: 5px">Click below or color code:</span>');
+	this.colorInput = jQuery('<input name="color" type="text" size="6" style="float: left; margin-left: 5px"/>').appendTo(div);
+	this.colorInput.change(function() {colorSwatch.css('background-color', '#' + that.colorInput.val())});
 	
 	var colorContainer = jQuery('<div style="clear: both; margin-top: 5px"></div>').appendTo(form);
 	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
 	for(var i = 0; i < colors.length; i++) {
 		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
-		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j]); that.colorInput.trigger('change');}}());
+		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j].substr(1)); that.colorInput.trigger('change');}}());
 	}	
 	
 	div = jQuery('<div class="item" style="padding-top: 5px; clear: both">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
@@ -173,11 +181,11 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
-	return {label : this.labelInput.val(), color : this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val(), comments: this.comments.val()};
+	return {label : this.labelInput.val(), color : "#" + this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val(), comments: this.comments.val()};
 }
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
-	this.colorInput.val(obj.color);
+	this.colorInput.val(obj.color != null ? obj.color.substr(1) : "");
 	this.colorInput.trigger('change');
 	this.fillInput.val(obj.fill);
 	this.weightInput.val(obj.weight);
