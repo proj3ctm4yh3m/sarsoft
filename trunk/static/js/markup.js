@@ -486,6 +486,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	var config = new Object();	
 	var tooltip = org.sarsoft.htmlescape(marker.label);
 	if(marker.comments != null && marker.comments.length > 0) tooltip = org.sarsoft.htmlescape(marker.comments);
+	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") || (marker.comments != null && marker.comments.length > 0)) config.clickable = true;
 	
 	if(marker.url == null || marker.url.length == 0) {
 		config.color = "#FF0000";
