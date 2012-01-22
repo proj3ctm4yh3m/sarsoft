@@ -112,8 +112,8 @@ OverlayDropdownMapControl = function() {
 	this.overlaySelect = document.createElement("select");
 	this.opacityInput = jQuery('<input style="margin-left: 5px" size="2" value="0"></input>');
 	
-	var sliderbg = jQuery('<div style="border-bottom: 1px solid #808080; width: 105px; float: left; margin-left: 5px; height: 6px"></div>');
-	var sliderthumb = jQuery('<div style="cursor: pointer; width: 5px; height: 12px; background-color: black">&#32;</div>').appendTo(sliderbg);
+	var sliderbg = jQuery('<div class="yui-h-slider" style="background: none; border-bottom: 1px solid #808080; width: 105px; float: left; margin-left: 5px; height: 6px"></div>');
+	var sliderthumb = jQuery('<div class="yui-slider-thumb" style="cursor: pointer; width: 5px; height: 12px; top: 0px; background-color: black">&#32;</div>').appendTo(sliderbg);
 	this.opacitySlider = YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, 100);
 	this.opacitySlider.subscribe('change', function() {
 		if(!that._inSliderSet) {
