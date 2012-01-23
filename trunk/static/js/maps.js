@@ -111,6 +111,8 @@ OverlayDropdownMapControl = function() {
 	this.extras = document.createElement("span");
 	this.typeSelect = document.createElement("select");
 	this.overlaySelect = document.createElement("select");
+	$(this.overlaySelect).css("margin-left", "3px");
+	$(this.overlaySelect).css("margin-right", "3px");
 	this.opacityInput = jQuery('<input style="margin-left: 5px" size="2" value="0"></input>');
 	
 	var sliderbg = jQuery('<div class="yui-h-slider" style="background: none; border-bottom: 1px solid #808080; width: 105px; float: left; margin-left: 5px; height: 6px"></div>');
@@ -129,7 +131,7 @@ OverlayDropdownMapControl = function() {
 	this.div.append(this.extras, this.typeSelect);
 	
 	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(this.div);
-	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 2px" title="Additional Layers">+</span>').appendTo(tPlus);
+	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 3px" title="Additional Layers">+</span>').appendTo(tPlus);
 	this.alphaOverlayPlus = tps[0];
 
 	var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
@@ -148,7 +150,7 @@ OverlayDropdownMapControl = function() {
 		});
 	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>');
 	tDiv.append(jQuery('<div style="color: black; font-weight: normal"></div>').append(
-			jQuery('<div style="float: left"></div>').append(this.overlaySelect, "@", this.opacityInput, "%"), 
+			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlaySelect, "@", this.opacityInput, "%"), 
 			upArrow).append(
 		jQuery('<div style="clear: both; height: 15px"></div>').append(
 				'<div style="float: left; margin-left: 2px">Enter % or: <span style="color: #606060; margin-left: 5px">0</span></div>', sliderbg, '<div style="float: left; margin-left: 5px; color: #606060">100</div>')));
