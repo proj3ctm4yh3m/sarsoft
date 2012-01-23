@@ -71,6 +71,7 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
 		$(element).css({"z-index": 0, overflow: "hidden"});
+		jQuery(map.getPane(G_MAP_MARKER_MOUSE_TARGET_PANE)).bind('contextmenu', function() { return false;});
 
 		if(typeof G_PHYSICAL_MAP != "undefined") {
 			map.addMapType(G_PHYSICAL_MAP);
@@ -1449,7 +1450,10 @@ org.sarsoft.InteractiveMap.prototype._createPolyline = function(vertices, config
 }
 
 org.sarsoft.InteractiveMap.prototype._removeOverlay = function(way) {
+	this.unselect(way);
 	var overlay = this.polys[way.id].overlay;
+	GEvent.clearListeners(overlay, "mouseover");
+	GEvent.clearListeners(overlay, "mouseout");
 	this.map.removeOverlay(overlay);
 	if(overlay.label != null) this.map.removeOverlay(overlay.label);
 }
@@ -1489,7 +1493,7 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 	poly.id = id;
 	poly.label = labelOverlay;
 	GEvent.addListener(poly, "mouseover", function() {
-		if(config.clickable) that.select(that.polys[id].way);
+		if(config.clickable) that.select(way);
 		if(way.displayMessage == null) {
 			that._infomessage(way.name);
 		} else {
@@ -1497,7 +1501,7 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 		}
 	});
 	GEvent.addListener(poly, "mouseout", function() {
-		if(config.clickable) that.unselect(that.polys[id].way);
+		if(config.clickable) that.unselect(way);
 	});
 	return poly;
 }
@@ -1528,10 +1532,11 @@ org.sarsoft.InteractiveMap.prototype.unselect = function(obj) {
 		// if unselecting a marker, check if we were also over a way
 		this._selected = null;
 		if(this._cachedWaySelection != null) this.select(this._cachedWaySelection);
-	} else {
+	} else if(this.polys[obj.id] != null) {
 		var overlay = this.polys[obj.id].overlay;
 		var config = this.polys[obj.id].config;
-		if(obj == this._selected) this._selected = null;
+		if(this._selected != null && (obj == this._selected || obj.id == this._selected.id)) this._selected = null;
+		if(this._cachedWaySelection != null && (obj == this._cachedWaySelection || obj.id == this._cachedWaySelection.id)) this._cachedWaySelection = null;
 		overlay.setStrokeStyle({weight: (config.weight != null) ? config.weight : 3});
 	}
 }
@@ -1575,7 +1580,10 @@ org.sarsoft.InteractiveMap.prototype.removeRangeRings = function() {
 }
 
 org.sarsoft.InteractiveMap.prototype._removeMarker = function(waypoint) {
+	this.unselect(waypoint);
 	var marker = this.markers[waypoint.id].marker;
+	GEvent.clearListeners(marker, "mouseover");
+	GEvent.clearListeners(marker, "mouseout");
 	this.map.removeOverlay(marker);
 	if(marker.label != null) this.map.removeOverlay(marker.label);
 }
@@ -1686,7 +1694,7 @@ org.sarsoft.InteractiveMap.prototype.unlockContextMenu = function() {
 org.sarsoft.InteractiveMap.prototype.redraw = function(id, onEnd, onCancel) {
 	var that = this;
 	var label = this.polys[id].overlay.label;
-	this._removeOverlay(this.polys[id].overlay);
+	this._removeOverlay(this.polys[id].overlay);	
 	this.polys[id].overlay = this._addOverlay({id : id, polygon: this.polys[id].way.polygon}, this.polys[id].config);
 	this.polys[id].overlay.label = label;
 	this.polys[id].overlay.enableDrawing();
@@ -2109,10 +2117,10 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
 		}
 	});
 	
-	tr = jQuery('<tr><td valign="top">Address</td></tr>').appendTo(tbody);
+	tr = jQuery('<tr><td valign="top">Place Name</td></tr>').appendTo(tbody);
 	td = jQuery("<td/>").appendTo(tr);
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(td);
-	td.append('<br/><span class="hint">e.g. "Truckee, CA" or "Mt Rose, NV".</span>');
+	td.append('<br/><span class="hint">e.g. "Truckee, CA" or "Mount Rainier".</span>');
 	if(typeof GClientGeocoder == 'undefined') {
 		tr.css("display", "none");
 	}

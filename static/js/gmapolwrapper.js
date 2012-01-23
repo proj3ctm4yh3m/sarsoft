@@ -26,6 +26,15 @@ GEvent.addDomListener = function(obj, event, handler) {
 	}
 }
 
+GEvent.clearListeners(obj, event) {
+	for(var i = 0; i < GEvent._handlers[0].length; i++) {
+		if(GEvent._handlers[0][i] == obj && GEvent._handlers[1][i] == event)
+			delete GEvent._handlers[1][i];
+			delete GEvent._handlers[2][i];
+			delete GEvent._handlers[3][i];
+	}
+}
+
 G_SATELLITE_MAP = new Object();
 G_SATELLITE_MAP.getProjection = function() {
 };
@@ -35,6 +44,7 @@ G_ANCHOR_TOP_RIGHT = 5;
 G_MAP_FLOAT_SHADOW_PANE = 6;
 G_MAP_MAP_PANE=7;
 G_MAP_OVERLAY_LAYER_PANE=8;
+G_MAP_MARKER_MOUSE_TARGET_PANE=9;
 
 function GCopyrightCollection() {}
 GCopyrightCollection.prototype.addCopyright = function() {};
@@ -265,7 +275,8 @@ GMap2.prototype.fromDivPixelToLatLng = function(px) {
 
 GMap2.prototype.getPane = function(pane) {
 	if(pane == G_MAP_FLOAT_SHADOW_PANE) return this.ol.markerLayer.div;
-	if(pane == G_MAP_MAP_PANE) return this.ol.map.baseLayer	.div;
+	if(pane == G_MAP_MAP_PANE) return this.ol.map.baseLayer.div;
+	if(pane == G_MAP_MARKER_MOUSE_TARGET_PANE) return this.ol.markerLayer.div;
 }
 
 GMap2.prototype.addMapType = function(type) {

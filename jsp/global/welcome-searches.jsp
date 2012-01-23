@@ -30,7 +30,7 @@
 </p>
 </form>
 
-<div style="padding-top: 15px">If known, enter the initial location in UTM, Lat/Lng, or as an address:</div>
+<div style="padding-top: 15px">If known, enter the initial location in UTM, Lat/Lng, or as an address or place name:</div>
 <div id="searchlocation">
 </div>
 
