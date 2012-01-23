@@ -209,6 +209,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.shapes = new Object();
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
+	this.embedded = embedded;
 	if(!embedded) {
 		this.alertDlgDiv = document.createElement("div");
 		this.alertDlg = org.sarsoft.view.AlertDialog("Comments", this.alertDlgDiv)
@@ -486,7 +487,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	var config = new Object();	
 	var tooltip = org.sarsoft.htmlescape(marker.label);
 	if(marker.comments != null && marker.comments.length > 0) tooltip = org.sarsoft.htmlescape(marker.comments);
-	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") || (marker.comments != null && marker.comments.length > 0)) config.clickable = true;
+	if(!this.embedded && ((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") || (marker.comments != null && marker.comments.length > 0))) config.clickable = true;
 	
 	if(marker.url == null || marker.url.length == 0) {
 		config.color = "#FF0000";
@@ -522,7 +523,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape)
 	shape.way.displayMessage = org.sarsoft.htmlescape(shape.label) + " (" + shape.formattedSize + ")";
 	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
 
-	this.imap.addWay(shape.way, {clickable : ((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") || (shape.comments != null && shape.comments.length > 0)), fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
+	this.imap.addWay(shape.way, {clickable : (!this.embedded && ((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") || (shape.comments != null && shape.comments.length > 0))), fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.refreshMarkers = function(markers) {
