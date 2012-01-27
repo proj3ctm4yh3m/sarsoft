@@ -100,6 +100,8 @@ public class CollaborativeMapController extends JSONBaseController {
 		map.put("id", shp.getId());
 		map.put("label", shp.getLabel());
 		map.put("way", shp.getWay());
+		map.put("color", shp.getColor());
+		map.put("weight", shp.getWeight());
 		
 		Map<String, String> attrs = new HashMap<String, String>();
 		attrs.put("color", shp.getColor());

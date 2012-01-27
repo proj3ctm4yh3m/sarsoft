@@ -144,7 +144,7 @@
 
 <xsl:template name="WayToKml">
 	<xsl:choose>
-	<xsl:when test="json:polygon=true()">
+	<xsl:when test="string(json:polygon)='true'">
 		<xsl:call-template name="PolygonToKml"/>
 	</xsl:when>
 	<xsl:otherwise>
