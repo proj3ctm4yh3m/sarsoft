@@ -34,7 +34,7 @@ org.sarsoft.Loader.queue(function() {
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", 'Leave map view and return to the home page?<br/><br/>You might also want to view <a href="/guide?id=${tenant.name}">this map\'s guide</a>.<br/><br/>', "Leave", "Cancel", function() {
 		window.location = "/maps";
 	});
-	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
+	var goback = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
 	GEvent.addDomListener(goback, "click", function() {
 		leaveDlg.show();
 	});
