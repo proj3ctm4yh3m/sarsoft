@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 
@@ -152,12 +153,26 @@ public class AdminController extends JSONBaseController {
 			return bounce(model);
 		}
 		
-		request.getSession().setAttribute("tenantid", name);
+		HttpSession session = request.getSession(true);
+		
+		session.setAttribute("tenantid", name);
 		RuntimeProperties.setTenant(name);
 		
-		request.getSession().setAttribute("userPermission", permission);
+		session.setAttribute("userPermission", permission);
 		RuntimeProperties.setUserPermission(permission);
-		
+
+		if(session.getAttribute("authedTenants") == null) {
+			synchronized(this) {
+				if(session.getAttribute("authedTenants") == null) session.setAttribute("authedTenants", new HashMap<String, Permission>());
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		Map<String, Permission> authedTenants = (Map<String, Permission>) session.getAttribute("authedTenants");
+		synchronized(authedTenants) {
+			authedTenants.put(name, permission);
+		}
+
 		String dest = request.getParameter("dest");
 		if(dest != null && dest.length() > 0) return "redirect:" + dest;
 		return null;
@@ -274,8 +289,12 @@ public class AdminController extends JSONBaseController {
 	public String logout(Model model, HttpServletRequest request) {
 		RuntimeProperties.setUsername(null);
 		RuntimeProperties.setTenant(null);
-		request.getSession(true).removeAttribute("tenantid");
-		request.getSession(true).removeAttribute("username");
+		
+		HttpSession session = request.getSession(true);
+		session.removeAttribute("tenantid");
+		session.removeAttribute("username");
+		session.removeAttribute("authedTenants");
+
 		return bounce(model);
 	}
 	

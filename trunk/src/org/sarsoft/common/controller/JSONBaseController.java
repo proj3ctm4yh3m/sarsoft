@@ -200,7 +200,9 @@ public abstract class JSONBaseController {
 				if(tenant.getDatum() != null) datum = tenant.getDatum();
 			}
 			header = header + "org.sarsoft.map.datum=\"" + datum + "\"\n" +
+				"org.sarsoft.tenantid=\"" + RuntimeProperties.getTenant() + "\"\n" +
 				"org.sarsoft.userPermissionLevel=\"" + RuntimeProperties.getUserPermission() + "\"";
+			
 			header = header + "</script>\n";
 				
 			if("google".equals(this.mapViewer)) {

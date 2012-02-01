@@ -1,6 +1,7 @@
 package org.sarsoft.common.util;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -21,9 +22,29 @@ public class RequestPropertyFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest servletRequest = (HttpServletRequest) request;
 		if(!RuntimeProperties.isInitialized()) RuntimeProperties.initialize(servletRequest.getSession(true).getServletContext());
-		RuntimeProperties.setTenant((String) servletRequest.getSession(true).getAttribute("tenantid"));
+
+		String name = (String) servletRequest.getSession(true).getAttribute("tenantid");
+		Permission permission = (Permission) servletRequest.getSession(true).getAttribute("userPermission");
+
+		String tid = request.getParameter("tid");
+		if(tid != null && !tid.equalsIgnoreCase(name)) {
+			@SuppressWarnings("unchecked")
+			Map<String, Permission> authedTenants = (Map<String, Permission>) ((HttpServletRequest) request).getSession().getAttribute("authedTenants");
+			if(authedTenants != null) {
+				Permission p = null;
+				synchronized(authedTenants) {
+					p = authedTenants.get(tid);
+				}
+				if(p != null) {
+					name = tid;
+					permission = p;
+				}
+			}
+		}
+
+		RuntimeProperties.setTenant(name);
 		RuntimeProperties.setUsername((String) servletRequest.getSession(true).getAttribute("username"));
-		RuntimeProperties.setUserPermission((Permission) servletRequest.getSession(true).getAttribute("userPermission"));
+		RuntimeProperties.setUserPermission(permission);
 		RuntimeProperties.setServerName(servletRequest.getServerName());
 		RuntimeProperties.setServerPort(servletRequest.getServerPort());
 		chain.doFilter(request, response);

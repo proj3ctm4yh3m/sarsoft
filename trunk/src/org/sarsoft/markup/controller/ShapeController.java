@@ -76,7 +76,7 @@ public class ShapeController extends JSONBaseController {
 		List<Waypoint> waypoints = way.getWaypoints();
 		waypoints.removeAll(waypoints);
 		waypoints.addAll((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
-		dao.save(way);
+		dao.save(shape);
 		return json(model, way);
 	}
 	
