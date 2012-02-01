@@ -949,7 +949,7 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 	this._show = true;
 	
 	var div = jQuery('<div style="text-align: right; cursor: pointer" class="noprint"></div>');
-	this.minmax = jQuery('<img src="/static/images/left.png" title="Show Coordinates" style="display: none"/>').appendTo(div);
+	this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/left.png" title="Show Coordinates" style="display: none"/>').appendTo(div);
 	this.display = jQuery('<div style="background-color: white; font-weight: bold" title="Hide Coordinates"></div>').appendTo(div);
 
 	div.click(function(event) {
@@ -1040,7 +1040,7 @@ org.sarsoft.MapSizeWidget = function(imap) {
 	var that = this;
 	this.pageSizeDlg = new org.sarsoft.view.MapSizeDlg(imap.map);
 	var pagesetup = document.createElement("img");
-	pagesetup.src="/static/images/print.png";
+	pagesetup.src=org.sarsoft.imgPrefix + "/print.png";
 	pagesetup.style.cursor="pointer";
 	pagesetup.style.verticalAlign="middle";
 	pagesetup.title = "Adjust page size for printing";
@@ -1073,7 +1073,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 		that.locationEntryForm.read(function (gll) {that.imap.map.setCenter(gll, 14);});
 	});
 	
-	var find = jQuery('<img src="/static/images/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>')[0];
+	var find = jQuery('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>')[0];
 	GEvent.addDomListener(find, "click", function() {
 		that.locationEntryForm.clear();
 		that.initializeDlg();
@@ -1123,7 +1123,7 @@ org.sarsoft.view.MapSetupWidget = function(imap) {
 	var style = {position : "absolute", "z-index" : "2500", top : "100px", left : "100px", width : "500px"};
 	this._dialog = org.sarsoft.view.CreateDialog("Map Setup", this._body, "Update", "Cancel", function() { that.handleSetupChange() }, style);
 	
-	var setup = jQuery('<img src="/static/images/config.png" style="cursor: pointer; vertical-align: middle" title="Map Setup"/>')[0];
+	var setup = jQuery('<img src="' + org.sarsoft.imgPrefix + '/config.png" style="cursor: pointer; vertical-align: middle" title="Map Setup"/>')[0];
 	GEvent.addDomListener(setup, "click", function() {
 		that.showDlg();
 	});
@@ -1984,7 +1984,7 @@ org.sarsoft.MapInfoControl.prototype.initialize = function(map) {
 	this.minimized = false;
 	this.div = document.createElement("div");
 	this.ctrl = jQuery('<span style="background: white" class="noprint"></span>').appendTo(this.div);
-	this.min = jQuery('<img style="cursor: pointer; width: 12px; height: 12px" src="/static/images/right.png"/>').appendTo(this.ctrl);
+	this.min = jQuery('<img style="cursor: pointer; width: 12px; height: 12px" src="' + org.sarsoft.imgPrefix + '/right.png"/>').appendTo(this.ctrl);
 	GEvent.addDomListener(this.min[0], "click", function() {
 		that.minmax();
 	});
@@ -1998,12 +1998,12 @@ org.sarsoft.MapInfoControl.prototype.minmax = function() {
 	if(this.minimized) {
 		this.ctrl.css("padding-right", "0");
 		this.msg.css("display", "inline");
-		this.min.attr("src", "/static/images/right.png");
+		this.min.attr("src", org.sarsoft.imgPrefix + "/right.png");
 		this.minimized = false;
 	} else {
 		this.ctrl.css("padding-right", "1em");
 		this.msg.css("display", "none");
-		this.min.attr("src", "/static/images/left.png");
+		this.min.attr("src", org.sarsoft.imgPrefix + "/left.png");
 		this.minimized = true;
 	}
 }

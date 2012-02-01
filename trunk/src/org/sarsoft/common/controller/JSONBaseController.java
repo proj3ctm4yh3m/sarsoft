@@ -216,6 +216,7 @@ public abstract class JSONBaseController {
 		synchronized(this) {
 			String preheader = "if(typeof org == \"undefined\") org = new Object();\nif(typeof org.sarsoft == \"undefined\") org.sarsoft = new Object();\nif(typeof org.sarsoft.map == \"undefined\") org.sarsoft.map = new Object();" +
 			"org.sarsoft.Constants=" + JSONAnnotatedPropertyFilter.fromObject(Constants.all) + "\n" +
+			"org.sarsoft.imgPrefix=\"" + getProperty("sarsoft.images.url") + "\"\n" +
 			"org.sarsoft.garmin = new Object(); org.sarsoft.garmin.hostName=\"http://" + RuntimeProperties.getServerName() +  "\"\n" +
 			"org.sarsoft.garmin.deviceKey=\"" + this.getProperty("garmin.key." + RuntimeProperties.getServerName()) + "\"\n" +
 			"org.sarsoft.map._default = new Object();\n" +

@@ -70,7 +70,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 				var swatch = jQuery('<img style="width: 16px; height: 16px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
 				swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["circles"][j].substr(1)); that.imageInput.trigger('change');}}());
 			} else {
-				var swatch = jQuery('<img style="width: 20px; height: 20px" src="/static/images/icons/' + url + '.png"/>').appendTo(ic2);
+				var swatch = jQuery('<img style="width: 20px; height: 20px" src="' + org.sarsoft.imgPrefix + '/icons/' + url + '.png"/>').appendTo(ic2);
 				swatch.click(function() { var j = i; var l = key; return function() {
 					that.imageInput.val(""); that.imageUrl = that.images[l][j]; that.handleChange();}}());
 			}
@@ -103,7 +103,7 @@ org.sarsoft.view.MarkerForm.prototype.handleChange = function() {
 		margin = "4px";
 		url = '/resource/imagery/icons/circle/' + url.substr(1) + '.png';
 	} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
-		url = '/static/images/icons/' + url + '.png';
+		url = org.sarsoft.imgPrefix + '/icons/' + url + '.png';
 	}
 	this.imgSwatch.css("width", size);
 	this.imgSwatch.css("height", size);
@@ -349,7 +349,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			}
 		});
 		
-		var icon = jQuery('<img src="/static/images/gps.png" style="cursor: pointer; vertical-align: middle" title="Export"/>')[0];
+		var icon = jQuery('<img src="' + org.sarsoft.imgPrefix + '/gps.png" style="cursor: pointer; vertical-align: middle" title="Export"/>')[0];
 		GEvent.addDomListener(icon, "click", function() {
 			that.gps.shape.empty();
 			for(var key in that.shapes) {
@@ -494,7 +494,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	} else if(marker.url.indexOf('#') == 0) {
 		config.color = marker.url;
 	} else if(marker.url.indexOf('/') == -1 && marker.url.indexOf('.') == -1) {
-		config.icon = org.sarsoft.MapUtil.createIcon(20, "/static/images/icons/" + marker.url + ".png");
+		config.icon = org.sarsoft.MapUtil.createIcon(20, org.sarsoft.imgPrefix + "/icons/" + marker.url + ".png");
 	} else {
 		config.icon = org.sarsoft.MapUtil.createIcon(20, marker.url);
 	}
@@ -509,7 +509,7 @@ org.sarsoft.controller.MarkupMapController.getRealURLForMarker = function(url) {
 		url = url.substring(1);
 		return "/resource/imagery/icons/circle/" + url + ".png"
 	} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
-		return "/static/images/icons/" + url + ".png";
+		return org.sarsoft.imgPrefix + "/icons/" + url + ".png";
 	} else {
 		return url;
 	}
