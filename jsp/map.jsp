@@ -10,7 +10,7 @@ org.sarsoft.Loader.queue(function() {
 
 	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
 	var embed = !(window==top);
-	imap = new org.sarsoft.InteractiveMap(map, {positionWindow: !embed, UTM: true, size: !embed, find: !embed, separators: true, switchableDatum : true});
+	imap = new org.sarsoft.InteractiveMap(map, {positionWindow: !embed, UTM: true, size: !embed, find: !embed, separators: true, switchableDatum : true, suppressPermissionWidget: true});
 	urlwidget = new org.sarsoft.MapURLHashWidget(imap, embed);
 	if(!embed) {
 		setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
