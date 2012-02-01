@@ -285,7 +285,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		this.garmindlg = new org.sarsoft.GPSDlg();
 		
 		this.gps = new Object();
-		this.gps.form = jQuery('<form name="gpsform" action="/map/gpxupload" enctype="multipart/form-data" method="post">I want to:</form>');
+		this.gps.form = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post">I want to:</form>');
 		this.gps.io = jQuery('<select style="margin-left: 15px"><option value="export">Export</option>' + ((org.sarsoft.userPermissionLevel != "READ") ? '<option value="import">Import</option>' : '') + '</select').appendTo(this.gps.form);
 		this.gps.form.append("<br/><br/>");
 

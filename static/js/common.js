@@ -15,22 +15,29 @@ org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 	var that = this;
 	postdata = "json=" + encodeURIComponent(YAHOO.lang.JSON.stringify(obj));
 	if(typeof poststr != "undefined") postdata += "&" + poststr;
+	if(org.sarsoft.tenantid != null) postdata += "&tid=" + encodeURIComponent(org.sarsoft.tenantid);
 	YAHOO.util.Connect.resetDefaultHeaders();
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', this.baseURL + url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
+			if(!org.sarsoft._saveAlertFlag) {
+				org.sarsoft._saveAlertFlag = true;
+				alert("Server Communication Error!  Data may not be getting saved properly, reloading this page may solve the problem.  This message will not be shown again until you reload the page, but the problem may persist");
+			}
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
 }
 
 org.sarsoft.BaseDAO.prototype._doGet = function(url, handler) {
 	var that = this;
-	YAHOO.util.Connect.asyncRequest('GET', this.baseURL + url, { success : function(response) {
+	var url = this.baseURL + url;
+	if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
+	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
-			throw("AJAX ERROR getting from " + that.baseURL + url + ": " + response.responseText);
+			throw("AJAX ERROR getting from " + url + ": " + response.responseText);
 		}});
 }
 
@@ -53,6 +60,7 @@ org.sarsoft.BaseDAO.prototype.load = function(handler, id) {
 org.sarsoft.BaseDAO.prototype.mark = function() {
 	var that = this;
 	var url = "/rest/timestamp";
+	if(org.sarsoft.tenantid != null) url = url + "?tid=" + encodeURIComponent(org.sarsoft.tenantid);
 	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
 			that._timestamp = YAHOO.lang.JSON.parse(response.responseText).timestamp;
 		}, failure : function(response) {
@@ -644,7 +652,9 @@ org.sarsoft.GPSDlg.prototype.retry = function() {
 
 	if(this._write) {
 		  this.console("Retrieving GPS data from server . . .");
-		  YAHOO.util.Connect.asyncRequest('GET', this._url, { success : function(response) {
+		  var url = this._url;
+		  if(org.sarsoft.tenantid != null) url = url + "?tid=" + encodeURIComponent(org.sarsoft.tenantid);
+		  YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
 			  	that.gpxstr = response.responseText;
 				that.control.findDevices();
 			}, failure : function(response) {
