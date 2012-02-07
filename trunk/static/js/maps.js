@@ -54,6 +54,7 @@ org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	    var type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "", tileSize: config.tilesize ? config.tilesize : 256 } );
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
+	    type._alias = config.alias;
 	    return type;
 	}
 }
@@ -184,9 +185,81 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 	if(idx > 0) this.aDiv.append(document.createElement("br"));
 	this.alphaOverlayBoxes[idx] = jQuery('<input type="checkbox" value="' + idx + '" name="' + type.getName() + '"/>').appendTo(this.aDiv)[0];
 	this.aDiv.append(type.getName());
+	if(type._alias != null && type._alias.indexOf("avy") == 0) {
+		var hazards = [0, 0, 0, 0, 0, 0, 0, 0];
+		var elements = [];
+		var colors = ['white', '#00FF09', '#F5FF0A', '#FE9900', '#FF0000'];
+		var cfg = jQuery('<table style="color: black; display: none" border="0"></table>').appendTo(this.aDiv);
+		var tb = jQuery('<tbody></tbody').appendTo(cfg);
+		var tr = jQuery('<tr></tr>').appendTo(tb);
+		elements[7] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">NW</td>').appendTo(tr);
+		elements[0] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">N</td>').appendTo(tr);
+		elements[1] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">NE</td>').appendTo(tr);
+		var dataset = jQuery('<select><option value="27">27&deg;+</option><option value="35">35&deg;-45&deg;</option></select>').appendTo(
+				jQuery('<span>Show: </span>').appendTo(jQuery('<td rowspan="3" valign="top" style="font-weight: normal"></td>').appendTo(tr)));
+		var tr = jQuery('<tr></tr>').appendTo(tb);
+		elements[6] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">W</td>').appendTo(tr);
+		var boostAll = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">&uarr;</td>').appendTo(tr);
+		elements[2] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">E</td>').appendTo(tr);
+		var tr = jQuery('<tr></tr>').appendTo(tb);
+		elements[5] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">SW</td>').appendTo(tr);
+		elements[4] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">S</td>').appendTo(tr);
+		elements[3] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">SE</td>').appendTo(tr);
+		var swapLayer = function() {
+			that.swapConfigurableAlphaLayer(idx, dataset.val() + "-" + hazards.join(""));
+			that.handleLayerChange();
+		}
+		var incrementAspect = function(aspect) {
+			var hazard = hazards[aspect]+1;
+			if(hazard > 4) hazard = 0;
+			hazards[aspect] = hazard;
+			elements[aspect].css('background', colors[hazard]);
+		}
+		boostAll.click(function() {
+			var min = 5;
+			for(var i = 0; i < 8; i++) {
+				min = Math.min(min, hazards[i]);
+			}
+			for(var i = 0; i < 8; i++) {
+				if(hazards[i] == min) incrementAspect(i);
+			}
+			swapLayer();
+		});
+		dataset.change(function() {
+			swapLayer();
+		});
+		cfg.readCfgValue = function(hazard) {
+			if(hazard == null) return;
+			dataset.val(hazard.split("-")[0]);
+			newHazards = hazard.split("-")[1].split("");
+			for(var i = 0; i < 8; i++) {
+				hazards[i] = 1*newHazards[i];
+				elements[i].css('background', colors[hazards[i]]);
+			}
+		}
+		for(var i = 0; i < 8; i++) {
+			elements[i].click((function(j) { return function() { incrementAspect(j); swapLayer();}})(i));
+		}
+		this.alphaOverlayBoxes[idx]._cfg = cfg;
+	}
 	$(this.alphaOverlayBoxes[idx]).change(function() { that.handleLayerChange() });
 	this.alphaOverlayTypes[idx] = type;
 	this.hasAlphaOverlays = true;
+}
+
+OverlayDropdownMapControl.prototype.swapConfigurableAlphaLayer = function(idx, cfgstr) {
+	this.map.removeMapType(this.alphaOverlayTypes[idx]);
+	for(i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		if(org.sarsoft.EnhancedGMap.defaultMapTypes[i].alias == this.alphaOverlayTypes[idx]._alias) {
+			var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+			var cfg = {alias: type.alias, alphaOverlay: true, copyright: type.copyright, info: type.info, maxresolution: type.maxresolution, minresolution: type.minresolution, name: type.name, png: type.png, type: type.type}
+			cfg.template = type.template.replace(/{V}/,cfgstr);
+			var atype = org.sarsoft.EnhancedGMap.createMapType(cfg);
+			atype._cfgvalue = cfgstr;
+			this.map.addMapType(atype);
+			this.alphaOverlayTypes[idx] = atype;
+		}
+	}
 }
 
 OverlayDropdownMapControl.prototype.handleLayerChange = function() {
@@ -195,7 +268,13 @@ OverlayDropdownMapControl.prototype.handleLayerChange = function() {
 	opacity = Math.min(100, Math.max(0, this.opacityInput.val())) / 100;
 	var tt = new Array();
 	if(this.alphaOverlayBoxes != null) for(var i = 0; i < this.alphaOverlayBoxes.length; i++) {
-		if(this.alphaOverlayBoxes[i].checked) tt.push(this.alphaOverlayTypes[i]);
+		var cfg = this.alphaOverlayBoxes[i]._cfg;
+		if(this.alphaOverlayBoxes[i].checked) {
+			tt.push(this.alphaOverlayTypes[i]);
+			if(cfg != null) cfg.css('display','block');
+		} else {
+			if(cfg != null) cfg.css('display','none');
+		}
 	}
 	this.updateMap(this.types[this.typeSelect.value], this.types[this.overlaySelect.value], opacity, tt.length > 0 ? tt : null);
 }
@@ -293,9 +372,17 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			if(this.types[i] == overlay) this.overlaySelect.value = i;
 		}
 		if(alphaOverlays != null) for(var i = 0; i < this.alphaOverlayTypes.length; i++) {
+			var cfg = this.alphaOverlayBoxes[i]._cfg;
 			this.alphaOverlayBoxes[i].checked=false;
+			if(cfg != null) cfg.css('display','none');
 			for(var j = 0; j < alphaOverlays.length; j++) {
-				if(this.alphaOverlayTypes[i] == alphaOverlays[j]) this.alphaOverlayBoxes[i].checked=true;
+				if(this.alphaOverlayTypes[i] == alphaOverlays[j]) {
+					this.alphaOverlayBoxes[i].checked=true;
+					if(cfg != null) {
+						cfg.css('display', 'block');
+						cfg.readCfgValue(this.alphaOverlayTypes[i]._cfgvalue)
+					}
+				}
 			}
 		}
 		var extras = 0;
@@ -446,6 +533,7 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 
 		that.map.getContainer().style.width=width;
 		that.map.getContainer().style.height=height;
+		that.map.getContainer()._margin=margin;
 		if(rule != null) rule.style.setProperty('margin', margin);
 		that.map.checkResize();
 		that.map.setCenter(center);
@@ -1354,7 +1442,6 @@ org.sarsoft.InteractiveMap.prototype.aliasToName = function(alias) {
 	return alias;
 }
 
-
 org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
 	config.base = this.nameToAlias(this.map._overlaydropdownmapcontrol.baseName);
@@ -1363,7 +1450,15 @@ org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 		config.opacity = this.map._overlaydropdownmapcontrol.opacity;
 		if(this.map._overlaydropdownmapcontrol.alphaOverlays != null) {
 			var ao = this.map._overlaydropdownmapcontrol.alphaOverlays.split(',');
-			for(var i = 0; i < ao.length; i++) ao[i] = this.nameToAlias(ao[i]);
+			for(var i = 0; i < ao.length; i++) {
+				ao[i] = this.nameToAlias(ao[i]);
+				var atypes = this.map._overlaydropdownmapcontrol.alphaOverlayTypes;
+				for(var j = 0; j < atypes.length; j++) {
+					if(atypes[j].getName != null && this.nameToAlias(atypes[j].getName()) == ao[i]) {
+						if(atypes[j]._cfgvalue != null) ao[i] = ao[i] + "_" + atypes[j]._cfgvalue; 
+					}
+				}
+			}
 			config.alphaOverlays = ao.join(",");
 		} else {
 			config.alphaOverlays = null;
@@ -1397,9 +1492,20 @@ org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayNa
 	if(alphaOverlays != null) {
 		var atypes = this.map._overlaydropdownmapcontrol.alphaOverlayTypes;
 		var names = alphaOverlays.split(",");
-		for (var i = 0; i < atypes.length; i++) {
-			for(var j = 0; j < names.length; j++) {
-				if(atypes[i].getName != null && names[j] == atypes[i].getName()) alphaTypes.push(atypes[i]);
+		for (var j = 0; j < names.length; j++) {
+			var name = names[j];
+			if(name.indexOf("_") >= 0) {
+				var parts = names[j].split("_");
+				for(var i = 0; i < atypes.length; i++) {
+					if(atypes[i].getName != null && this.nameToAlias(atypes[i].getName()).indexOf(parts[0]) == 0) {
+						this.map._overlaydropdownmapcontrol.swapConfigurableAlphaLayer(i, parts[1]);
+						alphaTypes.push(atypes[i]);
+					}
+				}
+			} else {
+				for (var i = 0; i < atypes.length; i++) {
+					if(atypes[i].getName != null && names[j] == atypes[i].getName()) alphaTypes.push(atypes[i]);
+				}
 			}
 		}
 	}
@@ -2122,7 +2228,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
 	tr = jQuery('<tr><td valign="top">Place Name</td></tr>').appendTo(tbody);
 	td = jQuery("<td/>").appendTo(tr);
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(td);
-	td.append('<br/><span class="hint">e.g. "Truckee, CA" or "Mount Rainier".</span>');
+	td.append('<br/><span class="hint">e.g. "Mount Rainier" or "Castle Peak near Truckee, CA".</span>');
 	if(typeof GClientGeocoder == 'undefined') {
 		tr.css("display", "none");
 	}
