@@ -15,7 +15,7 @@ org.sarsoft.Loader.queue(function() {
 	if(!embed) {
 		setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
 		configWidget = new org.sarsoft.view.CookieConfigWidget(imap);
-		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity});
+		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity, alphaOverlays : urlwidget.config.alphaOverlays});
 		toolsController = new org.sarsoft.controller.MapToolsController(imap);
 	}
 	
@@ -23,7 +23,7 @@ org.sarsoft.Loader.queue(function() {
 
 	if(!embed) {
 		var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave map view and return to the home page?", "Leave", "Cancel", function() {
-			window.location = "/";		
+			window.location = "/";
 		});
 		var goback = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
 		GEvent.addDomListener(goback, "click", function() {
