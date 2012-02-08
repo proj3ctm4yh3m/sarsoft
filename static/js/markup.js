@@ -27,6 +27,10 @@ org.sarsoft.MarkerDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.MarkerDAO.prototype = new org.sarsoft.BaseDAO();
 
+org.sarsoft.MarkerDAO.prototype.updatePosition = function(id, position, handler) {
+	this._doPost("/" + id + "/position", handler, {position: position}, handler);
+}
+
 org.sarsoft.view.MarkerForm = function() {
 }
 
@@ -142,6 +146,52 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.handleChange();
 }
 
+org.sarsoft.view.MarkerLocationForm = function() {
+}
+
+org.sarsoft.view.MarkerLocationForm.prototype.create = function(container, callback) {
+	var that = this;
+	var form = jQuery('<div></div>').appendTo(container);
+	jQuery('<div><span style="font-weight: bold">Current Location</span></div>').appendTo(form);
+	var div = jQuery('<div class="item"></div>').appendTo(form);
+	this.currentSelect = jQuery('<select><option value="UTM">UTM</option><option value="DD">DD</option><option value="DDMMHH">DDMMHH</option></select>').appendTo(div);
+	this.currentLocation = jQuery('<span style="margin-left: 10px"></span>').appendTo(div);
+	
+	jQuery('<div style="padding-top: 1em"><span style="font-weight: bold; padding-top: 1em">Enter New Location</span></div>').appendTo(form);
+	var div = jQuery('<div class="item" style="clear: both"></div>').appendTo(form);
+
+	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
+	this.locationEntryForm.create(div, callback, true);
+
+	this.currentSelect.change(function() {
+		that.updateCurrentLocation();
+	});
+}
+
+org.sarsoft.view.MarkerLocationForm.prototype.updateCurrentLocation = function() {
+	var type = this.currentSelect.val();
+	var html = "";
+	if(type == "UTM") {
+		html = GeoUtil.GLatLngToUTM(this.value).toHTMLString();
+	} else if(type == "DD") {
+		html = GeoUtil.formatDD(this.value.lat()) + ", " + GeoUtil.formatDD(this.value.lng());
+	} else if(type == "DDMMHH") {
+		html = GeoUtil.formatDDMMHH(this.value.lat()) + ", " + GeoUtil.formatDDMMHH(this.value.lng());
+	}
+	this.currentLocation.html(html);
+}
+
+org.sarsoft.view.MarkerLocationForm.prototype.write = function(wpt) {
+	this.value = new GLatLng(wpt.lat, wpt.lng);
+	this.currentSelect.val("utm");
+	this.updateCurrentLocation();
+	this.locationEntryForm.clear();
+}
+
+org.sarsoft.view.MarkerLocationForm.prototype.read = function(callback) {
+	return this.locationEntryForm.read(callback);
+}
+
 org.sarsoft.view.ShapeForm = function() {
 }
 
@@ -229,7 +279,23 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 				}, marker);
 			}}, "OK");
 		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.markerDlg.dialog.ok();});
-	
+
+		this.markerLocationForm = new org.sarsoft.view.MarkerLocationForm();
+		
+		var lbody = document.createElement("div");
+		var doit = function(gll) {
+			that.markerDAO.updatePosition(that.markerLocationForm.id, {lat: gll.lat(), lng: gll.lng()}, function(obj) {
+				that.refreshMarkers([obj]);
+			});
+		}
+		this.markerLocationForm.create(lbody,  function(obj) {
+			that.markerLocationDlg.hide();
+			that.markerLocationForm.read(doit);
+		});
+		this.markerLocationDlg = org.sarsoft.view.CreateDialog("Marker Location", lbody, "OK", "Cancel", function() {
+			that.markerLocationForm.read(doit);
+		},  {left: "100px", width: "450px"});
+
 		form = new org.sarsoft.view.ShapeForm();
 		this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details",form , function(shape) {
 			if(that.shapeDlg.shape != null) {
@@ -257,6 +323,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
 			this.imap.addContextMenuItems(items.concat([
 	    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
+	    		{text : "Move", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerLocationForm.write(marker.position); that.markerLocationForm.id = marker.id; that.markerLocationDlg.show();}},
 	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
 	    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},

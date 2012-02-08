@@ -2151,7 +2151,7 @@ org.sarsoft.UTMEditForm.prototype.read = function() {
 org.sarsoft.LocationEntryForm = function() {
 }
 
-org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
+org.sarsoft.LocationEntryForm.prototype.create = function(container, handler, noLookup) {
 	var that = this;
 	var table = jQuery('<table border="0"></table>').appendTo(container);
 	var tbody = jQuery('<tbody></tbody>').appendTo(table);
@@ -2229,7 +2229,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler) {
 	td = jQuery("<td/>").appendTo(tr);
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(td);
 	td.append('<br/><span class="hint">e.g. "Mount Rainier" or "Castle Peak near Truckee, CA".</span>');
-	if(typeof GClientGeocoder == 'undefined') {
+	if(typeof GClientGeocoder == 'undefined' || noLookup) {
 		tr.css("display", "none");
 	}
 	
