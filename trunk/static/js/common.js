@@ -394,6 +394,9 @@ org.sarsoft.TenantDAO.prototype.loadRecent = function(className, handler) {
 	this._doGet("/recent?className=" + className, handler);
 }
 
+org.sarsoft.TenantDAO.prototype.saveCenter = function(center, handler) {
+	this._doPost("/center", handler, center);
+}
 org.sarsoft.view.TenantTable = function() {
 	
 	var permissionFormatter = function(cell, record, column, data) {
