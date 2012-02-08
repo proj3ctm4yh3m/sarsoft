@@ -51,6 +51,19 @@ public class MarkerController extends JSONBaseController {
 		}
 		return json(model, marker);
 	}
+	
+	@RequestMapping(value="/rest/marker/{id}/position", method = RequestMethod.POST)
+	public String updateMarkerPosition(JSONForm params, Model model, @PathVariable("id") long id, HttpServletRequest request) {
+		Marker marker = dao.load(Marker.class, id);
+		Marker updated = Marker.createFromJSON(parseObject(params));
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
+		switch(action) {
+		case UPDATE :
+			marker.setPosition(updated.getPosition());
+			dao.save(marker);
+		}
+		return json(model, marker);
+	}
 
 	@RequestMapping(value="/rest/marker/{markerid}", method = RequestMethod.GET)
 	public String getMarker(Model model, @PathVariable("markerid") long markerid, HttpServletRequest request, HttpServletResponse response) {
