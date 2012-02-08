@@ -1253,6 +1253,7 @@ org.sarsoft.view.MapSetupWidget.prototype.handleSetupChange = function() {
 
 org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 	var that = this;
+	this.hasConfig = false;
 	if(imap != null) {
 		if(message == null) message = "Save map settings (e.g. visible layers, UTM grid) for future page loads?  Data is automatically saved as you work on it.";
 		this.imap = imap;
@@ -1291,22 +1292,36 @@ org.sarsoft.view.BaseConfigWidget.prototype._fromConfigObj = function(config) {
 	}
 }
 
-org.sarsoft.view.PersistedConfigWidget = function(imap, persist) {
+org.sarsoft.view.PersistedConfigWidget = function(imap, persist, saveCenter) {
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, persist);
 	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
+	this.saveCenter = saveCenter;
 }
 org.sarsoft.view.PersistedConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
 
-org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function() {
+org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) {
 	var that = this;
+	this.hasConfig = true;
+
+	var saveHandler = function() {
+		if(that.saveCenter) {
+			var center = this.imap.map.getCenter();
+			that.tenantDAO.saveCenter({lat: center.lat(), lng: center.lng()}, handler);
+		} else if(handler != null) {
+			handler();
+		}
+	}
+	
 	this.tenantDAO.load(function(cfg) {
 		var config = {};
 		if(cfg.value != null) {
 			config = YAHOO.lang.JSON.parse(cfg.value);
 		}
 		that._toConfigObj(config);
-		that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)});				
+		
+		that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)}, saveHandler);				
 	}, "mapConfig");
+	
 }
 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
@@ -1314,7 +1329,8 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 	this.tenantDAO.load(function(cfg) {
 		var config = {};
 		if(cfg.value != null) {
-			config = YAHOO.lang.JSON.parse(cfg.value);			
+			config = YAHOO.lang.JSON.parse(cfg.value);
+			that.hasConfig = true;
 		}
 		if(typeof(overrides) != "undefined") for(var key in overrides) {
 			config[key] = overrides[key];
@@ -1324,8 +1340,9 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 }
 
 
-org.sarsoft.view.CookieConfigWidget = function(imap) {
+org.sarsoft.view.CookieConfigWidget = function(imap, saveCenter) {
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, true, "Save map settings for future page loads?");
+	this.saveCenter = saveCenter;
 }
 org.sarsoft.view.CookieConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
 
@@ -1335,6 +1352,11 @@ org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function() {
 	if(config.base == null) config = {}; // keep mis-set cookies from screwing everything up
 	this._toConfigObj(config);
 	YAHOO.util.Cookie.set("org.sarsoft.mapConfig", YAHOO.lang.JSON.stringify(config));
+	if(this.saveCenter) {
+		var center = this.imap.map.getCenter();
+		var zoom = this.imap.map.getZoom();
+		YAHOO.util.Cookie.set("org.sarsoft.mapCenter", YAHOO.lang.JSON.stringify({center: {lat: center.lat(), lng: center.lng()}, zoom: zoom}));
+	}
 }
 
 org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
@@ -1344,6 +1366,13 @@ org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 			config[key] = overrides[key];
 		}
 		this._fromConfigObj(config);
+	}
+	if(YAHOO.util.Cookie.exists("org.sarsoft.mapCenter")) {
+		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapCenter"));
+		if(typeof(overrides) != "undefined") for(var key in overrides) {
+			config[key] = overrides[key];
+		}
+		this.imap.map.setCenter(new GLatLng(config.center.lat, config.center.lng), config.zoom);
 	}
 }
 

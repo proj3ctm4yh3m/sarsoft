@@ -16,6 +16,7 @@ import net.sf.json.JSONObject;
 import org.sarsoft.common.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Way;
@@ -28,6 +29,7 @@ import org.sarsoft.markup.model.MarkupLatitudeComparator;
 import org.sarsoft.markup.model.Shape;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.controller.SearchController;
+import org.sarsoft.plans.model.Search;
 import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -201,6 +203,15 @@ public class CollaborativeMapController extends JSONBaseController {
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
 		}
 		return val;
+	}
+
+	@RequestMapping(value = "/rest/tenant/center", method = RequestMethod.POST)
+	public String setDefaultCenter(Model model, JSONForm params, HttpServletRequest request) {
+		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		Waypoint center = Waypoint.createFromJSON(parseObject(params));
+		map.setDefaultCenter(center);
+		dao.save(map);
+		return json(model, map.getDefaultCenter());
 	}
 
 	@SuppressWarnings("unchecked")

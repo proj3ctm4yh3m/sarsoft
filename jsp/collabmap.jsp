@@ -26,13 +26,22 @@ org.sarsoft.Loader.queue(function() {
   	setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
     collabWidget = new org.sarsoft.MapCollaborationWidget(imap);
   }
-  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"));
+  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
   configWidget.loadConfig();
 
   if(!embed) {
 	imap.message("Right click on map background to create shapes", 30000);
-	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", 'Leave map view and return to the home page?<br/><br/>You might also want to view <a href="/guide?id=${tenant.name}">this map\'s guide</a>.<br/><br/>', "Leave", "Cancel", function() {
-		window.location = "/maps";
+	var leaveBody = jQuery('<span>Leave map view and return to the home page?<br/><br/>You might also want to view <a href="/guide?id=${tenant.name}">this map\'s guide</a>.<br/><br/></span>');
+	var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads. Data is automatically saved as you work on it.</input>').appendTo(leaveBody);
+	jQuery('<br/><br/>').appendTo(leaveBody);
+	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", leaveBody, "Leave", "Cancel", function() {
+		if(leaveCB.attr("checked")=="checked") {
+			configWidget.saveConfig(function() {
+				window.location = "/maps";
+			});
+		} else {
+			window.location = "/maps";
+		}
 	});
 	var goback = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
 	GEvent.addDomListener(goback, "click", function() {
