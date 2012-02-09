@@ -32,7 +32,7 @@ org.sarsoft.Loader.queue(function() {
   if(!embed) {
 	imap.message("Right click on map background to create shapes", 30000);
 	var leaveBody = jQuery('<span>Leave map view and return to the home page?<br/><br/>You might also want to view <a href="/guide?id=${tenant.name}">this map\'s guide</a>.<br/><br/></span>');
-	var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads. Data is automatically saved as you work on it.</input>').appendTo(leaveBody);
+	var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads (data is automatically saved as you work on it)</input>').appendTo(leaveBody);
 	jQuery('<br/><br/>').appendTo(leaveBody);
 	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", leaveBody, "Leave", "Cancel", function() {
 		if(leaveCB.attr("checked")=="checked") {

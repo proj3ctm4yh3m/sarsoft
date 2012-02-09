@@ -196,7 +196,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 		elements[0] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">N</td>').appendTo(tr);
 		elements[1] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">NE</td>').appendTo(tr);
 		var dataset = jQuery('<select><option value="27">27&deg;+</option><option value="35">35&deg;-45&deg;</option></select>').appendTo(
-				jQuery('<span>Show: </span>').appendTo(jQuery('<td rowspan="3" valign="top" style="font-weight: normal"></td>').appendTo(tr)));
+				jQuery('<span>Show: </span>').appendTo(jQuery('<td rowspan="2" valign="top" style="font-weight: normal"></td>').appendTo(tr)));
 		var tr = jQuery('<tr></tr>').appendTo(tb);
 		elements[6] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">W</td>').appendTo(tr);
 		var boostAll = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">&uarr;</td>').appendTo(tr);
@@ -205,6 +205,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 		elements[5] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">SW</td>').appendTo(tr);
 		elements[4] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">S</td>').appendTo(tr);
 		elements[3] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">SE</td>').appendTo(tr);
+		jQuery('<td valign="middle" style="font-weight: normal; text-align: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></td>').appendTo(tr);
 		var swapLayer = function() {
 			that.swapConfigurableAlphaLayer(idx, dataset.val() + "-" + hazards.join(""));
 			that.handleLayerChange();
