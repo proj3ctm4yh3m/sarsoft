@@ -154,7 +154,7 @@ org.sarsoft.view.MarkerLocationForm.prototype.create = function(container, callb
 	var form = jQuery('<div></div>').appendTo(container);
 	jQuery('<div><span style="font-weight: bold">Current Location</span></div>').appendTo(form);
 	var div = jQuery('<div class="item"></div>').appendTo(form);
-	this.currentSelect = jQuery('<select><option value="UTM">UTM</option><option value="DD">DD</option><option value="DDMMHH">DDMMHH</option></select>').appendTo(div);
+	this.currentSelect = jQuery('<select><option value="UTM">UTM</option><option value="DD">DD</option><option value="DDMMHH">DMH</option><option value="DDMMSS">DMS</option></select>').appendTo(div);
 	this.currentLocation = jQuery('<span style="margin-left: 10px"></span>').appendTo(div);
 	
 	jQuery('<div style="padding-top: 1em"><span style="font-weight: bold; padding-top: 1em">Enter New Location</span></div>').appendTo(form);
@@ -177,6 +177,8 @@ org.sarsoft.view.MarkerLocationForm.prototype.updateCurrentLocation = function()
 		html = GeoUtil.formatDD(this.value.lat()) + ", " + GeoUtil.formatDD(this.value.lng());
 	} else if(type == "DDMMHH") {
 		html = GeoUtil.formatDDMMHH(this.value.lat()) + ", " + GeoUtil.formatDDMMHH(this.value.lng());
+	} else if(type == "DDMMSS") {
+		html = GeoUtil.formatDDMMSS(this.value.lat()) + ", " + GeoUtil.formatDDMMSS(this.value.lng());
 	}
 	this.currentLocation.html(html);
 }

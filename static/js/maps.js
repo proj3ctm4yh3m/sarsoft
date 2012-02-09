@@ -780,7 +780,7 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 		    {name : "major", label: "1km Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%"], hint: "Opacity, 100% to 10%"},
 		    {name : "minor", label: "100m Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%","None"], hint: "Visible at high zoom levels only"},
 		    {name : "crosshatch", label: "Show UTM Grid as", type : ["Solid Lines", "Crosshatches", "Edge Tickmarks Only"]},
-		    {name : "latlng", label: "Lat/Long", type : ["Decimal Degree","DDMMHH"]},
+		    {name : "latlng", label: "Lat/Long", type : ["Decimal Degree","DMH","DMS"]},
 		    {name : "scale", label: "Show Scale", type : "boolean"}
 		]);
 		var node = jQuery('<div style="margin-top: 10px"><span style="font-weight: bold; text-decoration: underline">UTM Grid</span></div>')[0];
@@ -789,7 +789,7 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 			var obj = that._mapForm.read();
 			that.style.major = obj.major.substring(0, obj.major.length - 1)/100;
 			that.style.minor = (obj.minor == "None") ? 0 : obj.minor.substring(0, obj.minor.length - 1)/100;
-			that.style.latlng = (obj.latlng == "DDMMHH") ? "DDMMHH" : "DD";
+			that.style.latlng = (obj.latlng == "DMH") ? "DDMMHH" : (obj.latlng == "DMS" ? "DDMMSS" : "DD");
 			that.style.scale = obj.scale;
 			if(obj.crosshatch == "Solid Lines") {
 				that.style.crosshatch = 100;
@@ -807,7 +807,7 @@ org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
 		major : (this.style.major*100) + "%",
 		minor : (this.style.minor == 0) ? "None" : (this.style.minor*100) + "%",
 		crosshatch : lineTypes[this.style.crosshatch],
-		latlng : (this.style.latlng == "DDMMHH") ? "DDMMHH" : "Decimal Degree",
+		latlng : (this.style.latlng == "DDMMHH") ? "DMH" : (this.style.latlng == "DDMMSS" ? "DMS" : "Decimal Degree"),
 		scale : this.style.scale
 	});
 	return this._setupBlock;
@@ -1055,10 +1055,14 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 		var datumll = GeoUtil.fromWGS84(latlng);
 		var utm = GeoUtil.GLatLngToUTM(datumll);
 		var message = utm.toHTMLString() + "<br/>";
-		if(that.imap != null && that.imap.registered["org.sarsoft.UTMGridControl"] != null && that.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DD") {
-			message = message + GeoUtil.formatDD(datumll.lat()) + ", " + GeoUtil.formatDD(datumll.lng());
-		} else {
-			message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
+		if(that.imap != null && that.imap.registered["org.sarsoft.UTMGridControl"] != null) {
+			if(that.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DD") {
+				message = message + GeoUtil.formatDD(datumll.lat()) + ", " + GeoUtil.formatDD(datumll.lng());
+			} else if(that.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DDMMHH") {
+				message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
+			} else {
+				message = message + GeoUtil.formatDDMMSS(datumll.lat()) + ", " + GeoUtil.formatDDMMSS(datumll.lng());
+			}
 		}
 		that.display.html(message);
 	});
@@ -2193,7 +2197,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler, no
 	
 	tr = jQuery('<tr></tr>').appendTo(tbody);
 	var td = jQuery('<td valign="top"></td>').appendTo(tr);
-	this.select = jQuery('<select><option value="DD" selected="selected">Degrees</option><option value="DDMMHH">DDMMHH</option><option value="DDMMSS">DDMMSS</option></select').appendTo(td);
+	this.select = jQuery('<select><option value="DD" selected="selected">Degrees</option><option value="DDMMHH">DMH</option><option value="DDMMSS">DMS</option></select').appendTo(td);
 	
 	td = jQuery("<td/>").appendTo(tr);
 	var dd = jQuery('<div></div>').appendTo(td);
@@ -2389,6 +2393,27 @@ GeoUtil.formatDDMMHH = function(deg) {
 	}
 	return (neg ? "-" : "") + d+"\u00B0"+m+"."+((h < 10) ? "0" + h : h) +"'";
 }
+
+GeoUtil.formatDDMMSS = function(deg) {
+	var neg = false;
+	if(deg < 0) {
+		neg = true;
+		deg = deg*-1;
+	}
+	var d=Math.floor(deg);
+	var m=Math.floor((deg-d)*60);
+	var s=Math.round(((deg-d)*60-m)*60);
+	if(s == 60) {
+		s = 0;
+		m = m + 1;
+	}
+	if(m == 60) {
+		m = 0;
+		d = d + 1;
+	}
+	return (neg ? "-" : "") + d+"\u00B0"+m+"'"+ s +"''";
+}
+
 
 GeoUtil.UTMToGLatLng = function(utm) {
 	var ll = new Object();
