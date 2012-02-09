@@ -293,7 +293,11 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			that.markerLocationForm.read(doit);
 		});
 		this.markerLocationDlg = org.sarsoft.view.CreateDialog("Marker Location", lbody, "OK", "Cancel", function() {
-			that.markerLocationForm.read(doit);
+			if(that.markerLocationDlg.handler != null) {
+				that.markerLocationDlg.handler();
+			} else {
+				that.markerLocationForm.read(doit);
+			}
 		},  {left: "100px", width: "450px"});
 
 		form = new org.sarsoft.view.ShapeForm();
@@ -339,6 +343,73 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	            	handler: function(data) { var shpid = that.getShapeIdFromWay(data.subject); var shp=that.shapes[shpid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(shp.comments, true)); that.alertDlg.show()}}
 	            ]);
 		}
+	
+		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
+			this.newMarkup = new Object();
+
+			var tPlus = jQuery('<span style="position: relative"></span>');
+			var tps = jQuery('<span><img src="' + org.sarsoft.imgPrefix + '/new.png" style="vertical-align: middle; cursor: pointer" title="New Shape or Marker"/></span>').appendTo(tPlus);
+
+			var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 10em"></div>').appendTo(tPlus);
+
+			GEvent.addDomListener(tps[0], "click", function() {
+				if(tDiv.css("visibility")=="hidden") {
+					tDiv.css("visibility","visible");
+				} else {
+					tDiv.css("visibility", "hidden");
+				}
+				});
+			
+			var links = jQuery('<div style="color: black; font-weight: normal; padding-top: 2px"></div>').appendTo(tDiv);
+			var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>').appendTo(links);
+			var newMarker = jQuery('<div style="margin-left: 2px; cursor: pointer">New Marker</div>').appendTo(links);
+			var newLine = jQuery('<div style="margin-left: 2px; cursor: pointer">New Line</div>').appendTo(links);
+			var newPolygon = jQuery('<div style="margin-left: 2px; cursor: pointer">New Polygon</div>').appendTo(links);
+			
+			upArrow.click(function() {tDiv.css("visibility", "hidden");});
+			
+			newMarker.click(function() {
+				tDiv.css("visibility", "hidden");
+				var center = that.imap.map.getCenter();
+	    		that.markerLocationForm.write({lat: center.lat(), lng: center.lng()});
+	    		that.markerLocationDlg.handler = function() {
+	    			that.markerDlg.marker=null;
+	    			that.markerLocationDlg.handler=null;
+					if(!that.markerLocationForm.read(function(gll) {
+		    			that.markerDlg.entityform.write({url: "#FF0000"});
+		    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(gll);
+		    			that.markerDlg.show();
+					})) {
+		    			that.markerDlg.entityform.write({url: "#FF0000"});
+		    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(center);
+		    			that.markerDlg.show();
+					}
+	    		}
+	    		that.markerLocationDlg.show();
+			});
+			newLine.click(function() {
+				tDiv.css("visibility", "hidden");
+			    that.shapeDlg.shape=null;
+			    that.shapeDlg.polygon=false;
+			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});
+			    that.shapeDlg.point=new GPoint(Math.round(that.imap.map.getSize().width/2), Math.round(that.imap.map.getSize().height/2));
+			    that.shapeDlg.show();
+			});
+
+			newPolygon.click(function() {
+				tDiv.css("visibility", "hidden");
+			    that.shapeDlg.shape=null;
+			    that.shapeDlg.polygon=true;
+			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});
+			    that.shapeDlg.point=new GPoint(Math.round(that.imap.map.getSize().width/2), Math.round(that.imap.map.getSize().height/2));
+			    that.shapeDlg.show();
+			});
+			
+			this.newMarkup.tDiv = tDiv;
+			
+			imap.addMenuItem(tPlus[0], 21);
+		}
+				
 	}
 
 	var showHide = new org.sarsoft.ToggleControl("MRK", "Show/Hide Markup", function(value) {
