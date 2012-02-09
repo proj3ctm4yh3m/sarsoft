@@ -1157,7 +1157,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 	this.dialog = org.sarsoft.view.CreateDialog("Find", this.body, "Find", "Cancel", function() {
 		var entry = that.locationEntryForm.read(function(gll) { that.imap.map.setCenter(gll, 14);});
 		if(!entry) that.checkBlocks();
-		}, {width: "500px"});
+		}, {width: "550px"});
 
 	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
 	this.locationEntryForm.create(this.body, function() {
