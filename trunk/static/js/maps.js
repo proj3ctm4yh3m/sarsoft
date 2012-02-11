@@ -1156,14 +1156,14 @@ org.sarsoft.MapFindWidget = function(imap) {
 
 	this.body = document.createElement("div");
 	this.dialog = org.sarsoft.view.CreateDialog("Find", this.body, "Find", "Cancel", function() {
-		var entry = that.locationEntryForm.read(function(gll) { that.imap.map.setCenter(gll, 14);});
+		var entry = that.locationEntryForm.read(function(gll) { that.imap.setCenter(gll, 14);});
 		if(!entry) that.checkBlocks();
 		}, {width: "550px"});
 
 	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
 	this.locationEntryForm.create(this.body, function() {
 		that.dialog.hide();
-		that.locationEntryForm.read(function (gll) {that.imap.map.setCenter(gll, 14);});
+		that.locationEntryForm.read(function (gll) {that.imap.setCenter(gll, 14);});
 	});
 	
 	var find = jQuery('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>')[0];
@@ -1906,7 +1906,7 @@ org.sarsoft.InteractiveMap.prototype.growMap = function(gll) {
 }
 
 org.sarsoft.InteractiveMap.prototype.setCenter = function(center, zoom) {
-	this.map.setCenter(center, zoom);
+	this.map.setCenter(center, Math.min(this.map.getCurrentMapType().getMaximumResolution(), zoom));
 	this._boundsInitialized = true;
 }
 
