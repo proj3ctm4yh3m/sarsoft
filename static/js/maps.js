@@ -358,7 +358,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 				var layer = new GTileLayerOverlay(alphaOverlays[i].getTileLayers()[0]);
 				this._overlays[this._overlays.length] = layer;
 				this.map.addOverlay(layer)
-				this.alphaOverlays = this.alphaOverlays + alphaOverlays[i].getName() + ((i < this.alphaOverlays.length - 1) ? "," : "");
+				this.alphaOverlays = this.alphaOverlays + alphaOverlays[i].getName() + ((i < alphaOverlays.length - 1) ? "," : "");
 				if(alphaOverlays[i]._info != null && alphaOverlays[i]._info.length > 0) infoString += alphaOverlays[i]._info + ". ";
 			}
 		}
