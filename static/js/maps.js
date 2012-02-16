@@ -186,7 +186,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 	this.alphaOverlayBoxes[idx] = jQuery('<input type="checkbox" value="' + idx + '" name="' + type.getName() + '"/>').appendTo(this.aDiv)[0];
 	this.aDiv.append(type.getName());
 	if(type._alias != null && type._alias.indexOf("slp") == 0) {
-		var hazards = [0, 0, 0, 0, 0, 0, 0, 0];
+		var hazards = [1, 1, 1, 1, 1, 1, 1, 1];
 		var elements = [];
 		var colors = ['white', '#00FF09', '#F5FF0A', '#FE9900', '#FF0000'];
 		var slpcolors = ['none', "url('/static/images/ok.png')"];
@@ -196,7 +196,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 		elements[7] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">NW</td>').appendTo(tr);
 		elements[0] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">N</td>').appendTo(tr);
 		elements[1] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">NE</td>').appendTo(tr);
-		var dataset = jQuery('<select><option value="a">Aspect</option><option value="s">Slope</option></select>').appendTo(
+		var dataset = jQuery('<select><option value="s">Slope</option><option value="a">Aspect</option></select>').appendTo(
 				jQuery('<span>Color By: </span>').appendTo(jQuery('<td rowspan="2" valign="top" style="font-weight: normal"></td>').appendTo(tr)));
 		var tr = jQuery('<tr></tr>').appendTo(tb);
 		elements[6] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">W</td>').appendTo(tr);
@@ -239,14 +239,17 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 			swapLayer();
 		});
 		dataset.change(function() {
+			var total = 0;
 			for(var i = 0; i < 8; i++) {
-				if(dataset.val() == "s" && hazards[i] > 1) hazards[i] = 1;
+				total = total + hazards[i];
+			}
+			for(var i = 0; i < 8; i++) {
+				if((dataset.val() == "s" && hazards[i] > 1) || total == 0) hazards[i] = 1;
 				setBackground(i);
 			}
 			swapLayer();
 		});
 		cfg.readCfgValue = function(hazard) {
-			if(hazard == null) return;
 			dataset.val(hazard.split("-")[0]);
 			newHazards = hazard.split("-")[1].split("");
 			for(var i = 0; i < 8; i++) {
@@ -262,6 +265,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 	$(this.alphaOverlayBoxes[idx]).change(function() { that.handleLayerChange() });
 	this.alphaOverlayTypes[idx] = type;
 	this.hasAlphaOverlays = true;
+	if(type._alias != null && type._alias.indexOf("slp") == 0) this.swapConfigurableAlphaLayer(idx, "s-11111111");
 }
 
 OverlayDropdownMapControl.prototype.swapConfigurableAlphaLayer = function(idx, cfgstr) {
