@@ -185,36 +185,48 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 	if(idx > 0) this.aDiv.append(document.createElement("br"));
 	this.alphaOverlayBoxes[idx] = jQuery('<input type="checkbox" value="' + idx + '" name="' + type.getName() + '"/>').appendTo(this.aDiv)[0];
 	this.aDiv.append(type.getName());
-	if(type._alias != null && type._alias.indexOf("avy") == 0) {
+	if(type._alias != null && type._alias.indexOf("slp") == 0) {
 		var hazards = [0, 0, 0, 0, 0, 0, 0, 0];
 		var elements = [];
 		var colors = ['white', '#00FF09', '#F5FF0A', '#FE9900', '#FF0000'];
+		var slpcolors = ['none', "url('/static/images/ok.png')"];
 		var cfg = jQuery('<table style="color: black; display: none" border="0"></table>').appendTo(this.aDiv);
 		var tb = jQuery('<tbody></tbody').appendTo(cfg);
 		var tr = jQuery('<tr></tr>').appendTo(tb);
-		elements[7] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">NW</td>').appendTo(tr);
-		elements[0] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">N</td>').appendTo(tr);
-		elements[1] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">NE</td>').appendTo(tr);
-		var dataset = jQuery('<select><option value="27">27&deg;+</option><option value="35">35&deg;-45&deg;</option></select>').appendTo(
-				jQuery('<span>Show: </span>').appendTo(jQuery('<td rowspan="2" valign="top" style="font-weight: normal"></td>').appendTo(tr)));
+		elements[7] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">NW</td>').appendTo(tr);
+		elements[0] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">N</td>').appendTo(tr);
+		elements[1] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">NE</td>').appendTo(tr);
+		var dataset = jQuery('<select><option value="a">Aspect</option><option value="s">Slope</option></select>').appendTo(
+				jQuery('<span>Color By: </span>').appendTo(jQuery('<td rowspan="2" valign="top" style="font-weight: normal"></td>').appendTo(tr)));
 		var tr = jQuery('<tr></tr>').appendTo(tb);
-		elements[6] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">W</td>').appendTo(tr);
-		var boostAll = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">&uarr;</td>').appendTo(tr);
-		elements[2] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">E</td>').appendTo(tr);
+		elements[6] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">W</td>').appendTo(tr);
+		var boostAll = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">&uarr;</td>').appendTo(tr);
+		elements[2] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">E</td>').appendTo(tr);
 		var tr = jQuery('<tr></tr>').appendTo(tb);
-		elements[5] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">SW</td>').appendTo(tr);
-		elements[4] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">S</td>').appendTo(tr);
-		elements[3] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center">SE</td>').appendTo(tr);
+		elements[5] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">SW</td>').appendTo(tr);
+		elements[4] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">S</td>').appendTo(tr);
+		elements[3] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">SE</td>').appendTo(tr);
 		jQuery('<td valign="middle" style="font-weight: normal; text-align: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></td>').appendTo(tr);
 		var swapLayer = function() {
 			that.swapConfigurableAlphaLayer(idx, dataset.val() + "-" + hazards.join(""));
 			that.handleLayerChange();
 		}
+		var setBackground = function(aspect) {
+			var hazard = hazards[aspect];
+			if(dataset.val() == "s") {
+				elements[aspect].css('background-image', slpcolors[hazard]);
+				elements[aspect].css('background-color', '#FFFFFF');
+			} else {
+				elements[aspect].css('background-image', 'none');
+				elements[aspect].css('background-color', colors[hazard]);
+			}
+		}
 		var incrementAspect = function(aspect) {
 			var hazard = hazards[aspect]+1;
 			if(hazard > 4) hazard = 0;
+			if(dataset.val() == "s" && hazard > 1) hazard = 0;
 			hazards[aspect] = hazard;
-			elements[aspect].css('background', colors[hazard]);
+			setBackground(aspect);
 		}
 		boostAll.click(function() {
 			var min = 5;
@@ -227,6 +239,10 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 			swapLayer();
 		});
 		dataset.change(function() {
+			for(var i = 0; i < 8; i++) {
+				if(dataset.val() == "s" && hazards[i] > 1) hazards[i] = 1;
+				setBackground(i);
+			}
 			swapLayer();
 		});
 		cfg.readCfgValue = function(hazard) {
@@ -235,7 +251,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(type) {
 			newHazards = hazard.split("-")[1].split("");
 			for(var i = 0; i < 8; i++) {
 				hazards[i] = 1*newHazards[i];
-				elements[i].css('background', colors[hazards[i]]);
+				setBackground(i);
 			}
 		}
 		for(var i = 0; i < 8; i++) {
@@ -359,7 +375,17 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 				this._overlays[this._overlays.length] = layer;
 				this.map.addOverlay(layer)
 				this.alphaOverlays = this.alphaOverlays + alphaOverlays[i].getName() + ((i < alphaOverlays.length - 1) ? "," : "");
-				if(alphaOverlays[i]._info != null && alphaOverlays[i]._info.length > 0) infoString += alphaOverlays[i]._info + ". ";
+				if(alphaOverlays[i]._info != null && alphaOverlays[i]._info.length > 0) {
+					if(alphaOverlays[i]._alias == "slp") {
+						if(alphaOverlays[i]._cfgvalue != null && alphaOverlays[i]._cfgvalue.indexOf("s") == 0) {
+							infoString += '<span style="color: green; margin-left: 5px">20&deg;-26&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">27&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span>';
+						} else {
+							infoString += "Shading 27&deg;-59&deg;.  Dots 35&deg;-45&deg;";
+						}
+					} else {
+						infoString += alphaOverlays[i]._info + ". ";
+					}
+				}
 			}
 		}
 		
