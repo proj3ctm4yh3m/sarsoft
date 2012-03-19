@@ -382,9 +382,9 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 				if(alphaOverlays[i]._info != null && alphaOverlays[i]._info.length > 0) {
 					if(alphaOverlays[i]._alias == "slp") {
 						if(alphaOverlays[i]._cfgvalue != null && alphaOverlays[i]._cfgvalue.indexOf("s") == 0) {
-							infoString += '<span style="color: green; margin-left: 5px">20&deg;-26&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">27&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span>';
+							infoString += '<span style="color: green; margin-left: 5px">20&deg;-27&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">28&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span>';
 						} else {
-							infoString += "Shading 27&deg;-59&deg;.  Dots 35&deg;-45&deg;";
+							infoString += "Shading 28&deg;-59&deg;.  Dots 35&deg;-45&deg;";
 						}
 					} else {
 						infoString += alphaOverlays[i]._info + ". ";
