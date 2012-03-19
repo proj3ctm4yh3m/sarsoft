@@ -115,10 +115,9 @@ OverlayDropdownMapControl = function() {
 	$(this.overlaySelect).css("margin-left", "3px");
 	$(this.overlaySelect).css("margin-right", "3px");
 	this.opacityInput = jQuery('<input style="margin-left: 5px" size="2" value="0"></input>');
-	
-	var sliderbg = jQuery('<div class="yui-h-slider" style="background: none; border-bottom: 1px solid #808080; width: 105px; float: left; margin-left: 5px; height: 6px"></div>');
-	var sliderthumb = jQuery('<div class="yui-slider-thumb" style="cursor: pointer; width: 5px; height: 12px; top: 0px; background-color: black">&#32;</div>').appendTo(sliderbg);
-	this.opacitySlider = YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, 100);
+
+	var sliderContainer = jQuery('<div style="float: left; margin-left: 2px"><span style="float: left">Enter % or:</span></div>');
+	this.opacitySlider = org.sarsoft.view.CreateSlider(sliderContainer);
 	this.opacitySlider.subscribe('change', function() {
 		if(!that._inSliderSet) {
 			that._inSliderHandler = true;
@@ -139,10 +138,10 @@ OverlayDropdownMapControl = function() {
 	$(this.typeSelect).change(function() { that.handleLayerChange() });
 	$(this.overlaySelect).change(function() { that.handleLayerChange() });
 
-	dd.div.append(jQuery('<div style="color: black; font-weight: normal"></div>').append(
+	dd.div.append(jQuery('<div></div>').append(
 			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlaySelect, "@", this.opacityInput, "%")).append(
 		jQuery('<div style="clear: both; height: 15px"></div>').append(
-				'<div style="float: left; margin-left: 2px">Enter % or: <span style="color: #606060; margin-left: 5px">0</span></div>', sliderbg, '<div style="float: left; margin-left: 5px; color: #606060">100</div>')));
+				sliderContainer)));
 	
 	this.aDiv = jQuery('<div style="clear: both; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #808080"></div>').appendTo(dd.div);
 }
@@ -460,7 +459,7 @@ org.sarsoft.MapMessageControl.prototype.clear = function() {
 	this.timeout = null;
 }
 
-org.sarsoft.view.MapSizeDlg = function(map) {
+org.sarsoft.view.MapSizeForm = function(map, container) {
 	var that = this;
 	this.map = map;
 
@@ -481,6 +480,7 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 				that.widthInput.val(preset.width);
 				that.heightInput.val(preset.height);
 				that.marginInput.val(preset.margin);
+				that.write();
 			}
 		}
 	}
@@ -498,66 +498,66 @@ org.sarsoft.view.MapSizeDlg = function(map) {
 		}
 	}
 	
-	var bd = jQuery('<div class="bd"><div style="padding-bottom: 10px">This will set the visible map size, allowing accurate full-page prints.  You will also need to set the page size in your browser\'s print dialog.</div></div>');
-	bd.append(document.createTextNode("Default Sizes: "));
-	this.presetInput = jQuery('<select><option value="--">--</option></select>').appendTo(bd).change(updateToPreset);
+	var div = jQuery('<div></div>').appendTo(container);
+	div.append(document.createTextNode("Default Sizes: "));
+	this.presetInput = jQuery('<select><option value="--">--</option></select>').appendTo(div).change(updateToPreset);
 	for(var i = 0; i < this.presets.length; i++) {
 		jQuery('<option value="' + this.presets[i].name + '">' + this.presets[i].description + '</option>').appendTo(this.presetInput);
 	}
-	jQuery('<br/><br/>').appendTo(bd);
-	bd.append(document.createTextNode("Width: "));
-	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();}).change(updatePresetInput);
-	bd.append(document.createTextNode("   Height: "));
-	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(bd).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();}).change(updatePresetInput);
-	bd.append(document.createElement("br"));
-	bd.append(document.createElement("br"));
-	bd.append(document.createTextNode("Margin: ")).keydown(function(event) { if(event.keyCode == 13) that.dialog.ok();});
-	this.marginInput = jQuery('<input type="text" size="8"/>').appendTo(bd).change(updatePresetInput);
-	bd.append(document.createTextNode(" (not supported on Firefox)"));
+	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
+	div.append(document.createTextNode("Width: "));
+	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(div).change(function() {that.write()});
+	div.append(document.createTextNode("   Height: "));
+	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(div).change(function() {that.write()});
+	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
+	div.append(document.createTextNode("Margin: "));
+	this.marginInput = jQuery('<input type="text" size="8"/>').appendTo(div).change(function() {that.write()});
+	div.append(document.createTextNode(" (not supported on Firefox)"));
 
-	this.dialog = org.sarsoft.view.CreateDialog("Map Size", bd[0], "Update", "Cancel", function() {
-		var center = that.map.getCenter();
-		var width = that.widthInput.val().replace(' ', '');
-		var height = that.heightInput.val().replace(' ', '');
-		var margin = that.marginInput.val().replace(' ', '')
-		var rule = that._getMarginRule();
-		
-		if(rule != null && width.indexOf("in") > 0 && height.indexOf("in") > 0) {
-			var nWidth = width.replace("in", "");
-			var nHeight = height.replace("in", "");
-			var nMargin = 0;
-			if(margin.indexOf("in") > 0) {
-				nMargin = margin.replace("in", "");
-			} else if(margin.indexOf("cm") > 0) {
-				nMargin = 2.54*margin.replace("cm", "");
-			}
-			width = (1*nWidth - nMargin*2) + "in";
-			height = (1*nHeight - nMargin*2) + "in";
-		}
-		
-		if(rule != null && width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
-			var nWidth = width.replace("cm", "");
-			var nHeight = height.replace("cm", "");
-			var nMargin = 0;
-			if(margin.indexOf("cm") > 0) {
-				nMargin = margin.replace("cm", "");
-			} else if(margin.indexOf("in") > 0) {
-				nMargin = margin.replace("in", "")/2.54;
-			}
-			width = (1*nWidth - nMargin*2) + "cm";
-			height = (1*nHeight - nMargin*2) + "cm";
-		}
-
-		that.map.getContainer().style.width=width;
-		that.map.getContainer().style.height=height;
-		that.map.getContainer()._margin=margin;
-		if(rule != null) rule.style.setProperty('margin', margin);
-		that.map.checkResize();
-		that.map.setCenter(center);
-		}, {width: "350px"});
 }
 
-org.sarsoft.view.MapSizeDlg.prototype._getMarginRule = function() {
+org.sarsoft.view.MapSizeForm.prototype.write = function() {
+	var center = this.map.getCenter();
+	var width = this.widthInput.val().replace(' ', '');
+	var height = this.heightInput.val().replace(' ', '');
+	var margin = this.marginInput.val().replace(' ', '')
+	var rule = this._getMarginRule();
+	
+	if(rule != null && width.indexOf("in") > 0 && height.indexOf("in") > 0) {
+		var nWidth = width.replace("in", "");
+		var nHeight = height.replace("in", "");
+		var nMargin = 0;
+		if(margin.indexOf("in") > 0) {
+			nMargin = margin.replace("in", "");
+		} else if(margin.indexOf("cm") > 0) {
+			nMargin = 2.54*margin.replace("cm", "");
+		}
+		width = (1*nWidth - nMargin*2) + "in";
+		height = (1*nHeight - nMargin*2) + "in";
+	}
+	
+	if(rule != null && width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
+		var nWidth = width.replace("cm", "");
+		var nHeight = height.replace("cm", "");
+		var nMargin = 0;
+		if(margin.indexOf("cm") > 0) {
+			nMargin = margin.replace("cm", "");
+		} else if(margin.indexOf("in") > 0) {
+			nMargin = margin.replace("in", "")/2.54;
+		}
+		width = (1*nWidth - nMargin*2) + "cm";
+		height = (1*nHeight - nMargin*2) + "cm";
+	}
+
+	this.map.getContainer().style.width=width;
+	this.map.getContainer().style.height=height;
+	this.map.getContainer()._margin=margin;
+	if(rule != null) rule.style.setProperty('margin', margin);
+	this.map.checkResize();
+	this.map.setCenter(center);
+}
+
+org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
 	for(var i = 0; i < document.styleSheets.length; i++) {
 		var sheet = document.styleSheets[i];
 		var rules = sheet.cssRules;
@@ -568,7 +568,7 @@ org.sarsoft.view.MapSizeDlg.prototype._getMarginRule = function() {
 	}
 }
 
-org.sarsoft.view.MapSizeDlg.prototype.show = function() {
+org.sarsoft.view.MapSizeForm.prototype.read = function() {
 	var width = this.map.getContainer().style.width;
 	var height = this.map.getContainer().style.height;
 	var rule = this._getMarginRule();
@@ -611,7 +611,6 @@ org.sarsoft.view.MapSizeDlg.prototype.show = function() {
 			this.presetInput.val(preset.name);
 		}
 	}
-	this.dialog.show();
 }
 
 org.sarsoft.MapDeclinationWidget = function(imap) {
@@ -702,6 +701,52 @@ org.sarsoft.UTMGridControl = function(imap) {
 			});
 			this._UTMToggle.setValue(this._showUTM);
 			imap.addMenuItem(this._UTMToggle.node, 10);
+
+			this._UTMConfig = new org.sarsoft.view.MenuDropdown('&darr;', 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
+
+			var crosshatchContainer = jQuery('<div style="float: left; padding-right: 1em">Show grid as</div>').appendTo(this._UTMConfig.div)
+			this.crosshatchSelect = jQuery('<select style="margin-left: 1em"><option value="0">Tickmarks</option><option value="20">Crosshatches</option><option value="100">Lines</option></select>').appendTo(crosshatchContainer);
+			this.crosshatchSelect.change(function() {
+				that.style.crosshatch = that.crosshatchSelect.val();
+				that._drawUTMGrid(true);
+			});
+			this.crosshatchSelect.val(this.style.crosshatch);
+
+			var llContainer = jQuery('<div style="float: left">Show lat/long as</div>').appendTo(this._UTMConfig.div)
+			this.llSelect = jQuery('<select style="margin-left: 1em"><option value="DD">DD</option><option value="DDMMHH">DMH</option><option value="DDMMSS">DMS</option></select>').appendTo(llContainer);
+			this.llSelect.change(function() {
+				that.style.latlng = that.llSelect.val();
+				that._drawUTMGrid(true);
+			});
+			this.llSelect.val(this.style.latlng);
+
+			var div = jQuery('<div style="width: 100%; clear: both; padding-top: 5px"></div>').appendTo(this._UTMConfig.div);
+			var majorContainer = jQuery('<div style="width: 250px; clear: both"><div style="float: left">1km grid</div></div>').appendTo(div);
+			var subContainer = jQuery('<div style="float: right"></div>').appendTo(majorContainer);
+			this.majorSlider = org.sarsoft.view.CreateSlider(subContainer);
+			this.majorSlider.subscribe('slideEnd', function() {
+				that.style.major = that.majorSlider.getValue()/100;
+				that._drawUTMGrid(true);
+			});
+
+			var minorContainer = jQuery('<div style="width: 250px; clear: both"><div style="float: left">100m grid</div></div>').appendTo(div);
+			var subContainer = jQuery('<div style="float: right"></div>').appendTo(minorContainer);
+			this.minorSlider = org.sarsoft.view.CreateSlider(subContainer);
+			this.minorSlider.subscribe('slideEnd', function() {
+				that.style.minor = that.minorSlider.getValue()/100;
+				that._drawUTMGrid(true);
+			});
+			
+			var scaleContainer = jQuery('<div style="padding-top: 5px; clear: both"></idv>').appendTo(this._UTMConfig.div);
+			this.scaleCB = jQuery('<input type="checkbox"/>').appendTo(scaleContainer);
+			scaleContainer.append('Show Scale');
+			this.scaleCB.change(function() {
+				that.style.scale = that.scaleCB[0].checked;
+				that._drawScale();
+			});
+			this.scaleCB[0].checked = this.style.scale;
+			
+			imap.addMenuItem(this._UTMConfig.container, 10);
 			imap.register("org.sarsoft.UTMGridControl", this);
 	}
 }
@@ -728,6 +773,8 @@ org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 				that.text = new Array();
 			});
 			that.utminitialized=true;
+			that.majorSlider.setValue(that.style.major*100);
+			that.minorSlider.setValue(that.style.minor*100);
 		}
 	}
 	
@@ -767,11 +814,26 @@ org.sarsoft.UTMGridControl.prototype._drawScale = function() {
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	if(config.UTMGridControl == null) return;
 	this.setValue(config.UTMGridControl.showUTM);
-	if(config.UTMGridControl.major != null) this.style.major = config.UTMGridControl.major;
-	if(config.UTMGridControl.minor != null) this.style.minor = config.UTMGridControl.minor;
-	if(config.UTMGridControl.crosshatch != null) this.style.crosshatch = config.UTMGridControl.crosshatch;
-	if(config.UTMGridControl.latlng != null) this.style.latlng = config.UTMGridControl.latlng;
-	if(config.UTMGridControl.scale != null) this.style.scale = config.UTMGridControl.scale;
+	if(config.UTMGridControl.major != null) {
+		this.style.major = config.UTMGridControl.major;
+		this.majorSlider.setValue(this.style.major*100);
+	}
+	if(config.UTMGridControl.minor != null) {
+		this.style.minor = config.UTMGridControl.minor;
+		this.minorSlider.setValue(this.style.minor*100);
+	}
+	if(config.UTMGridControl.crosshatch != null) {
+		this.style.crosshatch = config.UTMGridControl.crosshatch;
+		this.crosshatchSelect.val(this.style.crosshatch);
+	}
+	if(config.UTMGridControl.latlng != null) {
+		this.style.latlng = config.UTMGridControl.latlng;
+		this.llSelect.val(this.style.latlng);
+	}
+	if(config.UTMGridControl.scale != null) {
+		this.style.scale = config.UTMGridControl.scale;
+		this.scaleCB[0].checked = this.style.scale;
+	}
 	this._drawUTMGrid(true);
 	this._drawScale();
 }
@@ -785,49 +847,6 @@ org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
 	config.UTMGridControl.latlng = this.style.latlng;
 	config.UTMGridControl.scale = this.style.scale;
 	return config;
-}
-
-org.sarsoft.UTMGridControl.prototype.getSetupBlock = function() {
-	var that = this;
-	
-	var lineTypes = {0: "Edge Tickmarks Only", 20: "Crosshatches", 100: "Solid Lines"}
-	
-	if(this._mapForm == null) {
-		this._mapForm = new org.sarsoft.view.EntityForm([
-		    {name : "major", label: "1km Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%"], hint: "Opacity, 100% to 10%"},
-		    {name : "minor", label: "100m Gridlines", type: ["100%","90%","80%","70%","60%","50%","40%","30%","20%","10%","None"], hint: "Visible at high zoom levels only"},
-		    {name : "crosshatch", label: "Show UTM Grid as", type : ["Solid Lines", "Crosshatches", "Edge Tickmarks Only"]},
-		    {name : "latlng", label: "Lat/Long", type : ["Decimal Degree","DMH","DMS"]},
-		    {name : "scale", label: "Show Scale", type : "boolean"}
-		]);
-		var node = jQuery('<div style="margin-top: 10px"><span style="font-weight: bold; text-decoration: underline">UTM Grid</span></div>')[0];
-		this._mapForm.create(node);
-		this._setupBlock = {order : 10, node : node, handler : function() {
-			var obj = that._mapForm.read();
-			that.style.major = obj.major.substring(0, obj.major.length - 1)/100;
-			that.style.minor = (obj.minor == "None") ? 0 : obj.minor.substring(0, obj.minor.length - 1)/100;
-			that.style.latlng = (obj.latlng == "DMH") ? "DDMMHH" : (obj.latlng == "DMS" ? "DDMMSS" : "DD");
-			that.style.scale = obj.scale;
-			if(obj.crosshatch == "Solid Lines") {
-				that.style.crosshatch = 100;
-			} else if(obj.crosshatch == "Crosshatches") {
-				that.style.crosshatch = 20;
-			} else {
-				that.style.crosshatch = 0;
-			}
-			that._drawUTMGrid(true);
-			that._drawScale();
-		}};
-	}
-
-	this._mapForm.write({
-		major : (this.style.major*100) + "%",
-		minor : (this.style.minor == 0) ? "None" : (this.style.minor*100) + "%",
-		crosshatch : lineTypes[this.style.crosshatch],
-		latlng : (this.style.latlng == "DDMMHH") ? "DMH" : (this.style.latlng == "DDMMSS" ? "DMS" : "Decimal Degree"),
-		scale : this.style.scale
-	});
-	return this._setupBlock;
 }
 
 org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
@@ -1147,16 +1166,12 @@ org.sarsoft.MapLabelWidget.prototype.getConfig = function(config) {
 
 org.sarsoft.MapSizeWidget = function(imap) {
 	var that = this;
-	this.pageSizeDlg = new org.sarsoft.view.MapSizeDlg(imap.map);
-	var pagesetup = document.createElement("img");
-	pagesetup.src=org.sarsoft.imgPrefix + "/print.png";
-	pagesetup.style.cursor="pointer";
-	pagesetup.style.verticalAlign="middle";
-	pagesetup.title = "Adjust page size for printing";
-	GEvent.addDomListener(pagesetup, "click", function() {
-		that.pageSizeDlg.show();
+	var img = jQuery('<img style="vertical-align: middle" title="Adjust page size for printing" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>');
+	this.dropdown = new org.sarsoft.view.MenuDropdown(img, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div, function() {
+		that.pageSizeForm.read();
 	});
-	imap.addMenuItem(pagesetup, 30);
+	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, this.dropdown.div);
+	imap.addMenuItem(this.dropdown.container, 30);
 }
 
 org.sarsoft.MapPermissionWidget = function(imap) {
@@ -1170,35 +1185,36 @@ org.sarsoft.MapFindWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
 
-	this.body = document.createElement("div");
-	this.dialog = org.sarsoft.view.CreateDialog("Find", this.body, "Find", "Cancel", function() {
-		var entry = that.locationEntryForm.read(function(gll) { that.imap.setCenter(gll, 14);});
-		if(!entry) that.checkBlocks();
-		}, {width: "550px"});
-
-	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
-	this.locationEntryForm.create(this.body, function() {
-		that.dialog.hide();
-		that.locationEntryForm.read(function (gll) {that.imap.setCenter(gll, 14);});
-	});
-	
-	var find = jQuery('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>')[0];
-	GEvent.addDomListener(find, "click", function() {
+	var find = jQuery('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>');
+	this.dropdown = new org.sarsoft.view.MenuDropdown(find, 'width: 100%; right: 0', imap.map._overlaydropdownmapcontrol.div, function() {
 		that.locationEntryForm.clear();
 		that.initializeDlg();
-		that.dialog.show();
 		if(typeof GClientGeocoder != 'undefined') {
 			that.locationEntryForm.address.focus();
 		}
 	});
-	imap.addMenuItem(find, 25);
+
+	this.formContainer = jQuery('<div></div>').appendTo(this.dropdown.div);
+	this.locationEntryForm = new org.sarsoft.ThinLocationForm();
+	this.locationEntryForm.create(this.formContainer, function() {
+		that.locationEntryForm.read(function (gll) {that.imap.setCenter(gll, 14);});
+	});
+	
+	this.formContainer.append('<div style="width: 100%; clear: both"></div>');
+	var go = jQuery('<button>Re-Center Map</button>').appendTo(this.dropdown.div)
+	go.click(function() {
+		var entry = that.locationEntryForm.read(function(gll) { that.imap.setCenter(gll, 14);});
+		if(!entry) that.checkBlocks();
+	});
+
+	imap.addMenuItem(this.dropdown.container, 25);
 }
 
 org.sarsoft.MapFindWidget.prototype.initializeDlg = function() {
 	var blocks = new Array();
 	if(this._container != null) $(this._container).remove();
 	this._container = document.createElement("div");
-	this.body.appendChild(this._container);
+	this.formContainer.append(this._container);
 
 	for(var key in this.imap.registered) {
 		if(this.imap.registered[key].getFindBlock != null) {
@@ -1279,14 +1295,15 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 		if(message == null) message = "Save map settings (e.g. visible layers, UTM grid) for future page loads?  Data is automatically saved as you work on it.";
 		this.imap = imap;
 		if(persist) {
-			var saveDlg = org.sarsoft.view.CreateDialog("Save Map Settings", message, "Save", "Cancel", function() {
+			var img = jQuery('<img src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle" title="Save Map Settings."/>')
+			var dropdown = new org.sarsoft.view.MenuDropdown(img, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
+			jQuery('<div style="padding-top: 5px"></div>').append(message).appendTo(dropdown.div);
+			var ok = jQuery('<button>Save Map Settings</button>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(dropdown.div));
+			ok.click(function() {
 				that.saveConfig();
+				dropdown.hide();
 			});
-			var save = jQuery('<img src="/static/images/save.png" style="cursor: pointer; vertical-align: middle" title="Save Map Settings."/>')[0];
-			GEvent.addDomListener(save, "click", function() {
-				saveDlg.show();
-			});
-			imap.addMenuItem(save, 34);
+			imap.addMenuItem(dropdown.container, 34);
 		}
 	}
 }
@@ -1397,12 +1414,16 @@ org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 	}
 }
 
-org.sarsoft.view.MenuDropdown = function(html, css) {
+org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
 	var that = this;
+	this.onShow = onShow;
 	var container = jQuery('<span style="position: relative"></span>');
-	var trigger = jQuery('<span></span>').append(html).appendTo(container);
+	var trigger = jQuery('<span style="cursor: pointer"></span>').append(html).appendTo(container);
+	
+	this.isArrow = (html == "&darr;");
 
-	var div = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + css + '"></div>').appendTo(container);
+	var div = jQuery('<div style="color: black; font-weight: normal; visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + css + '"></div>');
+	div.appendTo(parent != null ? parent : container);
 	trigger.click(function() {
 		if(div.css("visibility")=="hidden") {
 			that.show();
@@ -1411,10 +1432,11 @@ org.sarsoft.view.MenuDropdown = function(html, css) {
 		}
 	});
 		
-	this.content = jQuery('<div style="color: black; font-weight: normal; padding-top: 2px"></div>').appendTo(div);
+	this.content = jQuery('<div style="padding-top: 2px"></div>').appendTo(div);
 	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>').appendTo(this.content);
-	upArrow.click(function() {div.css("visibility", "hidden");});
+	upArrow.click(function() {that.hide()});
 
+	this.trigger = trigger;
 	this.container = container[0];
 	this.div = div;	
 }
@@ -1423,10 +1445,13 @@ org.sarsoft.view.MenuDropdown.prototype.show = function() {
 	// TODO: need to be able to send a callback to the menu div in order to reset
 	// its z-index to 1001
 	this.div.css("visibility", "visible");
+	if(this.isArrow) this.trigger.html('&uarr;');
+	if(this.onShow != null) this.onShow();
 }
 
 org.sarsoft.view.MenuDropdown.prototype.hide = function() {
 	this.div.css("visibility", "hidden");
+	if(this.isArrow) this.trigger.html('&darr;');
 }
 
 org.sarsoft.InteractiveMap = function(map, options) {
@@ -2388,6 +2413,154 @@ org.sarsoft.LocationEntryForm.prototype.clear = function() {
 	this.DDMMSS.lngMM.val("");
 	this.DDMMSS.lngSS.val("");
 }
+
+org.sarsoft.ThinLocationForm = function() {
+}
+
+org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noLookup) {
+	var that = this;
+
+	var geocode = !(typeof GClientGeocoder == 'undefined' || noLookup);
+	this.select = jQuery('<select>' + (geocode ? '<option value="name">Place Name</option>' : '') + '<option value="UTM">UTM</option><option value="DD">DD</option><option value="DMS">DMS</option><option value="DMH">DMH</option></select>');
+	this.select.appendTo(jQuery('<div style="float: left"></div>').appendTo(container));
+	var div = jQuery('<div style="float: left"></div>').appendTo(container);
+	this.containers = {
+			name : jQuery('<div' + (geocode ? '' : ' style="display: none"') + '></div>').appendTo(div),
+			UTM : jQuery('<div' + (geocode ? ' style="display: none"' : '') + '></div>').appendTo(div),
+			DD : jQuery('<div style="display: none"></div>').appendTo(div),
+			DMH : jQuery('<div style="display: none"></div>').appendTo(div),
+			DMS : jQuery('<div style="display: none"></div>').appendTo(div),
+	}
+	
+	this.select.change(function() {
+		var type = that.select.val();
+		for (var key in that.containers) {
+			that.containers[key].css("display", "none");
+		}
+		that.containers[type].css("display", "block");
+	});
+
+	this.utmform = new org.sarsoft.UTMEditForm();
+	this.utmform.create(this.containers["UTM"]);
+
+	var dd = this.containers["DD"];
+	this.lat = jQuery('<input type="text" size="8"/>').appendTo(dd);
+	dd.append(", ");
+	this.lng = jQuery('<input type="text" size="8"/>').appendTo(dd);
+	if(typeof(navigator.geolocation) != "undefined") {
+		this.geoloc = jQuery('<button style="margin-left: 10px">My Location</button>').appendTo(dd);
+		this.geoloc.click(function() {
+			navigator.geolocation.getCurrentPosition(function(pos) {
+				that.lat.val(pos.coords.latitude);
+				that.lng.val(pos.coords.longitude);
+		}, function() { alert("Unable to determine your location.")});
+		});
+	}
+	dd.append('<br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span>');
+	
+	var ddmmhh = this.containers["DMH"];
+	this.DDMMHH = new Object();
+	this.DDMMHH.latDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmhh);
+	ddmmhh.append("\u00B0");
+	this.DDMMHH.latMM = jQuery('<input type="text" size="5"/>').appendTo(ddmmhh);
+	ddmmhh.append("', ");
+	this.DDMMHH.lngDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmhh);
+	ddmmhh.append("\u00B0");
+	this.DDMMHH.lngMM = jQuery('<input type="text" size="5"/>').appendTo(ddmmhh);
+	ddmmhh.append('\'<br/><span class="hint">WGS84 degree minutes, e.g. 39\u00B020.66\', -120\u00B012.32\'</span>');
+
+	var ddmmss = this.containers["DMS"];
+	this.DDMMSS = new Object();
+	this.DDMMSS.latDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmss);
+	ddmmss.append("\u00B0");
+	this.DDMMSS.latMM = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append("'");
+	this.DDMMSS.latSS = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append("'', ");
+	this.DDMMSS.lngDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmss);
+	ddmmss.append("\u00B0");
+	this.DDMMSS.lngMM = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append("'");
+	this.DDMMSS.lngSS = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	ddmmss.append('\'\'<br/><span class="hint">WGS84 degree minute seconds, e.g. 39\u00B020\'39\'\', -120\u00B012\'19\'\'</span>');
+	
+	var name = this.containers["name"];
+	this.address = jQuery('<input type="text" size="16"/>').appendTo(name);
+	name.append('<br/><span class="hint">e.g. "Mount Rainier" or "Castle Peak near Truckee, CA".</span>');
+	
+	if(handler != null) {
+		this.lng.keydown(function(event) {
+			if(event.keyCode == 13 && that.lat.val() != null) handler();
+		});
+		this.address.keydown(function(event) {
+			if(event.keyCode == 13) handler();
+		});
+	}
+}
+
+org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
+	var type = this.select.val();
+	if(type == "UTM") {
+		callback(GeoUtil.UTMToGLatLng(utm));
+	} else if(type == "name") {
+		var gcg = new GClientGeocoder();
+		gcg.getLatLng(this.address.val(), callback);
+	} else if(type == "DD") {
+		var lat = this.lat.val();
+		var lng = this.lng.val();
+		if(lat != null && lat.length > 0 && lng != null && lng.length > 0) {
+			callback(new GLatLng(1*lat, 1*lng));
+		} else {
+			return false;
+		}
+	} else if(type == "DDMMHH") {
+		var latdd = this.DDMMHH.latDD.val();
+		var lngdd = this.DDMMHH.lngDD.val();
+		if(latdd == null || latdd.length == 0 || lngdd == null || lngdd.length == 0) return false; 
+
+		var latneg = (1*latdd < 0) ? true : false;
+		var lngneg = (1*lngdd < 0) ? true : false;		
+		var lat = Math.abs(latdd) + (this.DDMMHH.latMM.val()/60);
+		var lng = Math.abs(lngdd) + (this.DDMMHH.lngMM.val()/60);
+		if(isNaN(lat) || isNaN(lng)) return false;
+		if(latneg) lat = -1*lat;
+		if(lngneg) lng = -1*lng;
+		callback(new GLatLng(lat, lng));
+	} else {
+		var latdd = this.DDMMSS.latDD.val();
+		var lngdd = this.DDMMSS.lngDD.val();
+		if(latdd == null || latdd.length == 0 || lngdd == null || lngdd.length == 0) return false; 
+
+		var latneg = (1*latdd < 0) ? true : false;
+		var lngneg = (1*lngdd < 0) ? true : false;
+
+		var lat = Math.abs(latdd) + (this.DDMMSS.latMM.val()/60) + (this.DDMMSS.latSS.val()/3600);
+		var lng = Math.abs(lngdd) + (this.DDMMSS.lngMM.val()/60) + (this.DDMMSS.lngSS.val()/3600);
+		if(isNaN(lat) || isNaN(lng)) return false;
+		if(latneg) lat = -1*lat;
+		if(lngneg) lng = -1*lng;
+		callback(new GLatLng(lat, lng));
+	}
+	return true;
+}
+
+org.sarsoft.ThinLocationForm.prototype.clear = function() {
+	this.utmform.write({zone : "", e : "", n : ""});
+	this.address.val("");
+	this.lat.val("");
+	this.lng.val("");
+	this.DDMMHH.latDD.val("");
+	this.DDMMHH.latMM.val("");
+	this.DDMMHH.lngDD.val("");
+	this.DDMMHH.lngMM.val("");
+	this.DDMMSS.latDD.val("");
+	this.DDMMSS.latMM.val("");
+	this.DDMMSS.latSS.val("");
+	this.DDMMSS.lngDD.val("");
+	this.DDMMSS.lngMM.val("");
+	this.DDMMSS.lngSS.val("");
+}
+
 
 function UTM(e, n, zone) {
 	this.e = Math.round(e);

@@ -13,28 +13,29 @@ org.sarsoft.Loader.queue(function() {
 	imap = new org.sarsoft.InteractiveMap(map, {positionWindow: !embed, UTM: true, size: !embed, find: !embed, separators: true, switchableDatum : true, suppressPermissionWidget: true});
 	urlwidget = new org.sarsoft.MapURLHashWidget(imap, embed);
 	if(!embed) {
-		setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
 		configWidget = new org.sarsoft.view.CookieConfigWidget(imap, true);
 		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity, alphaOverlays : urlwidget.config.alphaOverlays, center: {lat: map.getCenter().lat(), lng: map.getCenter().lng()}, zoom: map.getZoom()});
 		toolsController = new org.sarsoft.controller.MapToolsController(imap);
 	}
-	
+
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 
 	if(!embed) {
 		imap.message("Right click on map background to create shapes", 30000);
-		var leaveBody = jQuery('<span>Leave map view and return to the home page?<br/><br/></span>');
+
+		var leaveImg = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>');
+		var leaveDD = new org.sarsoft.view.MenuDropdown(leaveImg, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
+
+		var leaveBody = jQuery('<div style="padding-top: 5px">Leave map view and return to the home page?<br/><br/></div>').appendTo(leaveDD.div);
 		var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads</input>').appendTo(leaveBody);
 		jQuery('<br/><br/>').appendTo(leaveBody);
-		var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", leaveBody, "Leave", "Cancel", function() {
+
+		jQuery('<button>Leave</button>').appendTo(leaveBody).click(function() {
 			if(leaveCB.attr("checked")=="checked") configWidget.saveConfig();
 			window.location = "/maps";
 		});
-		var goback = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
-		GEvent.addDomListener(goback, "click", function() {
-			leaveDlg.show();
-		});
-		imap.addMenuItem(goback, 40);
+
+		imap.addMenuItem(leaveDD.container, 40);
 	}
 	
 	<c:if test="${uimessage ne null}">

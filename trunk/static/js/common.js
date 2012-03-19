@@ -105,6 +105,13 @@ org.sarsoft.Loader.execute = function() {
 
 org.sarsoft.Loader.queue(function() {YAHOO.util.Event.throwErrors = true;});
 
+org.sarsoft.view.CreateSlider = function(container) {
+	var sliderbg = jQuery('<div class="yui-h-slider" style="background: none; border-bottom: 1px solid #808080; width: 105px; float: left; margin-left: 5px; height: 6px"></div>');
+	container.append('<div style="float: left"><span style="color: #606060; margin-left: 5px">0</span></div>', sliderbg, '<div style="float: left; margin-left: 5px; color: #606060">100</div>');
+	var sliderthumb = jQuery('<div class="yui-slider-thumb" style="cursor: pointer; width: 5px; height: 12px; top: 0px; background-color: black">&#32;</div>').appendTo(sliderbg);
+	return YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, 100);
+}
+
 org.sarsoft.view.ContextMenu = function() {
 	var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;
 	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 500, showdelay : 0, zIndex: "1000"});
