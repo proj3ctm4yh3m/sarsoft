@@ -128,37 +128,23 @@ OverlayDropdownMapControl = function() {
 		}
 	});
 
-	this.div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>');
-	this.div.append(this.extras, this.typeSelect);
-	
-	var tPlus = jQuery('<span style="position: relative"></span>').appendTo(this.div);
-	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 3px" title="Additional Layers">+</span>').appendTo(tPlus);
+	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 3px" title="Additional Layers">+</span>');
+	var dd = new org.sarsoft.view.MenuDropdown(tps, 'width: 18em');
 	this.alphaOverlayPlus = tps[0];
 
-	var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 18em"></div>').appendTo(tPlus);
+	this.div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>');
+	this.div.append(this.extras, this.typeSelect, dd.container);
 
 	this.opacityInput.change(function() { that.handleLayerChange() });
 	$(this.typeSelect).change(function() { that.handleLayerChange() });
 	$(this.overlaySelect).change(function() { that.handleLayerChange() });
 
-	GEvent.addDomListener(tps[0], "click", function() {
-		if(tDiv.css("visibility")=="hidden") {
-			tDiv.css("visibility","visible");
-			that.div.css("z-index", 1001); // z-index gets overwritten by OpenLayers
-		} else {
-			tDiv.css("visibility", "hidden");
-		}
-		});
-	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>');
-	tDiv.append(jQuery('<div style="color: black; font-weight: normal"></div>').append(
-			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlaySelect, "@", this.opacityInput, "%"), 
-			upArrow).append(
+	dd.div.append(jQuery('<div style="color: black; font-weight: normal"></div>').append(
+			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlaySelect, "@", this.opacityInput, "%")).append(
 		jQuery('<div style="clear: both; height: 15px"></div>').append(
 				'<div style="float: left; margin-left: 2px">Enter % or: <span style="color: #606060; margin-left: 5px">0</span></div>', sliderbg, '<div style="float: left; margin-left: 5px; color: #606060">100</div>')));
-	upArrow.click(function() {tDiv.css("visibility", "hidden");});
 	
-	this.aDiv = jQuery('<div style="clear: both; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #808080"></div>').appendTo(tDiv);
-	this.tDiv = tDiv;
+	this.aDiv = jQuery('<div style="clear: both; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #808080"></div>').appendTo(dd.div);
 }
 
 OverlayDropdownMapControl.prototype = new GControl();
@@ -1411,6 +1397,37 @@ org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 	}
 }
 
+org.sarsoft.view.MenuDropdown = function(html, css) {
+	var that = this;
+	var container = jQuery('<span style="position: relative"></span>');
+	var trigger = jQuery('<span></span>').append(html).appendTo(container);
+
+	var div = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + css + '"></div>').appendTo(container);
+	trigger.click(function() {
+		if(div.css("visibility")=="hidden") {
+			that.show();
+		} else {
+			that.hide();
+		}
+	});
+		
+	this.content = jQuery('<div style="color: black; font-weight: normal; padding-top: 2px"></div>').appendTo(div);
+	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>').appendTo(this.content);
+	upArrow.click(function() {div.css("visibility", "hidden");});
+
+	this.container = container[0];
+	this.div = div;	
+}
+
+org.sarsoft.view.MenuDropdown.prototype.show = function() {
+	// TODO: need to be able to send a callback to the menu div in order to reset
+	// its z-index to 1001
+	this.div.css("visibility", "visible");
+}
+
+org.sarsoft.view.MenuDropdown.prototype.hide = function() {
+	this.div.css("visibility", "hidden");
+}
 
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
