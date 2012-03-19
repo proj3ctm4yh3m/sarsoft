@@ -325,7 +325,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		if(nestMenuItems) {
 			items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
 		}
-	
+
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
 			this.imap.addContextMenuItems(items.concat([
 	    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
@@ -347,31 +347,14 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		}
 	
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
-			this.newMarkup = new Object();
-
-			var tPlus = jQuery('<span style="position: relative"></span>');
-			var tps = jQuery('<span><img src="' + org.sarsoft.imgPrefix + '/new.png" style="vertical-align: middle; cursor: pointer" title="New Shape or Marker"/></span>').appendTo(tPlus);
-
-			var tDiv = jQuery('<div style="visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + 'width: 10em"></div>').appendTo(tPlus);
-
-			GEvent.addDomListener(tps[0], "click", function() {
-				if(tDiv.css("visibility")=="hidden") {
-					tDiv.css("visibility","visible");
-				} else {
-					tDiv.css("visibility", "hidden");
-				}
-				});
+			var dd = new org.sarsoft.view.MenuDropdown('<img src="' + org.sarsoft.imgPrefix + '/new.png" style="vertical-align: middle; cursor: pointer" title="New Shape or Marker"/>', 'width: 10em');
 			
-			var links = jQuery('<div style="color: black; font-weight: normal; padding-top: 2px"></div>').appendTo(tDiv);
-			var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>').appendTo(links);
-			var newMarker = jQuery('<div style="margin-left: 2px; cursor: pointer">New Marker</div>').appendTo(links);
-			var newLine = jQuery('<div style="margin-left: 2px; cursor: pointer">New Line</div>').appendTo(links);
-			var newPolygon = jQuery('<div style="margin-left: 2px; cursor: pointer">New Polygon</div>').appendTo(links);
-			
-			upArrow.click(function() {tDiv.css("visibility", "hidden");});
+			var newMarker = jQuery('<div style="margin-left: 2px; cursor: pointer">New Marker</div>').appendTo(dd.content);
+			var newLine = jQuery('<div style="margin-left: 2px; cursor: pointer">New Line</div>').appendTo(dd.content);
+			var newPolygon = jQuery('<div style="margin-left: 2px; cursor: pointer">New Polygon</div>').appendTo(dd.content);
 			
 			newMarker.click(function() {
-				tDiv.css("visibility", "hidden");
+				dd.hide();
 				var center = that.imap.map.getCenter();
 	    		that.markerLocationForm.write({lat: center.lat(), lng: center.lng()});
 	    		that.markerLocationDlg.handler = function() {
@@ -390,7 +373,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	    		that.markerLocationDlg.show();
 			});
 			newLine.click(function() {
-				tDiv.css("visibility", "hidden");
+				dd.hide();
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=false;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});
@@ -399,7 +382,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			});
 
 			newPolygon.click(function() {
-				tDiv.css("visibility", "hidden");
+				dd.hide();
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=true;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});
@@ -407,9 +390,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			    that.shapeDlg.show();
 			});
 			
-			this.newMarkup.tDiv = tDiv;
-			
-			imap.addMenuItem(tPlus[0], 21);
+			imap.addMenuItem(dd.container, 21);
 		}
 				
 	}
