@@ -408,6 +408,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		this.gps = new Object();
 		this.gps.form = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post">I want to:</form>');
 		this.gps.io = jQuery('<select style="margin-left: 15px"><option value="export">Export</option>' + ((org.sarsoft.userPermissionLevel != "READ") ? '<option value="import">Import</option>' : '') + '</select').appendTo(this.gps.form);
+
 		this.gps.form.append("<br/><br/>");
 
 		this.gps.exp = jQuery('<div></div>').appendTo(this.gps.form);
@@ -445,7 +446,32 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 				that.garmindlg.show(true, url, "");
 			}
 		}
-		this.gps.dlg = new org.sarsoft.view.CreateDialog("Import / Export", this.gps.form[0], "GO", "Cancel", function() {
+		
+		var img = jQuery('<img src="' + org.sarsoft.imgPrefix + '/gps.png" style="cursor: pointer; vertical-align: middle" title="Export"/>');
+		var dropdown = new org.sarsoft.view.MenuDropdown(img, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div, function() {
+			that.gps.shape.empty();
+			for(var key in that.shapes) {
+				if(that.shapes[key].label != null && that.shapes[key].label.length > 0) that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + org.sarsoft.htmlescape(that.shapes[key].label) + '</option>')
+			}
+			if(that.gps.shape.children().length == 0) {
+				that.gps.shapeDiv.css("display", "none");
+			} else {
+				that.gps.shapeDiv.css("display", "block");
+			}
+			that.gps.marker.empty();
+			for(var key in that.markers) {
+				if(that.markers[key].label != null && that.markers[key].label.length > 0) that.gps.marker.append('<option value="' + that.markers[key].id + '">' + org.sarsoft.htmlescape(that.markers[key].label) + '</option>')
+			}
+			if(that.gps.marker.children().length == 0) {
+				that.gps.markerDiv.css("display", "none");
+			} else {
+				that.gps.markerDiv.css("display", "block");
+			}
+		});
+		
+		dropdown.div.append(this.gps.form);
+		jQuery('<button>GO</button>').appendTo(dropdown.div).click(function() {
+			dropdown.hide();
 			var impexp = that.gps.io.val();
 			if(impexp == "export") {
 				var val = $("input[@name=gpsexport]:checked").val();
@@ -470,29 +496,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			}
 		});
 		
-		var icon = jQuery('<img src="' + org.sarsoft.imgPrefix + '/gps.png" style="cursor: pointer; vertical-align: middle" title="Export"/>')[0];
-		GEvent.addDomListener(icon, "click", function() {
-			that.gps.shape.empty();
-			for(var key in that.shapes) {
-				if(that.shapes[key].label != null && that.shapes[key].label.length > 0) that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + org.sarsoft.htmlescape(that.shapes[key].label) + '</option>')
-			}
-			if(that.gps.shape.children().length == 0) {
-				that.gps.shapeDiv.css("display", "none");
-			} else {
-				that.gps.shapeDiv.css("display", "block");
-			}
-			that.gps.marker.empty();
-			for(var key in that.markers) {
-				if(that.markers[key].label != null && that.markers[key].label.length > 0) that.gps.marker.append('<option value="' + that.markers[key].id + '">' + org.sarsoft.htmlescape(that.markers[key].label) + '</option>')
-			}
-			if(that.gps.marker.children().length == 0) {
-				that.gps.markerDiv.css("display", "none");
-			} else {
-				that.gps.markerDiv.css("display", "block");
-			}
-			that.gps.dlg.show();
-		});
-		imap.addMenuItem(icon, 40);
+		imap.addMenuItem(dropdown.container, 40);
 	}
 
 	this.markerDAO.loadAll(function(markers) {

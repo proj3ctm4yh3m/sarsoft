@@ -23,7 +23,6 @@ org.sarsoft.Loader.queue(function() {
   markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
   if(!embed) {
 	toolsController = new org.sarsoft.controller.MapToolsController(imap);
-  	setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
     collabWidget = new org.sarsoft.MapCollaborationWidget(imap);
   }
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
@@ -31,35 +30,35 @@ org.sarsoft.Loader.queue(function() {
 
   if(!embed) {
 	imap.message("Right click on map background to create shapes", 30000);
-	var leaveBody = jQuery('<span>Leave map view and return to the home page?<br/><br/>You might also want to view <a href="/guide?id=${tenant.name}">this map\'s guide</a>.<br/><br/></span>');
-	var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads (data is automatically saved as you work on it)</input>').appendTo(leaveBody);
-	jQuery('<br/><br/>').appendTo(leaveBody);
-	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", leaveBody, "Leave", "Cancel", function() {
+
+	var leaveImg = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>');
+	var leaveDD = new org.sarsoft.view.MenuDropdown(leaveImg, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
+
+	var leaveBody = jQuery('<div style="padding-top: 5px">Leave map view?<br/><br/></div>').appendTo(leaveDD.div);
+	var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads (data is automatically saved as you work on it)</input>');
+	if(org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.userPermissionLevel == "WRITE") {
+		leaveCB.appendTo(leaveBody);
+		jQuery('<br/><br/>').appendTo(leaveBody);
+	}
+	
+	leaveHandler = function(url) {
 		if(leaveCB.attr("checked")=="checked") {
 			configWidget.saveConfig(function() {
-				window.location = "/maps";
+				window.location = url;
 			});
 		} else {
-			window.location = "/maps";
-		}
-	});
-	var goback = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>')[0];
-	GEvent.addDomListener(goback, "click", function() {
-		leaveDlg.show();
-	});
-	imap.addMenuItem(goback, 40);
-
-	if(org.sarsoft.userPermissionLevel == "ADMIN") {
-		var goToAdmin = new Object();
-		imap.register("goToAdmin", goToAdmin);
-		goToAdmin.getSetupBlock = function() {
-			return {
-				order : 1,
-				node : jQuery('<div>Visit the <a href="/admin.html">Admin Page</a> to manage sharing</div>')[0],
-				handler : function() {}
-			}
+			window.location = url;
 		}
 	}
+	var bottomRow = jQuery('<div>Go To:</div>').appendTo(leaveBody);
+	jQuery('<a href="javascript:leaveHandler(\'/maps\')" style="margin-left: 15px">Home Page</a>').appendTo(bottomRow);
+	jQuery('<a href="javascript:leaveHandler(\'/guide?id=${tenant.name}\')" style="margin-left: 15px">Guide</a>').appendTo(bottomRow);
+	if(org.sarsoft.userPermissionLevel == "ADMIN") {
+		jQuery('<a href="javascript:leaveHandler(\'/admin.html\')" style="margin-left: 15px">Admin Page</a>').appendTo(bottomRow);
+	}
+	
+	imap.addMenuItem(leaveDD.container, 40);
+
   }
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 });
