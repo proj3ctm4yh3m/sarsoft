@@ -1074,19 +1074,35 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 		this.imap = imap;
 		imap.register("org.sarsoft.DataNavigatorTogglecontrol", this);
 	}
+	this.offset = 250;
+	this.state = false;
 }
 
 org.sarsoft.DataNavigatorToggleControl.prototype = new GControl();
 org.sarsoft.DataNavigatorToggleControl.prototype.printable = function() { return false; }
 org.sarsoft.DataNavigatorToggleControl.prototype.selectable = function() { return false; }
-org.sarsoft.DataNavigatorToggleControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_BOTTOM_LEFT, new GSize(0, 200)); }
+org.sarsoft.DataNavigatorToggleControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(0, $(this.imap.map.getContainer()).height()/2)); }
 
 org.sarsoft.DataNavigatorToggleControl.prototype.initialize = function(map) {
 	var that = this;
 	this.map = map;
 	this._show = true;
 
-	this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/right.png" title="Show Data Navigator" style="cursor: pointer" class="noprint"/>');
+	this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/right.png" title="Show Data Navigator" style="cursor: pointer" class="noprint"/>');	
+	this.dragbar = jQuery('<div style="visibility: hidden; top: 0; left: 0; position: absolute; z-index: 2000; height: 100%; width: 8px; background-color: black; opacity: 0.4; filter: alpha(opacity=40)"></div>').appendTo(this.imap.container.top);
+
+	this.minmax.bind('drag', function(evt) {
+		if(that.state) that.dragbar.css({visibility : 'visible', left : Math.max(that.offset + evt.offsetX - 8, 150) + "px"});
+	});
+	
+	this.minmax.bind('dragend', function(evt) {
+		if(that.state) {
+			that.dragbar.css({visibility: 'hidden', left: '0px'});
+			that.offset = Math.max(that.offset + evt.offsetX, 150);
+			that.showDataNavigator();
+		}
+	});
+	
 	this.minmax.click(function(event) {
 		that._show = !that._show;
 		if(that._show) {
@@ -1095,7 +1111,8 @@ org.sarsoft.DataNavigatorToggleControl.prototype.initialize = function(map) {
 			that.hideDataNavigator();
 		}
 	});
-
+	
+	
 	map.getContainer().appendChild(this.minmax[0]);
 	return this.minmax[0];
 
@@ -1105,11 +1122,13 @@ org.sarsoft.DataNavigatorToggleControl.prototype.showDataNavigator = function() 
 	this.minmax[0].src = org.sarsoft.imgPrefix + '/left.png';
 	this.minmax[0].title = "Hide Data Navigator";
 	var center = this.map.getCenter();
-	this.imap.container.top.css({"padding-left": "20em"});
-	this.imap.container.left.css({width: "19em", display : "block", "margin-left": "-19em"});
+	var width = this.offset + "px"
+	this.imap.container.top.css({"padding-left": width});
+	this.imap.container.left.css({width: width, display : "block", "margin-left": "-" + width});
 	this.imap.container.right.css({float : "left"});
 	this.map.checkResize();
 	this.map.setCenter(center);
+	this.state = true;
 }
 
 org.sarsoft.DataNavigatorToggleControl.prototype.hideDataNavigator = function() {
@@ -1121,6 +1140,24 @@ org.sarsoft.DataNavigatorToggleControl.prototype.hideDataNavigator = function() 
 	this.imap.container.right.css({float : "none"});
 	this.map.checkResize();
 	this.map.setCenter(center);
+	this.state = false;
+}
+
+org.sarsoft.DataNavigatorToggleControl.prototype.setConfig = function(config) {
+	if(config.DataNavigatorToggleControl == null) return;
+	this.offset = config.DataNavigatorToggleControl.offset;
+	if(config.DataNavigatorToggleControl.state) {
+		this.showDataNavigator();
+	} else {
+		this.hideDataNavigator();
+	}
+}
+
+org.sarsoft.DataNavigatorToggleControl.prototype.getConfig = function(config) {
+	if(config.DataNavigatorTogleControl == null) config.DataNavigatorToggleControl = new Object();
+	config.DataNavigatorToggleControl.offset = this.offset;
+	config.DataNavigatorToggleControl.state = this.state;
+	return config;
 }
 
 
