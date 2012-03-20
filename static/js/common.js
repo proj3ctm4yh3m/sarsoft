@@ -143,14 +143,15 @@ org.sarsoft.view.ContextMenu.prototype._addItems = function(menu, items, subject
 	}
 }
 
-org.sarsoft.view.ContextMenu.prototype.show = function(point, subject) {
+org.sarsoft.view.ContextMenu.prototype.show = function(point, subject, screenxy) {
 	var that = this;
 	this.data = {point: point, subject: subject};
 	this.menu.clearContent();
+	if(screenxy == null) screenxy = point;
 	
 	this._addItems(this.menu, this.items, subject, this.data);
 
-	this.menu.moveTo(point.x, point.y);
+	this.menu.moveTo(screenxy.x, screenxy.y);
 	this.menu.render(document.body);
 	this.menu.show();
 }
