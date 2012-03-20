@@ -1055,6 +1055,75 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	}
 }
 
+org.sarsoft.DataNavigator = function(imap) {
+	if(imap != null) {
+		this.imap = imap;
+		this.container = imap.container.left;
+		imap.register("org.sarsoft.DataNavigator", this);
+	}
+}
+
+org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
+	this.container.append('<div style="font-weight: bold; font-size: 160%">' + title + '</div>');
+	var div = jQuery('<div style="padding-bottom: 1.5em"></div>').appendTo(this.container);
+	return div;
+}
+
+org.sarsoft.DataNavigatorToggleControl = function(imap) {
+	if(imap != null) {
+		this.imap = imap;
+		imap.register("org.sarsoft.DataNavigatorTogglecontrol", this);
+	}
+}
+
+org.sarsoft.DataNavigatorToggleControl.prototype = new GControl();
+org.sarsoft.DataNavigatorToggleControl.prototype.printable = function() { return false; }
+org.sarsoft.DataNavigatorToggleControl.prototype.selectable = function() { return false; }
+org.sarsoft.DataNavigatorToggleControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_BOTTOM_LEFT, new GSize(0, 200)); }
+
+org.sarsoft.DataNavigatorToggleControl.prototype.initialize = function(map) {
+	var that = this;
+	this.map = map;
+	this._show = true;
+
+	this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/right.png" title="Show Data Navigator" style="cursor: pointer" class="noprint"/>');
+	this.minmax.click(function(event) {
+		that._show = !that._show;
+		if(that._show) {
+			that.showDataNavigator();
+		} else {
+			that.hideDataNavigator();
+		}
+	});
+
+	map.getContainer().appendChild(this.minmax[0]);
+	return this.minmax[0];
+
+}
+
+org.sarsoft.DataNavigatorToggleControl.prototype.showDataNavigator = function() {
+	this.minmax[0].src = org.sarsoft.imgPrefix + '/left.png';
+	this.minmax[0].title = "Hide Data Navigator";
+	var center = this.map.getCenter();
+	this.imap.container.top.css({"padding-left": "20em"});
+	this.imap.container.left.css({width: "19em", display : "block", "margin-left": "-19em"});
+	this.imap.container.right.css({float : "left"});
+	this.map.checkResize();
+	this.map.setCenter(center);
+}
+
+org.sarsoft.DataNavigatorToggleControl.prototype.hideDataNavigator = function() {
+	this.minmax[0].src = org.sarsoft.imgPrefix + '/right.png';
+	this.minmax[0].title = "Show Data Navigator";
+	var center = this.map.getCenter();
+	this.imap.container.top.css({"padding-left": "0"});
+	this.imap.container.left.css({width: "0", "margin-left": "0", display: "none", height: "100%"});
+	this.imap.container.right.css({float : "none"});
+	this.map.checkResize();
+	this.map.setCenter(center);
+}
+
+
 org.sarsoft.PositionInfoControl = function(imap) {
 	if(imap != null) {
 		this.imap = imap;
@@ -1482,7 +1551,8 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		}
 		if(that._menuItems.length > 0  && that._menuItemsOverride == null) {
 			that._contextMenu.setItems(that._menuItems)
-			that._contextMenu.show(point, obj);
+			var offset = $(that.map.getContainer()).offset();
+			that._contextMenu.show(point, obj, new GPoint(point.x + offset.left, point.y + offset.top));
 		}
 		if(typeof that._handlers["singlerightclick"] != "undefined") {
 			for(var i = 0; i < that._handlers["singlerightclick"].length; i++) {
@@ -1517,6 +1587,25 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options.standardControls || options.separators) {
 		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 20);
 		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 100);
+	}
+
+	if(options.container != null) {
+		this.container = new Object();
+		this.container.top = $(options.container);
+		this.container.left = $(this.container.top.children()[0]);
+		this.container.right = $(this.container.top.children()[1]);
+		this.container.canvas = $(this.container.right[0]);
+		this.container.bottom = $(this.container.right[1]);
+
+		this.container.top.css({height : "100%"});
+		this.container.left.css({position : "relative", float : "left", height: "100%", display : "none", "overflow-y" : "auto"});
+		this.container.right.css({position : "relative", width : "100%", height: "100%"});
+		this.container.bottom.css({width : "100%", display: "none"});	
+		
+		var dn = new org.sarsoft.DataNavigator(this);
+		var dnc = new org.sarsoft.DataNavigatorToggleControl(this);
+		this.map.addControl(dnc);
+		dnc.showDataNavigator();
 	}
 
 }

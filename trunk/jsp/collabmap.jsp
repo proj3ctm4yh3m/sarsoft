@@ -19,7 +19,7 @@ org.sarsoft.Loader.queue(function() {
   </c:otherwise>
   </c:choose>
   var embed = !(window==top);
-  imap = new org.sarsoft.InteractiveMap(map, {standardControls : !embed, UTM: true, switchableDatum : true});
+  imap = new org.sarsoft.InteractiveMap(map, {standardControls : !embed, UTM: true, switchableDatum : true, container : $('#page_container')[0]});
   markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
   if(!embed) {
 	toolsController = new org.sarsoft.controller.MapToolsController(imap);
@@ -66,7 +66,14 @@ org.sarsoft.Loader.queue(function() {
 </script>
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
-<div id="map_canvas" style="width: 100%; height: 100%"></div>
+<div id="page_container" style="height: 100%">
+ <div id="map_left">
+ </div>
+ <div id="map_right" style="height: 100%">
+  <div id="map_canvas" style="width: 100%; height: 100%"></div>
+  <div id="map_bottom"></div>
+ </div>
+</div>
 
 </body>
 </html>
