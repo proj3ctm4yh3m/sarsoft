@@ -606,12 +606,18 @@ org.sarsoft.controller.MarkupMapController.prototype.editShape = function(shape)
 
 org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id) {
 	if(this.markers[id] != null) this.imap.removeWaypoint(this.markers[id].position);
+	if(this.dn.markerdiv != null && this.dn.markers[id] != null) {
+		this.dn.markers[id].empty();
+	}
 	delete this.markers[id];
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.removeShape = function(id) {
 	this.setShapeAttr(this.shapes[id], "inedit", false);
 	if(this.shapes[id] != null) this.imap.removeWay(this.shapes[id].way);
+	if(this.dn.shapediv != null && this.dn.shapes[id] != null) {
+		this.dn.shapes[id].empty();
+	}
 	delete this.shapes[id];
 }
 
