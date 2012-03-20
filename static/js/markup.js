@@ -841,48 +841,6 @@ org.sarsoft.controller.MarkupMapController.prototype.handleSetupChange = functio
 	}
 }
 
-org.sarsoft.controller.MarkupMapController.prototype.getFindBlock = function() {
-	var that = this;
-	var node = jQuery('<div></div>');
-	var node1 = jQuery('<div>Marker:</div>').appendTo(node);
-	var select1 = jQuery('<select><option value="--">--</option></select>').appendTo(node1);
-	for(var id in this.markers) {
-		var label = this.markers[id].label;
-		if(label != null && label.length > 0) {
-			jQuery('<option value="' + id + '">' + org.sarsoft.htmlescape(label) + '</option>').appendTo(select1);
-		}
-	}
-	if(select1.children().length == 1) node1.css("display", "none");
-
-	var node2 = jQuery('<div>Shape:</div>').appendTo(node);
-	var select2 = jQuery('<select><option value="--">--</option></select>').appendTo(node2);
-	for(var id in this.shapes) {
-		var label = this.shapes[id].label;
-		if(label != null && label.length > 0) {
-			jQuery('<option value="' + id + '">' + org.sarsoft.htmlescape(label) + '</option>').appendTo(select2);
-		}
-	}
-	if(select2.children().length == 1) node2.css("display", "none");
-
-	this._findBlock = {order : 10, node : node[0], handler : function() {
-		var id = select1.val();
-		if(id != "--") {
-			var wpt = that.markers[id].position;
-			that.imap.map.setCenter(new GLatLng(wpt.lat, wpt.lng), 15);
-			return true;
-		}
-		id = select2.val();
-		if(id != "--") {
-			var bb = that.shapes[id].way.boundingBox;
-			that.imap.setBounds(new GLatLngBounds(new GLatLng(bb[0].lat, bb[0].lng), new GLatLng(bb[1].lat, bb[1].lng)));
-			return true;
-		}
-		return false;
-	}};
-
-	return this._findBlock;
-}
-
 org.sarsoft.controller.MapToolsController = function(imap) {
 	var that = this;
 	this.imap = imap;
