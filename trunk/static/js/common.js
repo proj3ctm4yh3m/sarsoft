@@ -497,7 +497,7 @@ org.sarsoft.view.CreateDialog = function(title, bodynode, yes, no, handler, styl
 		dialog.hide();
 		handler();
 	}
-		
+
 	var buttons = [ { text : yes, handler: ok, isDefault: true}, {text : no, handler : function() { dialog.hide(); }}];
 	dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
 	dialog.render(document.body);
