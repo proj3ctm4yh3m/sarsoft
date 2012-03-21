@@ -12,7 +12,7 @@ Sarsoft is packaged as a JAR file; all you need to run it is Java 5.
 
  * Working data will be placed in a folder named `.sarsoft`, in the directory you start the .jar file from.
 
- * If you want to use user-supplied georeferenced imagery, it is recommended that you increase the memory available to the JVM, e.g. by using `java -Xmx256M -jar sarsoft-0.7.jar` with the Sun JVM.
+ * If you want to use user-supplied georeferenced imagery, it is recommended that you increase the memory available to the JVM, e.g. by using `java -Xmx256M -jar sarsoft-0.8.jar` with the Sun JVM.
 
 = Configuration =
 
