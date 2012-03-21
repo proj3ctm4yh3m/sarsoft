@@ -37,10 +37,13 @@ org.sarsoft.view.MarkerForm = function() {
 org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	var that = this;
 	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
-	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(form);
+	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(form)));
+	var left = jQuery('<td width="50%"></td>').appendTo(form);
+	var right = jQuery('<td width="50%"></td>').appendTo(form);
+	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left);
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
 	
-	div = jQuery('<div class="item"><label for="image" style="width: 80px">Image:</label>Currently:</div>').appendTo(form);
+	div = jQuery('<div class="item"><label for="image" style="width: 80px">Image:</label>Currently:</div>').appendTo(left);
 	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px; padding-left: 5px; padding-right: 5px" valign="top"/>').appendTo(div);
 	div.append('<span style="padding-left: 5px; padding-right: 5px">Show me</span>');
 	this.imgDD = jQuery('<select><option value="circles">Circles</option><option value="activities">Activities</option><option value="symbols">Symbols</option><option value="npsactivities">NPS Activities</option><option value="npssymbols">NPS Symbols</option><option value="arrows">Arrows</option></select>').appendTo(div);
@@ -57,7 +60,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	}
 	this.imgDD.change(this.imgDDonChange);
 
-	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(form);
+	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(left);
 	this.images = {npsactivities : ["nps-ski","nps-xc","nps-skate","nps-climbing","nps-scramble","nps-caving","nps-diving","nps-canoe","nps-roadbike","nps-dirtbike","nps-4wd","nps-snowmobile","nps-camera"],
 	        npssymbols : ["nps-parking","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-fire","nps-shower","nps-anchor","nps-rockfall","nps-slip","nps-shelter","nps-picnic","nps-water"],
 	        arrows : ["arr-sw","arr-w","arr-nw","arr-n","arr-ne","arr-e","arr-se","arr-s"],
@@ -90,10 +93,10 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 		that.handleChange();
 	});
 
-	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
-	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(form);
+	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(right);
+	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(right);
 
-	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
+	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(right);
 }
 
 
@@ -200,36 +203,39 @@ org.sarsoft.view.ShapeForm = function() {
 org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	var that = this;
 	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
+	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(form)));
+	var left = jQuery('<td width="50%"></td>').appendTo(form);
+	var right = jQuery('<td width="50%"></td>').appendTo(form);
 	
-	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(form);
+	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left);
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);	
 
-	div = jQuery('<div class="item" style="clear: both"><label for="color" style="width: 80px">Weight:</label></div>').appendTo(form);
+	div = jQuery('<div class="item" style="clear: both"><label for="color" style="width: 80px">Weight:</label></div>').appendTo(left);
 	this.weightInput = jQuery('<select name="weight"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>').appendTo(div);
 
-	this.fillDiv = jQuery('<div class="item"><label for="color" style="width: 80px">Fill:</label></div>').appendTo(form);
+	this.fillDiv = jQuery('<div class="item"><label for="color" style="width: 80px">Fill:</label></div>').appendTo(left);
 	this.fillInput = jQuery('<select name="fill"><option value="0">None</option><option value="10">10%</option>' + 
 			'<option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>' +
 			'<option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option>' +
 			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
 
-	div = jQuery('<div class="item"><label for="color" style="width: 80px">Color:</label></div>').appendTo(form);
+	div = jQuery('<div class="item"><label for="color" style="width: 80px">Color:</label></div>').appendTo(left);
 	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left"></div>').appendTo(div);
 	div.append('<span style="float: left; margin-left: 5px">Click below or color code:</span>');
 	this.colorInput = jQuery('<input name="color" type="text" size="6" style="float: left; margin-left: 5px"/>').appendTo(div);
 	this.colorInput.change(function() {colorSwatch.css('background-color', '#' + that.colorInput.val())});
 	
-	var colorContainer = jQuery('<div style="clear: both; margin-top: 5px"></div>').appendTo(form);
+	var colorContainer = jQuery('<div style="clear: both; margin-top: 5px"></div>').appendTo(left);
 	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
 	for(var i = 0; i < colors.length; i++) {
 		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
 		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j].substr(1)); that.colorInput.trigger('change');}}());
 	}	
 	
-	div = jQuery('<div class="item" style="padding-top: 5px; clear: both">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(form);
-	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(form);
+	div = jQuery('<div class="item" style="padding-top: 5px; clear: both">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(right);
+	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(right);
 
-	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(form);
+	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(right);
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
@@ -317,7 +323,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		this.alertDlg = org.sarsoft.view.AlertDialog("Comments", this.alertDlgDiv)
 	
 		var form = new org.sarsoft.view.MarkerForm();
-		this.markerDlg = new org.sarsoft.view.EntityCreateDialog("Marker Details", form, function(marker) {
+		this.markerDlg = new org.sarsoft.view.MapEntityDialog(imap, "Marker Details", form, function(marker) {
 			if(that.markerDlg.marker != null) {
 				marker.position = that.markerDlg.marker.position;
 				that.markerDAO.save(that.markerDlg.marker.id, marker, function(obj) {
@@ -344,7 +350,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			that.markerLocationDlg.hide();
 			that.markerLocationForm.read(doit);
 		});
-		this.markerLocationDlg = org.sarsoft.view.CreateDialog("Marker Location", lbody, "OK", "Cancel", function() {
+		this.markerLocationDlg = new org.sarsoft.view.MapDialog(imap, "Marker Location", lbody, "OK", "Cancel", function() {
 			if(that.markerLocationDlg.handler != null) {
 				that.markerLocationDlg.handler();
 			} else {
@@ -353,7 +359,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		},  {left: "100px", width: "450px"});
 
 		form = new org.sarsoft.view.ShapeForm();
-		this.shapeDlg = new org.sarsoft.view.EntityCreateDialog("Shape Details",form , function(shape) {
+		this.shapeDlg = new org.sarsoft.view.MapEntityDialog(imap, "Shape Details",form , function(shape) {
 			if(that.shapeDlg.shape != null) {
 				that.shapeDAO.save(that.shapeDlg.shape.id, shape, function(obj) {
 					that.refreshShapes([obj]);

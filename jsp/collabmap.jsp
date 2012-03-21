@@ -71,7 +71,6 @@ org.sarsoft.Loader.queue(function() {
  </div>
  <div id="map_right" style="height: 100%">
   <div id="map_canvas" style="width: 100%; height: 100%"></div>
-  <div id="map_bottom"></div>
  </div>
 </div>
 

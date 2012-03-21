@@ -1072,7 +1072,7 @@ org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
 org.sarsoft.DataNavigatorToggleControl = function(imap) {
 	if(imap != null) {
 		this.imap = imap;
-		imap.register("org.sarsoft.DataNavigatorTogglecontrol", this);
+		imap.register("org.sarsoft.DataNavigatorToggleControl", this);
 	}
 	this.offset = 250;
 	this.state = false;
@@ -1560,6 +1560,77 @@ org.sarsoft.view.MenuDropdown.prototype.hide = function() {
 	if(this.isArrow) this.trigger.html('&darr;');
 }
 
+org.sarsoft.view.MapEntityDialog = function(imap, title, entityform, handler, okButton) {
+	if(okButton == null) okButton = "Create";
+	var that = this;
+	this.handler = handler;
+	this.entityform = entityform;
+	this.body = document.createElement("div");
+	entityform.create(this.body);
+	this.dialog = new org.sarsoft.view.MapDialog(imap, title, this.body, okButton, "Cancel", function() {
+		var obj = that.entityform.read();
+		that.entityform.write(new Object());
+		handler(obj);
+	});
+}
+
+org.sarsoft.view.MapEntityDialog.prototype.show = function(obj) {
+	if(obj != null) this.entityform.write(obj);
+	this.dialog.show();
+}
+
+
+org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, style) {
+	var that = this;
+	this.imap = imap;
+	var dlgStyle = {width: "300px", position: "absolute", top: "0px", left: "0px", "z-index": "2500"};
+	if(style != null) for(var key in style) {
+		dlgStyle[key] = style[key];
+	}
+	
+	if(typeof(bodynode)=="string") bodynode = jQuery('<div>' + bodynode + '</div>')[0];
+	
+	var dlg = jQuery('<div></div>');
+	dlg.css(dlgStyle);
+	this.hd = jQuery('<div class="hd">' + title + '</div>').appendTo(dlg);
+	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
+	this.bd.append(bodynode);
+	this.ft = jQuery('<div class="ft"></div>').appendTo(dlg);
+
+	var ok = function() {
+		that.dialog.hide();
+		handler();
+	}
+
+	var buttons = [ { text : yes, handler: ok, isDefault: true}, {text : no, handler : function() { that.dialog.hide(); }}];
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
+	this.dialog.render(document.body);
+	this.dialog.hide();
+	this.dialog.ok = ok;
+	this.dlg = dlg;
+	
+	this.dialog.hideEvent.subscribe(function() {
+		that.imap.map.getContainer().style.height = that._originalContainerHeight;
+		that.imap.map.checkResize();
+		that.imap.registered["org.sarsoft.view.MapDialog"] = null;
+	});
+}
+
+org.sarsoft.view.MapDialog.prototype.show = function() {
+	if(this.imap.registered["org.sarsoft.view.MapDialog"] != null) this.imap.registered["org.sarsoft.view.MapDialog"].dialog.hide();
+	this.imap.register("org.sarsoft.view.MapDialog", this);
+	this._originalContainerHeight = this.imap.map.getContainer().style.height;
+	var container = $(this.imap.map.getContainer());
+	this.dlg.css({left: '0px', top: '0px', 'width': (container.width()-2) + "px"});
+	var dlgHeight = this.hd.outerHeight()+this.bd.outerHeight()+this.ft.outerHeight()+2;
+	this.dlg.css({left: (container.offset().left+1) + "px", top: (container.height()-dlgHeight) + "px"});
+	this.dialog.show();
+	if(this.imap.container != null) {
+		container.css('height', container.height() - dlgHeight);
+		this.imap.map.checkResize();
+	}
+}
+
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
 	this.map = map;
@@ -1632,12 +1703,10 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		this.container.left = $(this.container.top.children()[0]);
 		this.container.right = $(this.container.top.children()[1]);
 		this.container.canvas = $(this.container.right[0]);
-		this.container.bottom = $(this.container.right[1]);
 
 		this.container.top.css({height : "100%"});
 		this.container.left.css({position : "relative", float : "left", height: "100%", display : "none", "overflow-y" : "auto"});
 		this.container.right.css({position : "relative", width : "100%", height: "100%"});
-		this.container.bottom.css({width : "100%", display: "none"});	
 		
 		var dn = new org.sarsoft.DataNavigator(this);
 		var dnc = new org.sarsoft.DataNavigatorToggleControl(this);
