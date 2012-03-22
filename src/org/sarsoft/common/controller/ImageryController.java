@@ -57,8 +57,7 @@ public class ImageryController extends JSONBaseController {
 		binder.registerCustomEditor(byte[].class, new ByteArrayMultipartFileEditor());
 	}
 
-	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+	protected InputStream getLocalTileInputStream(String layer, int z, int x, int y) {
 		InputStream in = null;
 		String tile =  layer + "/" + z + "/" + x + "/" + y + ".png";
 		if(EXTERNAL_TILE_DIR == null) EXTERNAL_TILE_DIR = getProperty("sarsoft.map.localTileStore");
@@ -82,45 +81,10 @@ public class ImageryController extends JSONBaseController {
 				in = null;
 			}
 		}
-		if(in == null) {
-			try {
-				response.sendError(HttpServletResponse.SC_NOT_FOUND);
-				return;
-			} catch (IOException e) {
-			}
-		}
-
-		response.setContentType("image/png");
-		OutputStream out = null;
-		byte[] bytes = new byte[512];
-		int bytesRead;
-		response.setHeader("Cache-Control", "max-age=3600, public");
-		
-		try {
-			out = response.getOutputStream();
-			while ((bytesRead = in.read(bytes)) != -1) {
-			    out.write(bytes, 0, bytesRead);
-			}
-		} catch (Exception e) {
-			if(z > 2 && e.getClass() != java.net.SocketException.class) logger.error("Error reading local tile " + file.getAbsolutePath(), e);
-		} finally {
-			try { if(in != null) in.close(); } catch(Exception e) {
-				logger.error("Doubly bad error closing inputstream for local tile " + file.getAbsolutePath(), e);
-			}
-		}
+		return in;
 	}
 	
-	/**
-	 * @param response
-	 * @param request
-	 * @param layer
-	 * @param z
-	 * @param x
-	 * @param y
-	 */
-	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
+	protected InputStream getRemoteTileInputStream(String layer, int z, int x, int y) {
 		for(MapSource source : getMapSources()) {
 			if(source.getName().equals(layer)) {
 				String url = source.getTemplate();
@@ -132,38 +96,100 @@ public class ImageryController extends JSONBaseController {
 				byte[] array = null;
 				Element element = cache.get(url);
 				if(element != null) {
-					array = (byte[]) element.getValue(); 
-				} else {
-					try {
-						URLConnection connection = new URL(url).openConnection();
-						InputStream in = connection.getInputStream();
-						ByteArrayOutputStream out = new ByteArrayOutputStream(connection.getContentLength() == -1 ? 40000 : connection.getContentLength());
-						byte[] bytes = new byte[512];
-						while(true) {
-							int len = in.read(bytes);
-							if(len == -1) break;
-							out.write(bytes, 0, len);
-						}
-						in.close();
-						array = out.toByteArray();
-						element = new Element(url, array);
-						cache.put(element);
-					} catch (Exception e) {
-						try {
-						response.sendError(HttpServletResponse.SC_NOT_FOUND);
-						return;
-						} catch (Exception e2) {}
-						logger.error("Unable to send SC_NOT_FOUND to client", e);
-					}
+					return new ByteArrayInputStream((byte[]) element.getValue()); 
 				}
-				response.setContentType("image/png");
-				response.setHeader("Cache-Control", "max-age=3600, public");
 				try {
-					response.getOutputStream().write(array);
-				} catch(IOException e) {}
-				return;
+					URLConnection connection = new URL(url).openConnection();
+					InputStream in = connection.getInputStream();
+					ByteArrayOutputStream out = new ByteArrayOutputStream(connection.getContentLength() == -1 ? 40000 : connection.getContentLength());
+					byte[] bytes = new byte[512];
+					while(true) {
+						int len = in.read(bytes);
+						if(len == -1) break;
+						out.write(bytes, 0, len);
+					}
+					in.close();
+					array = out.toByteArray();
+					element = new Element(url, array);
+					cache.put(element);
+					return new ByteArrayInputStream(array);
+				} catch (Exception e) {
+				}
 			}
 		}
+		return null;
+	}
+	
+	protected void respond(InputStream in, HttpServletResponse response, String url) {
+		if(in == null) {
+			try {
+				response.sendError(HttpServletResponse.SC_NOT_FOUND);
+				return;
+				} catch (Exception e2) {}
+				logger.error("Unable to send SC_NOT_FOUND to client");
+		}
+
+		response.setContentType("image/png");
+		OutputStream out = null;
+		byte[] bytes = new byte[512];
+		int bytesRead;
+		response.setHeader("Cache-Control", "max-age=3600, public");
+	
+		try {
+			out = response.getOutputStream();
+			while ((bytesRead = in.read(bytes)) != -1) {
+			    out.write(bytes, 0, bytesRead);
+			}
+		} catch (Exception e) {
+			if(e.getClass() != java.net.SocketException.class) logger.error("Error reading local tile " + url, e);
+		} finally {
+			try { if(in != null) in.close(); } catch(Exception e) {
+				logger.error("Doubly bad error closing inputstream for local tile " + url, e);
+			}
+		}
+	}
+
+	protected InputStream zoom(InputStream in, int dz, int dx, int dy) {
+		int tilesize = 256 / ((int) Math.pow(2, dz));
+		try {
+			BufferedImage original = ImageIO.read(in);
+			BufferedImage zoomed = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+			Graphics2D g = zoomed.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+			g.setBackground(new Color(255, 255, 255, 0));
+			g.clearRect(0, 0, 256, 256);
+
+			g.drawImage(original, 0, 0, 256, 256, dx*tilesize, dy*tilesize, (dx+1)*tilesize, (dy+1)*tilesize, new Color(255, 255, 255, 0), null);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ImageIO.write(zoomed, "png", out);
+			return new ByteArrayInputStream(out.toByteArray());
+		} catch (Exception e) {
+		}
+		return null;
+	}
+
+	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		InputStream in = getLocalTileInputStream(layer, z, x, y);
+		respond(in, response, layer + "/" + z + "/" + x + "/" + y);
+	}
+
+	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
+		InputStream in = null;
+		if(z <= 16) {
+			in = getRemoteTileInputStream(layer, z, x, y);
+		} else {
+			int dz = z - 16;
+			int pow = (int) Math.pow(2, dz);
+			in = getRemoteTileInputStream(layer, 16, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+			int dx = (x - pow * (int) Math.floor(x/pow));
+			int dy = (y - pow * (int) Math.floor(y/pow));
+			in = zoom(in, dz, dx, dy);
+		}
+		respond(in, response, layer + "/" + z + "/" + x + "/" + y);
 	}
 	
 	@RequestMapping(value="/resource/imagery/icons/circle/{rgb}.png", method = RequestMethod.GET)
