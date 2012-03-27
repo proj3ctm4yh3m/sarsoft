@@ -83,43 +83,39 @@ public class ImageryController extends JSONBaseController {
 		}
 		return in;
 	}
-	
-	protected InputStream getRemoteTileInputStream(String layer, int z, int x, int y) {
-		for(MapSource source : getMapSources()) {
-			if(source.getName().equals(layer)) {
-				String url = source.getTemplate();
-				url = url.replaceAll("\\{Z\\}", Integer.toString(z));
-				url = url.replaceAll("\\{X\\}", Integer.toString(x));
-				url = url.replaceAll("\\{Y\\}", Integer.toString(y));
-				Cache cache = CacheManager.getInstance().getCache("tileCache");
 
-				byte[] array = null;
-				Element element = cache.get(url);
-				if(element != null) {
-					return new ByteArrayInputStream((byte[]) element.getValue()); 
-				}
-				try {
-					URLConnection connection = new URL(url).openConnection();
-					InputStream in = connection.getInputStream();
-					ByteArrayOutputStream out = new ByteArrayOutputStream(connection.getContentLength() == -1 ? 40000 : connection.getContentLength());
-					byte[] bytes = new byte[512];
-					while(true) {
-						int len = in.read(bytes);
-						if(len == -1) break;
-						out.write(bytes, 0, len);
-					}
-					in.close();
-					array = out.toByteArray();
-					element = new Element(url, array);
-					cache.put(element);
-					return new ByteArrayInputStream(array);
-				} catch (Exception e) {
-				}
+	protected InputStream getRemoteTileInputStream(MapSource source, int z, int x, int y) {
+		String url = source.getTemplate();
+		url = url.replaceAll("\\{Z\\}", Integer.toString(z));
+		url = url.replaceAll("\\{X\\}", Integer.toString(x));
+		url = url.replaceAll("\\{Y\\}", Integer.toString(y));
+		Cache cache = CacheManager.getInstance().getCache("tileCache");
+
+		byte[] array = null;
+		Element element = cache.get(url);
+		if(element != null) {
+			return new ByteArrayInputStream((byte[]) element.getValue()); 
+		}
+		try {
+			URLConnection connection = new URL(url).openConnection();
+			InputStream in = connection.getInputStream();
+			ByteArrayOutputStream out = new ByteArrayOutputStream(connection.getContentLength() == -1 ? 40000 : connection.getContentLength());
+			byte[] bytes = new byte[512];
+			while(true) {
+				int len = in.read(bytes);
+				if(len == -1) break;
+				out.write(bytes, 0, len);
 			}
+			in.close();
+			array = out.toByteArray();
+			element = new Element(url, array);
+			cache.put(element);
+			return new ByteArrayInputStream(array);
+		} catch (Exception e) {
 		}
 		return null;
 	}
-	
+
 	protected void respond(InputStream in, HttpServletResponse response, String url) {
 		if(in == null) {
 			try {
@@ -172,26 +168,43 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		InputStream in = getLocalTileInputStream(layer, z, x, y);
-		respond(in, response, layer + "/" + z + "/" + x + "/" + y);
+		if(in != null) {
+			respond(in, response, layer + "/" + z + "/" + x + "/" + y);
+			return;
+		}
+		for(int dz = 1; dz < 5; dz++) {
+			int pow = (int) Math.pow(2, dz);
+			in = getLocalTileInputStream(layer, z-dz, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+			if(in != null) {
+				int dx = (x - pow * (int) Math.floor(x/pow));
+				int dy = (y - pow * (int) Math.floor(y/pow));
+				in = zoom(in, dz, dx, dy);
+				respond(in, response, layer + "/" + z + "/" + x + "/" + y);
+				return;
+			}
+		}
 	}
 
 	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
+//		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
+		MapSource source = getMapSourceByName(layer);
 		InputStream in = null;
-		if(z <= 16) {
-			in = getRemoteTileInputStream(layer, z, x, y);
-		} else {
-			int dz = z - 16;
-			int pow = (int) Math.pow(2, dz);
-			in = getRemoteTileInputStream(layer, 16, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
-			int dx = (x - pow * (int) Math.floor(x/pow));
-			int dy = (y - pow * (int) Math.floor(y/pow));
-			in = zoom(in, dz, dx, dy);
+		if(source != null) {
+			if(z <= source.getMaxresolution()) {
+				in = getRemoteTileInputStream(source, z, x, y);
+			} else {
+				int dz = z - source.getMaxresolution();
+				int pow = (int) Math.pow(2, dz);
+				in = getRemoteTileInputStream(source, source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+				int dx = (x - pow * (int) Math.floor(x/pow));
+				int dy = (y - pow * (int) Math.floor(y/pow));
+				in = zoom(in, dz, dx, dy);
+			}
 		}
 		respond(in, response, layer + "/" + z + "/" + x + "/" + y);
 	}
-	
+
 	@RequestMapping(value="/resource/imagery/icons/circle/{rgb}.png", method = RequestMethod.GET)
 	public void getCircle(HttpServletResponse response, @PathVariable("rgb") String rgb) {
 		response.setContentType("image/png");
