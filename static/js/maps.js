@@ -94,18 +94,16 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		if(typeof G_PHYSICAL_MAP != "undefined") {
 			map.addMapType(G_PHYSICAL_MAP);
 		}
-
+		
 		var mapTypes = new Array(), type = null, bkgset = false;
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 			var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-			if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.name) >= 0) {
-				type = org.sarsoft.EnhancedGMap.createMapType(config);
-				mapTypes.push(type);
-				map.addMapType(type);
-				if(bkgset == false) {
-					map.setMapType(type);
-					bkgset = true;
-				}
+			type = org.sarsoft.EnhancedGMap.createMapType(config);
+			mapTypes.push(type);
+			map.addMapType(type);
+			if(bkgset == false) {
+				map.setMapType(type);
+				bkgset = true;
 			}
 		}
 		
@@ -302,33 +300,46 @@ OverlayDropdownMapControl.prototype.handleLayerChange = function() {
 	this.updateMap(this.types[this.typeSelect.value], this.types[this.overlaySelect.value], opacity, tt.length > 0 ? tt : null);
 }
 
+OverlayDropdownMapControl.prototype.resetMapTypes = function(type) {
+	this.types = new Array();
+	this.alphaOverlayBoxes = new Array();
+	this.alphaOverlayTypes = new Array();
+	$(this.typeSelect).empty();
+	$(this.overlaySelect).empty();
+	this.aDiv.empty();
+
+	var alphaTypes = new Array();
+	var baseTypes = new Array();
+	
+	for(var i = 0; i < this.map.getMapTypes().length; i++) {
+		var type = this.map.getMapTypes()[i];
+		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(type.getName()) >= 0) {
+			if(type._alphaOverlay) {
+				this.addAlphaType(type);
+			} else {
+				this.addBaseType(type);
+			}
+		}
+	}
+
+	for(var i = 0; i < this.map.geoRefImages.length; i++) {
+		this.addOverlayType(this.map.geoRefImages[i]);
+	}
+	
+	this.hasAlphaOverlays = false;
+	this.updateMap(this.map.getCurrentMapType(), this.types[0], 0);
+}
+
+
 OverlayDropdownMapControl.prototype.initialize = function(map) {
 	var that = this;
 	map._overlaydropdownmapcontrol = this;
 	this.map = map;
 	
-	var alphaTypes = new Array();
-	var baseTypes = new Array();
+	this.resetMapTypes();
 	
-	for(var i = 0; i < map.getMapTypes().length; i++) {
-		var type = map.getMapTypes()[i];
-		if(type._alphaOverlay) {
-			this.addAlphaType(type);
-		} else {
-			this.addBaseType(type);
-		}
-	}
-	
-	for(var i = 0; i < map.geoRefImages.length; i++) {
-		this.addOverlayType(map.geoRefImages[i]);
-	}
-	
-	this.div.appendTo(map.getContainer());
-	
-	this.hasAlphaOverlays = false;
-	this.updateMap(map.getCurrentMapType(), this.types[0], 0);
+	this.div.appendTo(map.getContainer());	
 	return this.div[0];
-	
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
@@ -1078,10 +1089,12 @@ org.sarsoft.DataNavigator = function(imap) {
 		this.container = imap.container.left;
 		imap.register("org.sarsoft.DataNavigator", this);
 	}
+	this.defaults = new Object();
+	this.defaults.layers = this.container.append('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Map Layers</div>');
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
-	this.container.append('<div style="font-weight: bold; font-size: 160%">' + title + '</div>');
+	this.container.append('<div style="font-weight: bold; font-size: 150%">' + title + '</div>');
 	var div = jQuery('<div style="padding-bottom: 1.5em"></div>').appendTo(this.container);
 	return div;
 }
@@ -1457,32 +1470,112 @@ org.sarsoft.view.PersistedConfigWidget = function(imap, persist, saveCenter) {
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, persist);
 	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
 	this.saveCenter = saveCenter;
+	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
+		var dn = imap.registered["org.sarsoft.DataNavigator"];
+		this.dn = new Object();
+		var bn = jQuery('<div></div>');
+		var layerpane = new org.sarsoft.view.MapRightPane(imap, bn);
+		var header = jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(bn);
+		jQuery('<div style="font-size: 150%; font-weight: bold">Set Visible Map Layers</div>').appendTo(header);
+		var overzoomcb = jQuery('<input type="checkbox"/>');
+		jQuery('<div style="padding-top: 5px; padding-bottom: 5px"></div>').append(overzoomcb).append('Enable zooming beyond native map resolutions.').appendTo(header);
+		var ok1 = jQuery('<button style="float: right; margin-right: 50px; font-size: 150%">Save Changes</button>').appendTo(bn);
+		
+		var baselayers = jQuery('<div style="width: 100%; clear: both"></div>').appendTo(bn);
+		var aolayers = jQuery('<div style="width: 100%; clear: both"><div style="font-size: 150%">Overlays</div></div>').appendTo(bn);
+		var checkboxes = new Object();
+		var divs = new Object();
+		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+			var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+			var div = jQuery('<div style="float: left; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : baselayers);
+			var url = type.template;
+			if(type.type == "TILE") {
+				if(type.minresolution > 12) {
+					url = url.replace(/\{Z\}/, 14).replace(/\{X\}/, 2630).replace(/\{Y\}/, 6118).replace(/\{V\}/, 's-11111111');
+				} else {
+					url = url.replace(/\{Z\}/, 12).replace(/\{X\}/, 657).replace(/\{Y\}/, 1529).replace(/\{V\}/, 's-11111111');
+				}
+			} else if(type.type == "WMS") {
+				url = url.replace(/\{left\}/, '-122.255859375').replace(/\{bottom\}/, '41.37680856570233').replace(/\{right\}/, '-122.16796875').replace(/\{top\}/, '41.44272637767212').replace(/\{tilesize\}/g, 128);
+			} else if(type.type == "NATIVE") {
+				url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + url + ".jpg";
+			}
+			var img = jQuery('<img style="width: 100px; height: 100px; cursor: pointer; float: left" src="' + url + '"/>').appendTo(div);
+			var d2 = jQuery('<div style="float: left; width: 220px"></div>').appendTo(div);
+			var cb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>');
+			checkboxes[type.name] = cb;
+			var devnull = function(c, d) {
+				img.click(function() { c[0].checked = !c[0].checked; c.change(); });
+				$(c).change(function() {
+					d.css('opacity', c[0].checked ? '1' : '0.5');
+				});
+			}(cb, div);
+			d2.append(jQuery('<div style="font-size: 120%; font-weight: bold"></div>').append(checkboxes[type.name]).append(type.name));
+			d2.append('<div>' + type.description + '</div>');
+		}
+		dn.defaults.layers.click(function() {
+			if(layerpane.visible()) {
+				layerpane.hide();
+			} else {
+				for(var key in checkboxes) {
+					checkboxes[key][0].checked = (org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(key) >= 0) ? true : false;
+					checkboxes[key].change();
+				}
+				overzoomcb[0].checked = org.sarsoft.EnhancedGMap._overzoom;
+				layerpane.show();
+			}
+		});
+		var ok2 = jQuery('<button style="font-size: 150%">Save Changes</button>').appendTo(bn);
+		var okhandler = function() {
+			org.sarsoft.EnhancedGMap.visibleMapTypes = [];
+			for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+				var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+				if(checkboxes[type.name][0].checked==true) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
+			}
+			imap.map._overlaydropdownmapcontrol.resetMapTypes();
+			org.sarsoft.EnhancedGMap._overzoom = overzoomcb[0].checked;
+			layerpane.hide();
+			
+		}
+		ok1.click(okhandler);
+		ok2.click(okhandler);
+	}
 }
+
 org.sarsoft.view.PersistedConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
 
 org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) {
 	var that = this;
 	this.hasConfig = true;
 
-	var saveHandler = function() {
-		if(that.saveCenter) {
-			var center = this.imap.map.getCenter();
-			that.tenantDAO.saveCenter({lat: center.lat(), lng: center.lng()}, handler);
-		} else if(handler != null) {
-			handler();
-		}
+	var layers = [];
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(type.name) >= 0) layers.push(type.alias);
 	}
-	
-	this.tenantDAO.load(function(cfg) {
-		var config = {};
-		if(cfg.value != null) {
-			config = YAHOO.lang.JSON.parse(cfg.value);
+
+	this.tenantDAO.save("layers", { value: YAHOO.lang.JSON.stringify(layers.join(","))}, function() {
+
+		var saveHandler = function() {
+			if(that.saveCenter) {
+				var center = that.imap.map.getCenter();
+				that.tenantDAO.saveCenter({lat: center.lat(), lng: center.lng()}, handler != null ? handler : function() {});
+			} else if(handler != null) {
+				handler();
+			}
 		}
-		that._toConfigObj(config);
-		
-		that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)}, saveHandler);				
-	}, "mapConfig");
-	
+
+		that.tenantDAO.load(function(cfg) {
+			var config = {};
+			if(cfg.value != null) {
+				config = YAHOO.lang.JSON.parse(cfg.value);
+			}
+			that._toConfigObj(config);
+			
+			that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)}, saveHandler);				
+		}, "mapConfig");
+	});
+
 }
 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
@@ -1648,6 +1741,30 @@ org.sarsoft.view.MapDialog.prototype.show = function() {
 	}
 }
 
+org.sarsoft.view.MapRightPane = function(imap, bodynode) {
+	var that = this;
+	this.imap = imap;
+	var pane = jQuery('<div style="width: 100%; height: 100%; background-color: white; z-index: 2000; display: none; position: absolute; top: 0px; left: 0px; overflow-y: scroll"></div>').appendTo(imap.container.right);
+	var close = jQuery('<div style="cursor: pointer; float: right; font-size: 200%; font-weight: bold; color: red; padding-right: 5px">X</div>').appendTo(pane);
+	jQuery('<div style="height: 100%; margin-left: 10px; padding-left: 10px; border-left: 1px dashed black"></div>').appendTo(pane).append(bodynode);
+	this.pane = pane;
+	close.click(function() {
+		pane.css('display', 'none');
+	});
+}
+
+org.sarsoft.view.MapRightPane.prototype.visible = function() {
+	return this.pane.css('display') == 'block';
+}
+
+org.sarsoft.view.MapRightPane.prototype.show = function() {
+	this.pane.css('display', 'block');
+}
+
+org.sarsoft.view.MapRightPane.prototype.hide = function() {
+	this.pane.css('display', 'none');
+}
+
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
 	this.map = map;
@@ -1782,6 +1899,7 @@ org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 			config.alphaOverlays = null;
 		}
 	}
+	config.overzoom = org.sarsoft.EnhancedGMap._overzoom;
 	return config;
 }
 
@@ -1794,6 +1912,7 @@ org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 		alphaOverlays = ao.join(",");
 	}
 	this.setMapLayers(this.aliasToName(config.base), this.aliasToName(config.overlay), config.opacity, alphaOverlays);
+	org.sarsoft.EnhancedGMap._overzoom = config.overzoom;
 }
 
 org.sarsoft.InteractiveMap.prototype.setMapLayers = function(baseName, overlayName, opacity, alphaOverlays) {
