@@ -358,7 +358,7 @@ public class AdminController extends JSONBaseController {
 		
 		return "redirect:/" + ((tenant.getClass().getName() == "org.sarsoft.plans.model.Search") ? "setup" : "maps");
 	}
-
+		
 	@RequestMapping(value="/admin/delete", method = RequestMethod.GET)
 	public String delete(Model model, @RequestParam("id") String id, HttpServletRequest request) {
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
@@ -487,6 +487,16 @@ public class AdminController extends JSONBaseController {
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		tenant.setMapConfig((String) m.get("value"));
+		dao.save(tenant);
+		return json(model, tenant);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value="/rest/tenant/layers", method = RequestMethod.POST)
+	public String setMapLayers(Model model, JSONForm params) {
+		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		tenant.setLayers((String) m.get("value"));
 		dao.save(tenant);
 		return json(model, tenant);
 	}

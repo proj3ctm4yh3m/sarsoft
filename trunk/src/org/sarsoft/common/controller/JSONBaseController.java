@@ -251,7 +251,8 @@ public abstract class JSONBaseController {
 				if(!source.isAlphaOverlay()) {
 					preheader = preheader + ((first) ? "" : ",") + "{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
 						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
-						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + "\", template: \"";
+						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + 
+						"\", description: \"" + ((source.getDescription() == null) ? "" : source.getDescription()) + "\", template: \"";
 					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
 						preheader = preheader + "/resource/imagery/tilecache/" + source.getName() + "/{Z}/{X}/{Y}.png";
 					} else {
@@ -265,7 +266,8 @@ public abstract class JSONBaseController {
 				if(source.isAlphaOverlay()) {
 					preheader = preheader + ",{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
 						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
-						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + "\", template: \"";
+						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + 
+						"\", description: \"" + ((source.getDescription() == null) ? "" : source.getDescription()) + "\", template: \"";
 					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
 						preheader = preheader + "/resource/imagery/tilecache/" + source.getName() + "/{Z}/{X}/{Y}.png";
 					} else {
