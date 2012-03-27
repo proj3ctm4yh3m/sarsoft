@@ -187,10 +187,9 @@ public class ImageryController extends JSONBaseController {
 
 	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-//		if(!Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled"))) return;
 		MapSource source = getMapSourceByName(layer);
 		InputStream in = null;
-		if(source != null) {
+		if(source != null && (Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled")) || Boolean.valueOf(getProperty("sarsoft.map.overzoom.enabled")) && z > source.getMaxresolution())) {
 			if(z <= source.getMaxresolution()) {
 				in = getRemoteTileInputStream(source, z, x, y);
 			} else {
