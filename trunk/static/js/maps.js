@@ -22,7 +22,23 @@ org.sarsoft.EnhancedGMap._createTileLayers = function(config) {
 	var that = this;
 	var layer;
 	if(config.type == "TILE") {
-		return [new GTileLayer(new GCopyrightCollection(config.copyright), config.minresolution, config.maxresolution, { isPng: config.png, tileUrlTemplate: config.template })];
+		if(org.sarsoft.map.overzoom.enabled) {
+			layer = new GTileLayer(new GCopyrightCollection(config.copyright), config.minresolution, config.maxresolution, { isPng: config.png });
+			layer.getTileUrl = function(tile, zoom) { 
+				var url = config.template;
+				if(zoom > config.maxresolution) {
+					url = '/resource/imagery/tilecache/' + config.name + '/{Z}/' + '/{X}/' + '{Y}.png';
+				}
+				return url.replace(/{Z}/, zoom).replace(/{X}/, tile.x).replace(/{Y}/, tile.y);
+			}
+			layer.maxResolution = function() {
+				if(org.sarsoft.EnhancedGMap._overzoom) return org.sarsoft.map.overzoom.level;
+				return config.maxresolution;
+			}
+			return [layer];
+		} else {
+			return [new GTileLayer(new GCopyrightCollection(config.copyright), config.minresolution, config.maxresolution, { isPng: config.png, tileUrlTemplate: config.template })];
+		}
 	} else if(config.type == "WMS") {
 		layer = new GTileLayer(new GCopyrightCollection(config.copyright), config.minresolution, config.maxresolution, { isPng: config.png });
 		layer.getTileUrl = function(tile, zoom) { 
@@ -55,6 +71,7 @@ org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
 	    type._alias = config.alias;
+	    if(org.sarsoft.map.overzoom.enabled) type.getMaximumResolution = function() { return layers[0].maxResolution();}
 	    return type;
 	}
 }

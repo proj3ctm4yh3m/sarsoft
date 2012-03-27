@@ -8,7 +8,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -44,6 +46,7 @@ public abstract class JSONBaseController {
 	
 	private List<MapSource> mapSources;
 	private List<String> visibleMapSources;
+	private Map<String, MapSource> mapSourcesByName;
 	private String header = null;
 	private String preheader = null;
 	private String welcomeHTML;
@@ -104,6 +107,11 @@ public abstract class JSONBaseController {
 		return visibleMapSources;
 	}
 
+	protected MapSource getMapSourceByName(String name) {
+		if(mapSources == null) getMapSources();
+		return mapSourcesByName.get(name);
+	}
+	
 	protected List<MapSource> getMapSources() {
 		if(mapSources != null) return mapSources;
 		synchronized(this) {
@@ -130,6 +138,10 @@ public abstract class JSONBaseController {
 				mapSources.add(source);
 			}
 			mapSources = Collections.unmodifiableList(mapSources);
+			mapSourcesByName = new HashMap<String, MapSource>();
+			for(MapSource source : mapSources) {
+				mapSourcesByName.put(source.getName(), source);
+			}
 		}
 		return mapSources;
 	}
@@ -223,6 +235,9 @@ public abstract class JSONBaseController {
 			"org.sarsoft.map._default.zoom = " + getProperty("sarsoft.map.default.zoom") + ";\n" +
 			"org.sarsoft.map._default.lat = " + getProperty("sarsoft.map.default.lat") + ";\n" +
 			"org.sarsoft.map._default.lng = " + getProperty("sarsoft.map.default.lng") + ";\n" +
+			"org.sarsoft.map.overzoom = new Object();\n" +
+			"org.sarsoft.map.overzoom.enabled = " + getProperty("sarsoft.map.overzoom.enabled") + ";\n" +
+			"org.sarsoft.map.overzoom.level = " + getProperty("sarsoft.map.overzoom.level") + ";\n" +
 			"org.sarsoft.map.refreshInterval = " + RuntimeProperties.getProperty("sarsoft.refresh.interval") + ";\n" +
 			"org.sarsoft.map.autoRefresh = " + RuntimeProperties.getProperty("sarsoft.refresh.auto") + ";\n" +
 			"org.sarsoft.map.datums = new Object();\n" +
