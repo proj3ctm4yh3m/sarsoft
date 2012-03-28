@@ -1745,7 +1745,7 @@ org.sarsoft.view.MapDialog.prototype.show = function() {
 org.sarsoft.view.MapRightPane = function(imap, bodynode) {
 	var that = this;
 	this.imap = imap;
-	var pane = jQuery('<div style="width: 100%; height: 100%; background-color: white; z-index: 2000; display: none; position: absolute; top: 0px; left: 0px; overflow-y: scroll"></div>').appendTo(imap.container.right);
+	var pane = jQuery('<div style="width: 100%; height: 100%; background-color: white; z-index: 2000; display: none; position: absolute; top: 0px; left: 0px; overflow-y: if-needed"></div>').appendTo(imap.container.right);
 	var close = jQuery('<div style="cursor: pointer; float: right; font-size: 200%; font-weight: bold; color: red; padding-right: 5px">X</div>').appendTo(pane);
 	jQuery('<div style="height: 100%; margin-left: 10px; padding-left: 10px; border-left: 1px dashed black"></div>').appendTo(pane).append(bodynode);
 	this.pane = pane;
