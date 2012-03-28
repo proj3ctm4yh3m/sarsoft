@@ -1092,10 +1092,11 @@ org.sarsoft.DataNavigator = function(imap) {
 	this.defaults = new Object();
 	this.defaults.layers = jQuery('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Map Layers</div>').appendTo(this.container);
 	this.defaults.io = jQuery('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Export</div>').appendTo(this.container);
+	this.titleblocks = new Object();
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
-	this.container.append('<div style="font-weight: bold; font-size: 150%">' + title + '</div>');
+	this.titleblocks[title] = jQuery('<div style="font-weight: bold; font-size: 150%">' + title + '</div>').appendTo(this.container);
 	var div = jQuery('<div style="padding-bottom: 1.5em"></div>').appendTo(this.container);
 	return div;
 }
