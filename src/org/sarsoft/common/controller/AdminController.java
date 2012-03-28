@@ -317,8 +317,13 @@ public class AdminController extends JSONBaseController {
 
 	@RequestMapping(value="/admin.html", method = RequestMethod.POST)
 	public String updateAdmin(Model model, HttpServletRequest request) {
-		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-		
+		Tenant tenant = null;
+		if("map".equals(request.getParameter("type"))) {
+			tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		} else {
+			tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		}
+
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
 			model.addAttribute("message", "You don't own this object, and therefore can't edit it.");
 			return "error";
@@ -333,18 +338,6 @@ public class AdminController extends JSONBaseController {
 		} else {
 			tenant.setComments("");
 		}
-		String layers = "";
-		for(MapSource source : this.getMapSources()) {
-			if(Boolean.valueOf(request.getParameter("ml_" + source.getAlias()))) {
-				if(layers.length() > 0) layers = layers + ",";
-				layers = layers + source.getAlias();
-			}
-		}
-		if(layers.length() > 0) {
-			tenant.setLayers(layers);
-		} else {
-			tenant.setLayers(null);
-		}
 		dao.save(tenant);
 		if(tenant.getAccount() != null) {
 			tenant.setShared(Boolean.valueOf(request.getParameter("shared")));
@@ -356,7 +349,7 @@ public class AdminController extends JSONBaseController {
 			dao.save(tenant);
 		}
 		
-		return "redirect:/" + ((tenant.getClass().getName() == "org.sarsoft.plans.model.Search") ? "setup" : "maps");
+		return "redirect:/" + ((tenant.getClass().getName() == "org.sarsoft.plans.model.Search") ? "setup" : "map?id=" + tenant.getName());
 	}
 		
 	@RequestMapping(value="/admin/delete", method = RequestMethod.GET)
