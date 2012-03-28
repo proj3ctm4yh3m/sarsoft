@@ -1090,7 +1090,8 @@ org.sarsoft.DataNavigator = function(imap) {
 		imap.register("org.sarsoft.DataNavigator", this);
 	}
 	this.defaults = new Object();
-	this.defaults.layers = this.container.append('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Map Layers</div>');
+	this.defaults.layers = jQuery('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Map Layers</div>').appendTo(this.container);
+	this.defaults.io = jQuery('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Export</div>').appendTo(this.container);
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {

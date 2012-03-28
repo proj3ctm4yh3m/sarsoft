@@ -570,27 +570,17 @@ org.sarsoft.ToggleControl.prototype.setValue = function(value) {
 	}
 }
 
-org.sarsoft.GPSDlg = function() {
+org.sarsoft.GPSComms = function(container) {
 	var that = this;
-	var dlgStyle = {width: "410px", position: "absolute", top: "100px", left: "100px", "z-index": "2500"};
-		
-	var dlg = jQuery('<div><div class="hd">GPS Transfer</div></div>');
-	dlg.css(dlgStyle);
-	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
-	this.div = jQuery('<div style="width: 400px; height: 5em"></div>').appendTo(this.bd);
+	this.div = jQuery('<div style="width: 400px; height: 5em"></div>').appendTo(container);
 	
-	var dialog = null;
-	var buttons = [{text : "Try Again", handler: function() {that.retry()}},{ text : "OK", handler: function() { that.dialog.hide(); }, isDefault: true}];
-	this.dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
-	this.dialog.render(document.body);
-	this.dialog.hide();	
 }
 
-org.sarsoft.GPSDlg.prototype.console = function(str) {
-	  this.div.append(str + "<br/>");
+org.sarsoft.GPSComms.prototype.console = function(str) {
+	this.div.append('<div>' + str + '</div>');
 }
 
-org.sarsoft.GPSDlg.prototype.onFinishFindDevices = function() {
+org.sarsoft.GPSComms.prototype.onFinishFindDevices = function() {
 	var devices = this.control.getDevices();
 	if(devices.length > 1) {
 		this.console('The following GPS devices were found.  <span class="warning">Please attach 1 GPS device at a time</span>:');
@@ -601,6 +591,7 @@ org.sarsoft.GPSDlg.prototype.onFinishFindDevices = function() {
 	}
 	if(devices.length == 0) {
 		this.console('No GPS found.  <span class="warning">Please attach a GPS and try again.</span>');
+		return;
 	}
 	var device = devices[0];
 	if((this._write && !device._gpxType.writeAccess) || (!this._write && !device._gpxType.readAccess)) {
@@ -615,19 +606,19 @@ org.sarsoft.GPSDlg.prototype.onFinishFindDevices = function() {
 	}
 }
 
-org.sarsoft.GPSDlg.prototype.onFinishWriteToDevice = function() {
+org.sarsoft.GPSComms.prototype.onFinishWriteToDevice = function() {
 	this.console('<span style="font-weight: bold; color: green">Done!</span>');
 }
 
-org.sarsoft.GPSDlg.prototype.onCancelWriteToDevice = function() {
+org.sarsoft.GPSComms.prototype.onCancelWriteToDevice = function() {
 	this.console('<span class="warning">Operation Canceled</span>');
 }
 
-org.sarsoft.GPSDlg.prototype.onException = function() {
+org.sarsoft.GPSComms.prototype.onException = function() {
 	this.console('<span class="warning">GPS Exception: ' + this.control.msg + '</span>');
 }
 
-org.sarsoft.GPSDlg.prototype.onFinishReadFromDevice = function() {
+org.sarsoft.GPSComms.prototype.onFinishReadFromDevice = function() {
 	var gpx = this.control.gpsDataString;
 	globalgpx = gpx;
 	this.console('<span style="font-weight: bold; color: green">Done!</span>');
@@ -636,7 +627,7 @@ org.sarsoft.GPSDlg.prototype.onFinishReadFromDevice = function() {
 	dao._doPost(this._url, function() { window.location.reload(); }, {gpx:gpx}, this._poststr);
 }
 
-org.sarsoft.GPSDlg.prototype.retry = function() {
+org.sarsoft.GPSComms.prototype.retry = function() {
 	var that = this;
 	this.div.html("");
 	
@@ -664,7 +655,7 @@ org.sarsoft.GPSDlg.prototype.retry = function() {
 	if(this._write) {
 		  this.console("Retrieving GPS data from server . . .");
 		  var url = this._url;
-		  if(org.sarsoft.tenantid != null) url = url + "?tid=" + encodeURIComponent(org.sarsoft.tenantid);
+		  if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
 		  YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
 			  	that.gpxstr = response.responseText;
 				that.control.findDevices();
@@ -676,7 +667,7 @@ org.sarsoft.GPSDlg.prototype.retry = function() {
 		}
 }
 
-org.sarsoft.GPSDlg.prototype.show = function(write, url, name, handler, poststr) {
+org.sarsoft.GPSComms.prototype.init = function(write, url, name, handler, poststr) {
 	var that = this;
 	this._write = write;
 	this._url = url;
@@ -685,13 +676,37 @@ org.sarsoft.GPSDlg.prototype.show = function(write, url, name, handler, poststr)
 	
 	if(typeof(__garminJSLoaded) == "undefined") {
 		jQuery.getScript("/static/js/garmin.js", function() {
-			that.show(write, url, name, handler, poststr);
+			that.init(write, url, name, handler, poststr);
 		});
 		return;
 	}
 
-	this.dialog.show();	
 	this.retry();
+}
+
+
+org.sarsoft.GPSDlg = function() {
+	var that = this;
+	var dlgStyle = {width: "410px", position: "absolute", top: "100px", left: "100px", "z-index": "2500"};
+
+	var dlg = jQuery('<div><div class="hd">GPS Transfer</div></div>');
+	dlg.css(dlgStyle);
+	this.bd = jQuery('<div class="bd"></div>').appendTo(dlg);
+	this.comms = new org.sarsoft.GPSComms(this.bd);
+	
+	var dialog = null;
+	var buttons = [{text : "Try Again", handler: function() {that.comms.retry()}},{ text : "OK", handler: function() { that.dialog.hide(); }, isDefault: true}];
+	this.dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
+	this.dialog.render(document.body);
+	this.dialog.hide();	
+}
+
+
+
+org.sarsoft.GPSDlg.prototype.show = function(write, url, name, handler, poststr) {
+	this.comms.init(write, url, name, handler, poststr);
+
+	this.dialog.show();	
 }
 
 function sarsoftInit() {
