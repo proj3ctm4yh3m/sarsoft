@@ -270,6 +270,7 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 	var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
 	gpsin.appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(imp));
 	gpsin.click(function() {
+		that.gpsHeader.css('visibility', 'visible');
 		that.comms.init(false, "/map/restgpxupload", "");
 	});
 	
@@ -279,7 +280,7 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 	jQuery('<div style="float: left"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(gpxin)).appendTo(imp);
 	gpxicon.click(function() {
 		if("" == gpxfile.val()) {
-			alert("Please select a GPX file to import.");
+			alert("Please choose a GPX file to import.");
 		} else {
 			gpxin.submit();
 		}
@@ -290,6 +291,7 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 		
 		var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
 		gpsout.click(function() {
+			that.gpsHeader.css('visibility', 'visible');
 			var val = that.exportables._selected;
 			var url = ""
 			if(val == null) {
@@ -330,7 +332,8 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 		this.exportables = jQuery('<div></div>').appendTo(exp);
 	}
 	
-	this.comms = new org.sarsoft.GPSComms(jQuery('<div style="clear: both; padding-top: 20px"></div>').appendTo(bn));
+	this.gpsHeader = jQuery('<div style="visibility: hidden; clear: both; padding-top: 20px"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(bn);
+	this.comms = new org.sarsoft.GPSComms(jQuery('<div></div>').appendTo(bn));
 	
 	dn.defaults.io.click(function() {
 		if(pane.visible()) {
@@ -351,7 +354,7 @@ org.sarsoft.view.MarkerIOPane.prototype.refreshExportables = function() {
 	var expcb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>').appendTo(header).change(function() {
 		if(!expcb[0].checked) {
 			that.exportables._selected = null;
-			that.exportables.children().css('border', '1px solid white');
+			that.exportables.children().css('background-image', 'none');
 		}
 	});
 	header.append('Limit export to a single object:');
@@ -359,13 +362,13 @@ org.sarsoft.view.MarkerIOPane.prototype.refreshExportables = function() {
 	for(var key in this.controller.markers) {
 		var marker = this.controller.markers[key];
 		if(marker.label != null && marker.label.length > 0) {
-			var m = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; margin-right: 20px"><img style="vertical-align: middle" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>' + org.sarsoft.htmlescape(marker.label) + '</div>').appendTo(this.exportables);
+			var m = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"><img style="vertical-align: middle" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>' + org.sarsoft.htmlescape(marker.label) + '</div>').appendTo(this.exportables);
 			var devnull = function(dom, obj) {
 				dom.click(function() {
 					expcb[0].checked = true;
 					that.exportables._selected = obj;
-					that.exportables.children().css('border', '1px solid white');
-					dom.css('border', '1px dashed #5a8ed7');
+					that.exportables.children().css('background-image', 'none');
+					dom.css('background-image', 'url(' + org.sarsoft.imgPrefix + '/ok.png)');
 				});
 			}(m, marker);
 		}
@@ -373,13 +376,13 @@ org.sarsoft.view.MarkerIOPane.prototype.refreshExportables = function() {
 	for(var key in this.controller.shapes) {
 		var shape = this.controller.shapes[key];
 		if(shape.label != null && shape.label.length > 0) {
-			var s = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; margin-right: 20px"></div>').append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape)).append(org.sarsoft.htmlescape(shape.label)).appendTo(this.exportables);
+			var s = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"></div>').append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape)).append(org.sarsoft.htmlescape(shape.label)).appendTo(this.exportables);
 			var devnull = function(dom, obj) {
 				dom.click(function() {
 					expcb[0].checked = true;
 					that.exportables._selected = obj;
-					that.exportables.children().css('border', '1px solid white');
-					dom.css('border', '1px dashed #5a8ed7');
+					that.exportables.children().css('background-image', 'none');
+					dom.css('background-image', 'url(' + org.sarsoft.imgPrefix + '/ok.png)');
 				});
 			}(s, shape);
 		}
@@ -589,100 +592,6 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 
 	if(!nestMenuItems && !embedded) {
 		this.markerio = new org.sarsoft.view.MarkerIOPane(imap, this);
-		this.garmindlg = new org.sarsoft.GPSDlg();
-		
-		this.gps = new Object();
-		this.gps.form = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post">I want to:</form>');
-		this.gps.io = jQuery('<select style="margin-left: 15px"><option value="export">Export</option>' + ((org.sarsoft.userPermissionLevel != "READ") ? '<option value="import">Import</option>' : '') + '</select').appendTo(this.gps.form);
-
-		this.gps.form.append("<br/><br/>");
-
-		this.gps.exp = jQuery('<div></div>').appendTo(this.gps.form);
-		var d1 = jQuery('<div></div>').appendTo(this.gps.exp);
-		this.gps.exportAll = jQuery('<input type="radio" name="gpsexport" value="all" checked="yes">The entire map</input>').appendTo(d1);
-		this.gps.shapeDiv = jQuery('<div></div>').appendTo(this.gps.exp);
-		this.gps.exportShape = jQuery('<input type="radio" name="gpsexport" value="shape">A single shape:</input>').appendTo(this.gps.shapeDiv);
-		this.gps.shape = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.shapeDiv);
-
-		this.gps.markerDiv = jQuery('<div></div>').appendTo(this.gps.exp);
-		this.gps.exportMarker = jQuery('<input type="radio" name="gpsexport" value="marker">A single marker:</input>').appendTo(this.gps.markerDiv);
-		this.gps.marker = jQuery('<select style="margin-left: 15px">').appendTo(this.gps.markerDiv);
-		this.gps.exp.append("<br/>to:");
-		this.gps.expFormat = jQuery('<select style="margin-left: 15px"><option value="GPX">GPX</option><option value="KML">KML</option><option value="GPS">Garmin GPS</option></select>').appendTo(this.gps.exp);
-		
-		this.gps.imp = jQuery('<div style="display: none"></div>').appendTo(this.gps.form);
-		this.gps.imp.append("from:");
-		this.gps.impFormat = jQuery('<select style="margin-left: 15px"><option value="GPX">GPX</option><option value="GPS">Garmin GPS</option></select>').appendTo(this.gps.imp);
-		this.gps.imp.append('<br/>GPX File:<input type="hidden" name="format" value="gpx"/>');
-		this.gps.impFile = jQuery('<input type="file" name="file" style="margin-left: 15px"/>').appendTo(this.gps.imp);
-		
-		this.gps.io.change(function() {
-			var impexp = that.gps.io.val();
-			if(impexp == "export") { that.gps.exp.css("display", "block"); that.gps.imp.css("display", "none"); }
-			else { that.gps.exp.css("display", "none"); that.gps.imp.css("display", "block"); }
-		});
-		
-		this.gps.impFormat.change(function() { that.gps.impFile.attr("disabled", that.gps.impFormat.val() != "GPX"); });
-
-		var download = function(url, format) {
-			if(format == "GPX" || format == "KML") {
-				window.location = url + format;
-			} else {
-				url = url + "GPX";
-				that.garmindlg.show(true, url, "");
-			}
-		}
-		
-		var img = jQuery('<img src="' + org.sarsoft.imgPrefix + '/gps.png" style="cursor: pointer; vertical-align: middle" title="Export"/>');
-		var dropdown = new org.sarsoft.view.MenuDropdown(img, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div, function() {
-			that.gps.shape.empty();
-			for(var key in that.shapes) {
-				if(that.shapes[key].label != null && that.shapes[key].label.length > 0) that.gps.shape.append('<option value="' + that.shapes[key].id + '">' + org.sarsoft.htmlescape(that.shapes[key].label) + '</option>')
-			}
-			if(that.gps.shape.children().length == 0) {
-				that.gps.shapeDiv.css("display", "none");
-			} else {
-				that.gps.shapeDiv.css("display", "block");
-			}
-			that.gps.marker.empty();
-			for(var key in that.markers) {
-				if(that.markers[key].label != null && that.markers[key].label.length > 0) that.gps.marker.append('<option value="' + that.markers[key].id + '">' + org.sarsoft.htmlescape(that.markers[key].label) + '</option>')
-			}
-			if(that.gps.marker.children().length == 0) {
-				that.gps.markerDiv.css("display", "none");
-			} else {
-				that.gps.markerDiv.css("display", "block");
-			}
-		});
-		
-		dropdown.div.append(this.gps.form);
-		jQuery('<button>GO</button>').appendTo(dropdown.div).click(function() {
-			dropdown.hide();
-			var impexp = that.gps.io.val();
-			if(impexp == "export") {
-				var val = $("input[@name=gpsexport]:checked").val();
-				var format = that.gps.expFormat.val();
-				if(val == "all") {
-					download(window.location+'&format=', format);
-				} else if(val == "shape") {
-					download("/rest/shape/" + that.gps.shape.val() + "?format=", format);
-				} else if(val == "marker") {
-					download("/rest/marker/" + that.gps.marker.val() + "?format=", format);
-				}
-			} else {
-				var format = that.gps.impFormat.val();
-				if(format == "GPS") {
-					that.garmindlg.show(false, "/map/restgpxupload", "");
-				} else if("" == that.gps.impFile.val()) {
-					that.gps.dlg.show();
-					alert("Please select a GPX file to import.");
-				} else {
-					that.gps.form.submit();
-				}
-			}
-		});
-		
-		imap.addMenuItem(dropdown.container, 40);
 	}
 
 	this.markerDAO.loadAll(function(markers) {
