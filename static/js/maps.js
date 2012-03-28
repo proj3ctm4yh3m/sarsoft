@@ -1086,17 +1086,18 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 org.sarsoft.DataNavigator = function(imap) {
 	if(imap != null) {
 		this.imap = imap;
-		this.container = imap.container.left;
+		this.container = jQuery('<div style="padding-left: 2px"></div>').appendTo(imap.container.left);
 		imap.register("org.sarsoft.DataNavigator", this);
 	}
 	this.defaults = new Object();
-	this.defaults.layers = jQuery('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Map Layers</div>').appendTo(this.container);
-	this.defaults.io = jQuery('<div style="font-weight: bold; font-size: 150%; cursor: pointer">Export</div>').appendTo(this.container);
+	var defaultsContainer = jQuery('<div style="float: left; padding-top: 5px; padding-bottom: 5px"></div>').appendTo(this.container);
+	this.defaults.io = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Transfer</div>').appendTo(defaultsContainer);
+	this.defaults.layers = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Layers</div>').appendTo(defaultsContainer);
 	this.titleblocks = new Object();
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
-	this.titleblocks[title] = jQuery('<div style="font-weight: bold; font-size: 150%">' + title + '</div>').appendTo(this.container);
+	this.titleblocks[title] = jQuery('<div style="clear: both; font-weight: bold; font-size: 150%">' + title + '</div>').appendTo(this.container);
 	var div = jQuery('<div style="padding-bottom: 1.5em"></div>').appendTo(this.container);
 	return div;
 }

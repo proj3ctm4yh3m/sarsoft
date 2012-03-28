@@ -334,7 +334,9 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 	
 	this.gpsHeader = jQuery('<div style="visibility: hidden; clear: both; padding-top: 20px"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(bn);
 	this.comms = new org.sarsoft.GPSComms(jQuery('<div></div>').appendTo(bn));
-	
+
+	jQuery('<button style="font-size: 150%; margin-top: 20px">Transfer Complete - Close Window</button>').appendTo(bn).click(function() { pane.hide(); });
+
 	dn.defaults.io.click(function() {
 		if(pane.visible()) {
 			pane.hide();
@@ -558,53 +560,6 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	            ]);
 		}
 	
-		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
-			var dd = new org.sarsoft.view.MenuDropdown('<img src="' + org.sarsoft.imgPrefix + '/new.png" style="vertical-align: middle; cursor: pointer" title="New Shape or Marker"/>', 'width: 10em');
-			
-			var newMarker = jQuery('<div style="margin-left: 2px; cursor: pointer">New Marker</div>').appendTo(dd.content);
-			var newLine = jQuery('<div style="margin-left: 2px; cursor: pointer">New Line</div>').appendTo(dd.content);
-			var newPolygon = jQuery('<div style="margin-left: 2px; cursor: pointer">New Polygon</div>').appendTo(dd.content);
-			
-			newMarker.click(function() {
-				dd.hide();
-				var center = that.imap.map.getCenter();
-	    		that.markerLocationForm.write({lat: center.lat(), lng: center.lng()});
-	    		that.markerLocationDlg.handler = function() {
-	    			that.markerDlg.marker=null;
-	    			that.markerLocationDlg.handler=null;
-					if(!that.markerLocationForm.read(function(gll) {
-		    			that.markerDlg.entityform.write({url: "#FF0000"});
-		    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(gll);
-		    			that.markerDlg.show();
-					})) {
-		    			that.markerDlg.entityform.write({url: "#FF0000"});
-		    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(center);
-		    			that.markerDlg.show();
-					}
-	    		}
-	    		that.markerLocationDlg.show();
-			});
-			newLine.click(function() {
-				dd.hide();
-			    that.shapeDlg.shape=null;
-			    that.shapeDlg.polygon=false;
-			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});
-			    that.shapeDlg.point=new GPoint(Math.round(that.imap.map.getSize().width/2), Math.round(that.imap.map.getSize().height/2));
-			    that.shapeDlg.show();
-			});
-
-			newPolygon.click(function() {
-				dd.hide();
-			    that.shapeDlg.shape=null;
-			    that.shapeDlg.polygon=true;
-			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});
-			    that.shapeDlg.point=new GPoint(Math.round(that.imap.map.getSize().width/2), Math.round(that.imap.map.getSize().height/2));
-			    that.shapeDlg.show();
-			});
-			
-			imap.addMenuItem(dd.container, 21);
-		}
-				
 	}
 
 	var showHide = new org.sarsoft.ToggleControl("MRK", "Show/Hide Markup", function(value) {
@@ -744,11 +699,11 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddMarker = function(mark
 	});
 	
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
-		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: black">-</span>').appendTo(line).click(function() {
+		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
 			that.removeMarker(marker.id); that.markerDAO.del(marker.id);
 		});
 	}
-	jQuery('<span title="Details" style="cursor: pointer; float: right; margin-right: 5px; font-weight: bold; color: blue">?</span>').appendTo(line).click(function() {
+	jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
 		that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();
 	});
 	
@@ -828,11 +783,11 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddShape = function(shape
 	
 	
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
-		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: black">-</span>').appendTo(line).click(function() {
+		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
 			that.removeShape(shape.id); that.shapeDAO.del(shape.id);
 		});
 	}
-	jQuery('<span title="Details" style="cursor: pointer; float: right; margin-right: 5px; font-weight: bold; color: blue">?</span>').appendTo(line).click(function() {
+	jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
 		that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();
 		});
 	
