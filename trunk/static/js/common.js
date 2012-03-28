@@ -432,12 +432,8 @@ org.sarsoft.view.TenantTable = function() {
 		{ key : "comments", label: "Comments", sortable: true, formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "4em", "max-width": "30em"}); if(data != null && data.length > 120) data = data.substr(0,120) + "..."; cell.innerHTML = data;}},
 		{ key : "allPerm", label : "Sharing", formatter : permissionFormatter },
 		{ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
-			var owner = record.getData().owner;
-			if(owner == "N/A" || owner == "You") {
-				cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map")+ '?id=' + record.getData().name + '&dest=admin.html">Admin</a>,&nbsp;';
-			}
 			if(record.getData().type == "org.sarsoft.markup.model.CollaborativeMap") {
-				var guide = jQuery('<span><a href="/guide?id=' + record.getData().name + '">View Guide</a>,&nbsp;</span>').appendTo(cell);
+				var guide = jQuery('<span><a href="/guide?id=' + record.getData().name + '">Printable Guide</a>,&nbsp;</span>').appendTo(cell);
 			}
 			var share = jQuery('<a href="javascript:return false;">Share</a>').appendTo(cell);
 			share.click(function() { var rooturl = window.location.href.replace(window.location.pathname, "") + "/"; var html = 'Share this ';
@@ -700,7 +696,6 @@ org.sarsoft.GPSDlg = function() {
 	this.dialog.render(document.body);
 	this.dialog.hide();	
 }
-
 
 
 org.sarsoft.GPSDlg.prototype.show = function(write, url, name, handler, poststr) {

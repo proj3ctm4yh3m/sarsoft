@@ -764,16 +764,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 				that.style.minor = that.minorSlider.getValue()/100;
 				that._drawUTMGrid(true);
 			});
-			
-			var scaleContainer = jQuery('<div style="padding-top: 5px; clear: both"></idv>').appendTo(this._UTMConfig.div);
-			this.scaleCB = jQuery('<input type="checkbox"/>').appendTo(scaleContainer);
-			scaleContainer.append('Show Scale');
-			this.scaleCB.change(function() {
-				that.style.scale = that.scaleCB[0].checked;
-				that._drawScale();
-			});
-			this.scaleCB[0].checked = this.style.scale;
-			
+						
 			imap.addMenuItem(this._UTMConfig.container, 10);
 			imap.register("org.sarsoft.UTMGridControl", this);
 	}
@@ -791,7 +782,6 @@ org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 	var fn = function() {
 		if(that.utminitialized == false) {
 			that._drawUTMGrid();
-			that._drawScale();
 			GEvent.addListener(map, "moveend", function() { that._drawUTMGrid(); });
 			GEvent.addListener(map, "zoomend", function(foo, bar) { that._drawUTMGrid(); });
 			GEvent.addListener(map, "dragstart", function() {
@@ -828,17 +818,6 @@ org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
 	}
 }
 
-org.sarsoft.UTMGridControl.prototype._drawScale = function() {
-	if(this._scaleControl != null) {
-		this.imap.map.removeControl(this._scaleControl);
-		this._scaleControl = null;
-	}
-	if(this.style.scale) {
-		this._scaleControl = new org.sarsoft.EScaleControl(true);
-		this.imap.map.addControl(this._scaleControl);
-	}
-}
-
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	if(config.UTMGridControl == null) return;
 	this.setValue(config.UTMGridControl.showUTM);
@@ -858,12 +837,7 @@ org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 		this.style.latlng = config.UTMGridControl.latlng;
 		this.llSelect.val(this.style.latlng);
 	}
-	if(config.UTMGridControl.scale != null) {
-		this.style.scale = config.UTMGridControl.scale;
-		this.scaleCB[0].checked = this.style.scale;
-	}
 	this._drawUTMGrid(true);
-	this._drawScale();
 }
 
 org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
@@ -873,7 +847,6 @@ org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
 	config.UTMGridControl.minor = this.style.minor;
 	config.UTMGridControl.crosshatch = this.style.crosshatch;
 	config.UTMGridControl.latlng = this.style.latlng;
-	config.UTMGridControl.scale = this.style.scale;
 	return config;
 }
 
@@ -1092,8 +1065,42 @@ org.sarsoft.DataNavigator = function(imap) {
 	this.defaults = new Object();
 	var defaultsContainer = jQuery('<div style="float: left; padding-top: 5px; padding-bottom: 5px"></div>').appendTo(this.container);
 	this.defaults.io = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Transfer</div>').appendTo(defaultsContainer);
-	this.defaults.layers = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Layers</div>').appendTo(defaultsContainer);
+	this.defaults.layers = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Layers</div>').appendTo(defaultsContainer);
+	this.defaults.setup = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/config.png"/>Setup</div>').appendTo(defaultsContainer);
 	this.titleblocks = new Object();
+
+
+	var bn = jQuery('<div></div>');
+	var setuppane = new org.sarsoft.view.MapRightPane(imap, bn);
+	var settings_browser = jQuery('<div></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex">Browser Settings</div>');
+	
+	var swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="float: left; margin-right: 40px">Enable Scroll Wheel Zoom</div>').appendTo(settings_browser));
+	var sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="float: left; margin-right: 40px">Show Scale Bar</div>').appendTo(settings_browser));
+	
+	jQuery('<button>Save Changes to Browser Settings</button>').appendTo(jQuery('<div style="clear: both"></div>').appendTo(settings_browser)).click(function() {
+		var config = new Object();
+		config.scrollwheelzoom = swz[0].checked;
+		config.scalebar = sb[0].checked;
+		YAHOO.util.Cookie.set("org.sarsoft.browsersettings", YAHOO.lang.JSON.stringify(config));
+		imap.loadBrowserSettings();
+		setuppane.hide();
+	});
+	
+	this.settings_tenant = jQuery('<div style="display: none; clear: both; padding-top: 20px"></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex">Sharing and Permissions</div>');
+	
+	this.defaults.setup.click(function() {
+		if(setuppane.visible()) {
+			setuppane.hide();
+		} else {
+			var config = {}
+			if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
+				config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
+			}
+			swz[0].checked = config.scrollwheelzoom;
+			sb[0].checked = config.scalebar;
+			setuppane.show();
+		}
+	});
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
@@ -1806,7 +1813,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		}
 	});
 
-	this.map.enableScrollWheelZoom();
+	this.loadBrowserSettings();
 	this.map._imap = this;
 	this.mapMessageControl = new org.sarsoft.MapMessageControl();
 	this.map.addControl(this.mapMessageControl);
@@ -1851,6 +1858,25 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		dnc.showDataNavigator();
 	}
 
+}
+
+org.sarsoft.InteractiveMap.prototype.loadBrowserSettings = function() {
+	if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
+		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
+		if(config.scrollwheelzoom) {
+			this.map.enableScrollWheelZoom();
+		} else {
+			this.map.disableScrollWheelZoom();
+		}
+		if(this._scaleControl != null) {
+			this.map.removeControl(this._scaleControl);
+			this._scaleControl = null;
+		}
+		if(config.scalebar) {
+			this._scaleControl = new org.sarsoft.EScaleControl(true);
+			this.map.addControl(this._scaleControl);
+		}
+	}
 }
 
 org.sarsoft.InteractiveMap.prototype.updateDatum = function() {
