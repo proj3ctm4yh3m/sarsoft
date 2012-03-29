@@ -401,7 +401,8 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.shapes = new Object();
 	this._markerAttrs = new Object();
 	this._shapeAttrs = new Object();
-	this.showMarkup = true;
+	this.showMarkers = true;
+	this.showShapes = true;
 	this.embedded = embedded;
 	
 	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
@@ -409,30 +410,54 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		this.dn = new Object();
 		var markerdiv = dn.addDataType("Markers");
 		this.dn.markertoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide comments</span>)</span>').appendTo(dn.titleblocks["Markers"]);
-		this.dn.markertoggle._on = true;
+		this.dn.markertoggle._state = 0;
 		this.dn.markertoggle.click(function() {
-			that.dn.markertoggle._on = !that.dn.markertoggle._on;
-			if(that.dn.markertoggle._on) {
-				that.dn.markertoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
+			that.dn.markertoggle._state++;
+			if(that.dn.markertoggle._state == 3) that.dn.markertoggle._state = 0;
+			if(that.dn.markertoggle._state == 0) {	// long
+				that.showMarkers = true;
+				that.handleMarkerSetupChange();
+				markerdiv.css('display', 'block');
 				$('.marker_desc_line_item').css('display', 'block');
-			} else {
-				that.dn.markertoggle.html('(<span style="color: #5a8ed7">show comments</span>)');
+				that.dn.markertoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
+			} else if(that.dn.markertoggle._state == 1) { // short
+				that.showMarkers = true;
+				that.handleMarkerSetupChange();
+				markerdiv.css('display', 'block');
 				$('.marker_desc_line_item').css('display', 'none');
+				that.dn.markertoggle.html('(<span style="color: #5a8ed7">hide markers</span>)');
+			} else { // hidden
+				markerdiv.css('display', 'none');
+				that.showMarkers = false;
+				that.handleMarkerSetupChange();
+				that.dn.markertoggle.html('(<span style="color: #5a8ed7">show markers</span>)');
 			}
 		});
 		this.dn.markerdiv = jQuery('<div></div>').appendTo(markerdiv);
 		this.dn.markers = new Object();
 		var shapediv = dn.addDataType("Shapes");
 		this.dn.shapetoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide comments</span>)</span>').appendTo(dn.titleblocks["Shapes"]);
-		this.dn.shapetoggle._on = true;
+		this.dn.shapetoggle._state = 0;
 		this.dn.shapetoggle.click(function() {
-			that.dn.shapetoggle._on = !that.dn.shapetoggle._on;
-			if(that.dn.shapetoggle._on) {
-				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
+			that.dn.shapetoggle._state++;
+			if(that.dn.shapetoggle._state == 3) that.dn.shapetoggle._state = 0;
+			if(that.dn.shapetoggle._state == 0) {	// long
+				that.showShapes = true;
+				that.handleShapeSetupChange();
+				shapediv.css('display', 'block');
 				$('.shape_desc_line_item').css('display', 'block');
-			} else {
-				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">show comments</span>)');
+				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
+			} else if(that.dn.shapetoggle._state == 1) { // short
+				that.showShapes = true;
+				that.handleShapeSetupChange();
+				shapediv.css('display', 'block');
 				$('.shape_desc_line_item').css('display', 'none');
+				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">hide shapes</span>)');
+			} else { // hidden
+				shapediv.css('display', 'none');
+				that.showShapes = false;
+				that.handleShapeSetupChange();
+				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">show shapes</span>)');
 			}
 		});
 		this.dn.shapediv = jQuery('<div></div>').appendTo(shapediv);
@@ -519,9 +544,9 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			}}, "OK");
 		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
 		
-		var items = [{text : "New Marker", applicable : function(obj) { return obj == null }, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
-		    {text : "New Line", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
-		    {text : "New Polygon", applicable : function(obj) { return obj == null }, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
+		var items = [{text : "New Marker", applicable : function(obj) { return obj == null && that.showMarkers}, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
+		    {text : "New Line", applicable : function(obj) { return obj == null && that.showShapes}, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
+		    {text : "New Polygon", applicable : function(obj) { return obj == null && that.showShapes}, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
 	
 		if(nestMenuItems) {
 			items = [{text : "Markup \u2192", applicable : function(obj) { return obj == null }, items: items}];
@@ -548,13 +573,6 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		}
 	
 	}
-
-	var showHide = new org.sarsoft.ToggleControl("MRK", "Show/Hide Markup", function(value) {
-		that.showMarkup = value;
-		that.handleSetupChange();
-	});
-	this.showHide = showHide;
-	this.imap.addMenuItem(showHide.node, 19);
 
 	if(!nestMenuItems && !embedded) {
 		this.markerio = new org.sarsoft.view.MarkerIOPane(imap, this);
@@ -658,19 +676,6 @@ org.sarsoft.controller.MarkupMapController.prototype.removeShape = function(id) 
 	delete this.shapes[id];
 }
 
-org.sarsoft.controller.MarkupMapController.prototype.setConfig = function(config) {
-	if(config.MarkupMapController == null || config.MarkupMapController.showClues == null) return;
-	this.showMarkup = config.MarkupMapController.showMarkup;
-	this.handleSetupChange();
-}
-
-org.sarsoft.controller.MarkupMapController.prototype.getConfig = function(config) {
-	if(config == null) config = new Object();
-	if(config.MarkupMapController == null) config.MarkupMapController = new Object();
-	config.MarkupMapController.showMarkup = this.showMarkup;
-	return config;
-}
-
 org.sarsoft.controller.MarkupMapController.prototype.getMarkerIdFromWpt = function(wpt) {
 	for(var key in this.markers) {
 		if(this.markers[key] != null && this.markers[key].position == wpt) return key;
@@ -731,7 +736,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	if(this.markers[marker.id] != null) this.imap.removeWaypoint(this.markers[marker.id].position);
 	if(marker.position == null) return;
 	this.markers[marker.id] = marker;
-	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
+	if(!this.showMarkers) return; // need lines above this in case the user re-enables clues
 
 	var config = new Object();	
 	var tooltip = org.sarsoft.htmlescape(marker.label);
@@ -816,7 +821,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape)
 	this.shapes[shape.id] = shape;
 	shape.way.waypoints = shape.way.zoomAdjustedWaypoints;
 	shape.way.displayMessage = org.sarsoft.htmlescape(shape.label) + " (" + shape.formattedSize + ")";
-	if(!this.showMarkup) return; // need lines above this in case the user re-enables clues
+	if(!this.showShapes) return; // need lines above this in case the user re-enables clues
 
 	this.imap.addWay(shape.way, {clickable : (!this.embedded && ((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") || (shape.comments != null && shape.comments.length > 0))), fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
 	this.DNAddShape(shape);
@@ -841,19 +846,24 @@ org.sarsoft.controller.MarkupMapController.prototype.refreshShapes = function(sh
 	}
 }
 
-org.sarsoft.controller.MarkupMapController.prototype.handleSetupChange = function() {
-	this.showHide.setValue(this.showMarkup);
-	if(!this.showMarkup) {
+org.sarsoft.controller.MarkupMapController.prototype.handleMarkerSetupChange = function() {
+	if(!this.showMarkers) {
 		for(var key in this.markers) {
 			this.imap.removeWaypoint(this.markers[key].position);
-		}
-		for(var key in this.shapes) {
-			this.imap.removeWay(this.shapes[key].way);
 		}
 	} else {
 		for(var key in this.markers) {
 			this.showMarker(this.markers[key]);
 		}
+	}
+}
+
+org.sarsoft.controller.MarkupMapController.prototype.handleShapeSetupChange = function() {
+	if(!this.showShapes) {
+		for(var key in this.shapes) {
+			this.imap.removeWay(this.shapes[key].way);
+		}
+	} else {
 		for(var key in this.shapes) {
 			this.showShape(this.shapes[key]);
 		}
