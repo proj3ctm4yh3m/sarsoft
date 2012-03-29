@@ -65,7 +65,7 @@ org.sarsoft.Loader.queue(function() {
 	jQuery('<a href="javascript:leaveHandler(\'/guide?id=${tenant.name}\')" style="margin-left: 20px">Printable Guide</a>').appendTo(bottomRow);
 	
 	imap.addMenuItem(leaveDD.container, 40);
-
+	
   }
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 });

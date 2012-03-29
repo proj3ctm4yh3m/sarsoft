@@ -203,7 +203,7 @@ public abstract class JSONBaseController {
 				first = false;
 			}
 			header = header + "];\n";
-			
+
 			String datum = "WGS84";
 			if(getProperty("sarsoft.map.datum") != null) datum = getProperty("sarsoft.map.datum");
 			
@@ -211,10 +211,13 @@ public abstract class JSONBaseController {
 				Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
 				if(tenant.getDatum() != null) datum = tenant.getDatum();
 			}
+
+			UserAccount account = (RuntimeProperties.getUsername() != null) ? account = dao.getByPk(UserAccount.class, RuntimeProperties.getUsername()) : null;
 			header = header + "org.sarsoft.map.datum=\"" + datum + "\"\n" +
 				"org.sarsoft.tenantid=\"" + RuntimeProperties.getTenant() + "\"\n" +
+				((account != null) ? "org.sarsoft.username=\"" + account.getEmail() + "\"\n" : "") +
 				"org.sarsoft.userPermissionLevel=\"" + RuntimeProperties.getUserPermission() + "\"";
-			
+
 			header = header + "</script>\n";
 				
 			if("google".equals(this.mapViewer)) {

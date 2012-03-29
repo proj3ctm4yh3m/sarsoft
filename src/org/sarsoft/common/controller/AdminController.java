@@ -115,7 +115,26 @@ public class AdminController extends JSONBaseController {
 		}
 		model.addAttribute("pane", pane);
 		return app(model, "Pages.Find");
-	}	
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value="/rest/tenant/shared", method = RequestMethod.GET)
+	public String getSharedTenants(Model model, @RequestParam(value="key", required=false) String keyword, @RequestParam(value="user", required=false) String user) {
+		List<Tenant> tenants = null;
+		if(keyword != null) {
+			tenants = dao.getSharedTenants(keyword, null);
+		} else if(user != null) {
+			tenants = dao.getSharedTenants(null, user);
+		} else {
+			tenants = dao.getSharedTenants(null, null);
+		}
+
+		List<Map> list = new ArrayList<Map>();
+		for(Tenant tenant : tenants) {
+			list.add(jsonifyTenant(tenant, tenant.getClass().getName()));
+		}
+		return json(model, list);	
+	}
 
 	public String setTenant(Model model, String name, Class<? extends Tenant> cls, HttpServletRequest request) {
 		Tenant tenant = dao.getByAttr(cls, "name", name);
