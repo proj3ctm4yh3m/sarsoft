@@ -2184,7 +2184,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 		}
 	});
 	marker.id = waypoint.id;
-	if(label != null && (config.draggable != null)) {
+	if(label != null && config.drag == null) {
 		labelOverlay = new ELabel(gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", new GSize(icon.iconSize.width*0.5, icon.iconSize.height*-0.5));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
