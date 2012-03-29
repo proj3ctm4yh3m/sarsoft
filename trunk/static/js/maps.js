@@ -1063,12 +1063,13 @@ org.sarsoft.DataNavigator = function(imap) {
 		imap.register("org.sarsoft.DataNavigator", this);
 	}
 	this.defaults = new Object();
-	var defaultsContainer = jQuery('<div style="float: left; padding-top: 5px; padding-bottom: 5px"></div>').appendTo(this.container);
-	this.defaults.io = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Transfer</div>').appendTo(defaultsContainer);
-	this.defaults.layers = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Layers</div>').appendTo(defaultsContainer);
-	this.defaults.setup = jQuery('<div style="float: left; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/config.png"/>Setup</div>').appendTo(defaultsContainer);
+	var defaultsContainer = jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 5px; width: 100%"></div>').appendTo(this.container);
+	this.defaults.io = jQuery('<div style="float: left; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Transfer</div>').appendTo(defaultsContainer);
+	this.defaults.layers = jQuery('<div style="float: left; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Layers</div>').appendTo(defaultsContainer);
+	this.defaults.setup = jQuery('<div style="float: left; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/config.png"/>Setup</div>').appendTo(defaultsContainer);
+	var username = (org.sarsoft.username == null) ? "Not Signed In" : org.sarsoft.username;
+	this.defaults.account = jQuery('<div style="float: left; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; overflow: hidden; white-space: nowrap; max-width: 100%"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>' + username + '</div>').appendTo(defaultsContainer);
 	this.titleblocks = new Object();
-
 
 	var bn = jQuery('<div></div>');
 	var setuppane = new org.sarsoft.view.MapRightPane(imap, bn);
@@ -1101,6 +1102,74 @@ org.sarsoft.DataNavigator = function(imap) {
 			setuppane.show();
 		}
 	});
+
+	var bn = jQuery('<div></div>');
+	var accountpane = new org.sarsoft.view.MapRightPane(imap, bn);
+	var header = jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(bn);
+	jQuery('<div style="font-size: 150%; font-weight: bold">Account</div>').appendTo(header);
+
+	if(org.sarsoft.username != null) {
+		jQuery('<div style="clear: both; padding-top: 20x">You are signed in as <b>' + org.sarsoft.username + '</b>. </div>').appendTo(bn).append(
+				'<a style="font-weight: bold" href="/app/logout">logout</a>').append(
+				'<span> or sign in with a different account:</span>').append(
+				'<a style="margin-left: 10px" href="/app/openidrequest?domain=yahoo"><img style="vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').append(
+				'<a style="margin-left: 10px" href="/app/openidrequest?domain=google"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>');
+
+		bn.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">Your Maps</div>');
+		
+		var tenantDAO = new org.sarsoft.TenantDAO();
+		var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : true, sharing : true, actions : false});
+		yourTable.create(jQuery('<div style="clear: both;" class="growYUITable"></div>').appendTo(bn)[0]);
+
+		tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
+			yourTable.update(rows);
+		});
+		
+		bn.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">New Map</div>');
+		
+		var newform = jQuery('<form action="/map" method="post" id="newmapform" style="padding-top: 1ex">Create a new map centered on your current location.' +
+		'<table border="0"><tbody>' +
+		'<tr><td valign="top">Name</td><td><input type="text" size="30" id="name" name="name"/></td></tr>' +
+		'<tr><td valign="top">Comments</td><td><textarea cols="60" rows="5" id="comments" name="comments"></textarea></td></tr>' +
+		'</tbody></table></form>').appendTo(bn);
+		
+		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
+		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
+
+		jQuery('<button>Create Map</button>').appendTo(newform).click(function() {
+			var center = imap.map.getCenter();
+			newlat.val(center.lat());
+			newlng.val(center.lng());
+			newform.submit();
+		});
+		
+
+	} else {
+		jQuery('<div style="clear: both; padding-top: 20x">Sign in to begin creating your own maps:</div>').appendTo(bn).append(
+		'<a style="margin-left: 10px" href="/app/openidrequest?domain=yahoo"><img style="vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').append(
+		'<a style="margin-left: 10px" href="/app/openidrequest?domain=google"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>');
+
+		bn.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">Shared Maps</div>');
+		bn.append('<div>The following maps have been shared by other users.</div>');
+
+		var tenantDAO = new org.sarsoft.TenantDAO();
+		var sharedTable = new org.sarsoft.view.TenantTable({owner : true, comments : true, sharing : false, actions : false});
+		sharedTable.create(jQuery('<div style="clear: both;" class="growYUITable"></div>').appendTo(bn)[0]);
+
+		tenantDAO.loadShared(function(rows) {
+			sharedTable.update(rows);
+		});
+
+	}
+
+	this.defaults.account.click(function() {
+		if(accountpane.visible()) {
+			accountpane.hide();
+		} else {
+			accountpane.show();
+		}
+	});
+	
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {

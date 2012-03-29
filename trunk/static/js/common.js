@@ -402,11 +402,16 @@ org.sarsoft.TenantDAO.prototype.loadRecent = function(className, handler) {
 	this._doGet("/recent?className=" + className, handler);
 }
 
+org.sarsoft.TenantDAO.prototype.loadShared = function(handler) {
+	this._doGet("/shared", handler);
+}
+
 org.sarsoft.TenantDAO.prototype.saveCenter = function(center, handler) {
 	this._doPost("/center", handler, center);
 }
-org.sarsoft.view.TenantTable = function() {
+org.sarsoft.view.TenantTable = function(cols) {
 	
+	if(cols == null) cols = {owner : true, comments : true, sharing : true, actions : true}
 	var permissionFormatter = function(cell, record, column, data) {
 		var tenant = record.getData();
 		var value = "N/A";
@@ -427,11 +432,11 @@ org.sarsoft.view.TenantTable = function() {
 			formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap"}); cell.innerHTML = '<a href="/' + ((record.getData().type == "org.sarsoft.plans.model.Search") ? "search" : "map") + '?id=' + record.getData().name + '">' + org.sarsoft.htmlescape(data) + '</a>' },
 			sortOptions: {sortFunction: function(a, b, desc) { 
 				return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); 
-				}} },
-		{ key : "owner", label: "Created By", sortable : true},
-		{ key : "comments", label: "Comments", sortable: true, formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "4em", "max-width": "30em"}); if(data != null && data.length > 120) data = data.substr(0,120) + "..."; cell.innerHTML = data;}},
-		{ key : "allPerm", label : "Sharing", formatter : permissionFormatter },
-		{ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
+				}} }];
+    if(cols.owner) coldefs.push({ key : "owner", label: "Created By", sortable : true});
+    if(cols.comments) coldefs.push({ key : "comments", label: "Comments", sortable: true, formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "4em", "max-width": "30em"}); if(data != null && data.length > 120) data = data.substr(0,120) + "..."; cell.innerHTML = data;}});
+	if(cols.sharing) coldefs.push({ key : "allPerm", label : "Sharing", formatter : permissionFormatter });
+	if(cols.actions) coldefs.push({ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
 			if(record.getData().type == "org.sarsoft.markup.model.CollaborativeMap") {
 				var guide = jQuery('<span><a href="/guide?id=' + record.getData().name + '">Printable Guide</a>,&nbsp;</span>').appendTo(cell);
 			}
@@ -448,10 +453,7 @@ org.sarsoft.view.TenantTable = function() {
 				html += 'Embed it in a webpage or forum:<br/><br/><textarea rows="3" cols="45">&lt;iframe width="500px" height="500px" src="' + murl + '"&gt;&lt;/iframe&gt;</textarea>';
 			}
 			alertBody.innerHTML = html; alertDlg.show();});
-			
-		
-		}}
-	];
+		}});
 	org.sarsoft.view.EntityTable.call(this, coldefs, {});
 }
 org.sarsoft.view.TenantTable.prototype = new org.sarsoft.view.EntityTable();
