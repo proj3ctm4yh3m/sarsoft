@@ -34,7 +34,7 @@ org.sarsoft.Loader.queue(function() {
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
   configWidget.loadConfig();
 
-  <c:if test="${userPermission eq admin}">
+  <c:if test="${userPermission eq admin or userPermission eq read}">
   	$('#sharingpermissions').appendTo(imap.registered["org.sarsoft.DataNavigator"].settings_tenant).css('display', 'block');
   	imap.registered["org.sarsoft.DataNavigator"].settings_tenant.css('display', 'block');
   </c:if>
@@ -80,6 +80,25 @@ org.sarsoft.Loader.queue(function() {
   <div id="map_canvas" style="width: 100%; height: 100%"></div>
  </div>
 </div>
+
+<c:if test="${userPermission eq read}">
+<div style="display: none" id="sharingpermissions">
+Map is currently read only.  Enter password for write access:<br/>
+<form action="/password" method="post" id="sharingform">
+<input type="hidden" name="dest" value="/map?id=${tenant.name}"/>
+<label for="password">Password:</label>
+<input type="password" name="password" length="10"/>
+
+<button id="sharingsubmit">GO</button>
+
+</form>
+</div>
+
+<script>
+$('#sharingsubmit').click(function() { $('#sharingform').submit()});
+</script>
+</c:if>
+
 
 <c:if test="${userPermission eq admin}">
 <div style="display: none" id="sharingpermissions">
