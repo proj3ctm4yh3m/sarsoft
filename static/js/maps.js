@@ -2170,8 +2170,12 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	var tt = tooltip;
 	if(typeof tt == "undefined") tt = waypoint.name;
 	tt = tt +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(waypoint.lat, waypoint.lng))).toString() + ")";
-	var marker = new GMarker(gll, { title : tt, icon : icon});
+	var marker = new GMarker(gll, { title : tt, icon : icon, draggable : (config.drag != null)});
 	this.map.addOverlay(marker);
+	if(config.drag != null) {
+		marker.enableDragging();
+		GEvent.addListener(marker, "dragend", function() { config.drag(marker.getLatLng())});
+	}
 	GEvent.addListener(marker, "mouseover", function() {
 		if(waypoint.displayMessage == null) {
 			that._infomessage(label);
@@ -2180,7 +2184,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 		}
 	});
 	marker.id = waypoint.id;
-	if(label != null) {
+	if(label != null && (config.draggable != null)) {
 		labelOverlay = new ELabel(gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", new GSize(icon.iconSize.width*0.5, icon.iconSize.height*-0.5));
 		this.map.addOverlay(labelOverlay);
 		marker.label = labelOverlay;
@@ -2208,6 +2212,22 @@ org.sarsoft.InteractiveMap.prototype.removeWaypoint = function(waypoint) {
 org.sarsoft.InteractiveMap.prototype.addWaypoint = function(waypoint, config, tooltip, label) {
 	this.removeWaypoint(waypoint);
 	this._addMarker(waypoint, config, tooltip, label);
+}
+
+org.sarsoft.InteractiveMap.prototype.drag = function(waypoint, callback) {
+	var that = this;
+	var objs = this.markers[waypoint.id];
+	this._removeMarker(waypoint);
+	objs.config.drag = function(gll) {
+		GEvent.clearListeners(objs.marker, "drag");
+		that._removeMarker(waypoint);
+		waypoint.lat=gll.lat();
+		waypoint.lng=gll.lng();
+		objs.config.drag = null;
+		that._addMarker(waypoint, objs.config, objs.tooltip, objs.label);
+		callback(gll);
+	}
+	this._addMarker(waypoint, objs.config, objs.tooltip, objs.label);
 }
 
 org.sarsoft.InteractiveMap.prototype._infomessage = function(message, timeout) {

@@ -399,6 +399,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.markerDAO = new org.sarsoft.MarkerDAO(function () { that.imap.message("Server Communication Error"); });
 	this.markers = new Object();
 	this.shapes = new Object();
+	this._markerAttrs = new Object();
 	this._shapeAttrs = new Object();
 	this.showMarkup = true;
 	this.embedded = embedded;
@@ -407,30 +408,30 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		var dn = imap.registered["org.sarsoft.DataNavigator"];
 		this.dn = new Object();
 		var markerdiv = dn.addDataType("Markers");
-		this.dn.markertoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide details</span>)</span>').appendTo(dn.titleblocks["Markers"]);
+		this.dn.markertoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide comments</span>)</span>').appendTo(dn.titleblocks["Markers"]);
 		this.dn.markertoggle._on = true;
 		this.dn.markertoggle.click(function() {
 			that.dn.markertoggle._on = !that.dn.markertoggle._on;
 			if(that.dn.markertoggle._on) {
-				that.dn.markertoggle.html('(<span style="color: #5a8ed7">hide details</span>)');
+				that.dn.markertoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
 				$('.marker_desc_line_item').css('display', 'block');
 			} else {
-				that.dn.markertoggle.html('(<span style="color: #5a8ed7">show details</span>)');
+				that.dn.markertoggle.html('(<span style="color: #5a8ed7">show comments</span>)');
 				$('.marker_desc_line_item').css('display', 'none');
 			}
 		});
 		this.dn.markerdiv = jQuery('<div></div>').appendTo(markerdiv);
 		this.dn.markers = new Object();
 		var shapediv = dn.addDataType("Shapes");
-		this.dn.shapetoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide details</span>)</span>').appendTo(dn.titleblocks["Shapes"]);
+		this.dn.shapetoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide comments</span>)</span>').appendTo(dn.titleblocks["Shapes"]);
 		this.dn.shapetoggle._on = true;
 		this.dn.shapetoggle.click(function() {
 			that.dn.shapetoggle._on = !that.dn.shapetoggle._on;
 			if(that.dn.shapetoggle._on) {
-				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">hide details</span>)');
+				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
 				$('.shape_desc_line_item').css('display', 'block');
 			} else {
-				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">show details</span>)');
+				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">show comments</span>)');
 				$('.shape_desc_line_item').css('display', 'none');
 			}
 		});
@@ -440,25 +441,12 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
 			jQuery('<span style="color: green; cursor: pointer">+ New Marker</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(markerdiv)).click(function() {
 				var center = that.imap.map.getCenter();
-	    		that.markerLocationForm.write({lat: center.lat(), lng: center.lng()});
-	    		that.markerLocationDlg.handler = function() {
-	    			that.markerDlg.marker=null;
-	    			that.markerLocationDlg.handler=null;
-					if(!that.markerLocationForm.read(function(gll) {
-		    			that.markerDlg.entityform.write({url: "#FF0000"});
-		    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(gll);
-		    			that.markerDlg.show();
-					})) {
-		    			that.markerDlg.entityform.write({url: "#FF0000"});
-		    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(center);
-		    			that.markerDlg.show();
-					}
-	    		}
-	    		that.markerLocationDlg.show();
+    			that.markerDlg.entityform.write({url: "#FF0000"});
+    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(center);
+    			that.markerDlg.show();
 			});
 
 			jQuery('<div style="float: left; padding-top: 1em; margin-right: 2em; cursor: pointer; color: green; font-size: 120%">+ New Line</div>').appendTo(shapediv).click(function() {
-				dd.hide();
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=false;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});
@@ -466,7 +454,6 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			    that.shapeDlg.show();
 			});
 			jQuery('<div style="float: left; padding-top: 1em; cursor: pointer; color: green; font-size: 120%">+ New Polygon</div>').appendTo(shapediv).click(function() {
-				dd.hide();
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=true;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});
@@ -543,7 +530,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && nestMenuItems != "none") {
 			this.imap.addContextMenuItems(items.concat([
 	    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
-	    		{text : "Move", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerLocationForm.write(marker.position); that.markerLocationForm.id = marker.id; that.markerLocationDlg.show();}},
+	    		{text : "Drag to New Location", applicable : function(obj) { var marker = that.markers[that.getMarkerIdFromWpt(obj)]; return marker != null && !that.getMarkerAttr(marker, "inedit");}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.dragMarker(marker)}},
 	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
 	    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
@@ -592,6 +579,21 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.shapeDAO.mark();	
 }
 
+org.sarsoft.controller.MarkupMapController.prototype.setMarkerAttr = function(marker, key, value) {
+	if(marker == null) return null;
+	if(typeof this._markerAttrs[marker.id] == "undefined") {
+		this._markerAttrs[marker.id] = new Object();
+	}
+	this._markerAttrs[marker.id][key] = value;
+}
+
+org.sarsoft.controller.MarkupMapController.prototype.getMarkerAttr = function(marker, key) {
+	if(marker == null) return null;
+	if(typeof this._markerAttrs[marker.id] == "undefined") return null;
+	return this._markerAttrs[marker.id][key];
+}
+
+
 org.sarsoft.controller.MarkupMapController.prototype.setShapeAttr = function(shape, key, value) {
 	if(shape == null) return null;
 	if(typeof this._shapeAttrs[shape.id] == "undefined") {
@@ -626,6 +628,17 @@ org.sarsoft.controller.MarkupMapController.prototype.redrawShape = function(shap
 org.sarsoft.controller.MarkupMapController.prototype.editShape = function(shape) {
 	this.imap.edit(shape.way.id);
 	this.setShapeAttr(shape, "inedit", true);
+}
+
+org.sarsoft.controller.MarkupMapController.prototype.dragMarker = function(marker) {
+	var that = this;
+	this.setMarkerAttr(marker, "inedit", true);
+	this.imap.drag(marker.position, function(gll) {
+		that.setMarkerAttr(marker, "inedit", false);
+		marker.position.lat = gll.lat();
+		marker.position.lng = gll.lng();
+		that.markerDAO.updatePosition(marker.id, marker.position, function() {});
+	});
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id) {
@@ -692,7 +705,7 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddMarker = function(mark
 	}
 	this.dn.markers[marker.id].empty();
 
-	var line = jQuery('<div style="padding-top: 1em"></div>').appendTo(this.dn.markers[marker.id]);
+	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.markers[marker.id]);
 	line.append('<img style="vertical-align: middle; padding-right: 0.5em" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>');
 	jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(marker.label) + '</span>').appendTo(line).click(function() {
 		that.imap.map.setCenter(new GLatLng(marker.position.lat, marker.position.lng));
@@ -774,7 +787,7 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddShape = function(shape
 	
 	if(shape.label == null || shape.label.length == 0) return;
 
-	var line = jQuery('<div style="padding-top: 1em"></div>').appendTo(this.dn.shapes[shape.id]);
+	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.shapes[shape.id]);
 	line.append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape));
 
 	jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(shape.label) + '</span>').appendTo(line).click(function() {
