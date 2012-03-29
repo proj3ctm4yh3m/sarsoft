@@ -265,72 +265,72 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 	var bn = jQuery('<div></div>');
 	var pane = new org.sarsoft.view.MapRightPane(imap, bn);
 
-	var imp = jQuery('<div></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1em">Import Data From</div>');
-
-	var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
-	gpsin.appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(imp));
-	gpsin.click(function() {
-		that.gpsHeader.css('visibility', 'visible');
-		that.comms.init(false, "/map/restgpxupload", "");
-	});
+	if(org.sarsoft.userPermissionLevel != "READ") {
+		var imp = jQuery('<div></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1em">Import Data From</div>');
 	
-	var gpxin = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/></form>');
-	var gpxfile = jQuery('<input type="file" name="file" style="margin-top: 64px; margin-left: 10px"/>').appendTo(gpxin);
-	var gpxicon = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>');
-	jQuery('<div style="float: left"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(gpxin)).appendTo(imp);
-	gpxicon.click(function() {
-		if("" == gpxfile.val()) {
-			alert("Please choose a GPX file to import.");
+		var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
+		gpsin.appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(imp));
+		gpsin.click(function() {
+			that.gpsHeader.css('visibility', 'visible');
+			that.comms.init(false, "/map/restgpxupload", "");
+		});
+		
+		var gpxin = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/></form>');
+		var gpxfile = jQuery('<input type="file" name="file" style="margin-top: 64px; margin-left: 10px"/>').appendTo(gpxin);
+		var gpxicon = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>');
+		jQuery('<div style="float: left"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(gpxin)).appendTo(imp);
+		gpxicon.click(function() {
+			if("" == gpxfile.val()) {
+				alert("Please choose a GPX file to import.");
+			} else {
+				gpxin.submit();
+			}
+		});
+	}
+	
+	var exp = jQuery('<div' + ((org.sarsoft.userPermissionLevel != "READ") ? ' style="clear: both; padding-top: 2em"' : '') + '></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1em">Export This Map To</div>');
+	
+	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
+	gpsout.click(function() {
+		that.gpsHeader.css('visibility', 'visible');
+		var val = that.exportables._selected;
+		var url = ""
+		if(val == null) {
+			url=window.location.href+'&format=GPX';
+		} else if(val.url == null) {
+			url="/rest/shape/" + val.id + "?format=GPX";
 		} else {
-			gpxin.submit();
+			url="/rest/marker/" + val.id + "?format=GPX";
+		}
+		that.comms.init(true, url, "");
+	});
+
+	var gpxout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>');
+	gpxout.appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
+	gpxout.click(function() {
+		var val = that.exportables._selected;
+		if(val == null) {
+			window.location=window.location.href+'&format=GPX';
+		} else if(val.url == null) {
+			window.location="/rest/shape/" + val.id + "?format=GPX";
+		} else {
+			window.location="/rest/marker/" + val.id + "?format=GPX";
 		}
 	});
-	
-	if(org.sarsoft.userPermissionLevel != "READ") {
-		var exp = jQuery('<div style="clear: both; padding-top: 2em"></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1em">Export This Map To</div>');
-		
-		var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
-		gpsout.click(function() {
-			that.gpsHeader.css('visibility', 'visible');
-			var val = that.exportables._selected;
-			var url = ""
-			if(val == null) {
-				url=window.location.href+'&format=GPX';
-			} else if(val.url == null) {
-				url="/rest/shape/" + val.id + "?format=GPX";
-			} else {
-				url="/rest/marker/" + val.id + "?format=GPX";
-			}
-			that.comms.init(true, url, "");
-		});
 
-		var gpxout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>');
-		gpxout.appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
-		gpxout.click(function() {
-			var val = that.exportables._selected;
-			if(val == null) {
-				window.location=window.location.href+'&format=GPX';
-			} else if(val.url == null) {
-				window.location="/rest/shape/" + val.id + "?format=GPX";
-			} else {
-				window.location="/rest/marker/" + val.id + "?format=GPX";
-			}
-		});
+	var kmlout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
+	kmlout.click(function() {
+		var val = that.exportables._selected;
+		if(val == null) {
+			window.location=window.location.href+'&format=KML';
+		} else if(val.url == null) {
+			window.location="/rest/shape/" + val.id + "?format=KML";
+		} else {
+			window.location="/rest/marker/" + val.id + "?format=KML";
+		}
+	});
 
-		var kmlout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
-		kmlout.click(function() {
-			var val = that.exportables._selected;
-			if(val == null) {
-				window.location=window.location.href+'&format=KML';
-			} else if(val.url == null) {
-				window.location="/rest/shape/" + val.id + "?format=KML";
-			} else {
-				window.location="/rest/marker/" + val.id + "?format=KML";
-			}
-		});
-
-		this.exportables = jQuery('<div></div>').appendTo(exp);
-	}
+	this.exportables = jQuery('<div></div>').appendTo(exp);
 	
 	this.gpsHeader = jQuery('<div style="visibility: hidden; clear: both; padding-top: 20px"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(bn);
 	this.comms = new org.sarsoft.GPSComms(jQuery('<div></div>').appendTo(bn));
