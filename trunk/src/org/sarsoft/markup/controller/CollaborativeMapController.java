@@ -119,6 +119,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("id", mrk.getId());
 		map.put("label", mrk.getLabel());
+		map.put("url", mrk.getUrl());
 		map.put("position", mrk.getPosition());
 		
 		Map<String, String> attrs = new HashMap<String, String>();
