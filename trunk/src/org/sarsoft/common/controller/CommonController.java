@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.sarsoft.common.util.RuntimeProperties;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,9 @@ public class CommonController extends JSONBaseController {
 
 	@RequestMapping(value="/map.html", method = RequestMethod.GET)
 	public String showMap(Model model, HttpServletRequest request) {
+		RuntimeProperties.setTenant(null);		
+		HttpSession session = request.getSession(true);
+		session.removeAttribute("tenantid");
 		if(RuntimeProperties.getProperty("sarsoft.ui.quickmap.message") != null) {
 			model.addAttribute("uimessage", RuntimeProperties.getProperty("sarsoft.ui.quickmap.message"));
 		}

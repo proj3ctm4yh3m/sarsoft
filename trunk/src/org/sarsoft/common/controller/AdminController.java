@@ -266,6 +266,10 @@ public class AdminController extends JSONBaseController {
 	@RequestMapping(value="/app/openidrequest", method = RequestMethod.GET)
 	public void login(@RequestParam("domain") String domain, HttpServletRequest request, HttpServletResponse response) {
 		try {
+			String dest = request.getParameter("dest");
+			if(dest != null && dest.length() > 0) {
+				request.getSession(true).setAttribute("login_dest", dest);
+			}
 			String server = RuntimeProperties.getServerUrl();
 			if(consumer == null) consumer = new OIDConsumer(server);
 			if("google".equalsIgnoreCase(domain)) consumer.authRequest("https://www.google.com/accounts/o8/id", request, response);
@@ -297,6 +301,11 @@ public class AdminController extends JSONBaseController {
 			RuntimeProperties.setUsername(account.getName());
 			request.getSession(true).removeAttribute("tenantid");
 			RuntimeProperties.setTenant(null);
+			String dest = (String) request.getSession(true).getAttribute("login_dest");
+			request.getSession().removeAttribute("login_dest");
+			if(dest != null) {
+				return "redirect:" + dest;
+			}
 			return "redirect:/maps";
 		} catch (Exception e) {
 			logger.error("Exception encountered handling OpenID response", e);

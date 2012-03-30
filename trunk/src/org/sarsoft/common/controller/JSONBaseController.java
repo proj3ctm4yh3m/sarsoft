@@ -214,7 +214,7 @@ public abstract class JSONBaseController {
 
 			UserAccount account = (RuntimeProperties.getUsername() != null) ? account = dao.getByPk(UserAccount.class, RuntimeProperties.getUsername()) : null;
 			header = header + "org.sarsoft.map.datum=\"" + datum + "\"\n" +
-				"org.sarsoft.tenantid=\"" + RuntimeProperties.getTenant() + "\"\n" +
+				((RuntimeProperties.getTenant() != null) ? "org.sarsoft.tenantid=\"" + RuntimeProperties.getTenant() + "\"\n" : "") +
 				((account != null) ? "org.sarsoft.username=\"" + account.getEmail() + "\"\n" : "") +
 				"org.sarsoft.userPermissionLevel=\"" + RuntimeProperties.getUserPermission() + "\"";
 

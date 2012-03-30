@@ -337,6 +337,7 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 
 	jQuery('<button style="font-size: 150%; margin-top: 20px">Transfer Complete - Close Window</button>').appendTo(bn).click(function() { pane.hide(); });
 
+	dn.defaults.io.css('display', 'block');
 	dn.defaults.io.click(function() {
 		if(pane.visible()) {
 			pane.hide();
