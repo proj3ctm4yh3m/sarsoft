@@ -119,6 +119,8 @@ textarea.entityform {
 	}
 	.printnotransform {
 		-webkit-transform: none !important;
+		-moz-transform: none !important;
+		-ms-transform: none !important;
 	}
 	img.olTileImage {
 		position: absolute !important;

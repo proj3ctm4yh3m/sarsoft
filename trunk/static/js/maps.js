@@ -114,6 +114,7 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		map.setCenter(center, zoom);
 		map.addControl(new OverlayDropdownMapControl());
 		map.addControl(new GLargeMapControl3D());
+		map._zoomControl = $(map.getContainer()).children().last();
 		return map;
 	}
 }
@@ -544,7 +545,7 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 	this.cbmargin = jQuery('<input style="margin-left: 5px" type="checkbox"/>').appendTo(div).change(this.updateToPreset);
 	div.append('<span>Borderless</span>');
 	this.cbscale = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
-	div.append('<span>Zoom To Fit</span>');
+	div.append('<span>Shrink To Screen</span>');
 	jQuery('<button style="margin-left: 20px">Cancel</button>').appendTo(div).click(function() {
 		container.css('display', 'none');
 		that.fullscreen();
@@ -557,8 +558,13 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 	div.append(document.createTextNode("   Height: "));
 	this.heightInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
 	div.append(document.createTextNode("   Margin: "));
-	this.marginInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
-	div.append(document.createTextNode(" (not supported on Firefox)"));
+	if($.browser.mozilla) {
+		div.append(document.createTextNode(" Not Supported on Firefox"));
+		this.marginInput = jQuery('<input type="text" size="6"/>');
+		
+	} else {
+		this.marginInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
+	}
 }
 
 org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
@@ -568,7 +574,8 @@ org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
 	this.map.getContainer().style.height="100%";
 	this.map.getContainer()._margin=0;
 	
-	$(this.map.getContainer()).css('-webkit-transform', 'none');
+	$(this.map.getContainer()).css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
+	if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
 
 	this.map.checkResize();
 	this.map.setCenter(center);	
@@ -620,9 +627,14 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 	if(scale < 1 && this.cbscale[0].checked) {
 		var offset = (-50)*(1-scale);
 		var transform = 'translate(20px, 10px) translate(' + offset + '%, ' + offset + '%) scale(' + scale + ', ' + scale + ')';
-		container.css('-webkit-transform', transform);
+		container.css('-webkit-transform', transform).css('-moz-transform', transform).css('-ms-transform', transform);
+		var zscale = 1/scale;
+		var zoffset = (-50)*(1-zscale);
+		var ztransform = 'translate(' + zoffset + '%, ' + zoffset + '%) scale(' + zscale + ', ' + zscale + ')';
+		if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', ztransform).css('-moz-transform', ztransform).css('-ms-transform', ztransform);
 	} else {
-		container.css('-webkit-transform', 'none');
+		container.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
+		if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
 	}
 	if(rule != null) rule.style.setProperty('margin', margin);
 	this.map.checkResize();
@@ -1453,7 +1465,7 @@ org.sarsoft.MapLabelWidget.prototype.getConfig = function(config) {
 
 org.sarsoft.MapSizeWidget = function(imap) {
 	var that = this;
-	var img = jQuery('<img style="cursor: pointer; vertical-align: middle" title="Adjust page size for printing" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>');
+	var img = jQuery('<img style="cursor: pointer; vertical-align: middle" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>');
 	var div = jQuery('<div style="display: none; padding-left: 20px" class="noprint"></div>').prependTo($(imap.map.getContainer()).parent());
 	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, div);
 
