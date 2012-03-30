@@ -337,7 +337,7 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	this.map = map;
 	
 	this.resetMapTypes();
-	
+
 	this.div.appendTo(map.getContainer());	
 	return this.div[0];
 }
@@ -490,58 +490,88 @@ org.sarsoft.MapMessageControl.prototype.clear = function() {
 org.sarsoft.view.MapSizeForm = function(map, container) {
 	var that = this;
 	this.map = map;
+	this.container = container;
 
-	this.presets = [{name: "fullscreen", description: "Full Screen (no printing)", width: "100%", height: "100%", margin: "0.25in"},
-	                {name: "letter", description: "Letter", width: "8.5in", height: "11in", margin: "0.25in"}, 
-	                {name: "bletter", description: "Letter - Borderless", width: "8.5in", height: "11in", margin: "0in"},
-	                {name: "lletter", description: "Letter - Landscape", width: "11in", height: "8.5in", margin: "0.25in"},
-	                {name: "blletter", description: "Letter - Borderless Landscape", width: "11in", height: "8.5in", margin: "0in"},
-	                {name: "1393", description: "Super B", width: "13in", height: "19in", margin: "0.25in"},
-	                {name: "1913", description: "Super B - Landscape", width: "19in", height: "13in", margin: "0.25in"}
+	this.presets = [{name: "letter", description: "Letter", width: "8.5in", height: "11in", margin: "0.25in"}, 
+	                {name: "1393", description: "Super B", width: "13in", height: "19in", margin: "0.25in"}
 	                ];
-	
-	updateToPreset = function() {
+
+	this.updateToPreset = function() {
 		var presetName = that.presetInput.val();
+		if(presetName == "Custom") {
+			that.widthInput.removeAttr("disabled");
+			that.heightInput.removeAttr("disabled");
+			that.marginInput.removeAttr("disabled");
+			that.cborientation.attr("disabled", "disabled");
+			that.cbmargin.attr("disabled", "disabled");
+			that.cborientation[0].checked=false;
+			that.cbmargin[0].checked=false;
+			return;
+		}
+		that.cbmargin.removeAttr("disabled");
+		that.cborientation.removeAttr("disabled");
+		that.widthInput.attr("disabled", "disabled");
+		that.heightInput.attr("disabled", "disabled");
+		that.marginInput.attr("disabled", "disabled");
+
 		for(var i = 0; i < that.presets.length; i++) {
 			var preset = that.presets[i];
 			if(presetName == preset.name) {
-				that.widthInput.val(preset.width);
-				that.heightInput.val(preset.height);
-				that.marginInput.val(preset.margin);
+				var width = preset.width;
+				var height = preset.height;
+				if(that.cborientation[0].checked) {
+					width = preset.height;
+					height = preset.width;
+				}
+				that.widthInput.val(width);
+				that.heightInput.val(height);
+				var margin = preset.margin;
+				if(that.cbmargin[0].checked) margin = "0";
+				that.marginInput.val(margin);
 				that.write();
 			}
 		}
 	}
-	
-	updatePresetInput = function() {
-		that.presetInput.val('--');
-		var width = that.widthInput.val().replace(' ', '');
-		var height = that.heightInput.val().replace(' ', '');
-		var margin = that.marginInput.val().replace(' ', '');
-		for(var i = 0; i < that.presets.length; i++) {
-			var preset = that.presets[i];
-			if(preset.width==width && preset.height==height && preset.margin==margin) {
-				that.presetInput.val(preset.name);
-			}
-		}
-	}
-	
+
 	var div = jQuery('<div></div>').appendTo(container);
-	div.append(document.createTextNode("Default Sizes: "));
-	this.presetInput = jQuery('<select><option value="--">--</option></select>').appendTo(div).change(updateToPreset);
+	div.append(document.createTextNode("Page Size: "));
+	this.presetInput = jQuery('<select><option value="Custom">Custom</option></select>').appendTo(div).change(this.updateToPreset);
 	for(var i = 0; i < this.presets.length; i++) {
 		jQuery('<option value="' + this.presets[i].name + '">' + this.presets[i].description + '</option>').appendTo(this.presetInput);
 	}
+	this.cborientation = jQuery('<input type="checkbox"/>').appendTo(div).change(this.updateToPreset);
+	div.append('<span>Landscape</span>');
+	this.cbmargin = jQuery('<input style="margin-left: 5px" type="checkbox"/>').appendTo(div).change(this.updateToPreset);
+	div.append('<span>Borderless</span>');
+	this.cbscale = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
+	div.append('<span>Zoom To Fit</span>');
+	jQuery('<button style="margin-left: 20px">Cancel</button>').appendTo(div).click(function() {
+		container.css('display', 'none');
+		that.fullscreen();
+	});
+	
+
 	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
 	div.append(document.createTextNode("Width: "));
-	this.widthInput = jQuery('<input type="text" size="8"/>').appendTo(div).change(function() {that.write()});
+	this.widthInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
 	div.append(document.createTextNode("   Height: "));
-	this.heightInput = jQuery('<input type="text" size="8"/>').appendTo(div).change(function() {that.write()});
-	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
-	div.append(document.createTextNode("Margin: "));
-	this.marginInput = jQuery('<input type="text" size="8"/>').appendTo(div).change(function() {that.write()});
+	this.heightInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
+	div.append(document.createTextNode("   Margin: "));
+	this.marginInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
 	div.append(document.createTextNode(" (not supported on Firefox)"));
+}
 
+org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
+	var center = this.map.getCenter();
+
+	this.map.getContainer().style.width="100%";
+	this.map.getContainer().style.height="100%";
+	this.map.getContainer()._margin=0;
+	
+	$(this.map.getContainer()).css('-webkit-transform', 'none');
+
+	this.map.checkResize();
+	this.map.setCenter(center);	
 }
 
 org.sarsoft.view.MapSizeForm.prototype.write = function() {
@@ -576,10 +606,24 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 		width = (1*nWidth - nMargin*2) + "cm";
 		height = (1*nHeight - nMargin*2) + "cm";
 	}
+	
+	var container = $(map.getContainer());
 
 	this.map.getContainer().style.width=width;
 	this.map.getContainer().style.height=height;
 	this.map.getContainer()._margin=margin;
+	
+	this.border=this.container.height()+30;
+	
+	var scale = Math.min((container.parent().width()-40)/container.width(), (container.parent().height()-(this.container.height()+30))/container.height());
+	
+	if(scale < 1 && this.cbscale[0].checked) {
+		var offset = (-50)*(1-scale);
+		var transform = 'translate(20px, 10px) translate(' + offset + '%, ' + offset + '%) scale(' + scale + ', ' + scale + ')';
+		container.css('-webkit-transform', transform);
+	} else {
+		container.css('-webkit-transform', 'none');
+	}
 	if(rule != null) rule.style.setProperty('margin', margin);
 	this.map.checkResize();
 	this.map.setCenter(center);
@@ -592,51 +636,6 @@ org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
 		if(rules == null) rules = sheet.rules;
 		for(var j = 0; j < rules.length; j++) {
 			if(rules[j].cssText != null && rules[j].cssText.indexOf("@page") >= 0 && rules[j].cssText.indexOf("margin") >= 0) return rules[j];
-		}
-	}
-}
-
-org.sarsoft.view.MapSizeForm.prototype.read = function() {
-	var width = this.map.getContainer().style.width;
-	var height = this.map.getContainer().style.height;
-	var rule = this._getMarginRule();
-	var margin = "";
-	if(rule != null) margin = rule.style.getPropertyValue('margin');
-
-	if(rule != null && width.indexOf("in") > 0 && height.indexOf("in") > 0) {
-		var nWidth = width.replace("in", "");
-		var nHeight = height.replace("in", "");
-		var nMargin = 0;
-		if(margin.indexOf("in") > 0) {
-			nMargin = margin.replace("in", "");
-		} else if(margin.indexOf("cm") > 0) {
-			nMargin = 2.54*margin.replace("cm", "");
-		}
-		width = (1*nWidth + nMargin*2) + "in";
-		height = (1*nHeight + nMargin*2) + "in";
-	}
-	
-	if(rule != null && width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
-		var nWidth = width.replace("cm", "");
-		var nHeight = height.replace("cm", "");
-		var nMargin = 0;
-		if(margin.indexOf("cm") > 0) {
-			nMargin = margin.replace("cm", "");
-		} else if(margin.indexOf("in") > 0) {
-			nMargin = margin.replace("in", "")/2.54;
-		}
-		width = (1*nWidth + nMargin*2) + "cm";
-		height = (1*nHeight + nMargin*2) + "cm";
-	}
-		
-	this.widthInput.val(width);
-	this.heightInput.val(height);
-	if(rule != null) this.marginInput.val(margin);
-	
-	for(var i = 0; i < this.presets.length; i++) {
-		var preset = this.presets[i];
-		if(width==preset.width && height==preset.height && margin==preset.margin) {
-			this.presetInput.val(preset.name);
 		}
 	}
 }
@@ -1273,7 +1272,7 @@ org.sarsoft.DataNavigatorToggleControl.prototype.initialize = function(map) {
 	this.map = map;
 	this._show = true;
 
-	this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/right.png" title="Show Data Navigator" style="cursor: pointer" class="noprint"/>');	
+	this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/right.png" title="Show Data Navigator" style="cursor: pointer; z-index: 1001" class="noprint"/>');
 	this.dragbar = jQuery('<div style="visibility: hidden; top: 0; left: 0; position: absolute; z-index: 2000; height: 100%; width: 8px; background-color: black; opacity: 0.4; filter: alpha(opacity=40)"></div>').appendTo(this.imap.container.top);
 
 	this.minmax.bind('drag', function(evt) {
@@ -1296,9 +1295,13 @@ org.sarsoft.DataNavigatorToggleControl.prototype.initialize = function(map) {
 			that.hideDataNavigator();
 		}
 	});
-	
-	
-	map.getContainer().appendChild(this.minmax[0]);
+		
+	if(this.imap.container != null) {
+		this.imap.container.right.append(this.minmax);
+	} else {
+		map.getContainer().appendChild(this.minmax[0]);
+	}
+
 	return this.minmax[0];
 
 }
@@ -1386,6 +1389,8 @@ org.sarsoft.PositionInfoControl.prototype.initialize = function(map) {
 	});
 
 	map.getContainer().appendChild(div[0]);
+	this.div = div;
+	
 	return div[0];
 }
 
@@ -1448,12 +1453,22 @@ org.sarsoft.MapLabelWidget.prototype.getConfig = function(config) {
 
 org.sarsoft.MapSizeWidget = function(imap) {
 	var that = this;
-	var img = jQuery('<img style="vertical-align: middle" title="Adjust page size for printing" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>');
-	this.dropdown = new org.sarsoft.view.MenuDropdown(img, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div, function() {
-		that.pageSizeForm.read();
+	var img = jQuery('<img style="cursor: pointer; vertical-align: middle" title="Adjust page size for printing" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>');
+	var div = jQuery('<div style="display: none; padding-left: 20px" class="noprint"></div>').prependTo($(imap.map.getContainer()).parent());
+	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, div);
+
+	img.click(function() {
+		if(div.css('display')=='none') {
+			div.css('display', 'block');
+			that.pageSizeForm.presetInput.val("letter");
+			that.pageSizeForm.updateToPreset();
+		} else {
+			div.css('display', 'none');
+			that.pageSizeForm.fullscreen();
+		}
 	});
-	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, this.dropdown.div);
-	imap.addMenuItem(this.dropdown.container, 30);
+
+	imap.addMenuItem(img[0], 30);
 }
 
 org.sarsoft.MapPermissionWidget = function(imap) {
@@ -1926,6 +1941,8 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 20);
 		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 100);
 	}
+	
+	$(map.getContainer()).addClass("printnotransform");
 
 	if(options.container != null) {
 		this.container = new Object();
@@ -1934,9 +1951,15 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		this.container.right = $(this.container.top.children()[1]);
 		this.container.canvas = $(this.container.right[0]);
 
+		this.container.top.addClass("printnooffset");
 		this.container.top.css({height : "100%"});
 		this.container.left.css({position : "relative", float : "left", height: "100%", display : "none", "overflow-y" : "auto"});
 		this.container.right.css({position : "relative", width : "100%", height: "100%"});
+		
+		map._overlaydropdownmapcontrol.div.prependTo(this.container.right);
+		if(this.positionInfoControl != null) {
+			this.positionInfoControl.div.prependTo(this.container.right).css('z-index', '1001');
+		}
 		
 		var dn = new org.sarsoft.DataNavigator(this);
 		var dnc = new org.sarsoft.DataNavigatorToggleControl(this);

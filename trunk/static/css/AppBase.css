@@ -107,10 +107,18 @@ textarea.entityform {
 
 @media print {
 	.noprint {
-		display: none;
+		display: none !important;
 	}
 	.printonly {
 		display: block !important;
+	}
+	.printnooffset {
+		padding: 0 !important;
+		margin: 0 !important;
+		border: 0 !important;
+	}
+	.printnotransform {
+		-webkit-transform: none !important;
 	}
 	img.olTileImage {
 		position: absolute !important;
