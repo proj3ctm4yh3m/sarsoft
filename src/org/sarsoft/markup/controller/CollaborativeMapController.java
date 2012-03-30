@@ -198,6 +198,13 @@ public class CollaborativeMapController extends JSONBaseController {
 							// if we can't properly decode the mapConfig, don't worry about it
 						}
 					}
+					if("org.sarsoft.mapLayers".equals(cookie.getName())) {
+						try {
+						map.setLayers(java.net.URLDecoder.decode(cookie.getValue(), "UTF-8"));
+						} catch (Exception e){
+							// if we can't properly decode the mapConfig, don't worry about it
+						}
+					}
 				}
 				dao.save(map);
 			}
