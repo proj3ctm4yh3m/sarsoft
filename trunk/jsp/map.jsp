@@ -40,6 +40,8 @@ org.sarsoft.Loader.queue(function() {
 	<c:if test="${uimessage ne null}">
 	  imap.message('${uimessage}', 20000);
 	</c:if>
+
+	imap.registered["org.sarsoft.MapFindWidget"].setState(true);
 	
 });
 }

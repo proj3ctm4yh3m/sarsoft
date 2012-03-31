@@ -1493,59 +1493,45 @@ org.sarsoft.MapPermissionWidget = function(imap) {
 org.sarsoft.MapFindWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
+	this.state = false;
+	
+	imap.register("org.sarsoft.MapFindWidget", this);
 
-	var find = jQuery('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>');
-	this.dropdown = new org.sarsoft.view.MenuDropdown(find, 'width: 100%; right: 0', imap.map._overlaydropdownmapcontrol.div, function() {
-		that.locationEntryForm.clear();
-		that.initializeDlg();
-		if(typeof GClientGeocoder != 'undefined') {
-			that.locationEntryForm.address.focus();
-		}
+	this.find = jQuery('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>');
+	var container = jQuery('<span style="white-space: nowrap; color: black"></span>').append(this.find);
+
+	this.find.click(function() {
+		that.setState(!that.state);
 	});
 
-	this.formContainer = jQuery('<div></div>').appendTo(this.dropdown.div);
 	this.locationEntryForm = new org.sarsoft.ThinLocationForm();
-	this.locationEntryForm.create(this.formContainer, function() {
+	this.locationEntryForm.create(container, function() {
 		that.locationEntryForm.read(function (gll) {that.imap.setCenter(gll, 14);});
 	});
 	
-	this.formContainer.append('<div style="width: 100%; clear: both"></div>');
-	var go = jQuery('<button>Re-Center Map</button>').appendTo(this.dropdown.div)
+	var go = jQuery('<button>GO</button>').appendTo(container)
 	go.click(function() {
 		var entry = that.locationEntryForm.read(function(gll) { that.imap.setCenter(gll, 14);});
 		if(!entry) that.checkBlocks();
 	});
-
-	imap.addMenuItem(this.dropdown.container, 25);
-}
-
-org.sarsoft.MapFindWidget.prototype.initializeDlg = function() {
-	var blocks = new Array();
-	if(this._container != null) $(this._container).remove();
-	this._container = document.createElement("div");
-	this.formContainer.append(this._container);
-
-	for(var key in this.imap.registered) {
-		if(this.imap.registered[key].getFindBlock != null) {
-			var block = this.imap.registered[key].getFindBlock();
-			while(blocks[block.order] != null) block.order++;
-			blocks[block.order] = block;
-		}
-	}
 	
-	for(var i = 0; i < blocks.length; i++) {
-		if(blocks[i] != null) {
-			this._container.appendChild(blocks[i].node);
-		}
-	}
-	this.blocks = blocks;
+	this.container = container;
+	this.setState(false);
+
+	imap.addMenuItem(container[0], 25);
 }
 
-org.sarsoft.MapFindWidget.prototype.checkBlocks = function() {
-	for(var i = 0; i < this.blocks.length; i++) {
-		if(this.blocks[i] != null) {
-			if(this.blocks[i].handler()) return;
+org.sarsoft.MapFindWidget.prototype.setState = function(state) {
+	this.state = state;
+	if(this.state) {
+		this.container.children().css('display', 'inline');
+		this.locationEntryForm.clear();
+		if(typeof GClientGeocoder != 'undefined') {
+			this.locationEntryForm.address.focus();
 		}
+	} else {
+		this.container.children().css('display', 'none');
+		this.find.css('display', 'inline');
 	}
 }
 
@@ -1761,7 +1747,7 @@ org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
 	
 	this.isArrow = (html == "&darr;");
 
-	var div = jQuery('<div style="color: black; font-weight: normal; visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0.6em; ' : 'top: 0.5em; padding-top: 1em; z-index: -1; ') + css + '"></div>');
+	var div = jQuery('<div style="color: black; font-weight: normal; visibility: hidden; background: white; position: absolute; right: 0; ' + ($.browser.msie ? 'top: 0em; padding-top: 1.6em ' : 'top: 0em; padding-top: 1.5em; z-index: -1; ') + css + '"></div>');
 	div.appendTo(parent != null ? parent : container);
 	trigger.click(function() {
 		if(div.css("visibility")=="hidden") {
@@ -2835,7 +2821,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler, no
 	tr = jQuery('<tr><td valign="top">Place Name</td></tr>').appendTo(tbody);
 	td = jQuery("<td/>").appendTo(tr);
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(td);
-	td.append('<br/><span class="hint">e.g. "Mount Rainier" or "Castle Peak near Truckee, CA".</span>');
+	td.append('<span class="hint">e.g. "Mount Rainier" or "Castle Peak near Truckee, CA".</span>');
 	if(typeof GClientGeocoder == 'undefined' || noLookup) {
 		tr.css("display", "none");
 	}
@@ -2922,15 +2908,22 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 	var that = this;
 
 	var geocode = !(typeof GClientGeocoder == 'undefined' || noLookup);
-	this.select = jQuery('<select>' + (geocode ? '<option value="name">Place Name</option>' : '') + '<option value="UTM">UTM</option><option value="DD">DD</option><option value="DMS">DMS</option><option value="DMH">DMH</option></select>');
-	this.select.appendTo(jQuery('<div style="float: left"></div>').appendTo(container));
-	var div = jQuery('<div style="float: left"></div>').appendTo(container);
+	this.select = jQuery('<select style="margin-left: 5px">' + (geocode ? '<option value="name">Place Name</option>' : '') + '<option value="UTM">UTM</option><option value="DD">DD</option><option value="DMS">DMS</option><option value="DMH">DMH</option></select>');
+	this.select.appendTo(container);
 	this.containers = {
-			name : jQuery('<div' + (geocode ? '' : ' style="display: none"') + '></div>').appendTo(div),
-			UTM : jQuery('<div' + (geocode ? ' style="display: none"' : '') + '></div>').appendTo(div),
-			DD : jQuery('<div style="display: none"></div>').appendTo(div),
-			DMH : jQuery('<div style="display: none"></div>').appendTo(div),
-			DMS : jQuery('<div style="display: none"></div>').appendTo(div),
+			name : jQuery('<span' + (geocode ? '' : ' style="display: none"') + '></span>').appendTo(container),
+			UTM : jQuery('<span' + (geocode ? ' style="display: none"' : '') + '></span>').appendTo(container),
+			DD : jQuery('<span style="display: none"></span>').appendTo(container),
+			DMH : jQuery('<span style="display: none"></span>').appendTo(container),
+			DMS : jQuery('<span style="display: none"></span>').appendTo(container),
+	}
+	
+	var hints = {
+		name : 'e.g. "Mount Rainier" or "Castle Peak near Truckee, CA"',
+		UTM : 'UTM',
+		DD : 'WGS84 decimal degrees, e.g. 39.3422, -120.2036',
+		DMH : 'WGS84 degree minutes, e.g. 39\u00B020.66\', -120\u00B012.32\'',
+		DMS : 'WGS84 degree minute seconds, e.g. 39\u00B020\'39\'\', -120\u00B012\'19\'\''
 	}
 	
 	this.select.change(function() {
@@ -2938,7 +2931,8 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 		for (var key in that.containers) {
 			that.containers[key].css("display", "none");
 		}
-		that.containers[type].css("display", "block");
+		that.containers[type].css("display", "inline");
+		container.attr("title", hints[type]);
 	});
 
 	this.utmform = new org.sarsoft.UTMEditForm();
@@ -2957,7 +2951,6 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 		}, function() { alert("Unable to determine your location.")});
 		});
 	}
-	dd.append('<br/><span class="hint">WGS84 decimal degrees, e.g. 39.3422, -120.2036</span>');
 	
 	var ddmmhh = this.containers["DMH"];
 	this.DDMMHH = new Object();
@@ -2968,7 +2961,6 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 	this.DDMMHH.lngDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmhh);
 	ddmmhh.append("\u00B0");
 	this.DDMMHH.lngMM = jQuery('<input type="text" size="5"/>').appendTo(ddmmhh);
-	ddmmhh.append('\'<br/><span class="hint">WGS84 degree minutes, e.g. 39\u00B020.66\', -120\u00B012.32\'</span>');
 
 	var ddmmss = this.containers["DMS"];
 	this.DDMMSS = new Object();
@@ -2983,11 +2975,9 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 	this.DDMMSS.lngMM = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
 	ddmmss.append("'");
 	this.DDMMSS.lngSS = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
-	ddmmss.append('\'\'<br/><span class="hint">WGS84 degree minute seconds, e.g. 39\u00B020\'39\'\', -120\u00B012\'19\'\'</span>');
 	
 	var name = this.containers["name"];
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(name);
-	name.append('<br/><span class="hint">e.g. "Mount Rainier" or "Castle Peak near Truckee, CA".</span>');
 	
 	if(handler != null) {
 		this.lng.keydown(function(event) {
@@ -3046,6 +3036,7 @@ org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
 }
 
 org.sarsoft.ThinLocationForm.prototype.clear = function() {
+	this.select.val('UTM').val('name').change();
 	this.utmform.write({zone : "", e : "", n : ""});
 	this.address.val("");
 	this.lat.val("");
