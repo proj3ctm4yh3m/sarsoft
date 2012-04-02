@@ -364,9 +364,8 @@ OverlayDropdownMapControl.prototype.initialize = function(map) {
 	map._overlaydropdownmapcontrol = this;
 	this.map = map;
 	
-	this.resetMapTypes();
-
 	this.div.appendTo(map.getContainer());	
+	this.resetMapTypes();
 	return this.div[0];
 }
 
@@ -1177,7 +1176,8 @@ org.sarsoft.DataNavigator = function(imap) {
 	
 	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		var div = jQuery('<div style="float: left; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : ungroupedbaselayers);
+		var div = jQuery('<div style="position: relative; float: left; cursor: pointer; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : ungroupedbaselayers);
+		var bg = jQuery('<div style="position: absolute; z-index: -1; background-color: #5a8ed7; opacity: 0.2; width: 100%; height: 100%">&nbsp;</div>').appendTo(div);
 		if(grouping[type.alias] != null) {
 			var group = grouping[type.alias]
 			if(headers[group] == null) {
@@ -1202,11 +1202,12 @@ org.sarsoft.DataNavigator = function(imap) {
 		var cb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>');
 		checkboxes[type.name] = cb;
 		var devnull = function(c, d) {
-			img.click(function() { c[0].checked = !c[0].checked; c.change(); });
+			div.click(function() { c[0].checked = !c[0].checked; c.change(); });
 			$(c).change(function() {
-				d.css('opacity', c[0].checked ? '1' : '0.5');
+				d.children().first().css('opacity', c[0].checked ? '0.2' : '0');
 			});
 		}(cb, div);
+		cb.click(function(evt) { evt.stopPropagation(); });
 		d2.append(jQuery('<div style="font-size: 120%; font-weight: bold"></div>').append(checkboxes[type.name]).append(type.name));
 		d2.append('<div>' + type.description + '</div>');
 	}
