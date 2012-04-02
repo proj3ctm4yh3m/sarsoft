@@ -119,23 +119,27 @@ public abstract class JSONBaseController {
 			mapSources = new ArrayList<MapSource>();
 			String[] names = getProperty("sarsoft.map.backgrounds").split(",");
 			for(String name : names) {
-				MapSource source = new MapSource();
-				source.setName(getProperty("sarsoft.map.background." + name + ".name"));
-				source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
-				source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
-				String alias = getProperty("sarsoft.map.background." + name + ".alias");
-				if(alias == null) alias = name;
-				source.setAlias(alias);
-				source.setDescription(getProperty("sarsoft.map.background." + name + ".description"));
-				if(source.getType() != MapSource.Type.NATIVE) {
-					source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
-					source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
-					source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
-					source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
-					source.setAlphaOverlay(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".alphaOverlay")));
-					source.setInfo(getProperty("sarsoft.map.background." + name + ".info"));
+				try {
+					MapSource source = new MapSource();
+					source.setName(getProperty("sarsoft.map.background." + name + ".name"));
+					source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
+					source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
+					String alias = getProperty("sarsoft.map.background." + name + ".alias");
+					if(alias == null) alias = name;
+					source.setAlias(alias);
+					source.setDescription(getProperty("sarsoft.map.background." + name + ".description"));
+					if(source.getType() != MapSource.Type.NATIVE) {
+						source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
+						source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
+						source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
+						source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
+						source.setAlphaOverlay(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".alphaOverlay")));
+						source.setInfo(getProperty("sarsoft.map.background." + name + ".info"));
+					}
+					mapSources.add(source);
+				} catch (Exception e) {
+					logger.error("Error with map layer " + name, e);
 				}
-				mapSources.add(source);
 			}
 			mapSources = Collections.unmodifiableList(mapSources);
 			mapSourcesByName = new HashMap<String, MapSource>();
@@ -204,6 +208,9 @@ public abstract class JSONBaseController {
 			}
 			header = header + "];\n";
 
+			if(getProperty("sarsoft.map.backgrounds.grouping")!=null) {
+				header = header + "org.sarsoft.EnhancedGMap.mapTypeGrouping=\"" + getProperty("sarsoft.map.backgrounds.grouping") + "\"\n";
+			}
 			String datum = "WGS84";
 			if(getProperty("sarsoft.map.datum") != null) datum = getProperty("sarsoft.map.datum");
 			
