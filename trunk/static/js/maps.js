@@ -1150,28 +1150,50 @@ org.sarsoft.DataNavigator = function(imap) {
 	var header = jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(bn);
 	jQuery('<div style="font-size: 150%; font-weight: bold">Set Visible Map Layers</div>').appendTo(header);
 
-	
+
 	var cbcontainer = jQuery('<div style="padding-top: 5px; padding-bottom: 5px"></div>').appendTo(header);
 	var swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span style="white-space: nowrap; margin-right: 40px">Enable Scroll Wheel Zoom</span>').appendTo(cbcontainer));
 	var sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span style="white-space: nowrap; margin-right: 40px">Show Scale Bar</span>').appendTo(cbcontainer));
 	var overzoomcb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span style="white-space: nowrap; margin-right: 40px">Enable zooming beyond native map resolutions.</span>').appendTo(cbcontainer));
 	var ok1 = jQuery('<button style="float: right; margin-right: 50px; font-size: 150%">Save Changes</button>').appendTo(bn);
-	var baselayers = jQuery('<div style="width: 100%; clear: both"></div>').appendTo(bn);
+	var groupedbaselayers = jQuery('<div style="width: 100%; clear: both"></div>').appendTo(bn);
+	var ungroupedbaselayers = jQuery('<div style="width: 100%; clear: both"><div style="width: 100%; font-size: 150%; font-weight: bold">Other Layers</div></div>').appendTo(bn);
 	var aolayers = jQuery('<div style="width: 100%; clear: both"><div style="font-size: 150%">Overlays</div></div>').appendTo(bn);
 	var checkboxes = new Object();
 	var divs = new Object();
+	
+	var grouping = {};
+	if(org.sarsoft.EnhancedGMap.mapTypeGrouping != null) {
+		var groups = org.sarsoft.EnhancedGMap.mapTypeGrouping.split(';');
+		for(i = 0; i < groups.length; i++) {
+			var name = groups[i].split('=')[0];
+			var types = groups[i].split('=')[1].split(',');
+			for(var j = 0; j < types.length; j++) {
+				grouping[types[j]] = name;
+			}
+		}
+	}
+	var headers = {}
+	
 	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		var div = jQuery('<div style="float: left; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : baselayers);
+		var div = jQuery('<div style="float: left; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : ungroupedbaselayers);
+		if(grouping[type.alias] != null) {
+			var group = grouping[type.alias]
+			if(headers[group] == null) {
+				headers[group] = jQuery('<div style="clear: both"><div style="width: 100%; font-size: 150%; font-weight: bold; padding-top: 1em">' + group + '</div></div>').appendTo(groupedbaselayers);
+			}
+			headers[group].append(div);
+		}
 		var url = type.template;
 		if(type.type == "TILE") {
-			if(type.minresolution > 12) {
-				url = url.replace(/\{Z\}/, 14).replace(/\{X\}/, 2630).replace(/\{Y\}/, 6118).replace(/\{V\}/, 's-11111111');
+			if(url.indexOf("http") == 0) {
+				url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";
 			} else {
 				url = url.replace(/\{Z\}/, 12).replace(/\{X\}/, 657).replace(/\{Y\}/, 1529).replace(/\{V\}/, 's-11111111');
 			}
 		} else if(type.type == "WMS") {
-			url = url.replace(/\{left\}/, '-122.255859375').replace(/\{bottom\}/, '41.37680856570233').replace(/\{right\}/, '-122.16796875').replace(/\{top\}/, '41.44272637767212').replace(/\{tilesize\}/g, 128);
+			url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";
 		} else if(type.type == "NATIVE") {
 			url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + url + ".jpg";
 		}
