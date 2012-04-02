@@ -1067,23 +1067,51 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	}
 }
 
+org.sarsoft.DNTree = function(container, label) {
+	var that = this;
+	this.label = label;
+	this.container = container;
+	
+	this.block = jQuery('<div></div>').appendTo(container);
+	this.header = jQuery('<div style="cursor: pointer; white-space: nowrap; overflow: hidden; width: 100%">' + label + '</div>').appendTo(this.block);
+	this.body = jQuery('<div></div>').appendTo(this.block);
+	
+	this.header.click(function() {
+		if(that.body.css('display')=='none') {
+			that.body.css('display', 'block');
+		} else {
+			that.body.css('display', 'none');
+		}
+	});
+}
+
 org.sarsoft.DataNavigator = function(imap) {
 	this.imap = imap;
 	imap.register("org.sarsoft.DataNavigator", this);
 
 	this.defaults = new Object();
-	var username = (org.sarsoft.username == null) ? "Not Signed In" : org.sarsoft.username;
-	this.defaults.account = jQuery('<span style="padding-left: 2px; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>' + username + '</span>').appendTo(
-			jQuery('<div style="padding-top: 3px; font-weight: bold; color: white; background-color: #666666; padding-bottom: 3px; overflow: hidden; white-space: nowrap; width: 100%"></div>').appendTo(imap.container.left));
 
-	this.defaults.layers = jQuery('<div style="float: left; margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-left: 2px; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers</div>').appendTo(imap.container.left);
-	this.defaults.io = jQuery('<div style="display: none; float: right; margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Data Transfer</div>').appendTo(imap.container.left);
+	var username = (org.sarsoft.username == null) ? "Not Signed In" : org.sarsoft.username;
+	this.account = new org.sarsoft.DNTree(imap.container.left, username);
+	this.account.header.css({"padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
+	this.account.header.prepend(jQuery('<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>'));
+	this.account.body.css('padding-left', '2px');
 	
-	this.defaults.tenant = jQuery('<span style="padding-left: 2px; cursor: pointer">' + (org.sarsoft.tenantid != null ? ('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>' + org.sarsoft.tenantid) : "Map Browsing Only")  + '</span>').appendTo(
-			jQuery('<div style="padding-top: 3px; padding-bottom: 3px; font-weight: bold; border-top: 1px solid #CCCCCC; overflow: hidden; white-space: nowrap; width: 100%"></div>').appendTo(imap.container.left));
-	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(this.defaults.tenant.parent()).click(function() {
-		window.location="/map.html";
-	});
+	if(org.sarsoft.tenantid != null) {
+		this.defaults.tenant = new org.sarsoft.DNTree(imap.container.left, org.sarsoft.tenantid)
+		this.defaults.tenant.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
+		this.defaults.tenant.header.css({"padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
+		this.defaults.tenant.body.css('padding-left', '2px');
+		this.defaults.settings = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-left: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/config.png"/>Settings</div>').appendTo(this.defaults.tenant.body);
+		this.defaults.layers = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-left: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers</div>').appendTo(this.defaults.tenant.body);
+		this.defaults.io = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Data Transfer</div>').appendTo(this.defaults.tenant.body);
+
+		jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(this.defaults.tenant.header).click(function() {
+			window.location="/map.html";
+		});
+	} else {
+		this.defaults.layers = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-left: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers</div>').appendTo(this.account.body);
+	}
 	
 	this.container = jQuery('<div style="padding-left: 2px"></div>').appendTo(imap.container.left);
 	this.titleblocks = new Object();
@@ -1159,59 +1187,60 @@ org.sarsoft.DataNavigator = function(imap) {
 				checkboxes[key][0].checked = (org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(key) >= 0) ? true : false;
 				checkboxes[key].change();
 			}
-			overzoomcb[0].checked = org.sarsoft.EnhancedGMap._overzoom;
-			layerpane.show();
-		}
-	});
-		
-	var bn = jQuery('<div></div>');
-	var setuppane = new org.sarsoft.view.MapRightPane(imap, bn);	
-	this.settings_tenant = jQuery('<div style="display: none"></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex">Sharing and Permissions</div>');
-	
-	this.defaults.tenant.click(function() {
-		if(setuppane.visible()) {
-			setuppane.hide();
-		} else {
 			var config = {}
 			if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
 				config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
 			}
 			swz[0].checked = config.scrollwheelzoom;
 			sb[0].checked = config.scalebar;
+			overzoomcb[0].checked = org.sarsoft.EnhancedGMap._overzoom;
+			layerpane.show();
+		}
+	});
+	
+	var bn = jQuery('<div></div>');
+	var setuppane = new org.sarsoft.view.MapRightPane(imap, bn);	
+	this.settings_tenant = jQuery('<div style="display: none"></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex">Sharing and Permissions</div>');
+
+	if(this.defaults.settings != null) this.defaults.settings.click(function() {
+		if(setuppane.visible()) {
+			setuppane.hide();
+		} else {
 			setuppane.show();
 		}
 	});
-
-	var bn = jQuery('<div></div>');
-	var accountpane = new org.sarsoft.view.MapRightPane(imap, bn);
-	var header = jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(bn);
-	jQuery('<div style="font-size: 150%; font-weight: bold">Account</div>').appendTo(header);
-
+	
+	this.defaults.account = new org.sarsoft.DNTree(this.account.body, 'Account');
 	var urlcomp = encodeURIComponent(window.location);
 	if(org.sarsoft.username != null) {
-		jQuery('<div style="clear: both; padding-top: 20x">You are signed in as <b>' + org.sarsoft.username + '</b>. </div>').appendTo(bn).append(
-				'<a style="font-weight: bold" href="/app/logout">logout</a>').append(
-				'<span> or sign in with a different account:</span>').append(
-				'<a style="margin-left: 10px" href="/app/openidrequest?domain=yahoo&dest=' + urlcomp + '"><img style="vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').append(
-				'<a style="margin-left: 10px" href="/app/openidrequest?domain=google&dest=' + urlcomp + '"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>');
+		this.defaults.account.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+		this.defaults.account.body.css({'display': 'none', 'padding-left': '10px'}).append('<div><a style="font-weight: bold" href="/app/logout">logout</a></div>');
+		var diffuser = new org.sarsoft.DNTree(this.defaults.account.body, 'Sign In as a Different User');
+		diffuser.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+		diffuser.body.css('display', 'none');
+		diffuser.body.append('<div style="padding-top: 5px"><a style="margin-left: 10px" href="/app/openidrequest?domain=yahoo&dest=' + urlcomp + '"><img style="vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a></div>').append(
+				'<div style="padding-top: 5px"><a style="margin-left: 10px" href="/app/openidrequest?domain=google&dest=' + urlcomp + '"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a></div>');
 
-		bn.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">Your Maps</div>');
-		
+		this.defaults.maps = new org.sarsoft.DNTree(this.account.body, 'Your Maps');
+		this.defaults.maps.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+		if(org.sarsoft.tenantid != null) this.defaults.maps.body.css('display', 'none');
+
 		var tenantDAO = new org.sarsoft.TenantDAO();
-		var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : true, sharing : true, actions : false});
-		yourTable.create(jQuery('<div style="clear: both;" class="growYUITable"></div>').appendTo(bn)[0]);
+		var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : false, sharing : false, actions : false});
+		yourTable.create(this.defaults.maps.body[0]);
 
 		tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
 			yourTable.update(rows);
 		});
 		
-		bn.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">New Map</div>');
+		this.defaults.newmap = new org.sarsoft.DNTree(this.account.body, 'New Map');
+		this.defaults.newmap.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+		this.defaults.newmap.body.css('display', 'none');
 		
-		var newform = jQuery('<form action="/map" method="post" id="newmapform" style="padding-top: 1ex">Create a new map centered on your current location.' +
+		var newform = jQuery('<form action="/map" method="post" id="newmapform">Map will be centered on current location' +
 		'<table border="0"><tbody>' +
-		'<tr><td valign="top">Name</td><td><input type="text" size="30" id="name" name="name"/></td></tr>' +
-		'<tr><td valign="top">Comments</td><td><textarea cols="60" rows="5" id="comments" name="comments"></textarea></td></tr>' +
-		'</tbody></table></form>').appendTo(bn);
+		'<tr><td valign="top">Name</td><td><input type="text" id="name" name="name"/></td></tr>' +
+		'</tbody></table><input type="hidden" name="comments" value=""/></form>').appendTo(this.defaults.newmap.body);
 		
 		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
 		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
@@ -1222,14 +1251,16 @@ org.sarsoft.DataNavigator = function(imap) {
 			newlng.val(center.lng());
 			newform.submit();
 		});
-		
-
 	} else {
-		jQuery('<div style="clear: both; padding-top: 20x">Sign in to begin creating your own maps:</div>').appendTo(bn).append(
-		'<a style="margin-left: 10px" href="/app/openidrequest?domain=yahoo&dest=' + urlcomp + '"><img style="vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').append(
-		'<a style="margin-left: 10px" href="/app/openidrequest?domain=google&dest=' + urlcomp + '"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>');
+		this.defaults.account.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+		this.defaults.account.body.css('display', 'none').append('<div><a style="margin-left: 10px" href="/app/openidrequest?domain=yahoo&dest=' + urlcomp + '"><img style="vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a></div>').append(
+				'<div style="padding-top: 5px"><a style="margin-left: 10px" href="/app/openidrequest?domain=google&dest=' + urlcomp + '"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a></div>');
 
-		bn.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">Shared Maps</div>');
+		this.defaults.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer">Shared Maps</div>').appendTo(this.account.body);
+		var bn = jQuery('<div></div>');
+		var mapspane = new org.sarsoft.view.MapRightPane(imap, bn);
+		var header = jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(bn);
+		header.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">Shared Maps</div>');
 		bn.append('<div>The following maps have been shared by other users.</div>');
 
 		var tenantDAO = new org.sarsoft.TenantDAO();
@@ -1239,23 +1270,23 @@ org.sarsoft.DataNavigator = function(imap) {
 		tenantDAO.loadShared(function(rows) {
 			sharedTable.update(rows);
 		});
-
+		this.defaults.maps.click(function() {
+			if(mapspane.visible()) {
+				mapspane.hide();
+			} else {
+				mapspane.show();
+			}
+		});
+	}
+	
+	if(org.sarsoft.tenantid == null) {
+		this.defaults.layers.appendTo(this.account.body);
 	}
 
-	this.defaults.account.click(function() {
-		if(accountpane.visible()) {
-			accountpane.hide();
-		} else {
-			accountpane.show();
-		}
-	});
-	
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
-	this.titleblocks[title] = jQuery('<div style="clear: both; font-weight: bold; font-size: 150%; border-top: 1px solid #CCCCCC">' + title + '</div>').appendTo(this.container);
-	var div = jQuery('<div style="padding-bottom: 1.5em"></div>').appendTo(this.container);
-	return div;
+	return new org.sarsoft.DNTree(this.defaults.tenant.body, title);
 }
 
 org.sarsoft.DataNavigatorToggleControl = function(imap) {
@@ -2818,7 +2849,7 @@ org.sarsoft.LocationEntryForm.prototype.create = function(container, handler, no
 		}
 	});
 	
-	tr = jQuery('<tr><td valign="top">Place Name</td></tr>').appendTo(tbody);
+	tr = jQuery('<tr><td valign="top">Name</td></tr>').appendTo(tbody);
 	td = jQuery("<td/>").appendTo(tr);
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(td);
 	td.append('<span class="hint">e.g. "Mount Rainier" or "Castle Peak near Truckee, CA".</span>');
