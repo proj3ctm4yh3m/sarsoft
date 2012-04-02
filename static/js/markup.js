@@ -409,77 +409,31 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
 		var dn = imap.registered["org.sarsoft.DataNavigator"];
 		this.dn = new Object();
-		var markerdiv = dn.addDataType("Markers");
-		this.dn.markertoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide comments</span>)</span>').appendTo(dn.titleblocks["Markers"]);
-		this.dn.markertoggle._state = 0;
-		this.dn.markertoggle.click(function() {
-			that.dn.markertoggle._state++;
-			if(that.dn.markertoggle._state == 3) that.dn.markertoggle._state = 0;
-			if(that.dn.markertoggle._state == 0) {	// long
-				that.showMarkers = true;
-				that.handleMarkerSetupChange();
-				markerdiv.css('display', 'block');
-				$('.marker_desc_line_item').css('display', 'block');
-				that.dn.markertoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
-			} else if(that.dn.markertoggle._state == 1) { // short
-				that.showMarkers = true;
-				that.handleMarkerSetupChange();
-				markerdiv.css('display', 'block');
-				$('.marker_desc_line_item').css('display', 'none');
-				that.dn.markertoggle.html('(<span style="color: #5a8ed7">hide markers</span>)');
-			} else { // hidden
-				markerdiv.css('display', 'none');
-				that.showMarkers = false;
-				that.handleMarkerSetupChange();
-				that.dn.markertoggle.html('(<span style="color: #5a8ed7">show markers</span>)');
-			}
-		});
-		this.dn.markerdiv = jQuery('<div></div>').appendTo(markerdiv);
+		var mtree = dn.addDataType("Markers");
+		mtree.header.css({"font-size": "150%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		this.dn.markerdiv = jQuery('<div></div>').appendTo(mtree.body);
 		this.dn.markers = new Object();
-		var shapediv = dn.addDataType("Shapes");
-		this.dn.shapetoggle = jQuery('<span style="float: right; font-size: 50%; margin-top: 0.75em; cursor: pointer">(<span style="color: #5a8ed7">hide comments</span>)</span>').appendTo(dn.titleblocks["Shapes"]);
-		this.dn.shapetoggle._state = 0;
-		this.dn.shapetoggle.click(function() {
-			that.dn.shapetoggle._state++;
-			if(that.dn.shapetoggle._state == 3) that.dn.shapetoggle._state = 0;
-			if(that.dn.shapetoggle._state == 0) {	// long
-				that.showShapes = true;
-				that.handleShapeSetupChange();
-				shapediv.css('display', 'block');
-				$('.shape_desc_line_item').css('display', 'block');
-				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">hide comments</span>)');
-			} else if(that.dn.shapetoggle._state == 1) { // short
-				that.showShapes = true;
-				that.handleShapeSetupChange();
-				shapediv.css('display', 'block');
-				$('.shape_desc_line_item').css('display', 'none');
-				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">hide shapes</span>)');
-			} else { // hidden
-				shapediv.css('display', 'none');
-				that.showShapes = false;
-				that.handleShapeSetupChange();
-				that.dn.shapetoggle.html('(<span style="color: #5a8ed7">show shapes</span>)');
-			}
-		});
-		this.dn.shapediv = jQuery('<div></div>').appendTo(shapediv);
+		var stree = dn.addDataType("Shapes");
+		stree.header.css({"font-size": "150%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		this.dn.shapediv = jQuery('<div></div>').appendTo(stree.body);
 		this.dn.shapes = new Object();
 
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
-			jQuery('<span style="color: green; cursor: pointer">+ New Marker</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(markerdiv)).click(function() {
+			jQuery('<span style="color: green; cursor: pointer">+ New Marker</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(mtree.body)).click(function() {
 				var center = that.imap.map.getCenter();
     			that.markerDlg.entityform.write({url: "#FF0000"});
     			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(center);
     			that.markerDlg.show();
 			});
 
-			jQuery('<div style="float: left; padding-top: 1em; margin-right: 2em; cursor: pointer; color: green; font-size: 120%">+ New Line</div>').appendTo(shapediv).click(function() {
+			jQuery('<div style="float: left; padding-top: 1em; margin-right: 2em; cursor: pointer; color: green; font-size: 120%">+ New Line</div>').appendTo(stree.body).click(function() {
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=false;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});
 			    that.shapeDlg.point=new GPoint(Math.round(that.imap.map.getSize().width/2), Math.round(that.imap.map.getSize().height/2));
 			    that.shapeDlg.show();
 			});
-			jQuery('<div style="float: left; padding-top: 1em; cursor: pointer; color: green; font-size: 120%">+ New Polygon</div>').appendTo(shapediv).click(function() {
+			jQuery('<div style="float: left; padding-top: 1em; cursor: pointer; color: green; font-size: 120%">+ New Polygon</div>').appendTo(stree.body).click(function() {
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=true;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});
