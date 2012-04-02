@@ -64,7 +64,9 @@ org.sarsoft.EnhancedGMap._createTileLayers = function(config) {
 
 org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	if(config.type == "NATIVE") {
-		return eval(config.template);
+		var type = eval(config.template);
+		type.getName = function() { return config.name }
+		return type;
 	} else {
 		var layers = org.sarsoft.EnhancedGMap._createTileLayers(config);
 	    var type = new GMapType(layers, G_SATELLITE_MAP.getProjection(), config.name, { errorMessage: "", tileSize: config.tilesize ? config.tilesize : 256 } );
@@ -85,16 +87,12 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 			return -1;
 		}
 	}
-	
+
 	if(GBrowserIsCompatible()) {
 		var map = new GMap2(element);
 		$(element).css({"z-index": 0, overflow: "hidden"});
 		jQuery(map.getPane(G_MAP_MARKER_MOUSE_TARGET_PANE)).bind('contextmenu', function() { return false;});
 
-		if(typeof G_PHYSICAL_MAP != "undefined") {
-			map.addMapType(G_PHYSICAL_MAP);
-		}
-		
 		var mapTypes = new Array(), type = null, bkgset = false;
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 			var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
@@ -127,7 +125,9 @@ OverlayDropdownMapControl = function() {
 
 	this.extras = document.createElement("span");
 	this.typeSelect = document.createElement("select");
+	this.typeDM = new org.sarsoft.view.DropMenu();
 	this.overlaySelect = document.createElement("select");
+	this.overlayDM = new org.sarsoft.view.DropMenu();
 	$(this.overlaySelect).css("margin-left", "3px");
 	$(this.overlaySelect).css("margin-right", "3px");
 	this.opacityInput = jQuery('<input style="margin-left: 5px" size="2" value="0"></input>');
@@ -144,18 +144,20 @@ OverlayDropdownMapControl = function() {
 	});
 
 	var tps = jQuery('<span style="cursor: pointer; padding-right: 3px; padding-left: 3px" title="Additional Layers">+</span>');
-	var dd = new org.sarsoft.view.MenuDropdown(tps, 'width: 18em');
+	var dd = new org.sarsoft.view.MenuDropdown(tps, 'width: 20em');
 	this.alphaOverlayPlus = tps[0];
 
 	this.div = jQuery('<div style="color: red; background: white; font-weight: bold; z-index: 1001"></div>');
-	this.div.append(this.extras, this.typeSelect, dd.container);
+	this.div.append(this.extras, this.typeDM.container, dd.container);
 
 	this.opacityInput.change(function() { that.handleLayerChange() });
-	$(this.typeSelect).change(function() { that.handleLayerChange() });
-	$(this.overlaySelect).change(function() { that.handleLayerChange() });
+//	$(this.typeSelect).change(function() { that.handleLayerChange() });
+	this.typeDM.change(function() { that.handleLayerChange() });
+//	$(this.overlaySelect).change(function() { that.handleLayerChange() });
+	this.overlayDM.change(function() { that.handleLayerChange() });
 
 	dd.div.append(jQuery('<div></div>').append(
-			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlaySelect, "@", this.opacityInput, "%")).append(
+			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlayDM.container, "@", this.opacityInput, "%")).append(
 		jQuery('<div style="clear: both; height: 15px"></div>').append(
 				sliderContainer)));
 	
@@ -167,16 +169,19 @@ OverlayDropdownMapControl.prototype.printable = function() { return false; }
 OverlayDropdownMapControl.prototype.selectable = function() { return false; }
 OverlayDropdownMapControl.prototype.getDefaultPosition = function() { return new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(0, 0)); }
 
-OverlayDropdownMapControl.prototype.addBaseType = function(type) {
+OverlayDropdownMapControl.prototype.addBaseType = function(type, group) {
 	var idx = this.types.length;
 	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.typeSelect);
 	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.overlaySelect);
+	this.typeDM.addItem(type.getName(), idx, group);
+	this.overlayDM.addItem(type.getName(), idx, group);
 	this.types[idx] = type;
 }
 
 OverlayDropdownMapControl.prototype.addOverlayType = function(type) {
 	var idx = this.types.length;
 	jQuery('<option value="' + idx + '">' + type.getName() + '</option>').appendTo(this.overlaySelect);
+	this.overlayDM.addItem(type.getName(), idx, group);
 	this.types[idx] = type;
 }
 
@@ -285,8 +290,10 @@ OverlayDropdownMapControl.prototype.swapConfigurableAlphaLayer = function(idx, c
 }
 
 OverlayDropdownMapControl.prototype.handleLayerChange = function() {
-	var base = this.types[this.typeSelect.value];
-	var overlay = this.types[this.overlaySelect.value];
+//	var base = this.types[this.typeSelect.value];
+	var base = this.types[this.typeDM.val()];
+//	var overlay = this.types[this.overlaySelect.value];
+	var overlay = this.types[this.overlayDM.val()];
 	opacity = Math.min(100, Math.max(0, this.opacityInput.val())) / 100;
 	var tt = new Array();
 	if(this.alphaOverlayBoxes != null) for(var i = 0; i < this.alphaOverlayBoxes.length; i++) {
@@ -298,7 +305,7 @@ OverlayDropdownMapControl.prototype.handleLayerChange = function() {
 			if(cfg != null) cfg.css('display','none');
 		}
 	}
-	this.updateMap(this.types[this.typeSelect.value], this.types[this.overlaySelect.value], opacity, tt.length > 0 ? tt : null);
+	this.updateMap(this.types[this.typeDM.val()], this.types[this.overlayDM.val()], opacity, tt.length > 0 ? tt : null);
 }
 
 OverlayDropdownMapControl.prototype.resetMapTypes = function(type) {
@@ -307,18 +314,38 @@ OverlayDropdownMapControl.prototype.resetMapTypes = function(type) {
 	this.alphaOverlayTypes = new Array();
 	$(this.typeSelect).empty();
 	$(this.overlaySelect).empty();
+	this.typeDM.empty();
+	this.overlayDM.empty();
 	this.aDiv.empty();
 
 	var alphaTypes = new Array();
 	var baseTypes = new Array();
+
+	var grouping = {};
+	if(org.sarsoft.EnhancedGMap.mapTypeGrouping != null) {
+		var groups = org.sarsoft.EnhancedGMap.mapTypeGrouping.split(';');
+		for(i = 0; i < groups.length; i++) {
+			var name = groups[i].split('=')[0];
+			var types = groups[i].split('=')[1].split(',');
+			for(var j = 0; j < types.length; j++) {
+				grouping[types[j]] = name;
+			}
+		}
+	}
 	
-	for(var i = 0; i < this.map.getMapTypes().length; i++) {
-		var type = this.map.getMapTypes()[i];
-		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(type.getName()) >= 0) {
-			if(type._alphaOverlay) {
-				this.addAlphaType(type);
-			} else {
-				this.addBaseType(type);
+	var mapTypes = this.map.getMapTypes();	
+	// use defaultMapTypes ordering for consistency if map layers change
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.name) >= 0) {
+			for(var j = 0; j < mapTypes.length; j++) {
+				if(mapTypes[j].getName()==config.name) {
+					if(mapTypes[j]._alphaOverlay) {
+						this.addAlphaType(mapTypes[j]);
+					} else {
+						this.addBaseType(mapTypes[j], grouping[config.alias]);
+					}
+				}
 			}
 		}
 	}
@@ -413,8 +440,10 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		if(!this._inSliderHandler) this.opacitySlider.setValue(opacity*100);
 		this._inSliderSet = false;
 		for(var i = 0; i < this.types.length; i++) {
-			if(this.types[i] == base) this.typeSelect.value = i;
-			if(this.types[i] == overlay) this.overlaySelect.value = i;
+//			if(this.types[i] == base) this.typeSelect.value = i;
+			if(this.types[i] == base) this.typeDM.val(i);
+//			if(this.types[i] == overlay) this.overlaySelect.value = i;
+			if(this.types[i] == overlay) this.overlayDM.val(i);
 		}
 		if(alphaOverlays != null) for(var i = 0; i < this.alphaOverlayTypes.length; i++) {
 			var cfg = this.alphaOverlayBoxes[i]._cfg;

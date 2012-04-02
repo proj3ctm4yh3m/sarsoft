@@ -112,6 +112,96 @@ org.sarsoft.view.CreateSlider = function(container) {
 	return YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, 100);
 }
 
+org.sarsoft.view.DropMenu = function() {
+	var that = this;
+	this.groups = {}
+	this.values = {}
+	this.container = jQuery('<span style="display: inline-block; border: 1px solid #CCCCCC; color: black"></span>');
+	this.holder = jQuery('<span style="position: relative; z-index: 2000"></span>').appendTo(this.container);
+	this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold"></span>').appendTo(this.container).hover(function() { that.select.addClass("yuimenuitem-selected") }, function() { that.select.removeClass("yuimenuitem-selected")});
+	this.label = jQuery('<span style="padding-left: 10px"></span>').appendTo(this.select);
+	this.dd = jQuery('<span style="float: right">&darr;</span>').appendTo(this.select);
+	var id = "DropMenu_" + org.sarsoft.view.DropMenu._idx++;
+	this.menu = jQuery('<div class="yui-module yui-overlay yuimenu" style="position: absolute; visibility: hidden; left: 0; top: 1.5em"></div>').appendTo(this.holder);
+	this.bd = jQuery('<div class="bd"></div>').appendTo(this.menu);
+	this.ul = jQuery('<ul class="first-of-type"></ul>').appendTo(this.bd);
+	this.select.click(function() {
+		if(that.menu.css('visibility')=='visible') {
+			that.hide();
+		} else {
+			that.show();
+		}
+	});
+}
+
+org.sarsoft.view.DropMenu._idx = 0;
+
+org.sarsoft.view.DropMenu.prototype.addItem = function(text, value, group) {
+	var that = this;
+	if(this.value == null) this.value = value;
+	
+	this.values[value] = text;
+	var li = jQuery('<li class="yuimenuitem"></li>').appendTo(this.ul);
+	var a = jQuery('<a href="javascript:void{}" class="yuimenuitemlabel" style="cursor: pointer; font-weight: bold; padding-left: 10px">' + text + '</a>').appendTo(li);
+	a.hover(function() { li.addClass("yuimenuitem-selected") }, function() { li.removeClass("yuimenuitem-selected")});
+	a.click(function() { that.val(value); that.change(); that.hide()});
+
+	if(group != null) {
+		this.addGroup(group);
+		this.groups[group].slice(-1)[0].after(li);
+		this.groups[group].push(li);
+		if(this.groups[group].length == 3) {
+			this.groups[group][0].css('display', 'list-item');
+			this.groups[group][1].children().css({'font-weight': 'normal','padding-left': '20px'});
+		}
+		if(this.groups[group].length > 2) {
+			a.css({'font-weight': 'normal', 'padding-left': '20px'});
+		}
+	}
+	
+	this.container.css('width', this.ul.width() + "px");
+}
+
+org.sarsoft.view.DropMenu.prototype.addGroup = function(text) {
+	if(this.groups[text] != null) return;
+	var that = this;
+	var li = jQuery('<li class="yuimenuitem" style="display: none"></li>').appendTo(this.ul);
+	var a = jQuery('<a href="javascript:void{}" class="yuimenuitemlabel" style="font-weight: bold; padding-left: 10px">' + text + '</a>').appendTo(li);
+	this.container.css('width', this.ul.width() + "px");
+	this.groups[text] = [li];
+}
+
+org.sarsoft.view.DropMenu.prototype.show = function() {
+	this.menu.css('visibility', 'visible');
+}
+
+org.sarsoft.view.DropMenu.prototype.hide = function() {
+	this.menu.css('visibility', 'hidden');
+}
+
+org.sarsoft.view.DropMenu.prototype.empty = function() {
+	this.groups = {};
+	this.value = null;
+	this.ul.empty();
+}
+
+org.sarsoft.view.DropMenu.prototype.val = function(val) {
+	if(val == null) return this.value;
+	this.value = val;
+	this.label.html(this.values[val]);
+}
+
+org.sarsoft.view.DropMenu.prototype.change = function(fn) {
+	if(fn != null) {
+		this.listener=fn;
+		return;
+	}
+	if(this._hold) return;
+	this._hold = true;
+	if(this.listener != null) this.listener(this.value);
+	this._hold = false;
+}
+
 org.sarsoft.view.ContextMenu = function() {
 	var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;
 	this.menu = new YAHOO.widget.Menu(id, { hidedelay : 500, showdelay : 0, zIndex: "1000"});
