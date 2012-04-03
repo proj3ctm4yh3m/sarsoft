@@ -208,9 +208,6 @@ public abstract class JSONBaseController {
 			}
 			header = header + "];\n";
 
-			if(getProperty("sarsoft.map.backgrounds.grouping")!=null) {
-				header = header + "org.sarsoft.EnhancedGMap.mapTypeGrouping=\"" + getProperty("sarsoft.map.backgrounds.grouping") + "\"\n";
-			}
 			String datum = "WGS84";
 			if(getProperty("sarsoft.map.datum") != null) datum = getProperty("sarsoft.map.datum");
 			
@@ -254,6 +251,8 @@ public abstract class JSONBaseController {
 			"org.sarsoft.map.datums[\"NAD27 CONUS\"] = {a: 6378206.4, b: 6356583.8, f: 1/294.9786982, x : -8, y : 160, z : 176};\n" +
 			"org.sarsoft.map.datums[\"WGS84\"] = {a: 6378137.0, b: 6356752.314, f: 1/298.257223563, x : 0, y : 0, z : 0};\n" +
 			"if(typeof org.sarsoft.EnhancedGMap == \"undefined\") org.sarsoft.EnhancedGMap = function() {}\n" +
+			(getProperty("sarsoft.map.backgrounds.grouping")!=null ? ("org.sarsoft.EnhancedGMap.mapTypeGrouping=\"" + getProperty("sarsoft.map.backgrounds.grouping") + "\"\n") : "") +
+			(getProperty("sarsoft.map.samples")!=null ? ("org.sarsoft.EnhancedGMap.sampleMapTypes=\"" + getProperty("sarsoft.map.samples") + "\"\n") : "") +
 			"org.sarsoft.EnhancedGMap.defaultMapTypes = [\n";
 			boolean first = true;
 			boolean tileCacheEnabled = Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled"));

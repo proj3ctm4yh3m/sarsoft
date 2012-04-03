@@ -257,7 +257,7 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	}
 }
 
-org.sarsoft.view.MarkerIOPane = function(imap, controller) {
+org.sarsoft.view.MarkupIO = function(imap, controller) {
 	var that = this;
 	this.controller = controller;
 	var dn = imap.registered["org.sarsoft.DataNavigator"];
@@ -266,19 +266,23 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 	var pane = new org.sarsoft.view.MapRightPane(imap, bn);
 
 	if(org.sarsoft.userPermissionLevel != "READ") {
-		var imp = jQuery('<div></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1em">Import Data From</div>');
+		
+		var imp = jQuery('<div></div>');
+		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, "OK", "Cancel", function() {
+		});
+		dn.defaults.imp.click(function() { that.impcomms.clear(); that.impDlg.swap(); });
 	
 		var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
-		gpsin.appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(imp));
+		gpsin.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(imp));
 		gpsin.click(function() {
-			that.gpsHeader.css('visibility', 'visible');
-			that.comms.init(false, "/map/restgpxupload", "");
+			that.impHeader.css('visibility', 'inherit');
+			that.impcomms.init(false, "/map/restgpxupload", "");
 		});
 		
 		var gpxin = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/></form>');
 		var gpxfile = jQuery('<input type="file" name="file" style="margin-top: 64px; margin-left: 10px"/>').appendTo(gpxin);
 		var gpxicon = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>');
-		jQuery('<div style="float: left"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(gpxin)).appendTo(imp);
+		jQuery('<div style="display: inline-block"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(gpxin)).appendTo(imp);
 		gpxicon.click(function() {
 			if("" == gpxfile.val()) {
 				alert("Please choose a GPX file to import.");
@@ -286,13 +290,22 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 				gpxin.submit();
 			}
 		});
+
+		this.impHeader = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(imp);
+		this.impcomms = new org.sarsoft.GPSComms(this.impHeader);
+
+	} else {
+		dn.defaults.imp.css('display', 'none');
 	}
 	
-	var exp = jQuery('<div' + ((org.sarsoft.userPermissionLevel != "READ") ? ' style="clear: both; padding-top: 2em"' : '') + '></div>').appendTo(bn).append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1em">Export This Map To</div>');
-	
-	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
+	var exp = jQuery('<div></div>');
+	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, "OK", "Cancel", function() {
+	});
+	dn.defaults.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
+
+	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	gpsout.click(function() {
-		that.gpsHeader.css('visibility', 'visible');
+		that.expHeader.css('visibility', 'inherit');
 		var val = that.exportables._selected;
 		var url = ""
 		if(val == null) {
@@ -302,11 +315,11 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 		} else {
 			url="/rest/marker/" + val.id + "?format=GPX";
 		}
-		that.comms.init(true, url, "");
+		that.expcomms.init(true, url, "");
 	});
 
 	var gpxout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>');
-	gpxout.appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
+	gpxout.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	gpxout.click(function() {
 		var val = that.exportables._selected;
 		if(val == null) {
@@ -318,7 +331,7 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 		}
 	});
 
-	var kmlout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(exp));
+	var kmlout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	kmlout.click(function() {
 		var val = that.exportables._selected;
 		if(val == null) {
@@ -330,29 +343,15 @@ org.sarsoft.view.MarkerIOPane = function(imap, controller) {
 		}
 	});
 
-	this.exportables = jQuery('<div></div>').appendTo(exp);
 	
-	this.gpsHeader = jQuery('<div style="visibility: hidden; clear: both; padding-top: 20px"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(bn);
-	this.comms = new org.sarsoft.GPSComms(jQuery('<div></div>').appendTo(bn));
-
-	jQuery('<button style="font-size: 150%; margin-top: 20px">Transfer Complete - Close Window</button>').appendTo(bn).click(function() { pane.hide(); });
-
-	dn.defaults.io.css('display', 'block');
-	dn.defaults.io.click(function() {
-		if(pane.visible()) {
-			pane.hide();
-		} else {
-			that.refreshExportables();
-			pane.show();
-		}
-	});
-	
+	this.expHeader = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(exp);
+	this.expcomms = new org.sarsoft.GPSComms(this.expHeader);
+	this.exportables = jQuery('<div style="clear: both; width: 100%; padding-top: 10px"></div>').appendTo(exp);
 }
 
-org.sarsoft.view.MarkerIOPane.prototype.refreshExportables = function() {
+org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
 	var that = this;
 	this.exportables.empty();
-	this.exportables.append('<div style="clear: both; height: 2em"></div>');
 	var header = jQuery('<div style="font-size: 120%; margin-bottom: 5px"></div>').appendTo(this.exportables);
 	var expcb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>').appendTo(header).change(function() {
 		if(!expcb[0].checked) {
@@ -481,7 +480,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			} else {
 				that.markerLocationForm.read(doit);
 			}
-		},  {left: "100px", width: "450px"});
+		});
 
 		form = new org.sarsoft.view.ShapeForm();
 		this.shapeDlg = new org.sarsoft.view.MapEntityDialog(imap, "Shape Details",form , function(shape) {
@@ -530,7 +529,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	}
 
 	if(!nestMenuItems && !embedded) {
-		this.markerio = new org.sarsoft.view.MarkerIOPane(imap, this);
+		this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
 	}
 
 	this.markerDAO.loadAll(function(markers) {
