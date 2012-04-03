@@ -499,6 +499,7 @@ org.sarsoft.TenantDAO.prototype.loadShared = function(handler) {
 org.sarsoft.TenantDAO.prototype.saveCenter = function(center, handler) {
 	this._doPost("/center", handler, center);
 }
+
 org.sarsoft.view.TenantTable = function(cols) {
 	
 	if(cols == null) cols = {owner : true, comments : true, sharing : true, actions : true}
@@ -660,7 +661,7 @@ org.sarsoft.ToggleControl.prototype.setValue = function(value) {
 
 org.sarsoft.GPSComms = function(container) {
 	var that = this;
-	this.div = jQuery('<div style="width: 400px; height: 5em"></div>').appendTo(container);
+	this.div = jQuery('<div style="width: 400px; height: 5em; overflow-y: if-needed"></div>').appendTo(container);
 	
 }
 
@@ -713,6 +714,10 @@ org.sarsoft.GPSComms.prototype.onFinishReadFromDevice = function() {
     var dao = new org.sarsoft.BaseDAO();
     dao.baseURL = "";
 	dao._doPost(this._url, function() { window.location.reload(); }, {gpx:gpx}, this._poststr);
+}
+
+org.sarsoft.GPSComms.prototype.clear = function() {
+	this.div.html("");
 }
 
 org.sarsoft.GPSComms.prototype.retry = function() {

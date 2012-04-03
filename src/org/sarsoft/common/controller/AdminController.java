@@ -363,11 +363,11 @@ public class AdminController extends JSONBaseController {
 		if(request.getParameter("comments") != null && request.getParameter("comments").length() > 0) {
 			tenant.setComments(request.getParameter("comments"));
 			dao.save(tenant);
-		} else {
+		} else if(request.getParameter("allUsers") == null || request.getParameter("allUsers").length() == 0){
 			tenant.setComments("");
 		}
 		dao.save(tenant);
-		if(tenant.getAccount() != null) {
+		if(tenant.getAccount() != null && request.getParameter("allUsers") != null && request.getParameter("allUsers").length() > 0) {
 			tenant.setShared(Boolean.valueOf(request.getParameter("shared")));
 			tenant.setAllUserPermission(Permission.valueOf(request.getParameter("allUsers")));
 			tenant.setPasswordProtectedUserPermission(Permission.valueOf(request.getParameter("passwordUsers")));

@@ -4,6 +4,7 @@
 <%@page import="org.sarsoft.common.model.Tenant.Permission"%>
 <% pageContext.setAttribute("refreshInterval", RuntimeProperties.getProperty("sarsoft.refreshInterval")); %>
 <% pageContext.setAttribute("userPermission", RuntimeProperties.getUserPermission()); %>
+<% pageContext.setAttribute("serverUrl", RuntimeProperties.getServerUrl()); %>
 <% pageContext.setAttribute("none", Permission.NONE); %>
 <% pageContext.setAttribute("read", Permission.READ); %>
 <% pageContext.setAttribute("write", Permission.WRITE); %>
@@ -34,9 +35,19 @@ org.sarsoft.Loader.queue(function() {
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
   configWidget.loadConfig();
 
-  <c:if test="${userPermission eq admin or userPermission eq read}">
-  	$('#sharingpermissions').appendTo(imap.registered["org.sarsoft.DataNavigator"].settings_tenant).css('display', 'block');
-  	imap.registered["org.sarsoft.DataNavigator"].settings_tenant.css('display', 'block');
+  var dn = imap.registered["org.sarsoft.DataNavigator"];
+  $('#sharingpermissions').appendTo(dn.settings_sharing).css('display', 'block');
+  <c:if test="${userPermission eq read}">
+	dn.defaults.pwd.block.css('display', 'block');
+  </c:if>
+  <c:if test="${userPermission eq admin}">
+	dn.defaults.sharinghandler = function() { $('#sharingform').submit(); }
+	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px">Details</div>').appendTo(dn.defaults.settings.body);
+	var settings_details = jQuery('<div></div>').append($('#detailsform').css('display', 'block'));
+	var detailsDlg = new org.sarsoft.view.MapDialog(imap, "Details", settings_details, "OK", "Cancel", function() {
+		$('#detailsform').submit();
+	});
+	detailslink.click(function() {detailsDlg.swap();});
   </c:if>
   if(!embed) {
 	imap.message("Right click on map background to create shapes", 30000);
@@ -81,41 +92,37 @@ org.sarsoft.Loader.queue(function() {
  </div>
 </div>
 
-<c:if test="${userPermission eq read}">
-<div style="display: none" id="sharingpermissions">
-Map is currently read only.  Enter password for write access:<br/>
-<form action="/password" method="post" id="sharingform">
-<input type="hidden" name="dest" value="/map?id=${tenant.name}"/>
-<label for="password">Password:</label>
-<input type="password" name="password" length="10"/>
-
-<button id="sharingsubmit">GO</button>
-
+<c:if test="${userPermission eq admin}">
+<form action="/admin.html" method="post" id="detailsform" style="display: none">
+<input type="hidden" name="tid" value="${tenant.name}"/>
+<input type="hidden" name="type" value="map"/>
+<table border="0" style="width: 90%"><tbody>
+<tr><td valign="top" style="width: 10em">Name</td><td><input type="text" size="30" value="${tenant.publicName}" name="description"/></td></tr>
+<tr><td valign="top">Comments</td><td><textarea style="width: 100%; height: 6em" name="comments">${tenant.comments}</textarea></td></tr>
+</tbody></table>
 </form>
-</div>
-
-<script>
-$('#sharingsubmit').click(function() { $('#sharingform').submit()});
-</script>
 </c:if>
 
+<div style="display: none" id="sharingpermissions">
+
+Share this map by giving people the following URL: <a href="${serverUrl}/map?id=${tenant.name}">${serverUrl}/map?id=${tenant.name}</a>
+<br/><br/>
+Embed it in a webpage or forum:
+<textarea rows="2" cols="60" style="vertical-align: text-top">
+&lt;iframe width="500px" height="500px" src="${serverUrl}/map?id=${tenant.name}"&gt;&lt;/iframe&gt;
+</textarea>
 
 <c:if test="${userPermission eq admin}">
-<div style="display: none" id="sharingpermissions">
 <form action="/admin.html" method="post" id="sharingform">
 
 <input type="hidden" name="type" value="map"/>
 <input type="hidden" name="tid" value="${tenant.name}"/>
-<table border="0" style="width: 90%"><tbody>
-<tr><td valign="top" style="width: 10em">Name</td><td><input type="text" size="30" value="${tenant.publicName}" name="description"/></td></tr>
-<tr><td valign="top">Comments</td><td><textarea style="width: 100%; height: 10em" name="comments">${tenant.comments}</textarea></td></tr>
-</tbody></table>
 
 <c:if test="${hosted}">
-<div style="padding-bottom: 5px; padding-top: 10px">
+<div style="padding-top: 5px">
 <input type="checkbox" name="shared" value="true" id="sharedcb"<c:if test="${tenant.shared}"> checked="checked"</c:if>/> 
- <span>Make this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose></span> <a href="/find" target="_new">visible to everyone</a>.<br/><br/>
-<label for="allUsers">Allow anyone you share this <c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">search</c:when><c:otherwise>map</c:otherwise></c:choose> with to</label>
+ <span>Make this map <a href="/find" target="_new">visible to everyone</a>.<br/>
+<label for="allUsers">Allow anyone you share this map with</label>
 <select name="allUsers" id="allusersdd">
   <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>do nothing - data is password protected</option>
   <option value="READ"<c:if test="${tenant.allUserPermission eq read}"> selected="selected"</c:if>>view the map</option>
@@ -142,18 +149,15 @@ Password:
 </div>
 </c:if>
 
-<button id="sharingsubmit">Save Changes to Sharing and Permissions</button>
-
 </form>
 
 <script>
-$('#sharingsubmit').click(function() { $('#sharingform').submit()});
 $('#allusersdd').change(function() { var val = $('#sharedcb').prop('checked'); var val2 = $('#allusersdd').val(); if(val && val2 == 'NONE') $('#sharedcb').prop('checked', false)});
 $('#sharedcb').change(function() { var val = $('#sharedcb').prop('checked'); var val2 = $('#allusersdd').val(); if(val && val2 == 'NONE') $('#allusersdd').val('READ')});
 </script>
 
-</div>
 </c:if>
+</div>
 
 </body>
 </html>
