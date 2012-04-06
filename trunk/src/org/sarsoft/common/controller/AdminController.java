@@ -323,6 +323,8 @@ public class AdminController extends JSONBaseController {
 		session.removeAttribute("username");
 		session.removeAttribute("authedTenants");
 
+		String dest = request.getParameter("dest");
+		if(dest != null) return "redirect:" + dest;
 		return bounce(model);
 	}
 	
@@ -412,6 +414,10 @@ public class AdminController extends JSONBaseController {
 		}
 		RuntimeProperties.setTenant(null);
 		request.getSession(true).removeAttribute("tenantid");
+
+		String dest = request.getParameter("dest");
+		if(dest != null) return "redirect:" + dest;
+		
 		if("org.sarsoft.plans.model.Search".equals(tenant.getClass().getName())) return "redirect:/searches";
 		return "redirect:/maps";
 	}

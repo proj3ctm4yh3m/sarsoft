@@ -207,6 +207,8 @@ public abstract class JSONBaseController {
 				first = false;
 			}
 			header = header + "];\n";
+			
+			header = header + "org.sarsoft.server=\"" + RuntimeProperties.getServerUrl() + "\"\n";
 
 			String datum = "WGS84";
 			if(getProperty("sarsoft.map.datum") != null) datum = getProperty("sarsoft.map.datum");
@@ -217,9 +219,12 @@ public abstract class JSONBaseController {
 			}
 
 			UserAccount account = (RuntimeProperties.getUsername() != null) ? account = dao.getByPk(UserAccount.class, RuntimeProperties.getUsername()) : null;
-			header = header + "org.sarsoft.map.datum=\"" + datum + "\"\n" +
-				((RuntimeProperties.getTenant() != null) ? "org.sarsoft.tenantid=\"" + RuntimeProperties.getTenant() + "\"\n" : "") +
-				((account != null) ? "org.sarsoft.username=\"" + account.getEmail() + "\"\n" : "") +
+			header = header + "org.sarsoft.map.datum=\"" + datum + "\"\n";
+			if(RuntimeProperties.getTenant() != null) {
+				header = header + "org.sarsoft.tenantid=\"" + RuntimeProperties.getTenant() + "\"\n" +
+					"org.sarsoft.tenantname=\"" + dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()).getPublicName() + "\"\n";
+			}
+			header = header + ((account != null) ? "org.sarsoft.username=\"" + account.getEmail() + "\"\n" : "") +
 				"org.sarsoft.userPermissionLevel=\"" + RuntimeProperties.getUserPermission() + "\"";
 
 			header = header + "</script>\n";
@@ -292,9 +297,11 @@ public abstract class JSONBaseController {
 			if("local".equals(getProperty("sarsoft.js.server"))) {
 				header = "<script src=\"/static/js/yui.js\"></script>\n" +
 				"<script src=\"/static/js/jquery-1.6.4.js\"></script>\n";
+				header = header + "<script src=\"/static/js/jquery.event.drag-1.5.js\"></script>\n";
 			} else {
 				header = "<script type=\"text/javascript\" src=\"http://yui.yahooapis.com/combo?2.9.0/build/yahoo-dom-event/yahoo-dom-event.js&2.9.0/build/connection/connection-min.js&2.9.0/build/dragdrop/dragdrop-min.js&2.9.0/build/container/container-min.js&2.9.0/build/cookie/cookie-min.js&2.9.0/build/datasource/datasource-min.js&2.9.0/build/element/element-min.js&2.9.0/build/datatable/datatable-min.js&2.9.0/build/json/json-min.js&2.9.0/build/menu/menu-min.js&2.9.0/build/slider/slider-min.js&2.9.0/build/tabview/tabview-min.js\"></script>\n" +
 				"<script src=\"http://code.jquery.com/jquery-1.6.4.js\"></script>\n";
+				header = header + "<script src=\"http://threedubmedia.googlecode.com/files/jquery.event.drag-1.5.min.js\"></script>\n";
 			}
 			header = header + "<script src=\"/static/js/common.js\"></script>\n" +
 			"<script src=\"/static/js/maps.js\"></script>\n" +

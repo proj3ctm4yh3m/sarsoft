@@ -42,31 +42,23 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	var right = jQuery('<td width="50%"></td>').appendTo(form);
 	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left);
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
+		
+	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(left);
+	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(left);
+
+	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(left);
 	
-	div = jQuery('<div class="item"><label for="image" style="width: 80px">Image:</label>Currently:</div>').appendTo(left);
-	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px; padding-left: 5px; padding-right: 5px" valign="top"/>').appendTo(div);
-	div.append('<span style="padding-left: 5px; padding-right: 5px">Show me</span>');
-	this.imgDD = jQuery('<select><option value="circles">Circles</option><option value="activities">Activities</option><option value="symbols">Symbols</option><option value="npsactivities">NPS Activities</option><option value="npssymbols">NPS Symbols</option><option value="arrows">Arrows</option></select>').appendTo(div);
+	div = jQuery('<div class="item" style="min-height: 22px"><label for="image" style="width: 80px">Image:</label></div>').appendTo(right);
+	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px;" valign="top"/>').appendTo(div);
+	jQuery('<img style="width: 20px; height: 20px; visibility: hidden" src="' + org.sarsoft.imgPrefix + '/blank.gif"/>').appendTo(div);
 
-	this.imgDDonChange = function() {
-		var val = that.imgDD.val();
-		for(var key in that.icDivs) {
-			if(key == val) {
-				that.icDivs[key].css('display', 'block');
-			} else {
-				that.icDivs[key].css('display', 'none');
-			}
-		}
-	}
-	this.imgDD.change(this.imgDDonChange);
-
-	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(left);
-	this.images = {npsactivities : ["nps-ski","nps-xc","nps-skate","nps-climbing","nps-scramble","nps-caving","nps-diving","nps-canoe","nps-roadbike","nps-dirtbike","nps-4wd","nps-snowmobile","nps-camera"],
-	        npssymbols : ["nps-parking","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-fire","nps-shower","nps-anchor","nps-rockfall","nps-slip","nps-shelter","nps-picnic","nps-water"],
+	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(right);
+	this.images = {circles : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"],
 	        arrows : ["arr-sw","arr-w","arr-nw","arr-n","arr-ne","arr-e","arr-se","arr-s"],
+			npsactivities : ["nps-ski","nps-xc","nps-skate","nps-climbing","nps-scramble","nps-caving","nps-diving","nps-canoe","nps-roadbike","nps-dirtbike","nps-4wd","nps-snowmobile","nps-camera"],
+	        npssymbols : ["nps-parking","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-fire","nps-shower","nps-anchor","nps-rockfall","nps-slip","nps-shelter","nps-picnic","nps-water"],
 	        activities : ["skiing","xc","walking","snowshoe","climbing","spelunking","windsurf","snorkel","hunting","mountainbike","bike","motorbike","car","snowmobile","camera"],
-	        symbols : ["cp","clue","warning","crossbones","antenna","avy1","binoculars","fire","flag","plus","rescue","tent","waterfall","wetland","harbor","rocks","shelter","picnic","drinkingwater"],
-			circles : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"]}
+	        symbols : ["cp","clue","warning","crossbones","antenna","avy1","binoculars","fire","flag","plus","rescue","tent","waterfall","wetland","harbor","rocks","shelter","picnic","drinkingwater"]}
 	this.icDivs = {};
 	for(var key in this.images) {
 		var ic2 = jQuery('<div></div>').appendTo(imageContainer);
@@ -93,10 +85,6 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 		that.handleChange();
 	});
 
-	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(right);
-	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(right);
-
-	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(right);
 }
 
 
@@ -126,18 +114,8 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.labelInput.val(obj.label);
 	this.imageUrl = obj.url;
 	if(this.imageUrl != null && this.imageUrl.indexOf("#")==0) {
-		this.imgDD.val("circles");
-		this.imgDDonChange();
 		this.imageInput.val(obj.url.substr(1));
 	} else {
-		for(var key in this.images) {
-			for(var i = 0; i < this.images[key].length; i++) {
-				if(this.images[key][i] == this.imageUrl) {
-					this.imgDD.val(key);
-					this.imgDDonChange();
-				}
-			}
-		}
 		this.imageInput.val("");
 	}
 	this.comments.val(obj.comments);
@@ -205,7 +183,7 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
 	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(form)));
 	var left = jQuery('<td width="50%"></td>').appendTo(form);
-	var right = jQuery('<td width="50%"></td>').appendTo(form);
+	var right = jQuery('<td width="50%" style="padding-left: 20px"></td>').appendTo(form);
 	
 	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left);
 	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);	
@@ -232,7 +210,7 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j].substr(1)); that.colorInput.trigger('change');}}());
 	}	
 	
-	div = jQuery('<div class="item" style="padding-top: 5px; clear: both">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(right);
+	div = jQuery('<div class="item" style="clear: both">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(right);
 	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(right);
 
 	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(right);
@@ -405,17 +383,48 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.showShapes = true;
 	this.embedded = embedded;
 	
+	var dcbody = jQuery('<div>Delete - Are You Sure?</div>');
+	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", dcbody, "Delete", "Cancel", function() {
+		that.dchandler();
+		that.dchandler = null;
+	});
+	this.del = function(handler) {
+		that.dchandler = handler;
+		that.delconfirm.show();
+	}
+	
 	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
 		var dn = imap.registered["org.sarsoft.DataNavigator"];
 		this.dn = new Object();
 		var mtree = dn.addDataType("Markers");
-		mtree.header.css({"font-size": "150%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		mtree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
 		this.dn.markerdiv = jQuery('<div></div>').appendTo(mtree.body);
 		this.dn.markers = new Object();
+		this.dn.markertoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(mtree.header).click(function(evt) {
+			that.showMarkers=!that.showMarkers;
+			that.handleMarkerSetupChange();
+			if(that.showMarkers) {
+				that.dn.markertoggle.html('(shown)');
+			} else {
+				that.dn.markertoggle.html('(hidden)');
+			}
+			evt.stopPropagation();
+		});
+		
 		var stree = dn.addDataType("Shapes");
-		stree.header.css({"font-size": "150%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		stree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
 		this.dn.shapediv = jQuery('<div></div>').appendTo(stree.body);
 		this.dn.shapes = new Object();
+		this.dn.shapetoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(stree.header).click(function(evt) {
+			that.showShapes=!that.showShapes;
+			that.handleShapeSetupChange();
+			if(that.showShapes) {
+				that.dn.shapetoggle.html('(shown)');
+			} else {
+				that.dn.shapetoggle.html('(hidden)');
+			}
+			evt.stopPropagation();
+		});
 
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
 			jQuery('<span style="color: green; cursor: pointer">+ New Marker</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(mtree.body)).click(function() {
@@ -483,7 +492,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		});
 
 		form = new org.sarsoft.view.ShapeForm();
-		this.shapeDlg = new org.sarsoft.view.MapEntityDialog(imap, "Shape Details",form , function(shape) {
+		this.shapeDlg = new org.sarsoft.view.MapEntityDialog(imap, "Shape Details", form , function(shape) {
 			if(that.shapeDlg.shape != null) {
 				that.shapeDAO.save(that.shapeDlg.shape.id, shape, function(obj) {
 					that.refreshShapes([obj]);
@@ -510,20 +519,13 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			this.imap.addContextMenuItems(items.concat([
 	    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();}},
 	    		{text : "Drag to New Location", applicable : function(obj) { var marker = that.markers[that.getMarkerIdFromWpt(obj)]; return marker != null && !that.getMarkerAttr(marker, "inedit");}, handler: function(data) { var marker = that.markers[that.getMarkerIdFromWpt(data.subject)]; that.dragMarker(marker)}},
-	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.removeMarker(id); that.markerDAO.del(id);}},
+	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.del(function() { that.removeMarker(id); that.markerDAO.del(id);}); }},
 	    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
 	    		{text : "Save Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.saveShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
-	    		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.removeShape(id); that.shapeDAO.del(id);}}
+	    		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.del(function() { that.removeShape(id); that.shapeDAO.del(id);});}}
 	     		]));
-		} else if(nestMenuItems != "none") {
-			this.imap.addContextMenuItems([
-	            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var mrkid = that.getMarkerIdFromWpt(obj); if(mrkid == null) return false; var mrk = that.markers[mrkid]; return mrk.comments != null && mrk.comments.length > 0}, 
-	            	handler: function(data) { var mrkid = that.getMarkerIdFromWpt(data.subject); var mrk=that.markers[mrkid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(mrk.comments, true)); that.alertDlg.show()}},
-	            {text : "View Comments", applicable : function(obj) {if(obj == null) return false; var shpid = that.getShapeIdFromWay(obj); if(shpid == null) return false; var shp = that.shapes[shpid]; return shp.comments != null && shp.comments.length > 0}, 
-	            	handler: function(data) { var shpid = that.getShapeIdFromWay(data.subject); var shp=that.shapes[shpid]; $(that.alertDlgDiv).html(org.sarsoft.htmlescape(shp.comments, true)); that.alertDlg.show()}}
-	            ]);
 		}
 	
 	}
@@ -672,12 +674,12 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddMarker = function(mark
 	
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
 		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
-			that.removeMarker(marker.id); that.markerDAO.del(marker.id);
+			that.del(function() { that.removeMarker(marker.id); that.markerDAO.del(marker.id); });
+		});
+		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
+			that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();
 		});
 	}
-	jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
-		that.markerDlg.marker=marker; that.markerDlg.entityform.write(marker); that.markerDlg.show();
-	});
 	
 	var line = jQuery('<div></div>').appendTo(this.dn.markers[marker.id]);
 	if(marker.comments != null && marker.comments.length > 0) {
@@ -756,12 +758,12 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddShape = function(shape
 	
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
 		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
-			that.removeShape(shape.id); that.shapeDAO.del(shape.id);
+			that.del(function() { that.removeShape(shape.id); that.shapeDAO.del(shape.id); });
 		});
+		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
+			that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();
+			});
 	}
-	jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
-		that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();
-		});
 	
 	var line = jQuery('<div></div>').appendTo(this.dn.shapes[shape.id]);
 	if(shape.comments != null && shape.comments.length > 0) {
