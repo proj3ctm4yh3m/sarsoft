@@ -1166,8 +1166,9 @@ org.sarsoft.DataNavigator = function(imap) {
 		this.defaults.io = new org.sarsoft.DNTree(this.defaults.tenant.body, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Data Transfer');
 		this.defaults.io.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
 		this.defaults.io.body.css({'padding-left': '10px', display: 'none'});
-		this.defaults.imp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>').appendTo(this.defaults.io.body);
-		this.defaults.exp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>').appendTo(this.defaults.io.body);
+		this.defaults.imp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/right.png"/>Import Data</div>').appendTo(this.defaults.io.body);
+		this.defaults.exp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/left.png"/>Export Data</div>').appendTo(this.defaults.io.body);
+		this.defaults.kml = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>Export to Google Earth</div>').appendTo(this.defaults.io.body);
 
 		jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(this.defaults.tenant.header).click(function() {
 			window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
@@ -1181,7 +1182,24 @@ org.sarsoft.DataNavigator = function(imap) {
 		});
 		this.defaults.sharing.click(function() {sharingDlg.swap();});
 		this.defaults.layers = new org.sarsoft.DNTree(this.account.body, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers');
+		this.defaults.kml = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>Export to Google Earth</div>').appendTo(this.account.body);
 	}
+	
+	var kmlBody = jQuery('<div>Export a map layer to Google Earth.  Export will be limited to the current map bounds; zooming in can give you a higher resolution export.<br/><br/>Select a Layer:&nbsp;&nbsp;</div>');
+	var kmlSelect = jQuery('<select></select>').appendTo(kmlBody);
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+		if(type.type == "TILE") {
+			jQuery('<option value="' + type.name + '">' + type.name + '</option>').appendTo(kmlSelect);
+		}
+	}
+	var kmlDlg = new org.sarsoft.view.MapDialog(imap, "Export Map Layer to Google Earth", kmlBody, "Export", "Cancel", function() {
+		var layer = kmlSelect.val();
+		var bounds = map.getBounds();
+		window.location="/kml?layer=" + encodeURIComponent(layer) + "&bounds=" + bounds.getSouthWest().lng() + "," + bounds.getSouthWest().lat() + "," + bounds.getNorthEast().lng() + "," + bounds.getNorthEast().lat();
+	});
+	
+	this.defaults.kml.click(function() { kmlDlg.swap(); });
 
 	this.defaults.layers.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
 	this.defaults.layers.body.css('padding-left', '10px');
@@ -1400,6 +1418,7 @@ org.sarsoft.DataNavigator = function(imap) {
 	if(org.sarsoft.tenantid == null) {
 		this.defaults.sharing.appendTo(this.account.body);
 		this.defaults.layers.block.appendTo(this.account.body);
+		this.defaults.kml.appendTo(this.account.body);
 	}
 }
 
