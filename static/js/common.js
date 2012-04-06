@@ -2,6 +2,23 @@ if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
+org.sarsoft.setCookieProperty = function(cookie, prop, value) {
+	var obj = {}
+	if(YAHOO.util.Cookie.exists(cookie)) {
+		obj = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get(cookie));
+	}
+	obj[prop] = value;
+	YAHOO.util.Cookie.set(cookie, YAHOO.lang.JSON.stringify(obj));
+}
+
+org.sarsoft.getCookieProperty = function(cookie, prop) {
+	var obj = {}
+	if(YAHOO.util.Cookie.exists(cookie)) {
+		obj = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get(cookie));
+	}
+	return obj[prop];
+}
+
 org.sarsoft.htmlescape = function(str, newline) {
 	if(newline) return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g, "<br/>");
 	return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -117,7 +134,7 @@ org.sarsoft.view.DropMenu = function() {
 	this.groups = {}
 	this.values = {}
 	this.container = jQuery('<span style="display: inline-block; border: 1px solid #CCCCCC; color: black"></span>');
-	this.holder = jQuery('<span style="position: relative; z-index: 2000"></span>').appendTo(this.container);
+	this.holder = jQuery('<span style="position: relative; z-index: 2000; vertical-align: text-top"></span>').appendTo(this.container);
 	this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold"></span>').appendTo(this.container).hover(function() { that.select.addClass("yuimenuitem-selected") }, function() { that.select.removeClass("yuimenuitem-selected")});
 	this.label = jQuery('<span style="padding-left: 10px"></span>').appendTo(this.select);
 	this.dd = jQuery('<span style="float: right">&darr;</span>').appendTo(this.select);
@@ -131,6 +148,13 @@ org.sarsoft.view.DropMenu = function() {
 		} else {
 			that.show();
 		}
+	});
+	this.bd.mouseout(function() {
+		if(that.timer != null) clearTimeout(that.timer);
+		that.timer = setTimeout(function() {that.hide()}, 300);
+	});
+	this.bd.mouseover(function() {
+		if(that.timer != null) clearTimeout(that.timer);
 	});
 }
 
@@ -500,8 +524,19 @@ org.sarsoft.TenantDAO.prototype.saveCenter = function(center, handler) {
 	this._doPost("/center", handler, center);
 }
 
+org.sarsoft.view.TenantList = function(container) {
+	this.block = jQuery('<div></div>').appendTo(container);
+}
+
+org.sarsoft.view.TenantList.prototype.update = function(rows) {
+	for(var i = 0; i < rows.length; i++) {
+		var url = "map?id=" + rows[i].name
+		if(rows[i].type == "org.sarsoft.plans.model.Search") url = "search?id=" + rows[i].name;
+		jQuery('<div><a style="color: black; font-weight: bold; text-transform: capitalize" href="' + org.sarsoft.server + url + '">' + rows[i].publicName + '</a></div>').appendTo(this.block);
+	}
+}
+
 org.sarsoft.view.TenantTable = function(cols) {
-	
 	if(cols == null) cols = {owner : true, comments : true, sharing : true, actions : true}
 	var permissionFormatter = function(cell, record, column, data) {
 		var tenant = record.getData();

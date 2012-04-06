@@ -156,7 +156,7 @@ public class ImageryController extends JSONBaseController {
 			g.setBackground(new Color(255, 255, 255, 0));
 			g.clearRect(0, 0, 256, 256);
 
-			g.drawImage(original, 0, 0, 256, 256, dx*tilesize, dy*tilesize, (dx+1)*tilesize, (dy+1)*tilesize, new Color(255, 255, 255, 0), null);
+			g.drawImage(original, 0, 0, 256, 256, dx*tilesize, dy*tilesize, (dx+1)*tilesize, (dy+1)*tilesize, null);
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(zoomed, "png", out);
 			return new ByteArrayInputStream(out.toByteArray());

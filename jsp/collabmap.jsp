@@ -42,13 +42,21 @@ org.sarsoft.Loader.queue(function() {
   </c:if>
   <c:if test="${userPermission eq admin}">
 	dn.defaults.sharinghandler = function() { $('#sharingform').submit(); }
-	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px">Details</div>').appendTo(dn.defaults.settings.body);
+	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/details.png"/>Details</div>').insertBefore(dn.defaults.layers.block);
 	var settings_details = jQuery('<div></div>').append($('#detailsform').css('display', 'block'));
 	var detailsDlg = new org.sarsoft.view.MapDialog(imap, "Details", settings_details, "OK", "Cancel", function() {
 		$('#detailsform').submit();
 	});
 	detailslink.click(function() {detailsDlg.swap();});
-  </c:if>
+
+	deleteDlg = new org.sarsoft.view.MapDialog(imap, "Delete ${tenant.publicName}", $('#deleteObject'), "OK", "Cancel", function() {
+		window.location="/admin/delete?id=${tenant.name}&dest=/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
+	});
+	</c:if>
+  <c:if test="${userPermission eq write}">
+//    dn.defaults.settings.block.css('display', 'none')
+//    dn.defaults.sharing.prependTo(dn.defaults.tenant.body);
+    </c:if>
   if(!embed) {
 	imap.message("Right click on map background to create shapes", 30000);
 
@@ -77,6 +85,8 @@ org.sarsoft.Loader.queue(function() {
 	
 	imap.addMenuItem(leaveDD.container, 40);
 	
+	if($.browser.msie) map.checkResize();
+	
   }
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 });
@@ -100,6 +110,9 @@ org.sarsoft.Loader.queue(function() {
 <tr><td valign="top" style="width: 10em">Name</td><td><input type="text" size="30" value="${tenant.publicName}" name="description"/></td></tr>
 <tr><td valign="top">Comments</td><td><textarea style="width: 100%; height: 6em" name="comments">${tenant.comments}</textarea></td></tr>
 </tbody></table>
+<div style="padding-top: 20px">
+You can also <a href="javascript:deleteDlg.show()">delete this map</a>.
+</div>
 </form>
 </c:if>
 
@@ -150,6 +163,10 @@ Password:
 </c:if>
 
 </form>
+
+<div id="deleteObject" style="height: 6em">
+	Are you sure you want to delete ${tenant.publicName}?  This action cannot be undone.
+</div>
 
 <script>
 $('#allusersdd').change(function() { var val = $('#sharedcb').prop('checked'); var val2 = $('#allusersdd').val(); if(val && val2 == 'NONE') $('#sharedcb').prop('checked', false)});

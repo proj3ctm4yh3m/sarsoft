@@ -43,6 +43,8 @@ org.sarsoft.Loader.queue(function() {
 
 	imap.registered["org.sarsoft.MapFindWidget"].setState(true);
 	
+	if($.browser.msie) map.checkResize();
+
 });
 }
 
