@@ -605,6 +605,10 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 		this.marginInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
 	}
 	this.custom = div;
+	
+	if($.browser.msie) {
+		jQuery('<div style="font-weight: bold; color: red">Printing is not supported on Internet Explorer and may not work properly.</div>').appendTo(container);
+	}
 }
 
 org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
@@ -1199,7 +1203,7 @@ org.sarsoft.DataNavigator = function(imap) {
 		window.location="/kml?layer=" + encodeURIComponent(layer) + "&bounds=" + bounds.getSouthWest().lng() + "," + bounds.getSouthWest().lat() + "," + bounds.getNorthEast().lng() + "," + bounds.getNorthEast().lat();
 	});
 	
-	this.defaults.kml.click(function() { kmlDlg.swap(); });
+	this.defaults.kml.click(function() { kmlSelect.val(map.getCurrentMapType().getName()); kmlDlg.swap(); });
 
 	this.defaults.layers.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
 	this.defaults.layers.body.css('padding-left', '10px');
@@ -1274,7 +1278,7 @@ org.sarsoft.DataNavigator = function(imap) {
 			url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + url + ".jpg";
 		}
 		var img = jQuery('<img style="width: 100px; height: 100px; cursor: pointer; float: left" src="' + url + '"/>').appendTo(div);
-		var d2 = jQuery('<div style="float: left; width: 220px"></div>').appendTo(div);
+		var d2 = jQuery('<div style="float: left; width: 215px; padding-left: 5px"></div>').appendTo(div);
 		var cb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>');
 		checkboxes[type.name] = cb;
 		var devnull = function(c, d) {
@@ -1343,11 +1347,20 @@ org.sarsoft.DataNavigator = function(imap) {
 		
 		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
 		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
+		var mapcfg = jQuery('<input type="hidden" name="mapcfg"/>').appendTo(newform);
 
 		jQuery('<button>Create Map</button>').appendTo(newform).click(function() {
 			var center = imap.map.getCenter();
 			newlat.val(center.lat());
 			newlng.val(center.lng());
+			var bcw = imap.registered["org.sarsoft.view.BaseConfigWidget"];
+			var cfg = {}
+			if(bcw != null) {
+				cfg = bcw._toConfigObj();
+			} else {
+				cfg = imap.getConfig();
+			}
+			mapcfg.val(YAHOO.lang.JSON.stringify(cfg));				
 			newform.submit();
 		});
 	} else {
@@ -1390,15 +1403,15 @@ org.sarsoft.DataNavigator = function(imap) {
 	this.defaults.browser.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
 	this.defaults.browser.body.css('padding-left', '10px');
 	var cbcontainer = jQuery('<div style="padding-top: 3px; padding-bottom: 3px"></div>').appendTo(this.defaults.browser.body);
-	var swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Enable Scroll Wheel Zoom</div>').appendTo(cbcontainer)).change(function() {
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scrollwheelzoom", swz[0].checked);
-		imap.loadBrowserSettings();
-	});
 	var sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(cbcontainer)).change(function() {
 		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scalebar", sb[0].checked);
 		imap.loadBrowserSettings();
 	});
-	var overzoomcb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Overzoom if map data not available</div>').appendTo(cbcontainer)).change(function() {
+	var swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Enable Scroll Wheel Zoom</div>').appendTo(cbcontainer)).change(function() {
+		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scrollwheelzoom", swz[0].checked);
+		imap.loadBrowserSettings();
+	});
+	var overzoomcb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Allow Zooming Beyond Default Map Resolutions</div>').appendTo(cbcontainer)).change(function() {
 		org.sarsoft.EnhancedGMap._overzoom = overzoomcb[0].checked;
 		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "overzoom", org.sarsoft.EnhancedGMap._overzoom);
 		imap.map.setZoom(imap.map.getZoom());
@@ -1410,9 +1423,9 @@ org.sarsoft.DataNavigator = function(imap) {
 	if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
 		config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
 	}
-	swz[0].checked = config.scrollwheelzoom;
+	swz[0].checked = (config.scrollwheelzoom == false ? false : true);
 	sb[0].checked = config.scalebar;
-	org.sarsoft.EnhancedGMap._overzoom = config.overzoom;
+	org.sarsoft.EnhancedGMap._overzoom = (config.overzoom == false ? false : true);
 	overzoomcb[0].checked = org.sarsoft.EnhancedGMap._overzoom;
 
 	if(org.sarsoft.tenantid == null) {
@@ -1759,11 +1772,12 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 	this.hasConfig = false;
 	if(imap != null) {
 		this.imap = imap;
+		imap.register("org.sarsoft.view.BaseConfigWidget", this);
 		if(persist) {
 			var dn = imap.registered["org.sarsoft.DataNavigator"];
 			this.saveLink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer" title="Save current background, available data sources and UTM grid settings for future visits?"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save Configuration</div>').prependTo(dn.defaults.layers.body);
 			this.saveLink.click(function() {
-				that.saveConfig(function() { alert('Current Map Configuration Has Been Saved.');});
+				that.saveConfig(function() { alert('The following configuration items have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current Layers\n - Available Data Sources\n - Datum\n - UTM Grid\n');});
 			});
 		}
 	}

@@ -206,6 +206,9 @@ public class CollaborativeMapController extends JSONBaseController {
 						}
 					}
 				}
+				if(request.getParameter("mapcfg") != null) {
+					map.setMapConfig(request.getParameter("mapcfg"));
+				}
 				dao.save(map);
 			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();

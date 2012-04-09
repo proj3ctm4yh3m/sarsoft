@@ -129,7 +129,7 @@ public class ImageryController extends JSONBaseController {
 		OutputStream out = null;
 		byte[] bytes = new byte[512];
 		int bytesRead;
-		response.setHeader("Cache-Control", "max-age=3600, public");
+		response.setHeader("Cache-Control", "max-age=432000, public");
 	
 		try {
 			out = response.getOutputStream();

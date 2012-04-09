@@ -53,7 +53,7 @@ function toggleAcctDropdown() {
 			</span>
 		</c:when>
 		<c:when test="${hosted eq true}">
-		Sign in: <a href="/app/openidrequest?domain=google">Google</a>, <a href="/app/openidrequest?domain=yahoo">Yahoo</a>
+<!--		Sign in: <a href="/app/openidrequest?domain=google">Google</a>, <a href="/app/openidrequest?domain=yahoo">Yahoo</a> -->
 		</c:when>
 		</c:choose>
 		</div>
