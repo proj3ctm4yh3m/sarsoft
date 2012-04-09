@@ -108,7 +108,7 @@ public abstract class JSONBaseController {
 	}
 
 	protected MapSource getMapSourceByName(String name) {
-		if(mapSources == null) getMapSources();
+		if(mapSourcesByName == null) getMapSources();
 		return mapSourcesByName.get(name);
 	}
 	
