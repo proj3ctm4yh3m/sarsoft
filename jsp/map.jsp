@@ -10,7 +10,15 @@ org.sarsoft.Loader.queue(function() {
 
 	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
 	var embed = !(window==top);
-	imap = new org.sarsoft.InteractiveMap(map, {positionWindow: !embed, UTM: true, size: !embed, find: !embed, separators: true, switchableDatum : true, suppressPermissionWidget: true, container : $('#page_container')[0]});
+	var opts = {UTM: true, switchableDatum: true, supressPermissionWidget: true}
+	if(!embed) {
+		opts.positionWindow = true;
+		opts.size = true;
+		opts.separators = true;
+		opts.find = true;
+		opts.container = $('#page_container')[0];
+	}
+	imap = new org.sarsoft.InteractiveMap(map, opts);
 	urlwidget = new org.sarsoft.MapURLHashWidget(imap, embed);
 	if(!embed) {
 		configWidget = new org.sarsoft.view.CookieConfigWidget(imap, true);

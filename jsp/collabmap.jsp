@@ -26,7 +26,12 @@ org.sarsoft.Loader.queue(function() {
   </c:otherwise>
   </c:choose>
   var embed = !(window==top);
-  imap = new org.sarsoft.InteractiveMap(map, {standardControls : !embed, UTM: true, switchableDatum : true, container : $('#page_container')[0]});
+  var opts = {UTM: true, switchableDatum: true}
+  if(!embed) {
+	  opts.standardControls = true;
+	  opts.container = $('#page_container')[0];
+  }
+  imap = new org.sarsoft.InteractiveMap(map, opts);
   markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
   if(!embed) {
 	toolsController = new org.sarsoft.controller.MapToolsController(imap);
