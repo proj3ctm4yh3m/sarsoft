@@ -2000,8 +2000,8 @@ org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, s
 	this.ft = jQuery('<div class="ft"></div>').appendTo(dlg);
 
 	var ok = function() {
-		that.dialog.hide();
 		handler();
+		that.dialog.hide();
 	}
 
 	var buttons = [ { text : yes, handler: ok, isDefault: true}, {text : no, handler : function() { that.dialog.hide(); }}];
@@ -2530,7 +2530,35 @@ org.sarsoft.InteractiveMap.prototype.addWaypoint = function(waypoint, config, to
 	this._addMarker(waypoint, config, tooltip, label);
 }
 
-org.sarsoft.InteractiveMap.prototype.drag = function(waypoint, callback) {
+org.sarsoft.InteractiveMap.prototype.allowDragging = function(waypoint) {
+	var that = this;
+	var objs = this.markers[waypoint.id];
+	this._removeMarker(waypoint);
+	objs.config.drag = function(gll) {
+	}
+	this._addMarker(waypoint, objs.config, "Drag Me!", objs.label);
+}
+
+org.sarsoft.InteractiveMap.prototype.saveDrag = function(waypoint) {
+	var objs = this.markers[waypoint.id];
+	GEvent.clearListeners(objs.marker, "drag");
+	this._removeMarker(waypoint);
+	var gll = objs.marker.getLatLng();
+	waypoint.lat=gll.lat();
+	waypoint.lng=gll.lng();
+	objs.config.drag = null;
+	this._addMarker(waypoint, objs.config, objs.tooltip, objs.label);
+}
+
+org.sarsoft.InteractiveMap.prototype.discardDrag = function(waypoint) {
+	var objs = this.markers[waypoint.id];
+	GEvent.clearListeners(objs.marker, "drag");
+	this._removeMarker(waypoint);
+	objs.config.drag = null;
+	this._addMarker(waypoint, objs.config, objs.tooltip, objs.label);
+}
+
+org.sarsoft.InteractiveMap.prototype.dragOnce = function(waypoint, callback) {
 	var that = this;
 	var objs = this.markers[waypoint.id];
 	this._removeMarker(waypoint);
