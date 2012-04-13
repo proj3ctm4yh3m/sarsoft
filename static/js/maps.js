@@ -2004,7 +2004,13 @@ org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, s
 		that.dialog.hide();
 	}
 
-	var buttons = [ { text : yes, handler: ok, isDefault: true}, {text : no, handler : function() { that.dialog.hide(); }}];
+	var buttons = new Array();
+	if(yes != null) {
+		buttons.push({ text : yes, handler: ok, isDefault: true});
+	}
+	if(no != null) {
+		buttons.push({text : no, handler : function() { that.dialog.hide(); }});
+	}
 	this.dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
 	this.dialog.render(document.body);
 	this.dialog.hide();
