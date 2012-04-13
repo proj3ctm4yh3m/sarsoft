@@ -245,8 +245,8 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 
 	if(org.sarsoft.userPermissionLevel != "READ") {
 		
-		var imp = jQuery('<div></div>');
-		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, "OK", "Cancel", function() {
+		var imp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>');
+		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, null, "Cancel", function() {
 		});
 		dn.defaults.imp.click(function() { that.impcomms.clear(); that.impDlg.swap(); });
 	
@@ -258,7 +258,11 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		});
 		
 		var gpxin = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/></form>');
-		var gpxfile = jQuery('<input type="file" name="file" style="margin-top: 64px; margin-left: 10px"/>').appendTo(gpxin);
+		var gpxfile = jQuery('<input type="file" name="file" style="margin-top: 40px; margin-left: 10px"/>').appendTo(gpxin);
+		var gpxval = jQuery('<div style="margin-left: 10px; margin-top: 5px"></div>').appendTo(gpxin);
+		gpxfile.change(function() {
+			gpxval.html(gpxfile.val());
+		})
 		var gpxicon = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>');
 		jQuery('<div style="display: inline-block"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(gpxin)).appendTo(imp);
 		gpxicon.click(function() {
@@ -276,8 +280,8 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		dn.defaults.imp.css('display', 'none');
 	}
 	
-	var exp = jQuery('<div></div>');
-	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, "OK", "Cancel", function() {
+	var exp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To export data, click on the file type you wish to export to:</div></div>');
+	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, null, "Export Complete", function() {
 	});
 	dn.defaults.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
 
@@ -342,7 +346,7 @@ org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
 	for(var key in this.controller.markers) {
 		var marker = this.controller.markers[key];
 		if(marker.label != null && marker.label.length > 0) {
-			var m = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"><img style="vertical-align: middle" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>' + org.sarsoft.htmlescape(marker.label) + '</div>').appendTo(this.exportables);
+			var m = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"><img style="vertical-align: middle; width: 16px; height: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>' + org.sarsoft.htmlescape(marker.label) + '</div>').appendTo(this.exportables);
 			var devnull = function(dom, obj) {
 				dom.click(function() {
 					expcb[0].checked = true;
@@ -713,7 +717,7 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddMarker = function(mark
 	this.dn.markers[marker.id].empty();
 
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.markers[marker.id]);
-	line.append('<img style="vertical-align: middle; padding-right: 0.5em" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>');
+	line.append('<img style="vertical-align: middle; padding-right: 0.5em; height: 16px; width: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>');
 	jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(marker.label) + '</span>').appendTo(line).click(function() {
 		that.imap.map.setCenter(new GLatLng(marker.position.lat, marker.position.lng));
 	});
