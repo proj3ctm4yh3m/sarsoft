@@ -90,7 +90,7 @@ org.sarsoft.Loader.queue(function() {
 	
 	imap.addMenuItem(leaveDD.container, 40);
 	
-	if($.browser.msie) map.checkResize();
+	map.checkResize();
 	
   }
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});

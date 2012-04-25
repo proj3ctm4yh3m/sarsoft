@@ -584,14 +584,18 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 	for(var i = 0; i < this.presets.length; i++) {
 		jQuery('<option value="' + this.presets[i].name + '">' + this.presets[i].description + '</option>').appendTo(this.presetInput);
 	}
+
 	this.preset = jQuery('<span></span>').appendTo(div);
-	this.cborientation = jQuery('<input type="checkbox"/>').appendTo(this.preset).change(this.updateToPreset);
-	this.preset.append('<span>Landscape</span>');
+	this.cborientation = jQuery('<input type="checkbox" style="margin-left: 5px"/>').appendTo(this.preset).change(this.updateToPreset);
+	this.preset.append('<span style="padding-right: 5px">Landscape</span>');
 	this.cbmargin = jQuery('<input style="margin-left: 5px" type="checkbox"/>').appendTo(this.preset).change(this.updateToPreset);
 	this.preset.append('<span>Borderless</span>');
+
+	this.cbborder = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
+	div.append('<span style="padding-right: 5px">Show Coordinates in Margin</span>');
 	this.cbscale = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
 	div.append('<span>Fit Preview To Screen</span>');	
-
+	
 	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
 	div.append(document.createTextNode("Width: "));
 	this.widthInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
@@ -620,6 +624,16 @@ org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
 	
 	$(this.map.getContainer()).css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
 	if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
+
+	var ugc = this.map._imap.registered["org.sarsoft.UTMGridControl"];
+	var mic = this.map._imap._mapInfoControl;
+
+	ugc.hidePrintBorder();
+	if(this.footer[0] != null) this.footer[0].remove();
+	if(this.footer[1] != null) this.footer[0].remove();
+	if(mic != null) mic.ctrl.css('visibility', 'visible');
+	this.footer == null;
+	ugc.borders[3].div.css('height', '26px');
 
 	this.map.checkResize();
 	this.map.setCenter(center);	
@@ -663,6 +677,33 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 	this.map.getContainer().style.width=width;
 	this.map.getContainer().style.height=height;
 	this.map.getContainer()._margin=margin;
+	
+	var ugc = map._imap.registered["org.sarsoft.UTMGridControl"];
+	var mdw = this.map._imap.registered["org.sarsoft.MapDatumWidget"];
+	var mic = this.map._imap._mapInfoControl;
+	if(this.cbborder[0].checked) {
+		if(this.footer == null) {
+			ugc.borders[3].div.css('height', '46px');
+			this.footer = [];
+			if(mdw != null) this.footer[0] = jQuery('<span style="padding-right: 5px">Datum:</span>').insertBefore(mdw.datumDisplay);
+			if(mdw.datumSwitcher != null) mdw.datumSwitcher.css('visibility', 'hidden');
+			if(mic != null) {
+				this.footer[1] = jQuery('<span style="padding-right: 5px">Printed from CalTopo.com.</span>').insertBefore(mic.msg);
+				mic.ctrl.css('visibility', 'hidden');
+			}
+		}
+		ugc.showPrintBorder();
+	} else {
+		if(this.footer != null) {
+			if(this.footer[0] != null) this.footer[0].remove();
+			if(this.footer[1] != null) this.footer[1].remove();
+			if(mic != null) mic.ctrl.css('visibility', 'visible');
+			if(mdw.datumSwitcher != null) mdw.datumSwitcher.css('visibility', 'visible');
+			this.footer = null;
+			ugc.borders[3].div.css('height', '26px');
+		}
+		ugc.hidePrintBorder();
+	}
 	
 	this.border=this.container.height()+30;
 	
@@ -778,6 +819,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 	this.utmgridlines = new Array();
 	this.text = new Array();
 	this.utminitialized = false;
+	this.showborder = false;
 	this.imap = imap;
 	if(imap != null) {
 			this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Toggle UTM grid", function(value) {
@@ -834,6 +876,7 @@ org.sarsoft.UTMGridControl.prototype.getDefaultPosition = function() { return ne
 org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 	var that = this;
 	this.map = map;
+	this.borders = [];
 	
 	var fn = function() {
 		if(that.utminitialized == false) {
@@ -845,13 +888,20 @@ org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 					that.map.removeOverlay(that.text[i]);
 				}
 				that.text = new Array();
+				for(var i = 0; i < 4; i++) that.borders[i].clear();
 			});
 			that.utminitialized=true;
 			that.majorSlider.setValue(that.style.major*100);
-			that.minorSlider.setValue(that.style.minor*100);
+			that.minorSlider.setValue(that.style.minor*100);			
 		}
 	}
-	
+
+	for(var i = 0; i < 4; i++) {
+		this.borders[i] = new org.sarsoft.MapBorderControl(i);
+		map.addControl(this.borders[i]);
+		this.borders[i].div.css('display', 'none');
+	}
+
 	if(map.isLoaded()) {
 		fn();
 	} else {
@@ -863,15 +913,33 @@ org.sarsoft.UTMGridControl.prototype.initialize = function(map) {
 	return div;
 }
 
+org.sarsoft.UTMGridControl.prototype._setMDWClass = function() {
+	var mdw = this.imap.registered["org.sarsoft.MapDatumWidget"];
+	if(mdw != null) {
+		if(!this.showUTM && !this.showborder) { mdw.datumDisplay.addClass("noprint"); }
+		else { mdw.datumDisplay.removeClass("noprint"); }
+	}	
+}
+
+org.sarsoft.UTMGridControl.prototype.showPrintBorder = function() {
+	this.showborder = true;
+	for(var i = 0; i < 4; i++) this.borders[i].div.css('display', 'block');
+	this._setMDWClass();
+	this._drawUTMGrid(true);
+}
+
+org.sarsoft.UTMGridControl.prototype.hidePrintBorder = function() {
+	this.showborder = false;
+	for(var i = 0; i < 4; i++) this.borders[i].div.css('display', 'none');
+	this._setMDWClass();
+	this._drawUTMGrid(true);
+}
+
 org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
 	this._showUTM = value;
 	this._drawUTMGrid(true);
 	this._UTMToggle.setValue(this._showUTM);
-	var mdw = this.imap.registered["org.sarsoft.MapDatumWidget"];
-	if(mdw != null) {
-		if(!value) { mdw.datumDisplay.addClass("noprint"); }
-		else { mdw.datumDisplay.removeClass("noprint"); }
-	}
+	this._setMDWClass();
 }
 
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
@@ -910,6 +978,8 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	if(force != true && typeof this.utmgridcoverage != "undefined" && this.utmgridcoverage.getSouthWest().distanceFrom(this.map.getBounds().getSouthWest()) == 0 &&
 		this.utmgridcoverage.getNorthEast().distanceFrom(this.map.getBounds().getNorthEast()) == 0) return;
 
+	for(var i = 0; i < 4; i++) this.borders[i].clear();
+
 	this.utmgridcoverage = this.map.getBounds();
 
 	for(var i = 0; i < this.utmgridlines.length; i++) {
@@ -922,6 +992,8 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	}
 	this.text = new Array();
 	
+	if(this.showborder) this._drawLatLongGrid();	
+
 	if(this._showUTM == false) return;
 	
 	var bounds = this.map.getBounds();
@@ -939,10 +1011,13 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
 	var sw = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getSouthWest()));
 	var ne = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getNorthEast()));
 	if(ne.zone - sw.zone > 1) return;
-	this._drawUTMGridForZone(sw.zone, spacing, false);
-	if(sw.zone != ne.zone)  this._drawUTMGridForZone(ne.zone, spacing, true);
+	this._drawUTMGridForZone(sw.zone, spacing, false, sw.zone == ne.zone);
+	if(sw.zone != ne.zone)  this._drawUTMGridForZone(ne.zone, spacing, true, false);
 	
-	this._drawLatLongGrid();	
+}
+
+org.sarsoft.UTMGridControl.prototype._computeRotationalOffset = function(element) {
+	return Math.ceil((element.width()/2)-(element.height()/2));
 }
 
 org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
@@ -951,11 +1026,11 @@ org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
 	var pxmax = this.map.fromLatLngToContainerPixel(bounds.getNorthEast()).x;
 	var pymax = this.map.fromLatLngToContainerPixel(bounds.getSouthWest()).y;
 	
-	function createText(deg) {
-		if(that.style.latlng == "DD") {
-			deg = Math.abs(deg);
-			return "<div style=\"font-size: smaller; color: #000000; background: #FFFFFF\"><b>" + (Math.round(deg*100)/100) + "\u00B0</b></div>";
-		}
+	function createDDText(deg) {
+		deg = Math.abs(deg);
+		return "<div style=\"font-size: 12px; height: 12px; color: #000000; background: #FFFFFF\">" + (Math.round(deg*100)/100) + "\u00B0</div>";
+	}
+	function createDMText(deg) {
 		var neg = false;
 		if(deg < 0) {
 			neg = true;
@@ -968,56 +1043,144 @@ org.sarsoft.UTMGridControl.prototype._drawLatLongGrid = function() {
 			h = 0;
 			m = m + 1;
 		}		
-		return "<div style=\"font-size: smaller; color:#000000; background: #FFFFFF\"><b>" + d+"\u00B0"+m + (h == 50 ? ".5'" : "'") + "</b></div>";
+		return "<div style=\"font-size: 12px; height: 12px; color:#000000; background: #FFFFFF\">" + d+"\u00B0"+m + (h == 50 ? ".5'" : "'") + "</div>";
 	}
 	
-	function computeSpacing(span, multiplier) {
-		if(multiplier == 6000) {
-			var spacing = 6000;
-			if(span < 80) spacing = 2000;
-			if(span < 50) spacing = 500;
-			if(span < 8) spacing = 100;
-			if(span  < 2) spacing = 50;
-			return spacing;
-		} else {
-			var spacing = 1000;
-			if(span < 80) spacing = 200;
-			if(span < 65) spacing = 100;
-			if(span < 8) spacing = 50;
-			if(span  < 5) spacing = 20;
-			return spacing;
+	if(this.style.latlng == "DD") {
+		// spacing is in degrees
+		var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
+		var spacing = 0.01;
+		while(spacing*pxmax/200 < span) spacing=spacing*10;
+		if(span/spacing < 2 && spacing > 0.01) spacing = spacing/10;
+		var lng = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lng()/spacing)*spacing;
+		var east = GeoUtil.fromWGS84(bounds.getNorthEast()).lng();
+		while(lng < east) {
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat, lng))).x;
+			if(offset > 26 && offset < pymax - 26) {
+				var blabel = jQuery('<div style="position: absolute; bottom: 14px">' + createDDText(lng) + '</div>');
+				this.borders[1].div.append(blabel);
+				blabel.css({left: Math.round(offset - blabel.width()/2) + "px"});
+				var btick = jQuery('<div style="position: absolute; bottom: 0; height: 14px; border-left: 1px solid black"></div>');
+				this.borders[1].div.append(btick);
+				btick.css({left: offset + "px"});
+	
+				var blabel = jQuery('<div style="position: absolute; top: 14px">' + createDDText(lng) + '</div>');
+				this.borders[3].div.append(blabel);
+				blabel.css({left: Math.round(offset - blabel.width()/2) + "px"});
+				var btick = jQuery('<div style="position: absolute; top: 0; height: 14px; border-left: 1px solid black"></div>');
+				this.borders[3].div.append(btick);
+				btick.css({left: offset + "px"});
+			}
+			lng = lng + spacing;
+		}
+	} else {
+		// spacing is in minutes
+		var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())*60;
+		var spacing = 0.5;
+		if(spacing*pxmax/200 < span) spacing = 1;
+		if(spacing*pxmax/200 < span) spacing = 2;
+		if(spacing*pxmax/200 < span) spacing = 5;
+		if(spacing*pxmax/200 < span) spacing = 10;
+		if(spacing*pxmax/200 < span) spacing = 20;
+		if(spacing*pxmax/200 < span) spacing = 60;
+		if(spacing*pxmax/200 < span) spacing = 300;
+		var decDMSpacing = {300: 60, 60: 20, 20: 10, 10: 5, 5: 2, 2: 1, 1: 0.5};
+		if(span/spacing < 2 && spacing > 0.5) spacing = decDMSpacing[spacing];
+
+		var lng = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lng()*60/spacing)*spacing;
+		var east = GeoUtil.fromWGS84(bounds.getNorthEast()).lng()*60;
+		while(lng < east) {
+			var rlng = lng/60;
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat, rlng))).x;
+			if(offset > 26 && offset < pymax - 26) {
+				var blabel = jQuery('<div style="position: absolute; bottom: 14px">' + createDMText(rlng) + '</div>');
+				this.borders[1].div.append(blabel);
+				blabel.css({left: Math.round(offset - blabel.width()/2) + "px"});			
+				var btick = jQuery('<div style="position: absolute; bottom: 0; height: 14px; border-left: 1px solid black"></div>');
+				this.borders[1].div.append(btick);
+				btick.css({left: offset + "px"});
+	
+				var blabel = jQuery('<div style="position: absolute; top: 14px">' + createDMText(rlng) + '</div>');
+				this.borders[3].div.append(blabel);
+				blabel.css({left: Math.round(offset - blabel.width()/2) + "px"});			
+				var btick = jQuery('<div style="position: absolute; top: 0; height: 14px; border-left: 1px solid black"></div>');
+				this.borders[3].div.append(btick);
+				btick.css({left: offset + "px"});
+				}
+			
+			lng = lng + spacing;
 		}
 	}
-
-	var multiplier = 6000;
-	if(this.style.latlng == "DD") multiplier = 1000;
-	var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())*60;	
-	var spacing = computeSpacing(span, multiplier);
-	var lat = GeoUtil.fromWGS84(bounds.getSouthWest()).lat();
-	var lng = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lng()*multiplier/spacing)*spacing;
-	var east = GeoUtil.fromWGS84(bounds.getNorthEast()).lng()*multiplier;
-	while(lng < east) {
-		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat, lng/multiplier))).x;
-		var point = new GPoint(offset, pymax-2);
-		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lng/multiplier), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
-		this.map.addOverlay(label);
-		this.text.push(label);
-		lng = lng + spacing;
-	}
+	
 
 	var span = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())*60;
-	var spacing = computeSpacing(span, multiplier);
-	var lng = GeoUtil.fromWGS84(bounds.getSouthWest()).lng();
-	var lat = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lat()*multiplier/spacing)*spacing;
-	var north = GeoUtil.fromWGS84(bounds.getNorthEast()).lat()*multiplier;
-	while(lat < north) {
-		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat/multiplier, lng))).y;
-		var point = new GPoint(0, offset);
-		var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(lat/multiplier), null, null, new GSize(0,-0.5));
-		this.map.addOverlay(label);
-		this.text.push(label);
-		lat = lat + spacing;
+	if(this.style.latlng == "DD") {
+		// spacing is in degrees
+		var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng());
+		var spacing = 0.01;
+		while(spacing*pxmax/200 < span) spacing=spacing*10;
+		if(span/spacing < 2 && spacing > 0.01) spacing = spacing/10;
+		var lat = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lat()/spacing)*spacing;
+		var north = GeoUtil.fromWGS84(bounds.getNorthEast()).lat();
+		while(lat < north) {
+			lat = lat + spacing;
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(lat, lng))).y;
+			if(offset > 26 && offset < pymax - 26) {
+
+				var blabel = jQuery('<div style="position: absolute; right: 0px; -webkit-transform: rotate(270deg); -moz-transform: rotate(90deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1)">' + createDDText(lat) + '</div>');
+				this.borders[0].div.append(blabel);
+				blabel.css({top: Math.round(offset - blabel.height()/2) + "px", right: -1*(this._computeRotationalOffset(blabel) - 14) + "px"});
+				var btick = jQuery('<div style="position: absolute; top: 0; right: 0px; width: 12px; border-top: 1px solid black"></div>');
+				this.borders[0].div.append(btick);
+				btick.css({top: offset + "px"});
+	
+				var blabel = jQuery('<div style="position: absolute; left: 0px; -webkit-transform: rotate(90deg); -moz-transform: rotate(90deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1)">' + createDDText(lat) + '</div>');
+				this.borders[2].div.append(blabel);
+				blabel.css({top: Math.round(offset - blabel.height()/2) + "px", left: -1*(this._computeRotationalOffset(blabel) - 14) + "px"});
+				var btick = jQuery('<div style="position: absolute; top: 0; left: 0px; width: 12px; border-top: 1px solid black"></div>');
+				this.borders[2].div.append(btick);
+				btick.css({top: offset + "px"});
+			}
+		}
+	} else {
+		// spacing is in minutes
+		var span = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())*60;
+		var spacing = 0.5;
+		if(spacing*pxmax/200 < span) spacing = 1;
+		if(spacing*pxmax/200 < span) spacing = 2;
+		if(spacing*pxmax/200 < span) spacing = 5;
+		if(spacing*pxmax/200 < span) spacing = 10;
+		if(spacing*pxmax/200 < span) spacing = 20;
+		if(spacing*pxmax/200 < span) spacing = 60;
+		if(spacing*pxmax/200 < span) spacing = 300;
+		var decDMSpacing = {300: 60, 60: 20, 20: 10, 10: 5, 5: 2, 2: 1, 1: 0.5};
+		if(span/spacing < 2 && spacing > 0.5) spacing = decDMSpacing[spacing];
+
+		var lat = Math.round(GeoUtil.fromWGS84(bounds.getSouthWest()).lat()*60/spacing)*spacing;
+		var north = GeoUtil.fromWGS84(bounds.getNorthEast()).lat()*60;
+		while(lat < north) {
+			var rlat = lat/60;
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(new GLatLng(rlat, lng))).y;
+
+			if(offset > 26 && offset < pxmax - 26) {
+				var blabel = jQuery('<div style="position: absolute; right: 0px; -webkit-transform: rotate(270deg); -moz-transform: rotate(90deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1)">' + createDMText(rlat) + '</div>');
+				this.borders[0].div.append(blabel);
+				blabel.css({top: Math.round(offset - blabel.height()/2) + "px", right: -1*(this._computeRotationalOffset(blabel) - 14) + "px"});
+				var btick = jQuery('<div style="position: absolute; top: 0; right: 0px; width: 12px; border-top: 1px solid black"></div>');
+				this.borders[0].div.append(btick);
+				btick.css({top: offset + "px"});
+
+				var blabel = jQuery('<div style="position: absolute; left: 0px; -webkit-transform: rotate(90deg); -moz-transform: rotate(90deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1)">' + createDMText(rlat) + '</div>');
+				this.borders[2].div.append(blabel);
+				blabel.css({top: Math.round(offset - blabel.height()/2) + "px", left: -1*(this._computeRotationalOffset(blabel) - 14) + "px"});
+				var btick = jQuery('<div style="position: absolute; top: 0; left: 0px; width: 12px; border-top: 1px solid black"></div>');
+				this.borders[2].div.append(btick);
+				btick.css({top: offset + "px"});
+			}
+			lat = lat + spacing;
+		}
 	}
+		
 }
 
 org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm, primary, zone) {
@@ -1048,7 +1211,7 @@ org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm
 	this.map.addOverlay(overlay);
 }
 
-org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacing, right) {
+org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacing, right, markboth) {
 	var bounds = this.map.getBounds();
 	var screenSW = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getSouthWest()), zone);
 	var screenNE = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(bounds.getNorthEast()), zone);
@@ -1059,7 +1222,13 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	var west = GeoUtil.getWestBorder(zone);
 
 	function createText(meters) {
-		return "<div style=\"font-size: smaller; color:#0000FF; background: #FFFFFF\"><b>" + Math.round(meters/1000) + "</b><span style=\"font-size: smaller\">000</span></div>";
+		var major = Math.floor(meters/1000);
+		var minor = meters - major*1000;
+		if(minor == 0) minor = "000";
+		var top = Math.floor(major/100);
+		var bottom = major - top*100;
+		if(bottom < 10) bottom = "0" + bottom;
+		return "<div style=\"height: 12px; font-size: 12px; color:#0000FF; background-color: white\"><span style=\"font-size: 10px\">" + top + "</span>" + bottom + "<span style=\"font-size: 10px\">" + minor + "</span></div>";
 	}
 
 	var easting = Math.round(sw.e / spacing)  * spacing;
@@ -1085,12 +1254,26 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 			}
 
 			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: screenSW.n, zone: zone}))).x;
-			if(0 < offset && offset < pxmax && easting % 1000 == 0) {
-				var point = new GPoint(offset, pymax-2);
-				var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
-				this.map.addOverlay(label);
-				this.text.push(label);
+			if(26 < offset && offset < pxmax -26 && easting % 200 == 0) {
+				if(this.showborder) {
+					var blabel = jQuery('<div style="position: absolute; top: 0; z-index: 1">' + createText(easting) + '</div>');
+					this.borders[3].div.append(blabel);
+					blabel.css({left: Math.round(offset - blabel.width()/2) + "px"});
+				} else {
+					var point = new GPoint(offset, pymax-2);
+					var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(easting), "-webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);", null, new GSize(-0.5,-0.5));
+					this.map.addOverlay(label);
+					this.text.push(label);
+				}
 			}
+
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: easting, n: screenNE.n, zone: zone}))).x;
+			if(0 < offset && offset < pxmax && easting % 200 == 0) {
+				var blabel = jQuery('<div style="position: absolute; bottom: 0; z-index: 1">' + createText(easting) + '</div>');
+				this.borders[1].div.append(blabel);
+				blabel.css({left: Math.round(offset - blabel.width()/2) + "px"});
+			}
+			
 		}
 		easting = easting + spacing;
 	}
@@ -1101,15 +1284,70 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 			this._drawGridLine(new UTM(sw.e, northing, zone), new UTM(ne.e, northing, zone), (northing % 1000 == 0), zone);
 		}
 
-		var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: screenSW.e, n: northing, zone: zone}))).y;
-		if(0 < offset && offset < pymax && northing % 1000 == 0 && !right) {
-			var point = new GPoint(0, offset);
-			var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(northing), null, null, new GSize(0,-0.5));
-			this.map.addOverlay(label);
-			this.text.push(label);
+		if(!right) {
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: screenSW.e, n: northing, zone: zone}))).y;
+			if(26 < offset && offset < pymax - 26 && northing % 200 == 0) {
+				if(this.showborder) {
+					var blabel = jQuery('<div style="position: absolute; right: 0px; z-index: 1; -webkit-transform: rotate(270deg); -moz-transform: rotate(270deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3)">' + createText(northing) + '</div>');
+					this.borders[0].div.append(blabel);
+					blabel.css({top: Math.round(offset - blabel.height()/2) + "px", right: -1*(this._computeRotationalOffset(blabel) - 2) + "px"});
+				} else {
+					var point = new GPoint(0, offset);
+					var label = new ELabel(this.map.fromContainerPixelToLatLng(point), createText(northing), null, null, new GSize(0,-0.5));
+					this.map.addOverlay(label);
+					this.text.push(label);
+				}				
+			}
+		}
+		if((right || markboth) && this.showborder) {
+			var offset = this.map.fromLatLngToContainerPixel(GeoUtil.toWGS84(GeoUtil.UTMToGLatLng({e: screenNE.e, n: northing, zone: zone}))).y;
+			if(26 < offset && offset < pymax - 26 && northing % 200 == 0) {
+				var blabel = jQuery('<div style="position: absolute; left: 0px; z-index: 1; -webkit-transform: rotate(90deg); -moz-transform: rotate(90deg); filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1)">' + createText(northing) + '</div>');
+				this.borders[2].div.append(blabel);
+				blabel.css({top: Math.round(offset - blabel.height()/2) + "px", left: -1*(this._computeRotationalOffset(blabel) - 2) + "px"});
+			}
 		}
 		northing = northing + spacing;
 	}
+}
+
+org.sarsoft.MapBorderControl = function(edge) {
+	this.edge = edge;
+}
+
+org.sarsoft.MapBorderControl.prototype = new GControl();
+org.sarsoft.MapBorderControl.prototype.printable = function() { return true; }
+org.sarsoft.MapBorderControl.prototype.selectable = function() { return false; }
+org.sarsoft.MapBorderControl.prototype.getDefaultPosition = function() { 
+	if(this.edge == 0) return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(0, 0));
+	if(this.edge == 1) return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(0, 0));
+	if(this.edge == 2) return new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(0, 0));
+	if(this.edge == 3) return new GControlPosition(G_ANCHOR_BOTTOM_LEFT, new GSize(0, 0));
+}
+
+org.sarsoft.MapBorderControl.prototype.initialize = function(map) {
+	var that = this;
+	this.map = map;
+	
+	var size = '26px';
+	
+	this.div = jQuery('<div style="background-color: white; position: relative"></div>');
+	if(this.edge == 0) this.div.css({width: size, height: '100%'});
+	if(this.edge == 1) this.div.css({width: '100%', height: size});
+	if(this.edge == 2) this.div.css({width: size, height: '100%'});
+	if(this.edge == 3) this.div.css({width: '100%', height: size});
+
+	if(map._zoomControl != null) {
+		this.div.insertBefore(map._zoomControl);
+	} else {
+		this.div.insertBefore(map.getContainer().children()[0]);
+	}
+
+	return this.div[0];
+}
+
+org.sarsoft.MapBorderControl.prototype.clear = function() {
+	this.div.empty();
 }
 
 org.sarsoft.DNTree = function(container, label) {
