@@ -896,37 +896,38 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 	
 org.sarsoft.controller.MapToolsController.prototype.measure = function(point, polygon) {
 	var that = this;
-	var poly = (polygon) ? new GPolygon([], "#000000",2,1,"#000000",0.2) : new GPolyline([], "#000000", 2, 1);
 	this.imap.lockContextMenu();
-	this.imap.map.addOverlay(poly);
-	poly.enableDrawing();
-	poly.enableDrawing();
+
+	this.imap.drawingManager.setOptions({polygonOptions: {strokeColor: "#000000", strokeOpacity: 1, strokeWeight: 2, fillColor: "#000000", fillOpacity: 0.2},
+		polylineOptions: {strokeColor: "#000000", strokeOpacity: 1, strokeWeight: 1}});
+	this.imap.drawingManager.setDrawingMode(polygon ? google.maps.drawing.OverlayType.POLYGON : google.maps.drawing.OverlayType.POLYLINE);
 	
+	var handler = function(poly) {
+		google.maps.event.removeListener(that.complete);
+		that.imap.unlockContextMenu();
+		$(document).unbind("keydown", that.fn);
+		that.imap.drawingManager.setOptions({drawingMode: null});
+		var path = that.imap._getPath(poly);
+		poly.setMap(null);
+		if(polygon) {
+			var area = google.maps.geometry.spherical.computeArea(path);
+			that.alertDiv.innerHTML = "Area is " + (Math.round(area/1000)/1000) + " sq km / " + (Math.round(area/1000*0.3861)/1000) + " sq mi";
+		} else {
+			var length = google.maps.geometry.spherical.computeLength(path);
+			that.alertDiv.innerHTML = "Distance is " + (Math.round(length)/1000) + " km / " + (Math.round(length*0.62137)/1000) + " mi";
+		}
+		that.dlg.show();
+	}
+
 	this.fn = function(e) {
 		if(e.which == 27) {
-			$(document).unbind("keydown", that.fn);
-			poly.disableEditing();
-			GEvent.trigger(poly, "endline");
+			that.imap.drawingManager.setOptions({drawingMode: null});
 		}
 	}
 	$(document).bind("keydown", this.fn);
+	
+	this.complete = google.maps.event.addListener(this.imap.drawingManager, polygon ? "polygoncomplete" : "polylinecomplete", function(poly) {
+		window.setTimeout(function() { handler(poly) }, 100);
+	});
 
-	GEvent.addListener(poly, "endline", function() {
-		$(document).unbind("keydown", that.fn);
-		that.imap.unlockContextMenu();
-		if(polygon) {
-			var area = poly.getArea();
-			that.alertDiv.innerHTML = "Area is " + (Math.round(area/1000)/1000) + " sq km / " + (Math.round(area/1000*0.3861)/1000) + " sq mi";
-		} else {
-			var length = poly.getLength();
-			that.alertDiv.innerHTML = "Distance is " + (Math.round(length)/1000) + " km / " + (Math.round(length*0.62137)/1000) + " mi";
-		}
-		that.imap.map.removeOverlay(poly);
-		that.dlg.show();
-	});
-	GEvent.addListener(poly, "cancelline", function() {
-		$(document).unbind("keydown", that.fn);
-		that.imap.unlockContextMenu();
-		that.imap.map.removeOverlay(poly);
-	});
 }
