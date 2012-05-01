@@ -32,7 +32,7 @@ org.sarsoft.EnhancedGMap.nativeAliases = {};
 org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	var ts = config.tilesize ? config.tilesize : 256;
 	if(config.type == "TILE"){
-		var type = new google.maps.ImageMapType({alt: "", maxZoom: config.maxresolution, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
+		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
 			var url = config.template;
 			if(zoom > config.maxresolution) {
 				url = '/resource/imagery/tilecache/' + config.name + '/{Z}/' + '/{X}/' + '{Y}.png';
@@ -42,6 +42,7 @@ org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
 	    type._alias = config.alias;
+	    type._maxZoom = config.maxresolution;
 	    return type;
 	} else if(config.type == "WMS") {
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: config.maxresolution, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
@@ -61,6 +62,7 @@ org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
 	    type._alias = config.alias;
+	    type._maxZoom = config.maxresolution;
 	    return type;
 	}
 }
@@ -342,12 +344,8 @@ OverlayDropdownMapControl.prototype.resetMapTypes = function(type) {
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
-	// TODO this gets called too many times on intial page load
 	this.map.overlayMapTypes.clear();
 
-	this.baseName = base;
-	this.overlayName = overlay;
-	this.opacity = opacity;
 	var _overlayNative = false;
 	var _baseNative = false;
 	if(org.sarsoft.EnhancedGMap.nativeAliases[base] != null) {
@@ -358,37 +356,36 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		_overlayNative = true;
 		overlay = org.sarsoft.EnhancedGMap.nativeAliases[overlay];
 	}
-
-	var realBase = base;
-	var realOverlay = overlay;
-	var realOpacity = opacity*1;
-	if(_overlayNative || (!_baseNative && overlay.getMaximumResolution != null && base.getMaximumResolution() > overlay.getMaximumResolution() && !overlay._alphaOverlay && opacity > 0)) {
-		// google maps doesn't check the overlays' min and max resolutions
-		realOverlay = base;
-		realBase = overlay;
-		realOpacity = 1-opacity;
+	if(_overlayNative && !_baseNative) {
+		this.updateMap(overlay, base, 1-opacity, alphaOverlays);
+		return;
 	}
 
+	opacity = opacity*1;
+	this.baseName = base;
+	this.overlayName = overlay;
+	this.opacity = opacity;
+	var baseType = this.map.mapTypes.get(base);
+	var overlayType = this.map.mapTypes.get(overlay);
+
 	// set base type and create new overlays
-	if(this.map.mapTypes.get(realBase) != null && this.map.mapTypes.get(realBase).setOpacity != null) this.map.mapTypes.get(realBase).setOpacity(1);
-	this.map.setMapTypeId(realBase);
+	if(baseType != null && baseType.setOpacity != null) baseType.setOpacity(1);
+	this.map.setMapTypeId(base);
 	this.alphaOverlays = null;
 
 	var infoString = "";
-	var _info = this.map.mapTypes.get(base) != null ? this.map.mapTypes.get(base)._info : "";
+	var _info = baseType != null ? baseType._info : "";
 	if(_info != null && _info.length > 0) infoString += _info + ". ";
 	
-	if(realOpacity > 0) {
-		var _info = this.map.mapTypes.get(overlay)._info;
-		if(_info != null && _info.length > 0 && base != overlay && opacity > 0) infoString += _info + ". ";		
-		if(overlay.angle != null) {
+	if(opacity > 0) {
+		if(overlayType._info != null && overlayType._info.length > 0 && base != overlay && opacity > 0) infoString += overlayType._info + ". ";		
+		if(overlayType.angle != null) {
 			// TODO test georef overlays
 			this._overlays[0] = new GeoRefImageOverlay(new google.maps.Point(1*overlay.originx, 1*overlay.originy), new google.maps.LatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new google.maps.Size(1*overlay.width, 1*overlay.height), opacity);
 			this.map.addOverlay(this._overlays[0]);
 		} else {
-			var ot = this.map.mapTypes.get(realOverlay);
-			if(ot != null && ot.setOpacity != null) ot.setOpacity(realOpacity);
-			this.map.overlayMapTypes.push(ot);
+			if(overlayType != null && overlayType.setOpacity != null) overlayType.setOpacity(opacity);
+			this.map.overlayMapTypes.push(overlayType);
 		}
 	}
 	if(alphaOverlays != null) {
@@ -442,6 +439,22 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		this.map._imap.setMapInfo("org.sarsoft.OverlayDropdownMapControl", 0, null);
 	}
 
+	// set map zoom limits
+	this.checkMaxZoom();
+}
+
+OverlayDropdownMapControl.prototype.checkMaxZoom = function() {
+	var baseType = this.map.mapTypes.get(this.map.getMapTypeId());
+	if(org.sarsoft.EnhancedGMap._overzoom || baseType == null || baseType.setOpacity == null) {
+		this.map.setOptions({maxZoom: null});
+	} else {
+		var z = baseType._maxZoom;
+		for(var i = 0; i < this.map.overlayMapTypes.getLength(); i++) {
+			var type = this.map.overlayMapTypes.getAt(i);
+			if(type != null && type._maxZoom != null) z = Math.min(z, type._maxZoom);
+		}
+		this.map.setOptions({maxZoom: z});
+	}
 }
 
 org.sarsoft.MapMessageControl = function(map) {
@@ -1562,7 +1575,7 @@ org.sarsoft.DataNavigator = function(imap) {
 	var overzoomcb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Allow Zooming Beyond Default Map Resolutions</div>').appendTo(cbcontainer)).change(function() {
 		org.sarsoft.EnhancedGMap._overzoom = overzoomcb[0].checked;
 		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "overzoom", org.sarsoft.EnhancedGMap._overzoom);
-		imap.map.setZoom(imap.map.getZoom());
+		imap.map._overlaydropdownmapcontrol.checkMaxZoom();
 	});
 	
 	this.defaults.browser.body.css('display', 'none');
@@ -1574,6 +1587,7 @@ org.sarsoft.DataNavigator = function(imap) {
 	swz[0].checked = (config.scrollwheelzoom == false ? false : true);
 	sb[0].checked = config.scalebar;
 	org.sarsoft.EnhancedGMap._overzoom = (config.overzoom == false ? false : true);
+	imap.map._overlaydropdownmapcontrol.checkMaxZoom();
 	overzoomcb[0].checked = org.sarsoft.EnhancedGMap._overzoom;
 
 	if(org.sarsoft.tenantid == null) {
