@@ -51,7 +51,7 @@ org.sarsoft.Loader.queue(function() {
 
 	imap.registered["org.sarsoft.MapFindWidget"].setState(true);
 	
-	map.checkResize();
+	google.maps.event.trigger(map, "resize");
 
 });
 }

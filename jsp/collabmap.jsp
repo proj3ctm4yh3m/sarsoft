@@ -22,7 +22,7 @@ org.sarsoft.Loader.queue(function() {
     map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
   </c:when>
   <c:otherwise>
-   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), new GLatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14);
+   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), new google.maps.LatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14);
   </c:otherwise>
   </c:choose>
   var embed = !(window==top);
@@ -90,7 +90,7 @@ org.sarsoft.Loader.queue(function() {
 	
 	imap.addMenuItem(leaveDD.container, 40);
 	
-	map.checkResize();
+	google.maps.event.trigger(map, "resize");
 	
   }
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});

@@ -230,8 +230,7 @@ public abstract class JSONBaseController {
 			header = header + "</script>\n";
 				
 			if("google".equals(this.mapViewer)) {
-				return header + "<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=" + 
-				getProperty("google.maps.apikey." + RuntimeProperties.getServerName()) + "\" type=\"text/javascript\"></script>" + this.header;
+				return header + "<script src=\"http://maps.googleapis.com/maps/api/js?sensor=false&libraries=geometry,drawing\" type=\"text/javascript\"></script>" + this.header;
 			} else {
 				return header + "<script src=\"/static/js/openlayers.js\"></script>\n" +
 				"<script src=\"/static/js/gmapolwrapper.js\"></script>" + this.header;

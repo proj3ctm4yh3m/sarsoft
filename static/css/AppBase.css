@@ -18,6 +18,10 @@ body, html {
 	height: 100%;
 }
 
+.underlineOnHover:hover {
+	text-decoration: underline;
+}
+
 .pre {
 	white-space: pre-line;
 }

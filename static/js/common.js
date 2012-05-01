@@ -671,7 +671,7 @@ org.sarsoft.ToggleControl = function(label, tooltip, handler, states) {
 	this.node = toggle;
 	this.label = label;
 
-	GEvent.addDomListener(toggle, "click", function() {
+	$(toggle).click(function() {
 		for(var i = 0; i < states.length; i++) {
 			if(states[i].value == that.state) {
 				var j = i+1;

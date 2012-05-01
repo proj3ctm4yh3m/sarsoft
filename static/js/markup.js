@@ -165,7 +165,7 @@ org.sarsoft.view.MarkerLocationForm.prototype.updateCurrentLocation = function()
 }
 
 org.sarsoft.view.MarkerLocationForm.prototype.write = function(wpt) {
-	this.value = new GLatLng(wpt.lat, wpt.lng);
+	this.value = new google.maps.LatLng(wpt.lat, wpt.lng);
 	this.currentSelect.val("utm");
 	this.updateCurrentLocation();
 	this.locationEntryForm.clear();
@@ -434,7 +434,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			jQuery('<span style="color: green; cursor: pointer">+ New Marker</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(mtree.body)).click(function() {
 				var center = that.imap.map.getCenter();
     			that.markerDlg.entityform.write({url: "#FF0000"});
-    			that.markerDlg.point=that.imap.map.fromLatLngToContainerPixel(center);
+    			that.markerDlg.point=that.imap.projection.fromLatLngToContainerPixel(center);
     			that.markerDlg.show();
 			});
 
@@ -442,14 +442,16 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=false;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});
-			    that.shapeDlg.point=new GPoint(Math.round(that.imap.map.getSize().width/2), Math.round(that.imap.map.getSize().height/2));
+			    var div = $(that.imap.map.getDiv());
+			    that.shapeDlg.point=new google.maps.Point(Math.round(div.width()/2), Math.round(div.height()/2));
 			    that.shapeDlg.show();
 			});
 			jQuery('<div style="float: left; padding-top: 1em; cursor: pointer; color: green; font-size: 120%">+ New Polygon</div>').appendTo(stree.body).click(function() {
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=true;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});
-			    that.shapeDlg.point=new GPoint(Math.round(that.imap.map.getSize().width/2), Math.round(that.imap.map.getSize().height/2));
+			    var div = $(that.imap.map.getDiv());
+			    that.shapeDlg.point=new google.maps.Point(Math.round(div.width()/2), Math.round(div.height()/2));
 			    that.shapeDlg.show();
 			});
 		}
@@ -476,7 +478,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 					fn();
 				}
 			} else {
-				var wpt = this.imap.map.fromContainerPixelToLatLng(new GPoint(that.markerDlg.point.x, that.markerDlg.point.y));
+				var wpt = this.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(that.markerDlg.point.x, that.markerDlg.point.y));
 				marker.position = {lat: wpt.lat(), lng: wpt.lng()};
 				that.markerDAO.create(function(obj) {
 					that.refreshMarkers([obj]);
@@ -570,7 +572,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.markerDAO.loadAll(function(markers) {
 		that.refreshMarkers(markers);
 		for(var i = 0; i < markers.length; i++) {
-			that.imap.growInitialMap(new GLatLng(markers[i].position.lat, markers[i].position.lng));
+			that.imap.growInitialMap(new google.maps.LatLng(markers[i].position.lat, markers[i].position.lng));
 		}
 	});		
 	this.markerDAO.mark();
@@ -579,8 +581,8 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		that.refreshShapes(shapes);
 		for(var i = 0; i < shapes.length; i++) {
 			var bb = shapes[i].way.boundingBox;
-			that.imap.growInitialMap(new GLatLng(bb[0].lat, bb[0].lng));
-			that.imap.growInitialMap(new GLatLng(bb[1].lat, bb[1].lng));
+			that.imap.growInitialMap(new google.maps.LatLng(bb[0].lat, bb[0].lng));
+			that.imap.growInitialMap(new google.maps.LatLng(bb[1].lat, bb[1].lng));
 		}
 	});
 	this.shapeDAO.mark();	
@@ -719,7 +721,7 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddMarker = function(mark
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.markers[marker.id]);
 	line.append('<img style="vertical-align: middle; padding-right: 0.5em; height: 16px; width: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>');
 	jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(marker.label) + '</span>').appendTo(line).click(function() {
-		that.imap.map.setCenter(new GLatLng(marker.position.lat, marker.position.lng));
+		that.imap.map.setCenter(new google.maps.LatLng(marker.position.lat, marker.position.lng));
 	});
 	
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
@@ -754,9 +756,9 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	} else if(marker.url.indexOf('#') == 0) {
 		config.color = marker.url;
 	} else if(marker.url.indexOf('/') == -1 && marker.url.indexOf('.') == -1) {
-		config.icon = org.sarsoft.MapUtil.createIcon(20, org.sarsoft.imgPrefix + "/icons/" + marker.url + ".png");
+		config.icon = org.sarsoft.MapUtil.createImage(20, org.sarsoft.imgPrefix + "/icons/" + marker.url + ".png");
 	} else {
-		config.icon = org.sarsoft.MapUtil.createIcon(20, marker.url);
+		config.icon = org.sarsoft.MapUtil.createImage(20, marker.url);
 	}
 	this.imap.addWaypoint(marker.position, config, tooltip, org.sarsoft.htmlescape(marker.label));
 	this.DNAddMarker(marker);
@@ -802,7 +804,7 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddShape = function(shape
 	line.append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape));
 
 	jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(shape.label) + '</span>').appendTo(line).click(function() {
-		that.imap.setBounds(new GLatLngBounds(new GLatLng(shape.way.boundingBox[0].lat, shape.way.boundingBox[0].lng), new GLatLng(shape.way.boundingBox[1].lat, shape.way.boundingBox[1].lng)));
+		that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(shape.way.boundingBox[0].lat, shape.way.boundingBox[0].lng), new google.maps.LatLng(shape.way.boundingBox[1].lat, shape.way.boundingBox[1].lng)));
 	});
 	
 	
