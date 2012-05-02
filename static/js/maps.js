@@ -164,6 +164,7 @@ OverlayDropdownMapControl.prototype.addBaseType = function(alias, group) {
 	var type = this.map.mapTypes.get(alias);
 	if(type == null) {
 		alert(alias);
+		return;
 	}
 	this.typeDM.addItem(type.name, alias, group);
 	this.overlayDM.addItem(type.name, alias, group);
@@ -266,21 +267,20 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 	if(type._alias != null && type._alias.indexOf("slp") == 0) this.swapConfigurableAlphaLayer(idx, "s-11111111");
 }
 
-// TODO: swapConfigurableAlphaLayer needs updating
-OverlayDropdownMapControl.prototype.swapConfigurableAlphaLayer = function(idx, cfgstr) {
-	return;
-	this.map.removeMapType(this.alphaOverlayTypes[idx]);
+OverlayDropdownMapControl.prototype.getConfigFromAlias = function(alias) {
 	for(i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		if(org.sarsoft.EnhancedGMap.defaultMapTypes[i].alias == this.alphaOverlayTypes[idx]._alias) {
-			var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-			var cfg = {alias: type.alias, alphaOverlay: true, copyright: type.copyright, info: type.info, maxresolution: type.maxresolution, minresolution: type.minresolution, name: type.name, png: type.png, type: type.type}
-			cfg.template = type.template.replace(/{V}/,cfgstr);
-			var atype = org.sarsoft.EnhancedGMap.createMapType(cfg);
-			atype._cfgvalue = cfgstr;
-			this.map.addMapType(atype);
-			this.alphaOverlayTypes[idx] = atype;
+		var cfg = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+		if(cfg.alias == alias) {
+			return cfg;
 		}
 	}
+}
+
+OverlayDropdownMapControl.prototype.swapConfigurableAlphaLayer = function(idx, cfgstr) {
+	var cfg = this.getConfigFromAlias(this.alphaOverlayTypes[idx]);
+	if(cfg._vtemplate == null) cfg._vtemplate = cfg.template;
+	cfg.template = cfg._vtemplate.replace(/{V}/,cfgstr);
+	this.map.mapTypes.get(this.alphaOverlayTypes[idx])._cfgvalue = cfgstr;
 }
 
 OverlayDropdownMapControl.prototype.handleLayerChange = function() {
@@ -388,22 +388,24 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 			this.map.overlayMapTypes.push(overlayType);
 		}
 	}
-	if(alphaOverlays != null) {
+	if(alphaOverlays != null && alphaOverlays.length > 0) {
 		this.alphaOverlays="";
 		for(var i = 0; i < alphaOverlays.length; i++) {
-			var at = this.map.mapTypes.get(alphaOverlays[i]);
-			this.map.overlayMapTypes.push(at);
 			this.alphaOverlays = this.alphaOverlays + alphaOverlays[i] + ((i < alphaOverlays.length - 1) ? "," : "");
-			if(at._info != null && at._info.length > 0) {
+			if(alphaOverlays[i].indexOf("_") > 0) {
+				var at = this.map.mapTypes.get(alphaOverlays[i].substr(0, alphaOverlays[i].indexOf("_")));
+				this.map.overlayMapTypes.push(at);
 				if(at._alias == "slp") {
 					if(at._cfgvalue != null && at._cfgvalue.indexOf("s") == 0) {
 						infoString += '<span style="color: green; margin-left: 5px">20&deg;-27&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">28&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span>';
 					} else {
 						infoString += "Shading 28&deg;-59&deg;.  Dots 35&deg;-45&deg;";
 					}
-				} else {
-					infoString += at._info + ". ";
 				}
+			} else {
+				var at = this.map.mapTypes.get(alphaOverlays[i]);
+				this.map.overlayMapTypes.push(at);
+				infoString += at._info + ". ";
 			}
 		}
 	}
@@ -424,7 +426,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 				this.alphaOverlayBoxes[i].checked=true;
 				if(cfg != null) {
 					cfg.css('display', 'block');
-					cfg.readCfgValue(this.alphaOverlayTypes[i]._cfgvalue)
+					cfg.readCfgValue(this.map.mapTypes.get(this.alphaOverlayTypes[i])._cfgvalue);
 				}
 			}
 		}
@@ -2374,13 +2376,36 @@ org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 		config.overlay = this.map._overlaydropdownmapcontrol.overlayName;
 		config.opacity = this.map._overlaydropdownmapcontrol.opacity;
 		config.alphaOverlays = this.map._overlaydropdownmapcontrol.alphaOverlays;
+		if(config.alphaOverlays != null && config.alphaOverlays.length > 0) {
+			ao = config.alphaOverlays.split(",");
+			for(var i = 0; i < ao.length; i++) {
+				var type = this.map.mapTypes.get(ao[i]);
+				if(type._cfgvalue != null) ao[i] = ao[i] + "_" + type._cfgvalue;
+			}
+			config.alphaOverlays = ao.join(",");
+		}
 	}
 	return config;
 }
 
 org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 	if(config == null) return;
-	this.setMapLayers(config.base, config.overlay, config.opacity, config.alphaOverlays);
+	var alphaOverlays = "";
+	var names = [];
+	if(config.alphaOverlays != null && config.alphaOverlays.length > 0) {
+		names = config.alphaOverlays.split(",");
+		for (var i = 0; i < names.length; i++) {
+			if(names[i].indexOf("_") >= 0) {
+				var parts = names[i].split("_");
+				names[i] = parts[0];
+				var cfg = this.map._overlaydropdownmapcontrol.getConfigFromAlias(parts[0]);
+				if(cfg._vtemplate == null) cfg._vtemplate = cfg.template;
+				cfg.template = cfg._vtemplate.replace(/{V}/,parts[1]);
+				this.map.mapTypes.get(parts[0])._cfgvalue = parts[1];
+			}
+		}
+	}
+	this.setMapLayers(config.base, config.overlay, config.opacity, names);
 }
 
 org.sarsoft.InteractiveMap.prototype._addBaseLayerIfNecessary = function(alias) {
@@ -2393,28 +2418,21 @@ org.sarsoft.InteractiveMap.prototype._addBaseLayerIfNecessary = function(alias) 
 org.sarsoft.InteractiveMap.prototype._addAlphaLayerIfNecessary = function(alias) {
 	var types = this.map._overlaydropdownmapcontrol.alphaOverlayTypes;
 	for(var i = 0; i < types.length; i++) {
-		if(types[i].name == name) return;
+		if(types[i] == alias) return;
 	}
 	this.map._overlaydropdownmapcontrol.addAlphaType(alias);
 }
 
 
 org.sarsoft.InteractiveMap.prototype.setMapLayers = function(base, overlay, opacity, alphaOverlays) {
+	var names = null;
 	var types = this.map._overlaydropdownmapcontrol.types;
 	opacity = opacity ? 1*opacity : 0;
 	if(typeof overlay == "undefined") overlay = base;
 	this._addBaseLayerIfNecessary(base, false);
 	this._addBaseLayerIfNecessary(overlay, false);
-	if(alphaOverlays != null) {
-		var names = alphaOverlays.split(",");
-		for (var j = 0; j < names.length; j++) {
-			if(name.indexOf("_") >= 0) {
-				var parts = names[j].split("_");
-				this._addAlphaLayerIfNecessary(parts[0]);
-			} else {
-				this._addAlphaLayerIfNecessary(names[j]);
-			}
-		}
+	if(alphaOverlays != null) for (var i = 0; i < alphaOverlays.length; i++) {
+		this._addAlphaLayerIfNecessary(alphaOverlays[i]);
 	}
 	if(overlay == null) overlay = base;
 	if(base != null) this.map._overlaydropdownmapcontrol.updateMap(base, overlay, opacity, alphaOverlays);
