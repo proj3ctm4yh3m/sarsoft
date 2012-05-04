@@ -47,8 +47,8 @@ org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	} else if(config.type == "WMS") {
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: config.maxresolution, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
 			var size = config.tilesize ? config.tilesize : 256;
-		    var southWestPixel = new GPoint( point.x * size, ( point.y + 1 ) * size);
-		    var northEastPixel = new GPoint( ( point.x + 1 ) * size, point.y * size);
+		    var southWestPixel = new google.maps.Point( point.x * size, ( point.y + 1 ) * size);
+		    var northEastPixel = new google.maps.Point( ( point.x + 1 ) * size, point.y * size);
 		    var southWestCoords = google.maps.Projection.fromPointToLatLng(southWestPixel);
 		    var northEastCoords = google.maps.Projection.fromPointToLatLng(northEastPixel);
 		    var url = config.template;
@@ -163,7 +163,6 @@ OverlayDropdownMapControl.prototype.addNativeType = function(config, group) {
 OverlayDropdownMapControl.prototype.addBaseType = function(alias, group) {
 	var type = this.map.mapTypes.get(alias);
 	if(type == null) {
-		alert(alias);
 		return;
 	}
 	this.typeDM.addItem(type.name, alias, group);
@@ -304,7 +303,7 @@ OverlayDropdownMapControl.prototype.resetMapTypes = function(type) {
 	this.alphaOverlayTypes = new Array();
 	this.typeDM.empty();
 	this.overlayDM.empty();
-	this.aDiv.empty();
+	this.aDiv.empty()
 
 	var alphaTypes = new Array();
 	var baseTypes = new Array();
@@ -338,16 +337,16 @@ OverlayDropdownMapControl.prototype.resetMapTypes = function(type) {
 	for(var i = 0; i < this.map.geoRefImages.length; i++) {
 		this.addOverlayType(this.map.geoRefImages[i]);
 	}
-	
+
 	this.hasAlphaOverlays = false;
 	this.updateMap(this.map.getMapTypeId(), this.map.getMapTypeId(), 0);
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
-	this.map.overlayMapTypes.clear();
-
 	var _overlayNative = false;
 	var _baseNative = false;
+	
+	// 1. Reference native alias changes, re-call updateMap if necessary
 	if(org.sarsoft.EnhancedGMap.nativeAliases[base] != null) {
 		_baseNative = true;
 		base = org.sarsoft.EnhancedGMap.nativeAliases[base];
@@ -360,57 +359,74 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		this.updateMap(overlay, base, 1-opacity, alphaOverlays);
 		return;
 	}
-
+	
+	// 2. Set up variables
 	opacity = opacity*1;
-	this.baseName = base;
-	this.overlayName = overlay;
-	this.opacity = opacity;
 	var baseType = this.map.mapTypes.get(base);
 	var overlayType = this.map.mapTypes.get(overlay);
-
-	// set base type and create new overlays
-	if(baseType != null && baseType.setOpacity != null) baseType.setOpacity(1);
-	this.map.setMapTypeId(base);
-	this.alphaOverlays = null;
-
 	var infoString = "";
-	var _info = baseType != null ? baseType._info : "";
-	if(_info != null && _info.length > 0) infoString += _info + ". ";
 	
-	if(opacity > 0) {
-		if(overlayType._info != null && overlayType._info.length > 0 && base != overlay && opacity > 0) infoString += overlayType._info + ". ";		
-		if(overlayType.angle != null) {
-			// TODO test georef overlays
-			this._overlays[0] = new GeoRefImageOverlay(new google.maps.Point(1*overlay.originx, 1*overlay.originy), new google.maps.LatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new google.maps.Size(1*overlay.width, 1*overlay.height), opacity);
-			this.map.addOverlay(this._overlays[0]);
-		} else {
-			if(overlayType != null && overlayType.setOpacity != null) overlayType.setOpacity(opacity);
-			this.map.overlayMapTypes.push(overlayType);
-		}
+	// 3. Reset base iff changed
+	if(this.baseName != base) {
+		if(baseType != null && baseType.setOpacity != null) baseType.setOpacity(1);
+		this.map.setMapTypeId(base);
+		this.baseName = base;
 	}
-	if(alphaOverlays != null && alphaOverlays.length > 0) {
-		this.alphaOverlays="";
-		for(var i = 0; i < alphaOverlays.length; i++) {
-			this.alphaOverlays = this.alphaOverlays + alphaOverlays[i] + ((i < alphaOverlays.length - 1) ? "," : "");
-			if(alphaOverlays[i].indexOf("_") > 0) {
-				var at = this.map.mapTypes.get(alphaOverlays[i].substr(0, alphaOverlays[i].indexOf("_")));
-				this.map.overlayMapTypes.push(at);
-				if(at._alias == "slp") {
-					if(at._cfgvalue != null && at._cfgvalue.indexOf("s") == 0) {
-						infoString += '<span style="color: green; margin-left: 5px">20&deg;-27&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">28&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span>';
-					} else {
-						infoString += "Shading 28&deg;-59&deg;.  Dots 35&deg;-45&deg;";
-					}
-				}
-			} else {
-				var at = this.map.mapTypes.get(alphaOverlays[i]);
-				this.map.overlayMapTypes.push(at);
-				infoString += at._info + ". ";
+
+	// 4. Handle overlay layer
+	if(opacity == 0 && this.opacity == 0) {
+		// pass
+	} else if(opacity == 0 && !(this.opacity == 0)) {
+		// Clear overlay iff opacity just set to 0
+		this.map.overlayMapTypes.removeAt(0);
+		this.overlayName = null;
+	} else if(this.overlayName == overlay) {
+		// Iff overlay unchanged, just set opacity
+		if(overlayType != null && overlayType.setOpacity != null) overlayType.setOpacity(opacity);
+	} else {
+		// Do it all
+		if(this.opacity > 0) this.map.overlayMapTypes.removeAt(0);
+		if(overlayType != null && overlayType.setOpacity != null) overlayType.setOpacity(opacity);
+		this.map.overlayMapTypes.insertAt(0, overlayType);
+		this.overlayName = overlay;
+	}
+	this.opacity = opacity;
+
+//  TODO: georef image overlays if overlaType.angle != null
+//	this._overlays[0] = new GeoRefImageOverlay(new google.maps.Point(1*overlay.originx, 1*overlay.originy), new google.maps.LatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new google.maps.Size(1*overlay.width, 1*overlay.height), opacity);
+//	this.map.addOverlay(this._overlays[0]);
+
+	// 5. AlphaOverlays
+	if(alphaOverlays == null && this.alphaOverlays == null) {
+		// pass
+	} else if(alphaOverlays != null && this.alphaOverlays == alphaOverlays.join(",")) {
+		// pass
+	} else {
+		// clear existing overlays
+		while(this.map.overlayMapTypes.getLength() > (this.opacity > 0 ? 1 : 0)) {
+			this.map.overlayMapTypes.removeAt(this.opacity > 0 ? 1 : 0);
+		}
+		
+		this.alphaOverlays = null;
+		if(alphaOverlays != null) {
+			for(var i = 0; i < alphaOverlays.length; i++) {
+				this.map.overlayMapTypes.push(this.map.mapTypes.get(alphaOverlays[i]));
 			}
+			if(alphaOverlays.length > 0) this.alphaOverlays = alphaOverlays.join(",");
+		}
+	}
+
+
+	// 6. Set InfoString
+	if(baseType != null && baseType._info != null && baseType._info.length > 0) infoString += baseType._info + ". ";
+	if(overlayType != null && overlayType._info != null && overlayType._info.length > 0) infoString += overlayType._info + ". ";
+	if(alphaOverlays != null) {
+		for(var i = 0; i < alphaOverlays.length; i++) {
+			infoString += this.map.mapTypes.get(alphaOverlays[i])._info + ". ";
 		}
 	}
 	
-	// update visual controls
+	// 7. Update visual controls
 	this.opacityInput.val(Math.round(opacity*100));
 	this._inSliderSet = true;
 	if(!this._inSliderHandler) this.opacitySlider.setValue(opacity*100);
@@ -2037,6 +2053,19 @@ org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function(handler) {
 }
 
 org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
+	if(YAHOO.util.Cookie.exists("org.sarsoft.mapLayers")) {
+		var layers = YAHOO.util.Cookie.get("org.sarsoft.mapLayers").split(",");
+		org.sarsoft.EnhancedGMap.visibleMapTypes = [];
+		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+			for(var j = 0; j < layers.length; j++) {
+				var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+				if(layers[j] == type.alias) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
+			}
+		}
+		var config = imap.getConfig();
+		imap.map._overlaydropdownmapcontrol.resetMapTypes();
+		if(!YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) imap.setConfig(config);
+	}
 	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) {
 		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
 		if(typeof(overrides) != "undefined") for(var key in overrides) {
@@ -2051,19 +2080,6 @@ org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 		}
 		this.imap.map.setCenter(new google.maps.LatLng(config.center.lat, config.center.lng));
 		this.imap.map.setZoom(config.zoom);
-	}
-	if(YAHOO.util.Cookie.exists("org.sarsoft.mapLayers")) {
-		var layers = YAHOO.util.Cookie.get("org.sarsoft.mapLayers").split(",");
-		org.sarsoft.EnhancedGMap.visibleMapTypes = [];
-		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-			for(var j = 0; j < layers.length; j++) {
-				var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-				if(layers[j] == type.alias) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
-			}
-		}
-		var config = imap.getConfig();
-		imap.map._overlaydropdownmapcontrol.resetMapTypes();
-		imap.setConfig(config);
 	}
 }
 
@@ -2239,6 +2255,8 @@ org.sarsoft.ProjectionCaptureOverlay.prototype = new google.maps.OverlayView();
 org.sarsoft.ProjectionCaptureOverlay.prototype.onAdd = function() {}
 org.sarsoft.ProjectionCaptureOverlay.prototype.onRemove = function() {}
 org.sarsoft.ProjectionCaptureOverlay.prototype.draw = function() {
+	$(this.getPanes().mapPane).parent().addClass("printimgabsolute");
+	$('a[href^="http://maps.google.com"]').children().addClass("gmnoprint");
 	this.imap.projection = this.getProjection();
 }
 

@@ -126,7 +126,7 @@ textarea.entityform {
 		-moz-transform: none !important;
 		-ms-transform: none !important;
 	}
-	img.olTileImage {
+	.printimgabsolute img {
 		position: absolute !important;
 	}
 	img.olAlphaImage {
