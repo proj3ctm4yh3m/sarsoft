@@ -103,8 +103,6 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 	map.setCenter(center);
 	map.setZoom(zoom);
 	var odmc = new OverlayDropdownMapControl(map);
-//	TODO (for print mode)
-//	map._zoomControl = $(map.getContainer()).children().last();
 	return map;
 }
 
@@ -156,15 +154,14 @@ OverlayDropdownMapControl = function(map) {
 }
 
 OverlayDropdownMapControl.prototype.addNativeType = function(config, group) {
-	this.typeDM.addItem(config.name, config.alias, group);
-	this.types[config.alias] = config;
+	var alias = config.alias;
+	if(org.sarsoft.EnhancedGMap.nativeAliases[config.alias] != null) alias = org.sarsoft.EnhancedGMap.nativeAliases[alias];
+	this.typeDM.addItem(config.name, alias, group);
+	this.types[alias] = config;
 }
 
 OverlayDropdownMapControl.prototype.addBaseType = function(alias, group) {
 	var type = this.map.mapTypes.get(alias);
-	if(type == null) {
-		return;
-	}
 	this.typeDM.addItem(type.name, alias, group);
 	this.overlayDM.addItem(type.name, alias, group);
 	this.types[alias] = type;
@@ -358,6 +355,15 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 	if(_overlayNative && !_baseNative) {
 		this.updateMap(overlay, base, 1-opacity, alphaOverlays);
 		return;
+	}
+	if(_overlayNative) {
+		// try to do the best thing possible
+		if(overlay == "terrain") {
+			overlay = base;
+			base = "ter";
+		}
+		if(overlay == "satellite" || overlay == "hybrid") overlay = "usi";
+		if(overlay == "roadmap") overlay = "om";
 	}
 	
 	// 2. Set up variables
@@ -1280,11 +1286,6 @@ org.sarsoft.MapBorderControl = function(map, edge) {
 	if(this.edge == 1) this.div.css({left: 0, top: 0, width: '100%', height: size});
 	if(this.edge == 2) this.div.css({right: 0, top: 0, width: size, height: '100%'});
 	if(this.edge == 3) this.div.css({left: 0, bottom: 0, width: '100%', height: size});
-
-	if(map._zoomControl != null) {
-		// TODO handle this
-		this.div.insertBefore(map._zoomControl);
-	}
 }
 
 org.sarsoft.MapBorderControl.prototype.clear = function() {
@@ -2111,8 +2112,6 @@ org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
 }
 
 org.sarsoft.view.MenuDropdown.prototype.show = function() {
-	// TODO: need to be able to send a callback to the menu div in order to reset
-	// its z-index to 1001
 	this.div.css("visibility", "visible");
 	if(this.isArrow) this.trigger.html('&uarr;');
 	if(this.onShow != null) this.onShow();
@@ -2390,6 +2389,9 @@ org.sarsoft.InteractiveMap.prototype.aliasToName = function(alias) {
 org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
 	config.base = this.map._overlaydropdownmapcontrol.baseName;
+	for(var key in org.sarsoft.EnhancedGMap.nativeAliases) {
+		if(org.sarsoft.EnhancedGMap.nativeAliases[key] == config.base) config.base = key;
+	}
 	if(this.map._overlaydropdownmapcontrol != null) {
 		config.overlay = this.map._overlaydropdownmapcontrol.overlayName;
 		config.opacity = this.map._overlaydropdownmapcontrol.opacity;
@@ -2427,10 +2429,18 @@ org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 }
 
 org.sarsoft.InteractiveMap.prototype._addBaseLayerIfNecessary = function(alias) {
-	var types = this.map._overlaydropdownmapcontrol.types;
-	if(types[alias] == null) {
-		this.map._overlaydropdownmapcontrol.addBaseType(alias);
+	if(this.map._overlaydropdownmapcontrol.types[alias] != null) return;
+	if(this.map._overlaydropdownmapcontrol.types[org.sarsoft.EnhancedGMap.nativeAliases[alias]] != null) return;
+	
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+		if(config.type == "NATIVE" && config.alias == alias) {
+			this.addNativeType(config);
+			return;
+		}
 	}
+	
+	this.map._overlaydropdownmapcontrol.addBaseType(alias);
 }
 
 org.sarsoft.InteractiveMap.prototype._addAlphaLayerIfNecessary = function(alias) {
@@ -2960,7 +2970,6 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 		this.toggle.setValue(this.track);
 		imap.addMenuItem(this.toggle.node, 18);
 
-		// TODO: need a different event, if possible
 		google.maps.event.addListener(imap.map, "idle", function() {
 			if(!that.ignorehash) that.saveMap();
 		});
@@ -3248,8 +3257,7 @@ org.sarsoft.LocationEntryForm.prototype.read = function(callback) {
 		callback(GeoUtil.UTMToGLatLng(utm));
 	} else if(addr != null && addr.length > 0 && typeof google.maps.Geocoder != 'undefined') {
 		var gcg = new google.maps.Geocoder();
-		// TODO
-		gcg.getLatLng(addr, callback);
+		gcg.geocode({address: addr}, function(result, status) { if(status!=google.maps.GeocoderStatus.OK) return; callback(result[0].geometry.location); });
 	} else if(type == "DD"){
 		var lat = this.lat.val();
 		var lng = this.lng.val();
@@ -4054,7 +4062,7 @@ GeoRefImageOverlay.prototype.remove = function() {
 
 GeoRefImageOverlay.prototype.redraw = function(force) {
   var pixel = this._map.fromLatLngToDivPixel(this.latlng);
-  var ne = this._map.fromDivPixelToLatLng(new GPoint(pixel.x-this.point.x, pixel.y-this.point.y));
+  var ne = this._map.fromDivPixelToLatLng(new google.maps.Point(pixel.x-this.point.x, pixel.y-this.point.y));
   var pxDistance = Math.sqrt(Math.pow(this.point.x, 2) + Math.pow(this.point.y, 2));
   var scaling = this.scale / (ne.distanceFrom(this.latlng) / pxDistance);
   
