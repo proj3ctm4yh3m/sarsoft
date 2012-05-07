@@ -614,13 +614,11 @@ org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
 	if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
 
 	var ugc = this.map._imap.registered["org.sarsoft.UTMGridControl"];
-	var mdw = this.map._imap.registered["org.sarsoft.MapDatumWidget"];
 	var mic = this.map._imap._mapInfoControl;
 
 	ugc.hidePrintBorder();
 	if(this.footer[0] != null) this.footer[0].remove();
 	if(this.footer[1] != null) this.footer[1].remove();
-	if(mdw.datumSwitcher != null) mdw.datumSwitcher.css('visibility', 'visible');
 	
 	if(mic != null) mic.ctrl.css('visibility', 'visible');
 	this.footer = null;
@@ -675,9 +673,8 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 			ugc.borders[3].div.css('height', '46px');
 			this.footer = [];
 			if(mdw != null) this.footer[0] = jQuery('<span style="padding-right: 5px">Datum:</span>').insertBefore(mdw.datumDisplay);
-			if(mdw.datumSwitcher != null) mdw.datumSwitcher.css('visibility', 'hidden');
 			if(mic != null) {
-				this.footer[1] = jQuery('<span style="padding-right: 5px">Printed from CalTopo.com.</span>').insertBefore(mic.msg);
+				this.footer[1] = jQuery('<span style="padding-right: 5px">Printed from CalTopo.com.</span>').insertBefore(mic.premsg);
 				mic.ctrl.css('visibility', 'hidden');
 			}
 		}
@@ -687,7 +684,6 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 			if(this.footer[0] != null) this.footer[0].remove();
 			if(this.footer[1] != null) this.footer[1].remove();
 			if(mic != null) mic.ctrl.css('visibility', 'visible');
-			if(mdw.datumSwitcher != null) mdw.datumSwitcher.css('visibility', 'visible');
 			this.footer = null;
 			ugc.borders[3].div.css('height', '26px');
 		}
@@ -750,28 +746,31 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	this.imap = imap;
 	imap.register("org.sarsoft.MapDatumWidget", this);
 
-	this.datumControl = jQuery('<div style="z-index: 2000; position: absolute; bottom: 0px; left: 0px; background: white"></div>').appendTo(imap.map.getDiv());
-	this.datumDisplay = jQuery('<span class="noprint">' + org.sarsoft.map.datum + '</span>').appendTo(this.datumControl);
+	this.datumControl = jQuery('<span style="padding-left: 3px"></span>').appendTo(imap._mapInfoControl.premsg);
+	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '.</span>').appendTo(this.datumControl);
 	
 	if(switchable) {
-		this.datumSwitcher = jQuery('<a style="color: #5a8ed7; cursor: pointer" class="noprint"> +</a>').appendTo(this.datumControl);
-		this.datumList = jQuery('<span style="padding-left: 10px; display: none;">Set Datum:</span>').appendTo(this.datumControl);
+		this.datumSwitcher = jQuery('<a class="underlineOnHover" title="click to change datum" style="cursor: pointer"></a>').appendTo(this.datumControl).append(this.datumDisplay);
+		this.datumList = jQuery('<span style="display: none"><span style="margin-right: 10px">Set Datum:</span></span>').appendTo(this.datumControl);
 		
 		var fn = function(d) {
 			return function() {
 				that.datumList.css('display', 'none');
+				that.datumDisplay.css('display', 'inline');
 				that.setDatum(d);
 			}
 		}
 		for(var datum in org.sarsoft.map.datums) {
-			jQuery('<span style="margin-left: 15px; color: #5a8ed7; font-weight: bold; cursor: pointer">' + datum + '</span>').appendTo(this.datumList).click(fn(datum));
+			jQuery('<span style="margin-right: 10px; color: #5a8ed7; cursor: pointer">' + datum + '</span>').appendTo(this.datumList).click(fn(datum));
 		}
 		
 		this.datumSwitcher.click(function() {
 			if(that.datumList.css('display') == "none") {
 				that.datumList.css('display', 'inline');
+				that.datumDisplay.css('display', 'none');
 			} else {
 				that.datumList.css('display', 'none');
+				that.datumDisplay.css('display', 'inline');
 			}
 		})
 	}
@@ -780,7 +779,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 org.sarsoft.MapDatumWidget.prototype.setDatum = function(datum) {
 	org.sarsoft.map.datum = datum;
 	GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
-	this.datumDisplay.html(datum);
+	this.datumDisplay.html(datum + '.');
 	this.imap.updateDatum();
 }
 
@@ -879,25 +878,15 @@ org.sarsoft.UTMGridControl = function(imap) {
 	}
 }
 
-org.sarsoft.UTMGridControl.prototype._setMDWClass = function() {
-	var mdw = this.imap.registered["org.sarsoft.MapDatumWidget"];
-	if(mdw != null) {
-		if(!this.showUTM && !this.showborder) { mdw.datumDisplay.addClass("noprint"); }
-		else { mdw.datumDisplay.removeClass("noprint"); }
-	}	
-}
-
 org.sarsoft.UTMGridControl.prototype.showPrintBorder = function() {
 	this.showborder = true;
 	for(var i = 0; i < 4; i++) this.borders[i].div.css('display', 'block');
-	this._setMDWClass();
 	this._drawUTMGrid(true);
 }
 
 org.sarsoft.UTMGridControl.prototype.hidePrintBorder = function() {
 	this.showborder = false;
 	for(var i = 0; i < 4; i++) this.borders[i].div.css('display', 'none');
-	this._setMDWClass();
 	this._drawUTMGrid(true);
 }
 
@@ -905,7 +894,6 @@ org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
 	this._showUTM = value;
 	this._drawUTMGrid(true);
 	this._UTMToggle.setValue(this._showUTM);
-	this._setMDWClass();
 }
 
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
@@ -1554,7 +1542,7 @@ org.sarsoft.DataNavigator = function(imap) {
 			window.location='/app/openidrequest?domain=google&dest=' + encodeURIComponent(window.location);
 		});
 		this.defaults.account.body.css('display', 'none').append(jQuery('<div></div>').append(login_yahoo)).append(
-				jQuery('<div style="padding-top: 5px"></div>').append(login_google));
+				jQuery('<div style="white-space: nowrap; padding-top: 5px"></div>').append(login_google));
 
 		this.defaults.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; display: none">Shared Maps</div>').appendTo(this.account.body);
 		var bn = jQuery('<div></div>');
@@ -1583,6 +1571,11 @@ org.sarsoft.DataNavigator = function(imap) {
 	this.defaults.browser.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
 	this.defaults.browser.body.css('padding-left', '10px');
 	var cbcontainer = jQuery('<div style="padding-top: 3px; padding-bottom: 3px"></div>').appendTo(this.defaults.browser.body);
+	var pos = jQuery('<select><option value="1">Cursor</option><option value="2">Center</option><option value="0">None</option></select>').appendTo(jQuery('<div style="white-space: nowrap">Coordinates:</div>').appendTo(cbcontainer)).change(function() {
+		var val = 1*pos.val();
+		imap.registered["org.sarsoft.PositionInfoControl"].setValue(val);
+		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", val);
+	});
 	var sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(cbcontainer)).change(function() {
 		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scalebar", sb[0].checked);
 		imap.loadBrowserSettings();
@@ -1608,6 +1601,10 @@ org.sarsoft.DataNavigator = function(imap) {
 	org.sarsoft.EnhancedGMap._overzoom = (config.overzoom == false ? false : true);
 	imap.map._overlaydropdownmapcontrol.checkMaxZoom();
 	overzoomcb[0].checked = org.sarsoft.EnhancedGMap._overzoom;
+	if(config.position != null) {
+		pos.val(config.position);
+		imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position);
+	}
 
 	if(org.sarsoft.tenantid == null) {
 		this.defaults.sharing.appendTo(this.account.body);
@@ -1710,62 +1707,69 @@ org.sarsoft.PositionInfoControl = function(imap) {
 	if(imap != null) {
 		this.imap = imap;
 		imap.register("org.sarsoft.PositionInfoControl", this);
+		this.value = org.sarsoft.PositionInfoControl.CURSOR;
 
 		var that = this;
 		this.map = imap.map;
 		this._show = true;
 		
+		this.crosshair = jQuery('<img style="visibility: hidden; z-index: 10; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
 		var div = jQuery('<div style="text-align: right; cursor: pointer; position: absolute; right: 0; top: 25px; z-index: 1001" class="noprint"></div>').appendTo(this.map.getDiv());
-		this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/left.png" title="Show Coordinates" style="display: none"/>').appendTo(div);
-		this.display = jQuery('<div style="background-color: white; font-weight: bold" title="Hide Coordinates"></div>').appendTo(div);
+		this.display = jQuery('<div style="background-color: white; font-weight: bold"></div>').appendTo(div);
 		
-		div.click(function(event) {
-			that._show = !that._show;
-			if(that._show) {
-				that.minmax.css("display", "none");
-				that.display.css("display", "block");
-			} else {
-				that.minmax.css("display", "inline");
-				that.display.css("display", "none");
-			}
-		});
+		this.centerCrosshair();
 		
 		google.maps.event.addListener(imap.map, "mousemove", function(evt) {
-			var datumll = GeoUtil.fromWGS84(evt.latLng);
-			var utm = GeoUtil.GLatLngToUTM(datumll);
-			var message = utm.toHTMLString() + "<br/>";
-			if(that.imap != null && that.imap.registered["org.sarsoft.UTMGridControl"] != null) {
-				if(that.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DD") {
-					message = message + GeoUtil.formatDD(datumll.lat()) + ", " + GeoUtil.formatDD(datumll.lng());
-				} else if(that.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DDMMHH") {
-					message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
-				} else {
-					message = message + GeoUtil.formatDDMMSS(datumll.lat()) + ", " + GeoUtil.formatDDMMSS(datumll.lng());
-				}
-			}
-			that.display.html(message);
+			if(that.value == org.sarsoft.PositionInfoControl.CURSOR) that.update(evt.latLng);
 		});
-		
+		google.maps.event.addListener(imap.map, "bounds_changed", function() {
+			if(that.value == org.sarsoft.PositionInfoControl.CENTER) that.update(imap.map.getCenter());
+		});
+		google.maps.event.addListener(imap.map, "resize", function() {
+			that.centerCrosshair();
+		});
 		this.div = div;	
 	}
 }
 
-org.sarsoft.PositionInfoControl.prototype.setConfig = function(config) {
-	if(config.PositionInfoControl == null) return;
-	this._show = config.PositionInfoControl.showPosition;
-	if(this._show) {
-		this.minmax.css("display", "none");
-		this.display.css("display", "block");
-	} else {
-		this.minmax.css("display", "inline");
-		this.display.css("display", "none");
-	}
+org.sarsoft.PositionInfoControl.NONE = 0;
+org.sarsoft.PositionInfoControl.CURSOR = 1;
+org.sarsoft.PositionInfoControl.CENTER = 2;
+
+org.sarsoft.PositionInfoControl.prototype.centerCrosshair = function() {
+	var div = $(this.imap.map.getDiv());
+	this.crosshair.css({left: Math.round(div.width()/2) + "px", top: Math.round(div.height()/2) + "px"});
 }
 
-org.sarsoft.PositionInfoControl.prototype.getConfig = function(config) {
-	if(config.PositionInfoControl == null) config.PositionInfoControl = new Object();
-	config.PositionInfoControl.showPosition = this._show;
-	return config;
+org.sarsoft.PositionInfoControl.prototype.update = function(gll) {
+	var datumll = GeoUtil.fromWGS84(gll);
+	var utm = GeoUtil.GLatLngToUTM(datumll);
+	var message = utm.toHTMLString() + "<br/>";
+	if(this.imap != null && this.imap.registered["org.sarsoft.UTMGridControl"] != null) {
+		if(this.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DD") {
+			message = message + GeoUtil.formatDD(datumll.lat()) + ", " + GeoUtil.formatDD(datumll.lng());
+		} else if(this.imap.registered["org.sarsoft.UTMGridControl"].style.latlng == "DDMMHH") {
+			message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
+		} else {
+			message = message + GeoUtil.formatDDMMSS(datumll.lat()) + ", " + GeoUtil.formatDDMMSS(datumll.lng());
+		}
+	}
+	this.display.html(message);
+}
+
+org.sarsoft.PositionInfoControl.prototype.setValue = function(value) {
+	this.value = value;
+	if(value == org.sarsoft.PositionInfoControl.NONE) {
+		this.display.css('display', 'none');
+		this.crosshair.css('visibility', 'hidden');
+	} else if (value == org.sarsoft.PositionInfoControl.CURSOR) {
+		this.display.css('display', 'block');
+		this.crosshair.css('visibility', 'hidden');
+	} else {
+		this.update(this.imap.map.getCenter());
+		this.display.css('display', 'block');		
+		this.crosshair.css('visibility', 'visible');
+	}
 }
 
 org.sarsoft.MapLabelWidget = function(imap) {
@@ -2289,6 +2293,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.loadBrowserSettings();
 	this.map._imap = this;
 	this.mapMessageControl = new org.sarsoft.MapMessageControl(this.map);
+	this._mapInfoControl = new org.sarsoft.MapInfoControl(this.map);
 	
 	if(options == null) options = {};
 	if(options.positionWindow || options.standardControls) {
@@ -2921,11 +2926,7 @@ org.sarsoft.InteractiveMap.prototype.timer = function() {
 	}
 }
 
-org.sarsoft.InteractiveMap.prototype.setMapInfo = function(classname, order, message) {
-	if(this._mapInfoControl == null) {
-		this._mapInfoControl = new org.sarsoft.MapInfoControl(this.map);
-	}
-	
+org.sarsoft.InteractiveMap.prototype.setMapInfo = function(classname, order, message) {	
 	if(message == null) {
 		delete this._mapInfoMessages[classname];
 	} else {
@@ -3095,13 +3096,14 @@ org.sarsoft.MapCollaborationWidget = function(imap) {
 org.sarsoft.MapInfoControl = function(map) {
 	var that = this;
 	this.minimized = false;
-	this.div = jQuery('<div style="position: absolute; right: 0; bottom: 0; z-index: 20"></div>').appendTo(map.getDiv());
+	this.div = jQuery('<div style="position: absolute; right: 0; bottom: 0; z-index: 20; white-space: nowrap"></div>').appendTo(map.getDiv());
 	this.ctrl = jQuery('<span style="background: white" class="noprint"></span>').appendTo(this.div);
 	this.min = jQuery('<img style="cursor: pointer; width: 12px; height: 12px" src="' + org.sarsoft.imgPrefix + '/right.png"/>').appendTo(this.ctrl);
 	this.min.click(function() {
 		that.minmax();
 	});
 
+	this.premsg = jQuery('<span style="background: white"></span>').appendTo(this.div);
 	this.msg = jQuery('<span style="background: white"></span>').appendTo(this.div);
 }
 
@@ -3110,10 +3112,12 @@ org.sarsoft.MapInfoControl.prototype.minmax = function() {
 	if(this.minimized) {
 		this.ctrl.css("padding-right", "0");
 		this.msg.css("display", "inline");
+		this.premsg.css("display", "inline");
 		this.min.attr("src", org.sarsoft.imgPrefix + "/right.png");
 		this.minimized = false;
 	} else {
 		this.ctrl.css("padding-right", "1em");
+		this.premsg.css("display", "none");
 		this.msg.css("display", "none");
 		this.min.attr("src", org.sarsoft.imgPrefix + "/left.png");
 		this.minimized = true;
