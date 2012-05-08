@@ -132,7 +132,7 @@ OverlayDropdownMapControl = function(map) {
 	var dd = new org.sarsoft.view.MenuDropdown(tps, 'width: 20em');
 	this.alphaOverlayPlus = tps[0];
 
-	this.div = jQuery('<div style="color: #5a8ed7; background: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0"></div>');
+	this.div = jQuery('<div style="color: #5a8ed7; background: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0" class="noprint"></div>');
 	this.div.append(this.extras, this.typeDM.container, dd.container);
 
 	this.opacityInput.change(function() { that.handleLayerChange() });
@@ -506,7 +506,7 @@ org.sarsoft.view.ScaleControl = function(map, container) {
 	this.map = map;
 	this.container = container;
 	this.state = true;
-	this.div = jQuery('<div style="position: relative"></div>').appendTo(jQuery('<div style="position: absolute; bottom: 1px; left: 26px; height: 2em; font-size: 10px; z-index: 20"></div>').appendTo(container));
+	this.div = jQuery('<div style="position: relative"></div>').appendTo(jQuery('<div style="position: absolute; bottom: 2px; left: 26px; height: 2em; font-size: 10px; z-index: 20"></div>').appendTo(container));
 	google.maps.event.addListener(map, "zoom_changed", function() { if(that.state) that.draw(); });
 	google.maps.event.addListener(map, "center_changed", function() { if(that.state) that.draw(); });
 }
@@ -1784,7 +1784,7 @@ org.sarsoft.PositionInfoControl = function(imap) {
 		this.map = imap.map;
 		this._show = true;
 		
-		this.crosshair = jQuery('<img style="visibility: hidden; z-index: 10; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
+		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 10; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
 		var div = jQuery('<div style="text-align: right; cursor: pointer; position: absolute; right: 0; top: 25px; z-index: 1001" class="noprint"></div>').appendTo(this.map.getDiv());
 		this.display = jQuery('<div style="background-color: white; font-weight: bold"></div>').appendTo(div);
 		

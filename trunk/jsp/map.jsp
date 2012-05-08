@@ -58,7 +58,7 @@ org.sarsoft.Loader.queue(function() {
 
 </script>
 </head>
-<body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="width: 100%; height: 100%">
+<body onload="doload()" class="yui-skin-sam" style="width: 100%; height: 100%">
 <div id="page_container" style="height: 100%">
  <div id="map_left">
  </div>
