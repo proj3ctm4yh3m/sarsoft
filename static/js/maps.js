@@ -501,6 +501,71 @@ org.sarsoft.MapMessageControl.prototype.clear = function() {
 	this.timeout = null;
 }
 
+org.sarsoft.view.ScaleControl = function(map, container) {
+	var that = this;
+	this.map = map;
+	this.container = container;
+	this.state = true;
+	this.div = jQuery('<div style="position: relative"></div>').appendTo(jQuery('<div style="position: absolute; bottom: 1px; left: 26px; height: 2em; font-size: 10px; z-index: 20"></div>').appendTo(container));
+	google.maps.event.addListener(map, "zoom_changed", function() { if(that.state) that.draw(); });
+	google.maps.event.addListener(map, "center_changed", function() { if(that.state) that.draw(); });
+}
+
+org.sarsoft.view.ScaleControl.prototype.draw = function() {
+	this.div.empty();
+	var bounds = this.map.getBounds();
+	var distance = google.maps.geometry.spherical.computeDistanceBetween(bounds.getNorthEast(), bounds.getSouthWest());
+	var mapdiv = $(map.getDiv());
+	var pxdistance = Math.sqrt(mapdiv.width()*mapdiv.width() + mapdiv.height()*mapdiv.height());
+	var mscale = (distance/1000)/pxdistance;
+	var iscale = mscale/1.609;
+	var width = 200;
+	var color = "#5a8ed7";
+	
+	this.div.empty();
+	
+	var interval = 1000;
+	while(width*mscale/interval < 3) {
+		if(interval%10 == 0) {
+			interval = interval/2;
+		} else {
+			interval = interval/5;
+		}
+	}
+	if(interval < 0.1) interval = 0.1;
+	for(var i = 0; i*interval/mscale < width; i++) {
+		var content = Math.round(i*interval*10)/10 + ((i+1)*interval/mscale < width ? "" : "km");
+		jQuery('<div style="position: absolute; border-left: 1px solid ' + color + '; padding-left: 2px; top: 0px; height: 1em; left: ' + Math.round(i*interval/mscale) + 'px">' + content + '</div>').appendTo(this.div);
+	}
+	var width = (Math.round((i-1)*interval/mscale)+1);
+
+	var interval = 1000;
+	while(width*iscale/interval < 3) {
+		if(interval%10 == 0) {
+			interval = interval/2;
+		} else {
+			interval = interval/5;
+		}
+	}
+	if(interval < 0.1) interval = 0.1;
+	for(var i = 0; i*interval/iscale < width; i++) {
+		var content = Math.round(i*interval*10)/10 + ((i+1)*interval/iscale < width ? "" : "mi");
+		jQuery('<div style="position: absolute; border-left: 1px solid ' + color + '; padding-left: 2px; top: 1em; height: 1em; left: ' + Math.round(i*interval/iscale) + 'px">' + content + '</div>').appendTo(this.div);
+	}
+	var width = Math.max(width, (Math.round((i-1)*interval/iscale)+1));
+	jQuery('<div style="position: absolute; margin-top: 1em; width: ' + width + 'px; border-bottom: 1px solid ' + color + '"></div>').appendTo(this.div);
+}
+
+org.sarsoft.view.ScaleControl.prototype.show = function() {
+	this.state = true;
+	this.div.css('display', 'block');
+	this.draw();
+}
+
+org.sarsoft.view.ScaleControl.prototype.hide = function() {
+	this.state = false;
+	this.div.css('display', 'none');
+}
 
 org.sarsoft.view.MapSizeForm = function(map, container) {
 	var that = this;
@@ -601,6 +666,9 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 	} else if($.browser.mozilla) {
 		jQuery('<div style="font-weight: bold; color: red">Remember to check the "Ignore Scaling and Shrink to Fit Page Width" option in Firefox\'s print menu.</div>').appendTo(container);
 	}
+	
+	this.scaleControl = new org.sarsoft.view.ScaleControl(map, map.getDiv());
+	this.scaleControl.hide();
 }
 
 org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
@@ -619,6 +687,7 @@ org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
 	ugc.hidePrintBorder();
 	if(this.footer[0] != null) this.footer[0].remove();
 	if(this.footer[1] != null) this.footer[1].remove();
+	this.scaleControl.hide();
 	
 	if(mic != null) mic.ctrl.css('visibility', 'visible');
 	this.footer = null;
@@ -673,6 +742,7 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 			ugc.borders[3].div.css('height', '46px');
 			this.footer = [];
 			if(mdw != null) this.footer[0] = jQuery('<span style="padding-right: 5px">Datum:</span>').insertBefore(mdw.datumDisplay);
+			this.scaleControl.show();
 			if(mic != null) {
 				this.footer[1] = jQuery('<span style="padding-right: 5px">Printed from CalTopo.com.</span>').insertBefore(mic.premsg);
 				mic.ctrl.css('visibility', 'hidden');
@@ -683,6 +753,7 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 		if(this.footer != null) {
 			if(this.footer[0] != null) this.footer[0].remove();
 			if(this.footer[1] != null) this.footer[1].remove();
+			this.scaleControl.hide();
 			if(mic != null) mic.ctrl.css('visibility', 'visible');
 			this.footer = null;
 			ugc.borders[3].div.css('height', '26px');
