@@ -27,9 +27,79 @@ jQuery(map.getPane(G_MAP_MARKER_MOUSE_TARGET_PANE)).bind('contextmenu', function
 
 */
 
+org.sarsoft.WebMercator = function() {
+	this.tilesize = 256;
+	this.initialresolution = 2 * Math.PI * 6378137 / this.tilesize;
+	this.originshift = 2 * Math.PI * 6378137 / 2;
+}
+
+org.sarsoft.WebMercator.prototype.resolution = function(zoom) {
+	return this.initialresolution / Math.pow(2, zoom);
+}
+
+org.sarsoft.WebMercator.prototype.latLngToMeters = function(lat, lng) {
+	var mx = lng * this.originshift / 180;
+    var my = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
+    my = my * this.originshift / 180;
+    return [mx, my];
+}
+
+org.sarsoft.WebMercator.prototype.metersToLatLng = function(mx, my) {
+	var lng = (mx / this.originshift) * 180;
+	var lat = (my / this.originshift) * 180;
+
+    lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
+    return [lat, lng];
+}
+
+org.sarsoft.WebMercator.prototype.pixelsToMeters = function(px, py, zoom) {
+    var res = this.resolution(zoom);
+    var mx = px * res - this.originshift;
+    var my = py * res - this.originshift;
+    return [mx, my];
+}
+
+org.sarsoft.WebMercator.prototype.metersToPixels = function(mx, my, zoom) {
+    var res = this.esolution(zoom);
+    var px = (mx + this.originshift) / res;
+    var py = (my + this.originshift) / res;
+    return [px, py];
+}
+
+org.sarsoft.WebMercator.prototype.pixelsToTile = function(px, py) {
+    var tx = Math.ceil(px / this.tilesize) - 1;
+    var ty = Math.ceil(py / this.tilesize) - 1;
+    return [tx, ty];
+}
+
+org.sarsoft.WebMercator.prototype.tileBounds = function(tx, ty, zoom) {
+    var min = this.pixelsToMeters(tx*this.tilesize, ty*this.tilesize, zoom);
+    var max = this.pixelsToMeters((tx+1)*this.tilesize, (ty+1)*this.tilesize, zoom);
+    return [min[0], min[1], max[0], max[1]];
+}
+
+org.sarsoft.WebMercator.prototype.tileLatLngBounds = function(tx, ty, zoom) {
+	var bounds = this.tileBounds(tx, ty, zoom);
+	var min = this.metersToLatLng(bounds[0], bounds[1]);
+	var max = this.metersToLatLng(bounds[2], bounds[3]);
+	return [min[0], min[1], max[0], max[1]];
+}
+
+org.sarsoft.WebMercator.prototype.googleTile = function(tx, ty, zoom) {
+	return [tx, (Math.pow(2, zoom)) - 1 - ty];
+}
+
+org.sarsoft.WebMercator.prototype.googleY = function(y, z) {
+	return (Math.pow(2, z)) - 1 - y;
+}
+
+org.sarsoft.WebMercator.prototype.tileY = function(y, z) {
+	return (Math.pow(2, z)) - 1 - y;
+}
+
 org.sarsoft.EnhancedGMap.nativeAliases = {};
 
-org.sarsoft.EnhancedGMap.createMapType = function(config) {
+org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 	var ts = config.tilesize ? config.tilesize : 256;
 	if(config.type == "TILE"){
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
@@ -45,18 +115,15 @@ org.sarsoft.EnhancedGMap.createMapType = function(config) {
 	    type._maxZoom = config.maxresolution;
 	    return type;
 	} else if(config.type == "WMS") {
+		var wm = new org.sarsoft.WebMercator();
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: config.maxresolution, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
-			var size = config.tilesize ? config.tilesize : 256;
-		    var southWestPixel = new google.maps.Point( point.x * size, ( point.y + 1 ) * size);
-		    var northEastPixel = new google.maps.Point( ( point.x + 1 ) * size, point.y * size);
-		    var southWestCoords = google.maps.Projection.fromPointToLatLng(southWestPixel);
-		    var northEastCoords = google.maps.Projection.fromPointToLatLng(northEastPixel);
+			var bounds = wm.tileLatLngBounds(point.x, wm.tileY(point.y, zoom), zoom);
 		    var url = config.template;
-		    url = url.replace(/\{left\}/g, southWestCoords.lng());
-		    url = url.replace(/\{bottom\}/g, southWestCoords.lat());
-		    url = url.replace(/\{right\}/g, northEastCoords.lng());
-		    url = url.replace(/\{top\}/g, northEastCoords.lat());
-		    url = url.replace(/\{tilesize\}/g, size);
+		    url = url.replace(/\{left\}/g, bounds[3]);
+		    url = url.replace(/\{bottom\}/g, bounds[0]);
+		    url = url.replace(/\{right\}/g, bounds[1]);
+		    url = url.replace(/\{top\}/g, bounds[2]);
+		    url = url.replace(/\{tilesize\}/g, config.tilesize ? config.tilesize : 256);
 		    return url;
 		}});
 	    if(config.alphaOverlay) type._alphaOverlay = true;
@@ -87,7 +154,7 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 			// default google layers are loaded asynchronously, not available yet
 			org.sarsoft.EnhancedGMap.nativeAliases[config.alias] = eval(config.template);
 		} else {
-			var type = org.sarsoft.EnhancedGMap.createMapType(config);
+			var type = org.sarsoft.EnhancedGMap.createMapType(config, map);
 			map.mapTypes.set(config.alias, type);
 		}
 		if(bkgset == false) {
@@ -185,14 +252,18 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 		var elements = [];
 		var colors = ['white', '#00FF09', '#F5FF0A', '#FE9900', '#FF0000'];
 		var slpcolors = ['none', "url('/static/images/ok.png')"];
-		var cfg = jQuery('<table style="color: black; display: none" border="0"></table>').appendTo(this.aDiv);
+		
+		var div = jQuery('<div></div>').appendTo(this.aDiv)
+		div.append('<span style="margin-right: 2px; float: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></span>');
+		var dataset = jQuery('<select><option value="s">Slope</option><option value="a">Aspect</option></select>').appendTo(
+				jQuery('<div>Color By: </div>').appendTo(div));
+
+		var cfg = jQuery('<table style="color: black; display: none" border="0"></table>').appendTo(div);
 		var tb = jQuery('<tbody></tbody').appendTo(cfg);
 		var tr = jQuery('<tr></tr>').appendTo(tb);
 		elements[7] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">NW</td>').appendTo(tr);
 		elements[0] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">N</td>').appendTo(tr);
 		elements[1] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">NE</td>').appendTo(tr);
-		var dataset = jQuery('<select><option value="s">Slope</option><option value="a">Aspect</option></select>').appendTo(
-				jQuery('<span>Color By: </span>').appendTo(jQuery('<td rowspan="2" valign="top" style="font-weight: normal"></td>').appendTo(tr)));
 		var tr = jQuery('<tr></tr>').appendTo(tb);
 		elements[6] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">W</td>').appendTo(tr);
 		var boostAll = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">&uarr;</td>').appendTo(tr);
@@ -201,7 +272,6 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 		elements[5] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">SW</td>').appendTo(tr);
 		elements[4] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">S</td>').appendTo(tr);
 		elements[3] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">SE</td>').appendTo(tr);
-		jQuery('<td valign="middle" style="font-weight: normal; text-align: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></td>').appendTo(tr);
 		var swapLayer = function() {
 			that.swapConfigurableAlphaLayer(idx, dataset.val() + "-" + hazards.join(""));
 			that.handleLayerChange();
@@ -209,10 +279,9 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 		var setBackground = function(aspect) {
 			var hazard = hazards[aspect];
 			if(dataset.val() == "s") {
-				elements[aspect].css('background-image', slpcolors[hazard]);
-				elements[aspect].css('background-color', '#FFFFFF');
+				cfg.css('display', 'none');
 			} else {
-				elements[aspect].css('background-image', 'none');
+				cfg.css('display', 'block');
 				elements[aspect].css('background-color', colors[hazard]);
 			}
 		}
@@ -256,6 +325,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 			elements[i].click((function(j) { return function() { incrementAspect(j); swapLayer();}})(i));
 		}
 		this.alphaOverlayBoxes[idx]._cfg = cfg;
+		this.alphaOverlayBoxes[idx]._div = div;
 	}
 	$(this.alphaOverlayBoxes[idx]).change(function() { that.handleLayerChange() });
 	this.alphaOverlayTypes[idx] = alias;
@@ -277,6 +347,9 @@ OverlayDropdownMapControl.prototype.swapConfigurableAlphaLayer = function(idx, c
 	if(cfg._vtemplate == null) cfg._vtemplate = cfg.template;
 	cfg.template = cfg._vtemplate.replace(/{V}/,cfgstr);
 	this.map.mapTypes.get(this.alphaOverlayTypes[idx])._cfgvalue = cfgstr;
+	for(var i = 0; i < this.map.overlayMapTypes.getLength(); i++) {
+		if(this.map.overlayMapTypes.getAt(i)._alias == cfg.alias) this.map.overlayMapTypes.setAt(i, this.map.overlayMapTypes.getAt(i));
+	}
 }
 
 OverlayDropdownMapControl.prototype.handleLayerChange = function() {
@@ -284,11 +357,12 @@ OverlayDropdownMapControl.prototype.handleLayerChange = function() {
 	var tt = new Array();
 	if(this.alphaOverlayBoxes != null) for(var i = 0; i < this.alphaOverlayBoxes.length; i++) {
 		var cfg = this.alphaOverlayBoxes[i]._cfg;
+		var div = this.alphaOverlayBoxes[i]._div;
 		if(this.alphaOverlayBoxes[i].checked) {
 			tt.push(this.alphaOverlayTypes[i]);
-			if(cfg != null) cfg.css('display','block');
+			if(div != null) div.css('display','block');
 		} else {
-			if(cfg != null) cfg.css('display','none');
+			if(div != null) div.css('display','none');
 		}
 	}
 	this.updateMap(this.typeDM.val(), this.overlayDM.val(), opacity, tt.length > 0 ? tt : null);
@@ -441,13 +515,14 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 	this.overlayDM.val(overlay);
 	if(alphaOverlays != null) for(var i = 0; i < this.alphaOverlayTypes.length; i++) {
 		var cfg = this.alphaOverlayBoxes[i]._cfg;
+		var div = this.alphaOverlayBoxes[i]._div;
 		this.alphaOverlayBoxes[i].checked=false;
-		if(cfg != null) cfg.css('display','none');
+		if(cfg != null) div.css('display','none');
 		for(var j = 0; j < alphaOverlays.length; j++) {
 			if(this.alphaOverlayTypes[i] == alphaOverlays[j]) {
 				this.alphaOverlayBoxes[i].checked=true;
 				if(cfg != null) {
-					cfg.css('display', 'block');
+					div.css('display', 'block');
 					cfg.readCfgValue(this.map.mapTypes.get(this.alphaOverlayTypes[i])._cfgvalue);
 				}
 			}
@@ -1809,7 +1884,7 @@ org.sarsoft.PositionInfoControl.CENTER = 2;
 
 org.sarsoft.PositionInfoControl.prototype.centerCrosshair = function() {
 	var div = $(this.imap.map.getDiv());
-	this.crosshair.css({left: Math.round(div.width()/2) + "px", top: Math.round(div.height()/2) + "px"});
+	this.crosshair.css({left: Math.round(div.width()/2)-8 + "px", top: Math.round(div.height()/2)-8 + "px"});
 }
 
 org.sarsoft.PositionInfoControl.prototype.update = function(gll) {

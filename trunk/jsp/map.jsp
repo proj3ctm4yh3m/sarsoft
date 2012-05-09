@@ -2,6 +2,8 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <html xmlns="http://www.w3.org/TR/html4/loose.dtd">
 <head>
+<meta content='True' name='HandheldFriendly' />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 ${head}
 <script type="text/javascript">
 
