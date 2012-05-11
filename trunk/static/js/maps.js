@@ -1874,6 +1874,7 @@ org.sarsoft.PositionInfoControl = function(imap) {
 		google.maps.event.addListener(imap.map, "resize", function() {
 			that.centerCrosshair();
 		});
+		$(window).resize(function() { that.centerCrosshair(); });
 		this.div = div;	
 	}
 }
@@ -2368,6 +2369,86 @@ org.sarsoft.view.MapDialog.prototype.swap = function() {
 	}
 }
 
+org.sarsoft.view.ProfileGraph = function() {
+	this.height=120;
+	this.div = jQuery('<div style="height: ' + (this.height+20) + 'px; position: relative"></div>').append(this.svg);
+}
+
+org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
+	var that = this;
+	this.div.empty();
+	if(this.marker != null) this.marker.setMap(null);
+	if(color == null) color = "#FF0000";
+	var width = this.div.width();
+	
+	var svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
+		'<line x1="' + 0 + '" y1="' + 0 + '" x2="' + width + '" y2="' + 0 + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
+		'<line x1="' + 0 + '" y1="' + this.height + '" x2="' + width + '" y2="' + this.height + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
+		'<line x1="' + 0 + '" y1="' + 0 + '" x2="' + 0 + '" y2="' + this.height + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
+		'<line x1="' + width + '" y1="' + 0 + '" x2="' + width + '" y2="' + this.height + '" style="stroke:rgb(0,0,0);stroke-width:1" />';
+	
+	var min = series[0].elevation;
+	var max = series[0].elevation;
+	for(var i = 0; i < series.length; i++) {
+		min = Math.min(min, series[i].elevation);
+		max = Math.max(max, series[i].elevation);
+	}
+
+	var ele = jQuery('<div style="height: 20px"></div>').appendTo(this.div);
+
+	for(var i = 0; i < series.length - 1; i++) {
+		var x1 = i*(width/(series.length-1));
+		var x2 = (i+1)*(width/(series.length-1));
+		var y1 = this.height-(series[i].elevation-min)*(this.height/(max-min))
+		var y2 = this.height-(series[i+1].elevation-min)*(this.height/(max-min))
+		svg = svg + '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" style="stroke:' + color + ';stroke-width:2" />';
+	}
+	for(var i = 0; i < series.length; i++) {
+		if(series[i].elevation == max || series[i].elevation == min) {
+			var x1 = i*(width/(series.length-1));
+			var y1 = this.height-(series[i].elevation-min)*(this.height/(max-min))
+			if(series[i].elevation == max) {
+				svg = svg + '<line x1="' + x1 + '" y1="' + (y1+1) + '" x2="' + x1 + '" y2="' + (y1+50) + '" style="stroke:rgb(0,0,0);stroke-width:1" />';
+				svg = svg + '<text dy="1em" style="text-anchor: middle; dominant-baseline: top" x="' + x1 + '" y="' + (y1+50) + '">' + Math.round(series[i].elevation*3.2808399) + 'ft / ' + Math.round(series[i].elevation) + 'm</text>';
+			}
+			if(series[i].elevation == min) {
+				svg = svg + '<line x1="' + x1 + '" y1="' + (y1-1) + '" x2="' + x1 + '" y2="' + (y1-50) + '" style="stroke:rgb(0,0,0);stroke-width:1" />';
+				svg = svg + '<text dy="-1em" style="text-anchor: middle; dominant-baseline: top" x="' + x1 + '" y="' + (y1-50) + '">' + Math.round(series[i].elevation*3.2808399) + 'ft / ' + Math.round(series[i].elevation) + 'm</text>';
+			}
+		}
+	}
+	svg = svg + '</svg>';
+	svg = jQuery(svg).appendTo(jQuery('<div style="background-color: white; height: ' + this.height + 'px"></div>').appendTo(this.div));
+	
+	var icon =org.sarsoft.MapUtil.createFlatCircleImage(12, color);
+	this.marker = new google.maps.Marker({icon: icon, position: series[0].location, map: map, shape: icon.shape });
+	this.trace = jQuery('<div style="position: absolute; left: 0; top: 20px; width: 1px; border-left: 1px solid black; height: ' + this.height + 'px"></div>').appendTo(this.div);
+	
+	svg.mousemove(function(evt) {
+		if(that.marker != null) {
+			var x = (evt.pageX - svg.parent().offset().left)*(series.length-1)/width;
+			x = Math.max(0, Math.min(x, series.length-1));
+			var f = x - Math.floor(x);
+			var elevation = series[Math.floor(x)].elevation*(1-f) + series[Math.ceil(x)].elevation*f;
+			ele.html(Math.round(elevation*3.2808399) + "ft / " + Math.round(elevation) + "m");
+
+			var l = series[Math.floor(x)].location;
+			var r = series[Math.ceil(x)].location;
+			
+			that.marker.setPosition(new google.maps.LatLng(l.lat()*(1-f) + r.lat()*f, l.lng()*(1-f) + r.lng()*f));
+			that.trace.css('left', (evt.pageX - svg.parent().offset().left) + 'px');
+		}
+	});
+}
+
+org.sarsoft.view.ProfileGraph.prototype.hide = function() {
+	this.div.empty();
+	if(this.marker != null) {
+		this.marker.setMap(null);
+		this.marker = null;
+	}
+}
+
 org.sarsoft.view.MapRightPane = function(imap, bodynode) {
 	var that = this;
 	this.imap = imap;
@@ -2779,7 +2860,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	var that = this;
 	var id = waypoint.id;
 	var gll = new google.maps.LatLng(waypoint.lat, waypoint.lng);
-	var icon = (config.icon) ? config.icon : org.sarsoft.MapUtil.createFlatCircleIcon(12, config.color);
+	var icon = (config.icon) ? config.icon : org.sarsoft.MapUtil.createFlatCircleImage(12, config.color);
 	var tt = tooltip;
 	if(typeof tt == "undefined") tt = waypoint.name;
 	tt = tt +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new google.maps.LatLng(waypoint.lat, waypoint.lng))).toString() + ")";
@@ -2994,7 +3075,7 @@ org.sarsoft.InteractiveMap.prototype.discard = function(id) {
 	this._removeOverlay(this.polys[id].overlay);
 	this.polys[id].overlay = this._addOverlay(this.polys[id].way, this.polys[id].config);
 	this.polys[id].overlay.label = label;
-	if(label != null) this.map.addOverlay(label);
+	label.setMap(this.map);
 }
 
 org.sarsoft.InteractiveMap.prototype.addListener = function(event, handler) {
@@ -4110,7 +4191,7 @@ org.sarsoft.MapUtil.createFlatCircleImage = function (size, color) {
   if(color.indexOf('#') == 0) color = color.substring(1);
   var url = "/resource/imagery/icons/circle/" + color + ".png";
   var img = new google.maps.MarkerImage(url, new google.maps.Size(size, size), null, new google.maps.Point(size/2, size/2));
-  img.shape = { type: "circle", coords: [6, 6, 6]}
+  img.shape = { type: "circle", coords: [5, 5, 6]}
   return img;
 }
 

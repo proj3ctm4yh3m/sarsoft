@@ -542,6 +542,10 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		});
 		form.labelInput.keydown(function(event) { if(event.keyCode == 13) that.shapeDlg.dialog.ok();});
 		
+		this.pg = new org.sarsoft.view.ProfileGraph();
+		this.profileDlg = new org.sarsoft.view.MapDialog(imap, "Elevation Profile", this.pg.div, "OK", null, function() { that.pg.hide(); });
+		this.profileDlg.dialog.hideEvent.subscribe(function() { that.pg.hide(); });
+		
 		var items = [{text : "New Marker", applicable : function(obj) { return obj == null && that.showMarkers}, handler: function(data) { that.markerDlg.marker=null; that.markerDlg.entityform.write({url: "#FF0000"});that.markerDlg.point=data.point; that.markerDlg.show(); }},
 		    {text : "New Line", applicable : function(obj) { return obj == null && that.showShapes}, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=false; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0});that.shapeDlg.point=data.point; that.shapeDlg.show(); }},
 		    {text : "New Polygon", applicable : function(obj) { return obj == null && that.showShapes}, handler: function(data) { that.shapeDlg.shape=null; that.shapeDlg.polygon=true; that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});that.shapeDlg.point=data.point; that.shapeDlg.show(); }}];
@@ -557,6 +561,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.del(function() { that.removeMarker(id); that.markerDAO.del(id);}); }},
 	    		{text : "Modify Points", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && !that.getShapeAttr(shape, "inedit"); }, handler : function(data) { that.editShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit") && !that.shapeDlg.inedit; }, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show();}},
+	    		{text : "Profile", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit") && !that.shapeDlg.inedit; }, handler: function(data) { var shape = that.shapes[that.getShapeIdFromWay(data.subject)]; that.profileShape(shape);}},
 	    		{text : "Save Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit") && !that.shapeDlg.inedit; }, handler: function(data) { that.saveShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Discard Changes", applicable : function(obj) { var shape = that.shapes[that.getShapeIdFromWay(obj)]; return shape != null && that.getShapeAttr(shape, "inedit"); }, handler: function(data) { that.discardShape(that.shapes[that.getShapeIdFromWay(data.subject)]) }},
 	    		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getShapeAttr(that.shapes[id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.del(function() { that.removeShape(id); that.shapeDAO.del(id);});}}
@@ -637,6 +642,24 @@ org.sarsoft.controller.MarkupMapController.prototype.redrawShape = function(shap
 org.sarsoft.controller.MarkupMapController.prototype.editShape = function(shape) {
 	this.imap.edit(shape.way.id);
 	this.setShapeAttr(shape, "inedit", true);
+}
+
+org.sarsoft.controller.MarkupMapController.prototype.profileShape = function(shape) {
+	var that = this;
+	var service = new google.maps.ElevationService();
+	var path = [];
+	for(var i = 0; i < shape.way.waypoints.length; i++) {
+		path.push(new google.maps.LatLng(shape.way.waypoints[i].lat, shape.way.waypoints[i].lng));
+	}
+	if(shape.way.polygon) path.push(new google.maps.LatLng(shape.way.waypoints[0].lat, shape.way.waypoints[0].lng));
+	service.getElevationAlongPath({path: path, samples: 100}, function(result, status) {
+		if(status == google.maps.ElevationStatus.OK) {
+			that.profileDlg.show();
+			that.pg.draw(result, shape.color);			
+		} else {
+			alert("An error occurred while retrieving profile data from Google Maps: " + status);
+		}
+	});
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.editMarkerPosition = function(marker) {
@@ -816,7 +839,11 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddShape = function(shape
 			 that.shapeDlg.shape=shape; that.shapeDlg.entityform.write(shape); that.shapeDlg.show(); that.shapeDlg.inedit = true; that.editShape(shape);
 			});
 	}
-	
+
+	jQuery('<span title="Elevation Profile" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/profile.png"/></span>').appendTo(line).click(function() {
+			that.profileShape(shape);
+		});
+
 	var line = jQuery('<div></div>').appendTo(this.dn.shapes[shape.id]);
 	if(shape.comments != null && shape.comments.length > 0) {
 		jQuery('<div style="border-left: 1px solid #945e3b; padding-left: 1ex" class="shape_desc_line_item pre"></div>').append(shape.comments).appendTo(line);
