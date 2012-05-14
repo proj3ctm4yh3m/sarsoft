@@ -743,7 +743,9 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddMarker = function(mark
 
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.markers[marker.id]);
 	line.append('<img style="vertical-align: middle; padding-right: 0.5em; height: 16px; width: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>');
-	jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(marker.label) + '</span>').appendTo(line).click(function() {
+	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(marker.label) + '</span>';
+	if(marker.label == null || marker.label.length == 0) s = '<span style="cursor: pointer; font-weight: bold; color: #CCCCCC">N/A</span>'
+	jQuery(s).appendTo(line).click(function() {
 		that.imap.map.setCenter(new google.maps.LatLng(marker.position.lat, marker.position.lng));
 	});
 	
@@ -821,12 +823,13 @@ org.sarsoft.controller.MarkupMapController.prototype.DNAddShape = function(shape
 	}
 	this.dn.shapes[shape.id].empty();
 	
-	if(shape.label == null || shape.label.length == 0) return;
-
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.shapes[shape.id]);
 	line.append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape));
 
-	jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(shape.label) + '</span>').appendTo(line).click(function() {
+	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(shape.label) + '</span>';
+	if(shape.label == null || shape.label.length == 0) s = '<span style="cursor: pointer; font-weight: bold; color: #CCCCCC">N/A</span>'
+
+	jQuery(s).appendTo(line).click(function() {
 		that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(shape.way.boundingBox[0].lat, shape.way.boundingBox[0].lng), new google.maps.LatLng(shape.way.boundingBox[1].lat, shape.way.boundingBox[1].lng)));
 	});
 	
