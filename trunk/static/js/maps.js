@@ -2733,6 +2733,9 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 		var sw = new google.maps.LatLng(way.boundingBox[0].lat, way.boundingBox[0].lng);
 		var labelwpt = way.waypoints[0];
 		var distance = 0;
+		
+		var lat = 0;
+		var lng = 0;
 		for(var i = 0; i < way.waypoints.length; i++) {
 			var wpt = way.waypoints[i];
 			var gll = new google.maps.LatLng(wpt.lat, wpt.lng);
@@ -2741,9 +2744,19 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 				distance = google.maps.geometry.spherical.computeDistanceBetween(sw, gll);
 				labelwpt = wpt;
 			}
+			lat = lat + way.waypoints[i].lat;
+			lng = lng + way.waypoints[i].lng;
+		}
+		var style = "max-width: 8em";
+		if(way.polygon) {
+			labelwpt = {lat : lat/way.waypoints.length, lng : lng/way.waypoints.length}
+		} else if(way.waypoints.length > 1) {
+			var i = Math.floor((way.waypoints.length-1)/2);
+			if(way.waypoints.length < 3) i = 0;
+			labelwpt = {lat : (way.waypoints[i].lat + way.waypoints[i+1].lat)/2, lng : (way.waypoints[i].lng + way.waypoints[i+1].lng)/2};
 		}
 		if(label != null) {
-			labelOverlay = new Label(this.map, new google.maps.LatLng(labelwpt.lat, labelwpt.lng), "<span class='maplabel'>" + label + "</span>", "width: 8em");
+			labelOverlay = new Label(this.map, new google.maps.LatLng(labelwpt.lat, labelwpt.lng), "<span class='maplabel'>" + label + "</span>", style, null, new google.maps.Size(-0.5, -0.5));
 		}
 	}
 	var poly;
