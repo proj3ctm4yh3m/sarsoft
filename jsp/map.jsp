@@ -52,7 +52,10 @@ org.sarsoft.Loader.queue(function() {
 	  imap.message('${uimessage}', 20000);
 	</c:if>
 
-	if(!org.sarsoft.mobile) imap.registered["org.sarsoft.MapFindWidget"].setState(true);
+	if(!org.sarsoft.mobile) {
+		imap.registered["org.sarsoft.MapFindWidget"].setState(true);
+	}
+	
 	
 	google.maps.event.trigger(map, "resize");
 

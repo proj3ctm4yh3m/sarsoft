@@ -1982,6 +1982,7 @@ org.sarsoft.PositionInfoControl.prototype.centerCrosshair = function() {
 }
 
 org.sarsoft.PositionInfoControl.prototype.update = function(gll) {
+	this.div.css('top', this.imap.map._overlaydropdownmapcontrol.div.height() + 'px');
 	var datumll = GeoUtil.fromWGS84(gll);
 	var utm = GeoUtil.GLatLngToUTM(datumll);
 	var message = utm.toHTMLString() + "<br/>";
@@ -2131,7 +2132,7 @@ org.sarsoft.MapFindWidget.prototype.setState = function(state) {
 		this.find.css('display', 'inline');
 		if(org.sarsoft.touch && this.mylocation != null) this.mylocation.css('display', 'inline');
 	}
-}
+ }
 /*
 org.sarsoft.view.MapSetupWidget = function(imap) {
 	var that = this;
@@ -2345,7 +2346,7 @@ org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
 	
 	this.isArrow = (html == "&darr;");
 
-	var div = jQuery('<div style="color: black; font-weight: normal; visibility: hidden; background: white; position: absolute; right: 0; z-index: -1; ' + ($.browser.msie ? 'top: 0em; padding-top: 0.8em; ' : 'top: 0em; padding-top: 1.5em; ') + css + '"></div>');
+	var div = jQuery('<div style="color: black; font-weight: normal; visibility: hidden; background: white; position: absolute; right: 0; z-index: -1; ' + ($.browser.msie ? 'top: 0em; padding-top: 1.5em; ' : 'top: 0em; padding-top: 1.5em; ') + css + '"></div>');
 	div.appendTo(parent != null ? parent : container);
 	trigger.click(function() {
 		if(div.css("visibility")=="hidden") {
