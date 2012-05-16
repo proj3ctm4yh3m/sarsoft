@@ -38,7 +38,6 @@ org.sarsoft.Loader.queue(function() {
   markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
   if(!embed) {
 	toolsController = new org.sarsoft.controller.MapToolsController(imap);
-    collabWidget = new org.sarsoft.MapCollaborationWidget(imap);
   }
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
   configWidget.loadConfig();
