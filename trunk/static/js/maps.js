@@ -1464,12 +1464,38 @@ org.sarsoft.DataNavigator = function(imap) {
 		var pwdform = jQuery('<form action="/password" method="post"><input type="hidden" name="dest" value="' + window.location + '"/><input type="password" name="password"/></form>').appendTo(this.defaults.pwd.body);
 		jQuery('<button>Enter Password</button>').appendTo(pwdform).click(function() { pwdform.submit(); });
 		
-		this.defaults.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing</div>').appendTo(this.defaults.tenant.body);
+		this.defaults.sharing_container = new org.sarsoft.DNTree(this.defaults.tenant.body, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing');
+		this.defaults.sharing_container.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+		this.defaults.sharing_container.body.css({'padding-left': '10px', display: 'none'});
+		
+		this.defaults.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Share this map</div>').appendTo(this.defaults.sharing_container.body);
 		this.settings_sharing = jQuery('<div></div>');
 		var sharingDlg = new org.sarsoft.view.MapDialog(imap, "Sharing", this.settings_sharing, "OK", "Cancel", function() {
 			if(that.defaults.sharinghandler != null) that.defaults.sharinghandler();
 		});
 		this.defaults.sharing.click(function() {sharingDlg.swap();});
+		
+		this.defaults.sync = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Sync map to changes made by other users</div>').appendTo(this.defaults.sharing_container.body));
+		this.defaults.sync.change(function() {
+			if(that.defaults.timer != null) {
+				clearInterval(that.defaults.timer);
+				that.defaults.timer = null;
+			}
+			if(that.defaults.killswitch != null) {
+				clearTimeout(that.defaults.killswitch);
+				that.defaults.killswitch = null;
+			}
+			var val = that.defaults.sync.attr("checked")=="checked";
+			if(val) {
+				alert('This page will automatically sync with changes made by other users for the next hour.');
+				that.defaults.timer = setInterval(function() {that.imap.timer();}, 10000);
+				that.defaults.killswitch = setTimeout(function() { that.toggle.setValue(false); clearInterval(that.timer); that.timer = null; that.killswitch = null}, 3600000)
+			}
+		});
+
+		if(org.sarsoft.map.autoRefresh) {
+			this.defaults.sync.attr("checked", "checked");
+		}
 		
 		this.defaults.layers = new org.sarsoft.DNTree(this.defaults.tenant.body, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers');
 		this.defaults.layers.body.css('display', 'none');
@@ -3378,37 +3404,6 @@ org.sarsoft.MapURLHashWidget.prototype.getConfig = function(config) {
 	if(config.MapURLHashWidget == null) config.MapURLHashWidget = new Object();
 	config.MapURLHashWidget.track = this.track;
 	return config;
-}
-
-org.sarsoft.MapCollaborationWidget = function(imap) {
-	var that = this;
-	this.imap = imap;
-	this.collaborate = false;
-	
-	this.dlg = new org.sarsoft.view.AlertDialog("Sync Enabled", "This page will automatically sync with changes made by other users for the next hour.");
-	
-	if(org.sarsoft.map.autoRefresh) {
-		this.timer = setInterval(function() {imap.timer();}, org.sarsoft.map.refreshInterval);
-	} else {
-		this.toggle = new org.sarsoft.ToggleControl("SYNC", "Sync to changes made by others.", function(value) {
-			that.collaborate = value;
-			if(that.timer != null) {
-				clearInterval(that.timer);
-				that.timer = null;
-			}
-			if(that.killswitch != null) {
-				clearTimeout(that.killswitch);
-				that.killswitch = null;
-			}
-			if(that.collaborate) {
-				that.dlg.show();
-				that.timer = setInterval(function() {that.imap.timer();}, 10000);
-				that.killswitch = setTimeout(function() { that.toggle.setValue(false); clearInterval(that.timer); that.timer = null; that.killswitch = null}, 3600000)
-			}
-		});
-		this.toggle.setValue(this.collaborate);
-		this.imap.addMenuItem(this.toggle.node, 19);
-	}
 }
 
 org.sarsoft.MapInfoControl = function(map) {
