@@ -136,7 +136,7 @@ org.sarsoft.view.DropMenu = function() {
 	var that = this;
 	this.groups = {}
 	this.values = {}
-	if(org.sarsoft.mobile) {
+	if(org.sarsoft.touch) {
 		this.mobile = true;
 		this.container = jQuery('<select></select>');
 	} else {
