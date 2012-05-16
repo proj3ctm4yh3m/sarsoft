@@ -185,7 +185,7 @@ OverlayDropdownMapControl = function(map) {
 	this.overlayDM = new org.sarsoft.view.DropMenu();
 	this.opacityInput = jQuery('<input style="margin-left: 5px" size="2" value="0"></input>');
 
-	var sliderContainer = jQuery('<div style="float: left; margin-left: 2px"><span style="float: left">Enter % or:</span></div>');
+	var sliderContainer = jQuery('<div style="float: left;"><span style="float: left">Enter % or:</span></div>');
 	this.opacitySlider = org.sarsoft.view.CreateSlider(sliderContainer);
 	this.opacitySlider.subscribe('change', function() {
 		if(!that._inSliderSet) {
@@ -196,7 +196,7 @@ OverlayDropdownMapControl = function(map) {
 		}
 	});
 
-	var tps = jQuery('<span style="color: red; cursor: pointer; padding-right: 3px; padding-left: 3px" title="Additional Layers">+0</span>');
+	var tps = jQuery('<span style="color: red; cursor: pointer; padding-left: 3px; padding-right: 3px" title="Additional Layers">+0</span>');
 	var dd = new org.sarsoft.view.MenuDropdown(tps, 'width: 20em');
 	this.alphaOverlayPlus = tps[0];
 
@@ -207,10 +207,31 @@ OverlayDropdownMapControl = function(map) {
 	this.typeDM.change(function() { that.handleLayerChange() });
 	this.overlayDM.change(function() { that.handleLayerChange() });
 
-	dd.div.append(jQuery('<div></div>').append(
+	this.o1 = jQuery('<div></div>').append(
 			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlayDM.container, "@", this.opacityInput, "%")).append(
-		jQuery('<div style="clear: both; height: 15px"></div>').append(
-				sliderContainer)));
+		jQuery('<div style="clear: both; height: 15px; padding-left: 16px"></div>').append(
+				sliderContainer)).appendTo(dd.div);
+	jQuery('<div style="cursor: pointer; float: left; font-weight: bold; color: red; width: 16px; text-align: center; padding-top: 7px">X</div>').prependTo(this.o1).click(function() {
+		that.o1a.css('display', 'block');
+		that.o1.css('display', 'none')
+		that.opacityInput.val(0);
+		that.handleLayerChange();
+	});
+	this.o1a = jQuery('<div style="display: none; color: red; font-weight: bold; cursor: pointer; padding-left: 3px; padding-top: 3px">+ Add Layer</div>').appendTo(dd.div);
+	this.o1a.click(function() {
+		that.o1a.css('display', 'none');
+		that.o1.css('display', 'block')
+		that.opacitySlider.setValue(0);
+	});
+	dd.onShow = function() {
+		if(that.opacity == 0) {
+			that.o1a.css('display', 'block');
+			that.o1.css('display', 'none')
+		} else {
+			that.o1a.css('display', 'none');
+			that.o1.css('display', 'block')			
+		}
+	}
 	
 	this.aDiv = jQuery('<div style="clear: both; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #808080"></div>').appendTo(dd.div);
 	
@@ -463,11 +484,11 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		this.overlayName = null;
 	} else if(this.overlayName == overlay) {
 		// Iff overlay unchanged, just set opacity
-		if(overlayType != null && overlayType.setOpacity != null) overlayType.setOpacity(opacity);
+		if(overlayType != null && overlayType.setOpacity != null && baseType != overlayType) overlayType.setOpacity(opacity);
 	} else {
 		// Do it all
 		if(this.opacity > 0) this.map.overlayMapTypes.removeAt(0);
-		if(overlayType != null && overlayType.setOpacity != null) overlayType.setOpacity(opacity);
+		if(overlayType != null && overlayType.setOpacity != null && baseType != overlayType) overlayType.setOpacity(opacity);
 		this.map.overlayMapTypes.insertAt(0, overlayType);
 		this.overlayName = overlay;
 	}
