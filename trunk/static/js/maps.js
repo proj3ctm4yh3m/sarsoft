@@ -1953,8 +1953,8 @@ org.sarsoft.PositionInfoControl = function(imap) {
 		this._show = true;
 		
 		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 10; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
-		var div = jQuery('<div style="text-align: right; position: absolute; right: 0; top: 25px; z-index: 1001" class="noprint"></div>').appendTo(this.map.getDiv());
-		this.display = jQuery('<div style="background-color: white; font-weight: bold"></div>').appendTo(div);
+		var div = jQuery('<div style="text-align: right; position: absolute; right: 0; top: ' + imap.map._overlaydropdownmapcontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').appendTo(this.map.getDiv());
+		this.display = jQuery('<div style="background-color: white; padding-top: 3px; font-weight: bold"></div>').appendTo(div);
 		
 		this.centerCrosshair();
 		
