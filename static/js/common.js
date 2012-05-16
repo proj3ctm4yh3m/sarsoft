@@ -2,6 +2,9 @@ if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
+org.sarsoft.touch = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/);
+org.sarsoft.mobile = org.sarsoft.touch && $(window).width() < 600;
+
 org.sarsoft.setCookieProperty = function(cookie, prop, value) {
 	var obj = {}
 	if(YAHOO.util.Cookie.exists(cookie)) {
@@ -133,29 +136,34 @@ org.sarsoft.view.DropMenu = function() {
 	var that = this;
 	this.groups = {}
 	this.values = {}
-	this.container = jQuery('<span style="display: inline-block; border: 1px solid #CCCCCC; color: black"></span>');
-	this.holder = jQuery('<span style="position: relative; z-index: 2000; vertical-align: text-top"></span>').appendTo(this.container);
-	this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold"></span>').appendTo(this.container).hover(function() { that.select.addClass("yuimenuitem-selected") }, function() { that.select.removeClass("yuimenuitem-selected")});
-	this.label = jQuery('<span style="padding-left: 10px"></span>').appendTo(this.select);
-	this.dd = jQuery('<span style="float: right">&darr;</span>').appendTo(this.select);
-	var id = "DropMenu_" + org.sarsoft.view.DropMenu._idx++;
-	this.menu = jQuery('<div class="yui-module yui-overlay yuimenu" style="position: absolute; visibility: hidden; left: 0; top: 1.5em"></div>').appendTo(this.holder);
-	this.bd = jQuery('<div class="bd"></div>').appendTo(this.menu);
-	this.ul = jQuery('<ul class="first-of-type"></ul>').appendTo(this.bd);
-	this.select.click(function() {
-		if(that.menu.css('visibility')=='visible') {
-			that.hide();
-		} else {
-			that.show();
-		}
-	});
-	this.bd.mouseout(function() {
-		if(that.timer != null) clearTimeout(that.timer);
-		that.timer = setTimeout(function() {that.hide()}, 300);
-	});
-	this.bd.mouseover(function() {
-		if(that.timer != null) clearTimeout(that.timer);
-	});
+	if(org.sarsoft.mobile) {
+		this.mobile = true;
+		this.container = jQuery('<select></select>');
+	} else {
+		this.container = jQuery('<span style="display: inline-block; border: 1px solid #CCCCCC; color: black"></span>');
+		this.holder = jQuery('<span style="position: relative; z-index: 2000; vertical-align: text-top"></span>').appendTo(this.container);
+		this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold"></span>').appendTo(this.container).hover(function() { that.select.addClass("yuimenuitem-selected") }, function() { that.select.removeClass("yuimenuitem-selected")});
+		this.label = jQuery('<span style="padding-left: 10px"></span>').appendTo(this.select);
+		this.dd = jQuery('<span style="float: right">&darr;</span>').appendTo(this.select);
+		var id = "DropMenu_" + org.sarsoft.view.DropMenu._idx++;
+		this.menu = jQuery('<div class="yui-module yui-overlay yuimenu" style="position: absolute; visibility: hidden; left: 0; top: 1.5em"></div>').appendTo(this.holder);
+		this.bd = jQuery('<div class="bd"></div>').appendTo(this.menu);
+		this.ul = jQuery('<ul class="first-of-type"></ul>').appendTo(this.bd);
+		this.select.click(function() {
+			if(that.menu.css('visibility')=='visible') {
+				that.hide();
+			} else {
+				that.show();
+			}
+		});
+		this.bd.mouseout(function() {
+			if(that.timer != null) clearTimeout(that.timer);
+			that.timer = setTimeout(function() {that.hide()}, 300);
+		});
+		this.bd.mouseover(function() {
+			if(that.timer != null) clearTimeout(that.timer);
+		});
+	}
 }
 
 org.sarsoft.view.DropMenu._idx = 0;
@@ -163,6 +171,11 @@ org.sarsoft.view.DropMenu._idx = 0;
 org.sarsoft.view.DropMenu.prototype.addItem = function(text, value, group) {
 	var that = this;
 	if(this.value == null) this.value = value;
+	
+	if(this.mobile) {
+		this.container.append('<option value="' + value + '">' + text + '</option>');
+		return;
+	}
 	
 	this.values[value] = text;
 	var li = jQuery('<li class="yuimenuitem"></li>').appendTo(this.ul);
@@ -204,18 +217,27 @@ org.sarsoft.view.DropMenu.prototype.hide = function() {
 }
 
 org.sarsoft.view.DropMenu.prototype.empty = function() {
+	if(this.mobile) return this.container.empty();
 	this.groups = {};
 	this.value = null;
 	this.ul.empty();
 }
 
 org.sarsoft.view.DropMenu.prototype.val = function(val) {
+	if(this.mobile) {
+		if(val == null) return this.container.val();
+		return this.container.val(val); // passing null not the same as passing no arg
+	}
 	if(val == null) return this.value;
 	this.value = val;
 	this.label.html(this.values[val]);
 }
 
 org.sarsoft.view.DropMenu.prototype.change = function(fn) {
+	if(this.mobile) {
+		if(fn == null) return this.container.change();
+		return this.container.change(fn);
+	}
 	if(fn != null) {
 		this.listener=fn;
 		return;

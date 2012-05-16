@@ -14,7 +14,8 @@
 <html>
 <head>
 <meta content='True' name='HandheldFriendly' />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+<meta name="format-detection" content="telephone=no" />
 ${head}
 <script type="text/javascript">
 function doload() {
@@ -67,30 +68,32 @@ org.sarsoft.Loader.queue(function() {
   if(!embed) {
 	imap.message("Right click on map background to create shapes", 30000);
 
-	var leaveImg = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>');
-	var leaveDD = new org.sarsoft.view.MenuDropdown(leaveImg, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
+	if(!org.sarsoft.mobile) {
+		var leaveImg = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>');
+		var leaveDD = new org.sarsoft.view.MenuDropdown(leaveImg, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
 
-	var leaveBody = jQuery('<div style="padding-top: 5px">Leave map view?<br/><br/></div>').appendTo(leaveDD.div);
-	var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads (data is automatically saved as you work on it)</input>');
-	if(org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.userPermissionLevel == "WRITE") {
-		leaveCB.appendTo(leaveBody);
-		jQuery('<br/><br/>').appendTo(leaveBody);
-	}
-	
-	leaveHandler = function(url) {
-		if(leaveCB.attr("checked")=="checked") {
-			configWidget.saveConfig(function() {
-				window.location = url;
-			});
-		} else {
-			window.location = url;
+		var leaveBody = jQuery('<div style="padding-top: 5px">Leave map view?<br/><br/></div>').appendTo(leaveDD.div);
+		var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads (data is automatically saved as you work on it)</input>');
+		if(org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.userPermissionLevel == "WRITE") {
+			leaveCB.appendTo(leaveBody);
+			jQuery('<br/><br/>').appendTo(leaveBody);
 		}
+		
+		leaveHandler = function(url) {
+			if(leaveCB.attr("checked")=="checked") {
+				configWidget.saveConfig(function() {
+					window.location = url;
+				});
+			} else {
+				window.location = url;
+			}
+		}
+		var bottomRow = jQuery('<div>Go To:</div>').appendTo(leaveBody);
+		jQuery('<a href="javascript:leaveHandler(\'/maps\')" style="margin-left: 5px">Home Page</a>').appendTo(bottomRow);
+		jQuery('<a href="javascript:leaveHandler(\'/guide?id=${tenant.name}\')" style="margin-left: 20px">Printable Guide</a>').appendTo(bottomRow);
+		
+		imap.addMenuItem(leaveDD.container, 40);
 	}
-	var bottomRow = jQuery('<div>Go To:</div>').appendTo(leaveBody);
-	jQuery('<a href="javascript:leaveHandler(\'/maps\')" style="margin-left: 5px">Home Page</a>').appendTo(bottomRow);
-	jQuery('<a href="javascript:leaveHandler(\'/guide?id=${tenant.name}\')" style="margin-left: 20px">Printable Guide</a>').appendTo(bottomRow);
-	
-	imap.addMenuItem(leaveDD.container, 40);
 	
 	google.maps.event.trigger(map, "resize");
 	

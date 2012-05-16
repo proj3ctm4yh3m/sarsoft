@@ -3,7 +3,8 @@
 <html xmlns="http://www.w3.org/TR/html4/loose.dtd">
 <head>
 <meta content='True' name='HandheldFriendly' />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+<meta name="format-detection" content="telephone=no" />
 ${head}
 <script type="text/javascript">
 
@@ -15,7 +16,7 @@ org.sarsoft.Loader.queue(function() {
 	var opts = {UTM: true, switchableDatum: true, supressPermissionWidget: true}
 	if(!embed) {
 		opts.positionWindow = true;
-		opts.size = true;
+		opts.size = !org.sarsoft.mobile;
 		opts.separators = true;
 		opts.find = true;
 		opts.container = $('#page_container')[0];
@@ -30,7 +31,7 @@ org.sarsoft.Loader.queue(function() {
 
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 
-	if(!embed) {
+	if(!embed && !org.sarsoft.mobile) {
 
 		var leaveImg = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>');
 		var leaveDD = new org.sarsoft.view.MenuDropdown(leaveImg, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
@@ -51,7 +52,7 @@ org.sarsoft.Loader.queue(function() {
 	  imap.message('${uimessage}', 20000);
 	</c:if>
 
-	imap.registered["org.sarsoft.MapFindWidget"].setState(true);
+	if(!org.sarsoft.mobile) imap.registered["org.sarsoft.MapFindWidget"].setState(true);
 	
 	google.maps.event.trigger(map, "resize");
 
