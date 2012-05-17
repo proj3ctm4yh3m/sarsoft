@@ -106,7 +106,7 @@ org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
 			var url = config.template;
 			if(zoom > config.maxresolution) {
-				url = '/resource/imagery/tilecache/' + config.name + '/{Z}/' + '/{X}/' + '{Y}.png';
+				url = '/resource/imagery/tilecache/' + config.name + '/{Z}/{X}/{Y}.png';
 			}
 			return url.replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
 		}});
