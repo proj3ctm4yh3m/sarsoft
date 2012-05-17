@@ -89,6 +89,7 @@ public class ImageryController extends JSONBaseController {
 		url = url.replaceAll("\\{Z\\}", Integer.toString(z));
 		url = url.replaceAll("\\{X\\}", Integer.toString(x));
 		url = url.replaceAll("\\{Y\\}", Integer.toString(y));
+		url = url.replaceAll("\\{V\\}", "s-11111111");
 		Cache cache = CacheManager.getInstance().getCache("tileCache");
 
 		byte[] array = null;
@@ -164,6 +165,27 @@ public class ImageryController extends JSONBaseController {
 		}
 		return null;
 	}
+	
+	protected InputStream composite(InputStream[] in) {
+		try {
+			BufferedImage composited = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+			Graphics2D g = composited.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+			g.setBackground(new Color(255, 255, 255, 0));
+			g.clearRect(0, 0, 256, 256);
+				for(int i = 0; i < in.length; i++) {
+					BufferedImage original = ImageIO.read(in[i]);
+					g.drawImage(original, 0, 0, 256, 256, 0, 0, 256, 256, null);
+				}
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ImageIO.write(composited, "png", out);
+			return new ByteArrayInputStream(out.toByteArray());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
@@ -202,6 +224,17 @@ public class ImageryController extends JSONBaseController {
 			}
 		}
 		respond(in, response, layer + "/" + z + "/" + x + "/" + y);
+	}
+	
+	@RequestMapping(value="/resource/imagery/compositetile/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getCompositeTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		String[] layers = layer.split(",");
+		InputStream[] images = new InputStream[layers.length];
+		for(int i = 0; i < layers.length; i++) {
+			MapSource source = getMapSourceByAlias(layers[i]);
+			images[i] = getRemoteTileInputStream(source, z, x, y);
+		}
+		respond(composite(images), response, layer + "/" + z + "/" + x + "/" + y);
 	}
 
 	@RequestMapping(value="/resource/imagery/icons/circle/{rgb}.png", method = RequestMethod.GET)

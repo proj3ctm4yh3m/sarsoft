@@ -47,6 +47,7 @@ public abstract class JSONBaseController {
 	private List<MapSource> mapSources;
 	private List<String> visibleMapSources;
 	private Map<String, MapSource> mapSourcesByName;
+	private Map<String, MapSource> mapSourcesByAlias;
 	private String header = null;
 	private String preheader = null;
 	private String welcomeHTML;
@@ -112,6 +113,11 @@ public abstract class JSONBaseController {
 		return mapSourcesByName.get(name);
 	}
 	
+	protected MapSource getMapSourceByAlias(String alias) {
+		if(mapSourcesByAlias == null) getMapSources();
+		return mapSourcesByAlias.get(alias);
+	}
+	
 	protected List<MapSource> getMapSources() {
 		if(mapSources != null) return mapSources;
 		synchronized(this) {
@@ -143,8 +149,10 @@ public abstract class JSONBaseController {
 			}
 			mapSources = Collections.unmodifiableList(mapSources);
 			mapSourcesByName = new HashMap<String, MapSource>();
+			mapSourcesByAlias = new HashMap<String, MapSource>();
 			for(MapSource source : mapSources) {
 				mapSourcesByName.put(source.getName(), source);
+				mapSourcesByAlias.put(source.getAlias(), source);
 			}
 		}
 		return mapSources;

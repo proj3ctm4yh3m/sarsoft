@@ -1544,18 +1544,33 @@ org.sarsoft.DataNavigator = function(imap) {
 		if(!org.sarsoft.touch) this.defaults.kml = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>Export to Google Earth</div>').appendTo(this.account.body);
 	}
 	
-	var kmlBody = jQuery('<div>Export a map layer to Google Earth.  Export will be limited to the current map bounds; zooming in can give you a higher resolution export.<br/><br/>Select a Layer:&nbsp;&nbsp;</div>');
+	var kmlBody = jQuery('<div>Export map layers to Google Earth.  Export will be limited to the current map bounds; zooming in can give you a higher resolution export.<br/><br/></div>');
+	var supersize = jQuery('<input type="checkbox"/>').appendTo(kmlBody);
+	kmlBody.append('<span>Super size this export (more tiles, more coverage, larger file)</span><br/><br/><span>Select Base Layer:&nbsp;&nbsp;</span>');
 	var kmlSelect = jQuery('<select></select>').appendTo(kmlBody);
+	kmlBody.append('<br/>');
+	var kmlAlphaOverlays = [];
 	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
 		if(type.type == "TILE") {
-			jQuery('<option value="' + type.name + '">' + type.name + '</option>').appendTo(kmlSelect);
+			if(!type.alphaOverlay) {
+				jQuery('<option value="' + type.alias + '">' + type.name + '</option>').appendTo(kmlSelect);
+			} else {
+				kmlAlphaOverlays.push(jQuery('<input type="checkbox" value="' + type.alias + '"/>').appendTo(kmlBody));
+				kmlBody.append(type.name + '<br/>');
+			}
 		}
 	}
 	var kmlDlg = new org.sarsoft.view.MapDialog(imap, "Export Map Layer to Google Earth", kmlBody, "Export", "Cancel", function() {
 		var layer = kmlSelect.val();
+		imap.registered["org.sarsoft.view.MapDialog"].hide(); // dialog is still open, bounds not accurate
 		var bounds = map.getBounds();
-		window.location="/kml?layer=" + encodeURIComponent(layer) + "&bounds=" + bounds.getSouthWest().lng() + "," + bounds.getSouthWest().lat() + "," + bounds.getNorthEast().lng() + "," + bounds.getNorthEast().lat();
+		var aolayers = "";
+		for(var i = 0; i < kmlAlphaOverlays.length; i++) {
+			if(kmlAlphaOverlays[i].attr("checked")=="checked") aolayers = aolayers + (aolayers.length > 0 ? "," : "") + kmlAlphaOverlays[i].val();
+		}
+		if(aolayers.length > 0) layer = layer + "," + aolayers;
+		window.location="/kml?layer=" + encodeURIComponent(layer) + "&supersize=" + (supersize.attr("checked")=="checked") + "&bounds=" + bounds.getSouthWest().lng() + "," + bounds.getSouthWest().lat() + "," + bounds.getNorthEast().lng() + "," + bounds.getNorthEast().lat();
 	});
 	
 	if(this.defaults.kml != null) this.defaults.kml.click(function() { kmlSelect.val(map.getMapTypeId()); kmlDlg.swap(); });
