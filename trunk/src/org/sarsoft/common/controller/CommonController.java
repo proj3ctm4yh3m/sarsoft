@@ -1,10 +1,7 @@
 package org.sarsoft.common.controller;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -125,9 +122,15 @@ public class CommonController extends JSONBaseController {
 		
 		kml = kml + "</Document></kml>";
 
-		response.setHeader("Content-Disposition", "attachment; filename=" + sources[0].getName() + ".kml");
-		model.addAttribute("echo", kml);
-		return "/echo";
+		response.setContentType("application/vnd.google-earth.kml+xml");
+		response.setHeader("Content-Disposition", "attachment; filename=" + sources[0].getName().replaceAll(" ", "_") + ".kml");
+
+		try {
+			response.getOutputStream().write(kml.getBytes());
+			response.getOutputStream().close();
+		} catch (Exception e) {}
+		return null;
+
 	}
 
 }
