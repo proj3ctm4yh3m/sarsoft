@@ -120,9 +120,9 @@ org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: config.maxresolution, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
 			var bounds = wm.tileLatLngBounds(point.x, wm.tileY(point.y, zoom), zoom);
 		    var url = config.template;
-		    url = url.replace(/\{left\}/g, bounds[3]);
+		    url = url.replace(/\{left\}/g, bounds[1]);
 		    url = url.replace(/\{bottom\}/g, bounds[0]);
-		    url = url.replace(/\{right\}/g, bounds[1]);
+		    url = url.replace(/\{right\}/g, bounds[3]);
 		    url = url.replace(/\{top\}/g, bounds[2]);
 		    url = url.replace(/\{tilesize\}/g, config.tilesize ? config.tilesize : 256);
 		    return url;
@@ -2117,7 +2117,6 @@ org.sarsoft.MapFindWidget = function(imap) {
 	var go = jQuery('<button>GO</button>').appendTo(container)
 	go.click(function() {
 		var entry = that.locationEntryForm.read(function(gll) { that.imap.setCenter(gll, 14);});
-		if(!entry) that.checkBlocks();
 	});
 	
 	if(typeof(navigator.geolocation) != "undefined") {
@@ -3764,7 +3763,7 @@ org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
 		} else {
 			return false;
 		}
-	} else if(type == "DDMMHH") {
+	} else if(type == "DMH") {
 		var latdd = this.DDMMHH.latDD.val();
 		var lngdd = this.DDMMHH.lngDD.val();
 		if(latdd == null || latdd.length == 0 || lngdd == null || lngdd.length == 0) return false; 
