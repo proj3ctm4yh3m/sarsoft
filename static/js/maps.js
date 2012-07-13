@@ -1,21 +1,6 @@
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 
-org.sarsoft.EScaleControl = function() {
-	GScaleControl.call(this);
-}
-
-//org.sarsoft.EScaleControl.prototype = new GScaleControl();
-
-org.sarsoft.EScaleControl.prototype.getDefaultPosition = function() {
-	var position = GScaleControl.prototype.getDefaultPosition.call(this);
-	return new GControlPosition(position.anchor, new GSize(120,position.offset.height));
-}
-
-org.sarsoft.EScaleControl.prototype.printable = function() {
-	return true;
-}
-
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = new Object();
 org.sarsoft.EnhancedGMap._coordinates = "DD";
 
@@ -2612,7 +2597,7 @@ org.sarsoft.view.MapRightPane.prototype.hide = function() {
 
 org.sarsoft.ProjectionCaptureOverlay = function(imap) {
 	this.imap = imap;
-	this.setValues({map: imap.map});
+	this.setMap(imap.map);
 }
 org.sarsoft.ProjectionCaptureOverlay.prototype = new google.maps.OverlayView();
 org.sarsoft.ProjectionCaptureOverlay.prototype.onAdd = function() {}
@@ -3130,7 +3115,7 @@ org.sarsoft.InteractiveMap.prototype.getNewWaypoints = function(point, polygon) 
 }
 
 org.sarsoft.InteractiveMap.prototype._getPath = function(overlay) {
-	if(typeof overlay.getPath != null) {
+	if(overlay.getPath != null) {
 		return overlay.getPath();
 	} else {
 		return overlay.getPaths().getAt(0);
@@ -4329,9 +4314,11 @@ function Label(map, position, text, style, pixelOffset, centerOffset) {
 
 	this.div_ = jQuery('<div style="position: absolute"></div>')[0];
 	this.div2_ = jQuery('<div style="position: relative; z-index: 100; ' + style + '" class="olAlphaImage">' + text + '</div>').appendTo(this.div_)[0];
+	
+	this.setMap(map);
 }
 
-Label.prototype = new google.maps.OverlayView;
+Label.prototype = new google.maps.OverlayView();
 
 Label.prototype.onAdd = function() {
 	var pane = this.getPanes().overlayLayer;
@@ -4406,7 +4393,7 @@ GeoRefImageOverlay.prototype.remove = function() {
 	this.div.parentNode.removeChild(this.div);
 }
 
-GeoRefImageOverlay.prototype.redraw = function(force) {
+GeoRefImageOverlay.prototype.draw = function(force) {
   var pixel = this._map.fromLatLngToDivPixel(this.latlng);
   var ne = this._map.fromDivPixelToLatLng(new google.maps.Point(pixel.x-this.point.x, pixel.y-this.point.y));
   var pxDistance = Math.sqrt(Math.pow(this.point.x, 2) + Math.pow(this.point.y, 2));
