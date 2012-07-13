@@ -170,8 +170,11 @@ google.maps.Map = function(node, opts) {
 	
 	this.ol.vectorLayer = new OpenLayers.Layer.Vector("overlays", {});
 	this.ol.map.addLayer(this.ol.vectorLayer);
+	this.ol.markerLayer = new OpenLayers.Layer.Markers("marker", {});
+    this.ol.map.addLayer(this.ol.markerLayer);
 	this.ol.map.setLayerIndex(this.ol.vectorLayer, 20);
-	
+	this.ol.map.setLayerIndex(this.ol.markerLayer, 21);
+    
 	this.ol.map.setCenter(new OpenLayers.LonLat(0, 0), 1);
 	
 	this.ol.modifyControl = new OpenLayers.Control.ModifyFeature(this.ol.vectorLayer);
@@ -194,11 +197,11 @@ google.maps.Map = function(node, opts) {
 	}
 	
 	var createMouseEvent = function(source, trigger, e) {
-		google.maps.event.trigger(source, trigger, {latLng: google.maps.LatLng.fromLonLat(this.map.ol.map.getLonLatFromViewPortPx(e.xy))});
+		google.maps.event.trigger(source, trigger, {latLng: google.maps.LatLng.fromLonLat(that.ol.map.getLonLatFromViewPortPx(e.xy))});
 	}
 	
 	var createPolyMouseEvent = function(poly, trigger, e) {
-		google.maps.event.trigger(poly, trigger, {latLng: google.maps.LatLng.fromLonLat(this.map.ol.map.getLonLatFromViewPortPx(e.xy))});
+		google.maps.event.trigger(poly, trigger, {latLng: google.maps.LatLng.fromLonLat(that.ol.map.getLonLatFromViewPortPx(e.xy))});
 	}
 	
 	var createEvent = function(trigger, e) {
@@ -288,6 +291,7 @@ google.maps.Map = function(node, opts) {
 		var type = that.overlayMapTypes.getAt(i);
 		that.ol.map.addLayer(type.ol.olayer);
         that.ol.map.setLayerIndex(that.ol.vectorLayer, 20);
+        that.ol.map.setLayerIndex(that.ol.markerLayer, 21);
     });
 
 }
@@ -425,7 +429,7 @@ google.maps.OverlayView.prototype.getMap = function() {
 }
 
 google.maps.OverlayView.prototype.getPanes = function() {
-	return {mapPane : this.map.ol.vectorLayer.div, overlayLayer: this.map.ol.vectorLayer.div}
+	return {mapPane : this.map.ol.markerLayer.div, overlayLayer: this.map.ol.markerLayer.div}
 }
 
 google.maps.OverlayView.prototype.getProjection = function() { return this.projection }
@@ -660,15 +664,13 @@ google.maps.Marker = function(opts) {
 	var icon = new OpenLayers.Icon(url, size, offset);
 
 	this.ol = new Object();
-//	this.ol.marker = new OpenLayers.Marker(google.maps.LatLng.toLonLat(this.position), icon);
+	if(opts.title != null) {
+		this.title = opts.title;
+	}
 	
 	var ll = google.maps.LatLng.toLonLat(this.position);
 	this.ol.marker = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(ll.lon, ll.lat), null, {externalGraphic: url, graphicWidth: size.w, graphicHeight: size.h});
 	
-	if(opts.title != null) {
-		this.title = opts.title;
-//		this.ol.marker.icon.imageDiv.title = this.title;
-	}
 	this.ol.marker.goverlay = this;
 	
 	if(opts.map != null) this.setMap(opts.map);
