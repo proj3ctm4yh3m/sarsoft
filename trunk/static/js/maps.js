@@ -588,7 +588,7 @@ org.sarsoft.view.ScaleControl = function(map, container) {
 	this.map = map;
 	this.container = container;
 	this.state = true;
-	this.div = jQuery('<div style="position: relative"></div>').appendTo(jQuery('<div style="position: absolute; bottom: 2px; left: 26px; height: 2em; font-size: 10px; z-index: 20"></div>').appendTo(container));
+	this.div = jQuery('<div style="position: relative"></div>').appendTo(jQuery('<div style="position: absolute; bottom: 2px; left: 26px; height: 2em; font-size: 10px; z-index: 1000"></div>').appendTo(container));
 	google.maps.event.addListener(map, "zoom_changed", function() { if(that.state) that.draw(); });
 	google.maps.event.addListener(map, "center_changed", function() { if(that.state) that.draw(); });
 }
@@ -1003,9 +1003,9 @@ org.sarsoft.UTMGridControl = function(imap) {
 		var fn = function() {
 			if(that.utminitialized == false) {
 				that._drawUTMGrid();
-				google.maps.event.addListener(map, "idle", function() { that._drawUTMGrid(); });
+				google.maps.event.addListener(imap.map, "idle", function() { that._drawUTMGrid(); });
 //				google.maps.event.addListener(map, "zoom_changed", function(foo, bar) { that._drawUTMGrid(); });
-				google.maps.event.addListener(map, "dragstart", function() {
+				google.maps.event.addListener(imap.map, "dragstart", function() {
 					for(var i = 0; i < that.text.length; i++) {
 						that.text[i].setMap(null);
 					}
@@ -1019,7 +1019,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 		}
 	
 		for(var i = 0; i < 4; i++) {
-			this.borders[i] = new org.sarsoft.MapBorderControl(map, i);
+			this.borders[i] = new org.sarsoft.MapBorderControl(imap.map, i);
 			this.borders[i].div.css('display', 'none');
 		}
 	
@@ -2780,6 +2780,7 @@ org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 			}
 		}
 	}
+	if(config.base == null) return;
 	this.setMapLayers(config.base, config.overlay, config.opacity, names);
 }
 
@@ -2966,14 +2967,12 @@ org.sarsoft.InteractiveMap.prototype.addRangeRing = function(center, radius, ver
 		var vertexUTM = new UTM(centerUTM.e + radius*Math.sin(i*2*Math.PI/vertices), centerUTM.n + radius*Math.cos(i*2*Math.PI/vertices), centerUTM.zone);
 		glls.push(GeoUtil.UTMToGLatLng(vertexUTM));
 	}
-	var poly = new GPolyline(glls, "#000000", 1, 1);
-	this.map.addOverlay(poly);
+	var poly = new google.maps.Polyline({map: this.map, path: glls, strokeColor: "#000000", strokeOpacity: 1, strokeWeight: 1});
 	this.rangerings.push(poly);
 
 	var labelUTM = new UTM(centerUTM.e, 1*centerUTM.n + 1*radius, centerUTM.zone);
-	var label = new ELabel(GeoUtil.UTMToGLatLng(labelUTM), "<span class='maplabel'>" + radius + "m</span>", "", new google.maps.Size(-6, -4));
+	var label = new Label(this.map, GeoUtil.UTMToGLatLng(labelUTM), "<span class='maplabel'>" + radius + "m</span>", "", new google.maps.Size(-6, -4));
 	this.rangerings.push(label);
-	this.map.addOverlay(label);
 }
 
 org.sarsoft.InteractiveMap.prototype.removeRangeRings = function() {
@@ -3000,7 +2999,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	var tt = tooltip;
 	if(typeof tt == "undefined") tt = waypoint.name;
 	tt = tt +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new google.maps.LatLng(waypoint.lat, waypoint.lng))).toString() + ")";
-	var marker = new google.maps.Marker({title: tt, icon: icon, position: gll, map: map, shape: icon.shape });
+	var marker = new google.maps.Marker({title: tt, icon: icon, position: gll, map: this.map, shape: icon.shape });
 	
 	if(config.drag != null) {
 		marker.setDraggable(true);
@@ -3236,7 +3235,7 @@ org.sarsoft.InteractiveMap.prototype.growMap = function(gll) {
 
 org.sarsoft.InteractiveMap.prototype.setCenter = function(center, zoom) {
 	this.map.setCenter(center);
-	this.map.setZoom(zoom);
+	if(zoom != null) this.map.setZoom(zoom);
 	this._boundsInitialized = true;
 }
 
@@ -3430,7 +3429,7 @@ org.sarsoft.MapURLHashWidget.prototype.getConfig = function(config) {
 org.sarsoft.MapInfoControl = function(map) {
 	var that = this;
 	this.minimized = false;
-	this.div = jQuery('<div style="position: absolute; right: 0; bottom: 0; z-index: 20; white-space: nowrap"></div>').appendTo(map.getDiv());
+	this.div = jQuery('<div style="position: absolute; right: 0; bottom: 0; z-index: 1000; white-space: nowrap"></div>').appendTo(map.getDiv());
 	this.ctrl = jQuery('<span style="background: white" class="noprint"></span>').appendTo(this.div);
 	this.min = jQuery('<img style="cursor: pointer; width: 12px; height: 12px" src="' + org.sarsoft.imgPrefix + '/right.png"/>').appendTo(this.ctrl);
 	this.min.click(function() {
@@ -4358,7 +4357,6 @@ Label.prototype.draw = function() {
 
 	this.div2_.style.left = Math.round(p.x + this.pixelOffset.width + w * this.centerOffset.width) + "px";
 	this.div2_.style.top = Math.round(p.y +this.pixelOffset.height + h * this.centerOffset.height) + "px";
-	
 };
 
 

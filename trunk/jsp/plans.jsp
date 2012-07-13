@@ -8,14 +8,13 @@ ${head}
 function doload() {
 org.sarsoft.Loader.queue(function() {
   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
-  imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true});
+  imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true, container: $('#page_container')[0]});
   plansController = new org.sarsoft.controller.OperationalPeriodMapController(imap, {id : ${period.id}});
   waypointController = new org.sarsoft.controller.SearchWaypointMapController(imap);
   resourceController = new org.sarsoft.controller.ResourceLocationMapController(imap);
   callsignController = new org.sarsoft.controller.CallsignMapController(imap);
   clueController = new org.sarsoft.controller.ClueLocationMapController(imap);
   markupController = new org.sarsoft.controller.MarkupMapController(imap, true);
-  plansController.setupWidget = new org.sarsoft.view.MapSetupWidget(imap);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
   setInterval("imap.timer()", org.sarsoft.map.refreshInterval);
@@ -24,7 +23,13 @@ org.sarsoft.Loader.queue(function() {
 </script>
 </head>
 <body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
-<div id="map_canvas" style="width: 100%; height: 100%"></div>
+<div id="page_container" style="height: 100%">
+ <div id="map_left">
+ </div>
+ <div id="map_right" style="height: 100%">
+  <div id="map_canvas" style="width: 100%; height: 100%"></div>
+ </div>
+</div>
 
 </body>
 </html>

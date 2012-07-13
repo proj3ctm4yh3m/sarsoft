@@ -12,7 +12,7 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete, caption) {
 		{ key : "assignmentId", label : "Assignment", sortable : true},
 		{ key : "callsign", label : "Callsign"},
 		{ key : "spotId", label: "SPOT ID"},
-		{ key : "position", label : "Position", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
+		{ key : "position", label : "Position", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.google.maps.LatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
 		{ key : "lastFix", label : "Last Update", sortable : true }
 	];
 	if(onDelete == null) {
@@ -66,7 +66,7 @@ org.sarsoft.controller.ResourceViewMapController.prototype._loadResourceCallback
 	config.color = "#FF0000";
 	config.opacity = 100;
 
-	that.imap.setCenter(new GLatLng(resource.position.lat, resource.position.lng), 13);
+	that.imap.setCenter(new google.maps.LatLng(resource.position.lat, resource.position.lng), 13);
 	that.imap.addWaypoint(resource.position, config, resource.name);
 }
 
@@ -84,12 +84,30 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
      		{text : "Details (opens new window)", applicable : function(obj) { return obj != null && that.getResourceIdFromWpt(obj) != null}, handler : function(data) { window.open('/resource/' + that.getResourceIdFromWpt(data.subject)); }}
      		]);
 	
-	var showHide = new org.sarsoft.ToggleControl("LOC", "Show/Hide Resource Locations", function(value) {
-		that.showLocations = value;
-		that.handleSetupChange();
-	});
-	this.imap.addMenuItem(showHide.node, 18);
-	this.showHide = showHide;
+	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
+		var dn = imap.registered["org.sarsoft.DataNavigator"];
+		this.dn = new Object();
+		var rtree = dn.addDataType("Resources");
+		rtree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		this.dn.rdiv = jQuery('<div></div>').appendTo(rtree.body);
+		this.dn.resources = new Object();
+		this.dn.resourcetoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(rtree.header).click(function(evt) {
+			that.showLocations=!that.showLocations;
+			if(that.showLocations) {
+				that.dn.resourcetoggle.html('(shown)');
+			} else {
+				that.dn.resourcetoggle.html('(hidden)');
+			}
+			that.handleSetupChange();
+			evt.stopPropagation();
+		});
+
+		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
+			jQuery('<span style="color: green; cursor: pointer">+ New Resource</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(rtree.body)).click(function() {
+				// TODO
+			});
+		}
+	}
 
 	that.resourceDAO.loadAll(function(resources) {
 		var n = -180;
@@ -109,8 +127,8 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 			}
 		}
 		if(total > 1) {
-			that.imap.growInitialMap(new GLatLng(s, w));
-			that.imap.growInitialMap(new GLatLng(n, e));
+			that.imap.growInitialMap(new google.maps.LatLng(s, w));
+			that.imap.growInitialMap(new google.maps.LatLng(n, e));
 		}
 
 	});		
@@ -152,10 +170,42 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.timer = function(
 	that.resourceDAO.mark();
 }
 
+org.sarsoft.controller.ResourceLocationMapController.prototype.DNAddResource = function(resource) {
+	var that = this;
+	if(this.dn.rdiv == null) return;
+
+	if(this.dn.resources[resource.id] == null) {
+		this.dn.resources[resource.id] = jQuery('<div></div>').appendTo(this.dn.rdiv);
+	}
+	this.dn.resources[resource.id].empty();
+	
+	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.resources[resource.id]);
+
+	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(resource.name) + '</span>';
+
+	jQuery(s).appendTo(line).click(function() {
+		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
+		if(resource.position != null) that.imap.setCenter(new google.maps.LatLng(resource.position.lat, resource.position.lng));
+	});
+	
+	
+	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
+		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
+			// TODO handle delete
+		});
+		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
+			// TODO handle edit
+			});
+	}
+
+	var line = jQuery('<div></div>').appendTo(this.dn.resources[resource.id]);
+}
+
 org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = function(resource) {
 	if(this.resources[resource.id] != null) this.imap.removeWaypoint(this.resources[resource.id].position);
 	if(resource.position == null) return;
 	this.resources[resource.id] = resource;
+	this.DNAddResource(resource);
 	if(!this.showLocations) return; // need lines above this in case the user re-enables resources
 
 	var config = new Object();	
@@ -188,7 +238,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.isResourceVisible
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.handleSetupChange = function() {
-	this.showHide.setValue(this.showLocations);
+	// TODO update show/hide toggle
 	if(!this.showLocations) {
 		for(var key in this.resources) {
 			this.imap.removeWaypoint(this.resources[key].position);
@@ -222,7 +272,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.getFindBlock = fu
 		var id = select.options[select.selectedIndex].value;
 		if(id != "--") {
 			var wpt = that.resources[id].position;
-			that.imap.map.setCenter(new GLatLng(wpt.lat, wpt.lng), 14);
+			that.imap.map.setCenter(new google.maps.LatLng(wpt.lat, wpt.lng), 14);
 			return true;
 		}
 		return false;
