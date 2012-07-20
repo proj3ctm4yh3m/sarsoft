@@ -309,7 +309,8 @@ public class SearchAssignmentController extends JSONBaseController {
 	}
 
 	@RequestMapping(value="/rest/assignment/{assignmentId}", method = RequestMethod.POST)
-	public String updateAssignment(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request) {
+	public String updateAssignment(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request, JSONForm params) {
+		SearchAssignment updated = SearchAssignment.createFromJSON(parseObject(params));
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		switch(action) {
@@ -343,6 +344,13 @@ public class SearchAssignmentController extends JSONBaseController {
 			}
 			dao.delete(assignment);
 			return json(model, assignment);
+		case CREATE:
+			if(updated.getDetails() != null) assignment.setDetails(updated.getDetails());
+			if(updated.getResourceType() != null) assignment.setResourceType(updated.getResourceType());
+			if(updated.getUnresponsivePOD() != null) assignment.setUnresponsivePOD(updated.getUnresponsivePOD());
+			if(updated.getResponsivePOD() != null) assignment.setResponsivePOD(updated.getResponsivePOD());
+			if(updated.getCluePOD() != null) assignment.setCluePOD(updated.getCluePOD());
+			if(updated.getTimeAllocated() != null) assignment.setTimeAllocated(updated.getTimeAllocated());
 		}
 		dao.save(assignment);
 		return json(model, assignment);

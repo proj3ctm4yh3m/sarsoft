@@ -23,8 +23,8 @@ org.sarsoft.SearchAssignmentDAO.prototype.deleteWay = function(handler, assignme
 	this._doPost("/" + assignment.id + "/way/" + idx + "?action=delete", handler, way);
 }
 
-org.sarsoft.SearchAssignmentDAO.prototype.saveWaypoints = function(assignment, idx, waypoints) {
-	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", function() {}, waypoints);
+org.sarsoft.SearchAssignmentDAO.prototype.saveWaypoints = function(assignment, idx, waypoints, callback) {
+	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", callback || function() {}, waypoints);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.deleteWaypoint = function(handler, assignment, idx, wpt) {
@@ -114,24 +114,27 @@ org.sarsoft.view.WaypointTable = function(handler, onDelete) {
 }
 org.sarsoft.view.WaypointTable.prototype = new org.sarsoft.view.EntityTable();
 
-org.sarsoft.view.SearchAssignmentForm = function() {
+org.sarsoft.view.SearchAssignmentForm = function(existing) {
+	this.existing = existing;
 }
 
 org.sarsoft.view.SearchAssignmentForm.prototype.create = function(container) {
 	var that = this;
 	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(container)));
-	var left = jQuery('<td width="50%"></td>').appendTo(row);
-	var right = jQuery('<td width="50%" style="padding-left: 20px"></td>').appendTo(row);
+	var left = jQuery('<td width="50%" valign="top"></td>').appendTo(row);
+	var right = jQuery('<td width="50%" valign="top" style="padding-left: 20px"></td>').appendTo(row);
 	
 	var leftFields = [
 	          		{ name : "id", label: "Assignment Number", type : "string"},
 	        		{ name : "polygon", label: "Area Assignment?", type: "boolean", value: true},
 	        		{ name : "operationalPeriodId", label: "Operational Period", type: "number"},
-	        		{ name : "resourceType", type : ["GROUND","DOG","MOUNTED","OHV"] },
-	        		{ name : "unresponsivePOD", type : ["LOW","MEDIUM","HIGH"] },
-	        		{ name : "responsivePOD", type : ["LOW","MEDIUM","HIGH"] },
-	        		{ name : "cluePOD", type : ["LOW","MEDIUM","HIGH"]},
-	        		{ name : "timeAllocated", type : "number" }];
+	        		{ name : "resourceType", label: "Resource Type", type : ["GROUND","DOG","MOUNTED","OHV"] },
+	        		{ name : "unresponsivePOD", label: "Unresponsive POD", type : ["LOW","MEDIUM","HIGH"] },
+	        		{ name : "responsivePOD", label: "Responsive POD", type : ["LOW","MEDIUM","HIGH"] },
+	        		{ name : "cluePOD", label: "Clue POD", type : ["LOW","MEDIUM","HIGH"]},
+	        		{ name : "timeAllocated", label: "Time Allocated", type : "number" }];
+	
+	if(this.existing) leftFields = leftFields.splice(3);
 	
 	var rightFields = [{ name : "details", type : "text" }];
 	
@@ -140,7 +143,6 @@ org.sarsoft.view.SearchAssignmentForm.prototype.create = function(container) {
 	this.rightForm = new org.sarsoft.view.EntityForm(rightFields);
 	this.rightForm.create(right[0]);
 }
-
 
 org.sarsoft.view.SearchAssignmentForm.prototype.read = function() {
 	obj = this.leftForm.read();
@@ -530,6 +532,12 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 	});
 	this.imap.addMenuItem(goback, 40);	
 	
+	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", jQuery('<div>Delete - Are You Sure?</div>'), "Delete", "Cancel", function() {
+		that.assignmentDAO.del(that.delconfirm.assignment.id); that.removeAssignment(that.delconfirm.assignment);
+		that.delconfirm.assignment = null;
+	});
+
+	
 	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
 		var dn = imap.registered["org.sarsoft.DataNavigator"];
 		this.dn = new Object();
@@ -537,21 +545,46 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 		optree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
 		this.dn.assignmentdiv = jQuery('<div></div>').appendTo(optree.body);
 		this.dn.assignments = new Object();
-		this.dn.assignmenttoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(optree.header).click(function(evt) {
-			that.showAssignments=!that.showAssignments;
-			if(that.showAssignments) {
-				that.dn.assignmenttoggle.html('(shown)');
+		this.dn.config = jQuery('<div style="display: none; border-left-width: 1px; border-left-style: dashed; border-left-color: rgb(90, 142, 215); margin-left: 0.5em; padding-left: 0.5em; margin-top: 1ex; margin-bottom: 1ex;"></div>').appendTo(this.dn.assignmentdiv);
+		this.dn.assignmenttoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(setup)</div>').prependTo(optree.header).click(function(evt) {
+			if(that.dn.config.css('display')=='none') {
+				that.dn.assignmenttoggle.html('(done)');
+				that.dn.config.css('display', 'block');
 			} else {
-				that.dn.assignmenttoggle.html('(hidden)');
+				that.dn.assignmenttoggle.html('(setup)');
+				that.dn.config.css('display', 'none');
 			}
-			// currently, do nothing - this needs to be replaced, maybe with something to toggle tracks
 			evt.stopPropagation();
 		});
 
-		this.showTrackCB = jQuery('<input type="checkbox" checked="checked"/>').prependTo(jQuery('<div>Show Tracks?</div>').appendTo(this.dn.assignmentdiv)).change(function() {
+		this.showTrackCB = jQuery('<input type="checkbox" checked="checked"/>').prependTo(jQuery('<div>Show Tracks?</div>').appendTo(this.dn.config)).change(function() {
 			that._mapsetup.showtracks = that.showTrackCB[0].checked;
 			that.handleSetupChange();
 		});
+		
+		this.dn.groupingSelect = jQuery('<select><option value="Assignment Number">N/A</option><option value="Resource Type">Type</option><option>POD</option><option value="Assignment Status">Status</option></select>').appendTo(jQuery('<div>Group By: </div>').appendTo(this.dn.config)).change(function() {
+			for(var key in that.dn.grouping) {
+				if(key == that.dn.groupingSelect.val()) {
+					that.dn.grouping[key].css('display', 'block');
+					that.dn.grouping[key].children().css('display', 'none');
+				} else {
+					that.dn.grouping[key].css('display', 'none');
+				}
+			}
+			that.handleSetupChange();
+		});
+
+		this.dn.coloringSelect = jQuery('<select><option value="Assignment Number">Number</option><option value="Resource Type">Type</option><option>POD</option><option value="Assignment Status">Status</option></select>').appendTo(jQuery('<div>Color By: </div>').appendTo(this.dn.config)).change(function() {
+			that._mapsetup.present.colorby = that.dn.coloringSelect.val();
+			that.handleSetupChange();
+		});
+
+		this.dn.grouping = {
+				"Assignment Number": jQuery('<div style="display: block"></div>').appendTo(this.dn.assignmentdiv),
+				"Resource Type": jQuery('<div style="display: none"><div grouping="GROUND"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">Ground</div></div><div grouping="DOG"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Dog</div></div><div grouping="OHV"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">OHV</div></div><div grouping="MOUNTED"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">Mounted</div></div></div>').appendTo(this.dn.assignmentdiv),
+				"POD": jQuery('<div style="display: none"><div grouping="LOW"><div style="color: #0088FF; font-style: italic; font-size: 125%; text-align: center">Low</div></div><div grouping="MEDIUM"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Medium</div></div><div grouping="HIGH"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">High</div></div></div>').appendTo(this.dn.assignmentdiv),
+				"Assignment Status": jQuery('<div style="display: none"><div grouping="DRAFT"><div style="color: #0088FF; font-style: italic; font-size: 125%; text-align: center">Draft</div></div><div grouping="PREPARED"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Prepared</div></div><div grouping="INPROGRESS"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">In Progress</div></div><div grouping="COMPLETED"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">Completed</div></div></div>').appendTo(this.dn.assignmentdiv)
+		}
 		
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
 			jQuery('<span style="color: green; cursor: pointer">+ New Assignment</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(optree.body)).click(function() {
@@ -605,7 +638,28 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 			})});
 		}, assignment);
 	});
+	
+	this.editAssignmentDlg = new org.sarsoft.view.MapEntityDialog(this.imap, "Edit Assignment", new org.sarsoft.view.SearchAssignmentForm(true), function(assignment) {
+		var a2 = that.editAssignmentDlg.assignment;
+		that.editAssignmentDlg.assignment = null;
+		that.save(a2, function() {
+			that.assignmentDAO.save(a2.id, assignment, function(assignment) {
+				that.addAssignment(assignment);
+			});
+		});
+	}, "Save");
 
+	this.editAssignmentDlg.dialog.dialog.hideEvent.subscribe(function() { 
+		if(that.editAssignmentDlg.assignment != null) {
+			that.discard(that.editAssignmentDlg.assignment);
+			that.editAssignmentDlg.assignment = null;
+		}
+	});
+	
+	this.pg = new org.sarsoft.view.ProfileGraph();
+	this.profileDlg = new org.sarsoft.view.MapDialog(imap, "Elevation Profile", this.pg.div, "OK", null, function() { that.pg.hide(); });
+	this.profileDlg.dialog.hideEvent.subscribe(function() { that.pg.hide(); });
+	
 	this.assignmentDAO.loadAll(function(assignments) {
 		for(var i = 0; i < assignments.length; i++) {
 			that.addAssignment(assignments[i]);
@@ -694,11 +748,11 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function
 
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.save = function(assignment) {
+org.sarsoft.controller.OperationalPeriodMapController.prototype.save = function(assignment, callback) {
 	for(var i = 0; i < assignment.ways.length; i++) {
 		var way = assignment.ways[i];
 		way.waypoints = this.imap.save(way.id);
-		this.assignmentDAO.saveWaypoints(assignment, i, way.waypoints);
+		this.assignmentDAO.saveWaypoints(assignment, i, way.waypoints, i == 0 ? callback : null);
 	}
 	this.setAssignmentAttr(assignment, "inedit", false);
 }
@@ -726,6 +780,28 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.edit = function(
 		this.imap.edit(assignment.ways[i].id);
 	}
 	this.setAssignmentAttr(assignment, "inedit", true);
+}
+
+org.sarsoft.controller.OperationalPeriodMapController.prototype.profile = function(assignment) {
+	var that = this;
+	var service = new google.maps.ElevationService();
+	var path = [];
+	var idx = 0;
+	for(var i = 0; i < assignment.ways.length; i++) {
+		if(assignment.ways[i].type=="ROUTE") idx=i;
+	}
+	for(var i = 0; i < assignment.ways[idx].waypoints.length; i++) {
+		path.push(new google.maps.LatLng(assignment.ways[idx].waypoints[i].lat, assignment.ways[idx].waypoints[i].lng));
+	}
+	if(assignment.ways[idx].polygon) path.push(new google.maps.LatLng(assignment.ways[idx].waypoints[0].lat, assignment.ways[idx].waypoints[0].lng));
+	service.getElevationAlongPath({path: path, samples: 100}, function(result, status) {
+		if(status == google.maps.ElevationStatus.OK) {
+			that.profileDlg.show();
+			that.pg.draw(result, that.getColorForAssignmentId(assignment.id));
+		} else {
+			alert("An error occurred while retrieving profile data from Google Maps: " + status);
+		}
+	});
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setAssignmentAttr = function(assignment, key, value) {
@@ -852,43 +928,70 @@ org.sarsoft.controller.OperationalPeriodMapController.getIconForAssignment = fun
 org.sarsoft.controller.OperationalPeriodMapController.prototype.DNAddAssignment = function(config, ways, assignment) {
 	var that = this;
 	if(this.dn.assignmentdiv == null) return;
+	
+	var grouping = this.dn.groupingSelect.val();
+	var adiv = this.dn.grouping[grouping];
+
+	if(grouping == "Resource Type") {
+		var child = this.dn.grouping["Resource Type"].children('[grouping="' + assignment.resourceType + '"]');
+		if(child.length > 0) adiv = child[0];
+	} else if(grouping == "POD") {
+		var child = this.dn.grouping["POD"].children('[grouping="' + assignment.responsivePOD + '"]');
+		if(child.length > 0) adiv = child[0];
+	} else if(grouping == "Assignment Status") {
+		var child = this.dn.grouping["Assignment Status"].children('[grouping="' + assignment.status + '"]');
+		if(child.length > 0) adiv = child[0];
+	}
+	
+	adiv = $(adiv);
+	adiv.css('display', 'block');
 
 	if(this.dn.assignments[assignment.id] == null) {
-		this.dn.assignments[assignment.id] = jQuery('<div></div>').appendTo(this.dn.assignmentdiv);
+		this.dn.assignments[assignment.id] = jQuery('<div></div>');
+		this.dn.assignments[assignment.id][0].aid = assignment.id;
 	}
-	this.dn.assignments[assignment.id].empty();
+	
+	this.dn.assignments[assignment.id].empty().appendTo(adiv);
+	
+	adiv.children().sort(function(a, b) { return (1*a.aid > 1*b.aid) ? 1 : (1*a.aid < 1*b.aid) ? -1 : 0}).appendTo(adiv);
 	
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.assignments[assignment.id]);
 	line.append(org.sarsoft.controller.OperationalPeriodMapController.getIconForAssignment(assignment, config));
 
-	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + assignment.id + '</span>';
+	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + assignment.id + '&nbsp;&nbsp;(' + assignment.resourceType[0] + '/' + assignment.responsivePOD[0] + ')</span>');
+	if(assignment.details != null && assignment.details.length > 0) {
+		s.attr('title', org.sarsoft.htmlescape(assignment.details));
+	}
 
-	jQuery(s).appendTo(line).click(function() {
+	s.appendTo(line).click(function() {
 		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
 		that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new google.maps.LatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng)));
 	});
 	
-	
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
-		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
-			// TODO handle delete
-			that.del(function() { that.removeShape(shape.id); that.shapeDAO.del(shape.id); });
-		});
-		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
-			// TODO handle edit
-			 that.shapeDlg.entityform.write(shape); that.shapeDlg.show(); that.shapeDlg.shape=shape; that.shapeDlg.inedit = true; that.editShape(shape);
+		if(assignment.status == "DRAFT" && this.getAssignmentAttr(assignment, "clickable")) {
+			jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
+				that.delconfirm.assignment = assignment; that.delconfirm.show();
 			});
+
+			jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
+				that.editAssignmentDlg.assignment = assignment;
+				that.edit(assignment);
+				that.editAssignmentDlg.show(assignment);
+			});
+
+		}
+
 	}
 
 	jQuery('<span title="Elevation Profile" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/profile.png"/></span>').appendTo(line).click(function() {
-			// TODO elevation profile
-			that.profileAssignment(assignment);
+			that.profile(assignment);
 		});
 
 	var line = jQuery('<div></div>').appendTo(this.dn.assignments[assignment.id]);
-	if(assignment.details != null && assignment.details.length > 0) {
-		jQuery('<div style="border-left: 1px solid #945e3b; padding-left: 1ex" class="shape_desc_line_item pre"></div>').append(org.sarsoft.htmlescape(assignment.details)).appendTo(line);
-	}
+//	if(assignment.details != null && assignment.details.length > 0) {
+//		jQuery('<div style="border-left: 1px solid #945e3b; padding-left: 1ex" class="shape_desc_line_item pre"></div>').append(org.sarsoft.htmlescape(assignment.details)).appendTo(line);
+//	}
 
 }
 
@@ -973,7 +1076,7 @@ org.sarsoft.view.ClueTable = function(handler) {
       { key : "id", label : "Clue #"},
       { key : "summary", label : "Item Found"},
       { key : "assignmentId", label : "Team"},
-	  { key : "position", label : "Location Found", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.google.maps.LatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
+	  { key : "position", label : "Location Found", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
 	  { key : "instructions", label: "Instructions"}
 	];
 	if(handler == null) {
@@ -994,6 +1097,10 @@ org.sarsoft.ClueDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.ClueDAO.prototype = new org.sarsoft.BaseDAO();
 
+org.sarsoft.ClueDAO.prototype.updatePosition = function(id, position, handler) {
+	this._doPost("/" + id + "/position", handler, {position: position}, handler);
+}
+
 org.sarsoft.controller.ClueViewMapController = function(id, imap) {
 	var that = this;
 	this.imap = imap;
@@ -1010,6 +1117,43 @@ org.sarsoft.controller.ClueViewMapController.prototype._loadClueCallback = funct
 	var icon = org.sarsoft.MapUtil.createImage(16, "/static/images/clue.png");
 	that.imap.addWaypoint(clue.position, {icon: icon}, clue.id);
 }
+
+org.sarsoft.view.ClueForm = function() {
+}
+
+org.sarsoft.view.ClueForm.prototype.create = function(container) {
+	var that = this;
+	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(container)));
+	var left = jQuery('<td width="50%" valign="top"></td>').appendTo(row);
+	var right = jQuery('<td width="50%" valign="top" style="padding-left: 20px"></td>').appendTo(row);
+
+	var leftFields = [{ name: "summary", label: "Summary", type: "string"},
+	                  { name: "assignmentId", label: "Assignment ID", type: "string"},
+					  { name: "description", label: "Description", type: "text"}];
+	
+	var rightFields = [{ name: "instructions", label: "Instructions", type: ["COLLECT", "MARK", "IGNORE"]},
+	 	              { name: "location", label: "Location", type: "text"}];
+		
+	this.leftForm = new org.sarsoft.view.EntityForm(leftFields);
+	this.leftForm.create(left[0]);
+	this.rightForm = new org.sarsoft.view.EntityForm(rightFields);
+	this.rightForm.create(right[0]);
+}
+
+org.sarsoft.view.ClueForm.prototype.read = function() {
+	obj = this.leftForm.read();
+	obj2 = this.rightForm.read();
+	for(var key in obj2) {
+		obj[key] = obj2[key];
+	}
+	return obj;
+}
+
+org.sarsoft.view.ClueForm.prototype.write = function(obj) {
+	this.leftForm.write(obj);
+	this.rightForm.write(obj);
+}
+
 
 org.sarsoft.controller.ClueLocationMapController = function(imap) {
 	var that = this;
@@ -1046,10 +1190,42 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
 			jQuery('<span style="color: green; cursor: pointer">+ New Clue</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(cluetree.body)).click(function() {
-				// TODO new clue
+				that.clueDlg.show();
 			});
 		}
-	}	
+	}
+
+	this.clueDlg = new org.sarsoft.view.MapEntityDialog(this.imap, "Edit Clue", new org.sarsoft.view.ClueForm(), function(updated) {
+		if(that.clueDlg.clue != null) {
+			var clue = that.clues[that.clueDlg.clue.id];
+			that.clueDlg.clue = null;
+			that.imap.saveDrag(clue.position);
+			that.clueDAO.updatePosition(clue.id, clue.position, function() {
+				that.clueDAO.save(clue.id, updated, function(c) {
+					that.showClue(c);
+				});
+			});
+		} else { 
+			var center = that.imap.map.getCenter();
+			updated.position = {lat: center.lat(), lng: center.lng()}
+			that.clueDAO.create(function(c) {
+				that.showClue(c);
+			}, updated);
+		}
+	}, "Save");
+	
+	this.clueDlg.dialog.dialog.hideEvent.subscribe(function() { 
+		if(that.clueDlg.clue != null) {
+			that.imap.discardDrag(that.clues[that.clueDlg.clue.id].position);
+			that.clueDlg.clue = null;
+		}
+	});
+	
+	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", jQuery('<div>Delete - Are You Sure?</div>'), "Delete", "Cancel", function() {
+		that.clueDAO.del(that.delconfirm.clue.id); that.removeClue(that.delconfirm.clue);
+		that.delconfirm.clue = null;
+	});
+
 
 	this.clueDAO.loadAll(function(clues) {
 		var n = -180;
@@ -1116,9 +1292,17 @@ org.sarsoft.controller.ClueLocationMapController.prototype.DNAddClue = function(
 	
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.clues[clue.id]);
 
-	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + clue.id + '&nbsp;' + org.sarsoft.htmlescape(clue.summary) + '</span>';
+	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + clue.id + '&nbsp;' + org.sarsoft.htmlescape(clue.summary) + '</span>');
+	var title = "";
+	if(clue.description != null && clue.description.length > 0) title = title + org.sarsoft.htmlescape(clue.description) + "\n\n";
+	if(clue.assignmentId != null && clue.assignmentId != "") {
+		title = title + "(Assignment " + clue.assignmentId + ")";
+	} else {
+		title = title + "(No Asssignment)";
+	}
+	s.attr('title', title);
 
-	jQuery(s).appendTo(line).click(function() {
+	s.appendTo(line).click(function() {
 		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
 		that.imap.setCenter(new google.maps.LatLng(clue.position.lat, clue.position.lng));
 	});
@@ -1126,17 +1310,18 @@ org.sarsoft.controller.ClueLocationMapController.prototype.DNAddClue = function(
 	
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
 		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
-			// TODO handle delete
+			that.delconfirm.clue = clue; that.delconfirm.show();
 		});
 		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
-			// TODO handle edit
-			});
+			var c = that.clues[clue.id];
+			that.imap.allowDragging(c.position);
+			that.clueDlg.entityform.write(c);
+			that.clueDlg.show();
+			that.clueDlg.clue=c;
+		});
 	}
 
 	var line = jQuery('<div></div>').appendTo(this.dn.clues[clue.id]);
-	if(clue.description != null && clue.description.length > 0) {
-		jQuery('<div style="border-left: 1px solid #945e3b; padding-left: 1ex" class="shape_desc_line_item pre"></div>').append(org.sarsoft.htmlescape(clue.description)).appendTo(line);
-	}
 
 }
 
@@ -1156,6 +1341,13 @@ org.sarsoft.controller.ClueLocationMapController.prototype.showClue = function(c
 	
 	var icon = org.sarsoft.MapUtil.createImage(16, "/static/images/clue.png");
 	this.imap.addWaypoint(clue.position, {icon: icon}, tooltip, clue.summary);
+}
+
+org.sarsoft.controller.ClueLocationMapController.prototype.removeClue = function(clue) {
+	if(this.clues[clue.id] != null) this.imap.removeWaypoint(this.clues[clue.id].position);
+	delete this.clues[clue.id];
+	this.dn.clues[clue.id].remove();
+	delete this.dn.clues[clue.id];
 }
 
 org.sarsoft.controller.ClueLocationMapController.prototype.refresh = function(clues) {
