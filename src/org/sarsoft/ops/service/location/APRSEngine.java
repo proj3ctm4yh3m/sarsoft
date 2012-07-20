@@ -183,15 +183,16 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 					logger.debug("Updating resource " + resource.getName() + "/" + resource.getAgency() + " based on APRS callsign " + from);
 					Waypoint oldPosition = resource.getPosition();
 					resource.setPosition(wpt);
-					dao.save(resource);
+					resource.setUpdated(new Date());
+					dao.superSave(resource);
 					if(resource.getAssignment() != null) {
 						SearchAssignment assignment = resource.getAssignment();
 						boolean updated = false;
 						for(Way way : assignment.getWays()) {
 							if(way != null && from.equalsIgnoreCase(way.getName())) {
 								way.getWaypoints().add(wpt.clone());
-								dao.save(way);
-								dao.save(assignment);
+								dao.superSave(way);
+								dao.superSave(assignment);
 								updated = true;
 							}
 						}
@@ -205,7 +206,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 							waypoints.add(oldPosition.clone());
 							way.setWaypoints(waypoints);
 							assignment.getWays().add(way);
-							dao.save(assignment);
+							dao.superSave(assignment);
 						}
 					}
 				} else {

@@ -8,11 +8,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
+import net.sf.json.JSONObject;
+
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.SearchAssignment;
 
 @Entity
@@ -33,6 +36,10 @@ public class Resource extends SarModelObject {
 	protected SearchAssignment assignment;
 	protected Date updated;
 
+	public static Resource createFromJSON(JSONObject json) {
+		return (Resource) JSONObject.toBean(json, Resource.class);
+	}
+	
 	@JSONSerializable
 	public String getName() {
 		return name;

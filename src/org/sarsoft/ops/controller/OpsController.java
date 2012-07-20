@@ -171,31 +171,20 @@ public class OpsController extends JSONBaseController {
 		}			
 		return "redirect:/app/location/status";
 	}
-
-	@RequestMapping(value="/resource/new", method = RequestMethod.POST)
-	public String createResource(Model model, HttpServletRequest request,
-		@RequestParam(value="name", required=true) String name, @RequestParam(value="type", required=true) String type, 
-		@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
-		@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
+	
+	public void createNewResource(Resource resource) {
 		long maxId = 0L;
 		List<Resource> resources = dao.loadAll(Resource.class);
-		for(Resource resource : resources) {
-			maxId = Math.max(maxId, resource.getId());
+		for(Resource res : resources) {
+			maxId = Math.max(maxId, res.getId());
 		}
-		Resource resource = new Resource();
+		
 		resource.setId(maxId+1);
-		resource.setName(name);
-		resource.setType(Type.valueOf(type));
-		resource.setAgency(agency);
-		resource.setCallsign(callsign);
-		resource.setSpotId(spotId);
-		resource.setSpotPassword(spotPassword);
-		dao.save(resource);
-
+		
 		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());		
 		if(engines.aprst2 != null) engines.aprst2.updateFilter();
 		
-		String assignmentId = request.getParameter("assignmentId");
+		String assignmentId = resource.getAssignmentId();
 		if(assignmentId != null && assignmentId.length() > 0) {
 			long id = Long.parseLong(assignmentId);
 			SearchAssignment assignment = dao.load(SearchAssignment.class, id);
@@ -204,23 +193,49 @@ public class OpsController extends JSONBaseController {
 		}
 		
 		if(engines != null && engines.aprsLocal != null) {
-			Waypoint wpt = engines.aprsLocal.getCallsigns().get(callsign);
+			Waypoint wpt = engines.aprsLocal.getCallsigns().get(resource.getCallsign());
 			if(wpt != null) {
 				resource.setPosition(wpt);
 				dao.save(resource);
 			}
 		}
 		if(engines != null && engines.aprst2 != null) {
-			Waypoint wpt = engines.aprst2.getCallsigns().get(callsign);
+			Waypoint wpt = engines.aprst2.getCallsigns().get(resource.getCallsign());
 			if(wpt != null) {
 				resource.setPosition(wpt);
 				dao.save(resource);
 			}
 		}
 		
+		dao.save(resource);
+	}
+
+	@RequestMapping(value="/resource/new", method = RequestMethod.POST)
+	public String createResource(Model model, HttpServletRequest request,
+		@RequestParam(value="name", required=true) String name, @RequestParam(value="type", required=true) String type, 
+		@RequestParam(value="agency", required=false) String agency, @RequestParam(value="callsign", required=false) String callsign, 
+		@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
+
+		Resource resource = new Resource();
+		resource.setName(name);
+		resource.setType(Type.valueOf(type));
+		resource.setAgency(agency);
+		resource.setCallsign(callsign);
+		resource.setSpotId(spotId);
+		resource.setSpotPassword(spotPassword);
+		
+		createNewResource(resource);
+		
 		String redirect = request.getParameter("redirect");
 		if(redirect != null && redirect.length() > 0) return "redirect:" + redirect;
 		return "redirect:/resource/" + resource.getId();
+	}
+	
+	@RequestMapping(value="/rest/resource", method = RequestMethod.POST)
+	public String restCreateResource(Model model, HttpServletRequest request, JSONForm params) {
+		Resource resource = Resource.createFromJSON(parseObject(params));
+		createNewResource(resource);		
+		return json(model, resource);
 	}
 	
 	@RequestMapping(value="/resource", method = RequestMethod.POST)
@@ -275,6 +290,7 @@ public class OpsController extends JSONBaseController {
 				}
 			}
 		}
+		
 		return "redirect:/resource/";
 	}
 
@@ -306,6 +322,33 @@ public class OpsController extends JSONBaseController {
 
 		model.addAttribute("resource", resource);
 		return "redirect:/resource/" + id;
+	}
+	
+	@RequestMapping(value="/rest/resource/{resourceid}", method = RequestMethod.POST)
+	public String updateRestResource(Model model, @PathVariable("resourceid") long id, JSONForm params, HttpServletRequest request) {
+		Resource updated = Resource.createFromJSON(parseObject(params));
+		Resource resource = dao.load(Resource.class, id);
+
+		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action").toUpperCase()) == Action.DELETE) {			
+			if(resource.getAssignment() != null) {
+				SearchAssignment assignment = resource.getAssignment();
+				assignment.removeResource(resource);
+				dao.save(assignment);
+			}
+			dao.delete(resource);
+			return json(model, new Object());
+		}
+		
+		resource.setName(updated.getName());
+		resource.setAgency(updated.getAgency());
+		resource.setType(updated.getType());
+		resource.setCallsign(updated.getCallsign());
+		resource.setSpotId(updated.getSpotId());
+		if(updated.getSpotPassword() != null && updated.getSpotPassword().length() > 0) resource.setSpotPassword(updated.getSpotPassword());
+		
+		dao.save(resource);
+		
+		return json(model, resource);
 	}
 	
 	@RequestMapping(value="/resource/{resourceid}/position", method = RequestMethod.POST)
@@ -354,7 +397,15 @@ public class OpsController extends JSONBaseController {
 		if(engines.aprsLocal != null) engines.aprsLocal.clearCallsigns();
 		return "redirect:/resource";
 	}
-	
+
+	@RequestMapping(value="/rest/callsign/clear", method = RequestMethod.GET)
+	public String restClearCallsigns(Model model) {
+		EngineList engines = locationEngines.get(RuntimeProperties.getTenant());
+		if(engines.aprst2 != null) engines.aprst2.clearCallsigns();
+		if(engines.aprsLocal != null) engines.aprsLocal.clearCallsigns();
+		return json(model, new Object());
+	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value="/rest/callsign/since/{date}", method = RequestMethod.GET)
 	public String getCallsignsSince(Model model, @PathVariable("date") long date) {

@@ -12,7 +12,7 @@ org.sarsoft.view.ResourceTable = function(handler, onDelete, caption) {
 		{ key : "assignmentId", label : "Assignment", sortable : true},
 		{ key : "callsign", label : "Callsign"},
 		{ key : "spotId", label: "SPOT ID"},
-		{ key : "position", label : "Position", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.google.maps.LatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
+		{ key : "position", label : "Position", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
 		{ key : "lastFix", label : "Last Update", sortable : true }
 	];
 	if(onDelete == null) {
@@ -70,6 +70,42 @@ org.sarsoft.controller.ResourceViewMapController.prototype._loadResourceCallback
 	that.imap.addWaypoint(resource.position, config, resource.name);
 }
 
+org.sarsoft.view.ResourceForm = function() {
+}
+
+org.sarsoft.view.ResourceForm.prototype.create = function(container) {
+	var that = this;
+	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(container)));
+	var left = jQuery('<td width="50%" valign="top"></td>').appendTo(row);
+	var right = jQuery('<td width="50%" valign="top" style="padding-left: 20px"></td>').appendTo(row);
+
+	var leftFields = [{ name: "name", label: "Name", type: "string"},
+	                  { name: "type", label: "Type", type: ["PERSON","EQUIPMENT"]},
+	                  { name: "agency", label: "Agency", type: "string"}];
+	
+	var rightFields = [{ name: "callsign", label: "Callsign", type: "string"},
+	 	              { name: "spotId", label: "SPOT ID", type: "string"},
+	 	              { name: "spotPassword", label: "SPOT Password", type: "string"}];
+		
+	this.leftForm = new org.sarsoft.view.EntityForm(leftFields);
+	this.leftForm.create(left[0]);
+	this.rightForm = new org.sarsoft.view.EntityForm(rightFields);
+	this.rightForm.create(right[0]);
+}
+
+org.sarsoft.view.ResourceForm.prototype.read = function() {
+	obj = this.leftForm.read();
+	obj2 = this.rightForm.read();
+	for(var key in obj2) {
+		obj[key] = obj2[key];
+	}
+	return obj;
+}
+
+org.sarsoft.view.ResourceForm.prototype.write = function(obj) {
+	this.leftForm.write(obj);
+	this.rightForm.write(obj);
+}
 
 org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 	var that = this;
@@ -104,10 +140,30 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
 			jQuery('<span style="color: green; cursor: pointer">+ New Resource</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(rtree.body)).click(function() {
-				// TODO
+				that.resourceDlg.resource = null;
+				that.resourceDlg.show();
 			});
 		}
 	}
+
+	this.resourceDlg = new org.sarsoft.view.MapEntityDialog(this.imap, "Edit Resource", new org.sarsoft.view.ResourceForm(), function(updated) {
+		if(that.resourceDlg.resource != null) {
+			var resource = that.resources[that.resourceDlg.resource.id];
+			that.resourceDlg.resource = null;
+			that.resourceDAO.save(resource.id, updated, function(r) {
+				that.showResource(r);
+			});
+		} else { 
+			that.resourceDAO.create(function(r) {
+				that.showResource(r);
+			}, updated);
+		}
+	}, "Save");
+	
+	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", jQuery('<div>Delete - Are You Sure?</div>'), "Delete", "Cancel", function() {
+		that.resourceDAO.del(that.delconfirm.resource.id); that.removeResource(that.delconfirm.resource);
+		that.delconfirm.resource = null;
+	});
 
 	that.resourceDAO.loadAll(function(resources) {
 		var n = -180;
@@ -181,31 +237,53 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.DNAddResource = f
 	
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.resources[resource.id]);
 
-	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(resource.name) + '</span>';
+	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(resource.name) + '</span>');
 
-	jQuery(s).appendTo(line).click(function() {
+	s.appendTo(line).click(function() {
 		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
-		if(resource.position != null) that.imap.setCenter(new google.maps.LatLng(resource.position.lat, resource.position.lng));
+		if(resource.position != null) that.imap.setCenter(new google.maps.LatLng(that.resources[resource.id].position.lat, that.resources[resource.id].position.lng));
 	});
 	
+	var title = "";
+	if(resource.position != null) {
+		var d = new Date(1*resource.updated);
+		title = title + "Last Position " + GeoUtil.GLatLngToUTM(new google.maps.LatLng(resource.position.lat, resource.position.lng)) + " at " + (d.getMonth()+1) + "/" + (d.getDate()) + " " + d.toTimeString();
+	} else {
+		title = title + "No Current Position"
+	}
+	if(resource.assignmentId != null && resource.assignmentId.length > 0) {
+		title = title + "\nAssignment " + resource.assignmentId;
+	} else {
+		title = title + "\nNo Assignment";
+	}
 	
+	s.attr("title", title);
+
+	var timestamp = this.resourceDAO._timestamp;
+	if(resource.position == null || (timestamp - (1*resource.position.time) > 1800000 && (resource.assignmentId == null || resource.assignmentId == ""))) {
+		s.css('color', '#CCCCCC');		
+	}
+
 	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {	
 		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
-			// TODO handle delete
+			that.delconfirm.resource = resource;
+			that.delconfirm.show();
 		});
 		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
-			// TODO handle edit
-			});
+			that.resourceDlg.resource = resource;
+			that.resourceDlg.entityform.write(that.resources[resource.id]);
+			that.resourceDlg.show();
+		});
 	}
 
 	var line = jQuery('<div></div>').appendTo(this.dn.resources[resource.id]);
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = function(resource) {
-	if(this.resources[resource.id] != null) this.imap.removeWaypoint(this.resources[resource.id].position);
-	if(resource.position == null) return;
+	if(this.resources[resource.id] != null && this.resources[resource.id].position != null) this.imap.removeWaypoint(this.resources[resource.id].position);
 	this.resources[resource.id] = resource;
 	this.DNAddResource(resource);
+	if(resource.position == null) return;
 	if(!this.showLocations) return; // need lines above this in case the user re-enables resources
 
 	var config = new Object();	
@@ -224,11 +302,21 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 	}
 	
 	var timestamp = this.resourceDAO._timestamp;
-	if(timestamp - (1*resource.position.time) > 1800000 && (resource.assignmentId == null || resource.assignmentId == "")) return;
+	if(timestamp - (1*resource.position.time) > 1800000 && (resource.assignmentId == null || resource.assignmentId == "")) {
+		// present in DN but greyed out
+		return;
+	}
 	if(timestamp - (1*resource.position.time) > 900000) {
 		config = { icon : org.sarsoft.MapUtil.createIcon(15, "/static/images/warning.png")}
 	}
 	this.imap.addWaypoint(resource.position, config, tooltip, label);
+}
+
+org.sarsoft.controller.ResourceLocationMapController.prototype.removeResource = function(resource) {
+	if(this.resources[resource.id] != null && this.resources[resource.id].position != null) this.imap.removeWaypoint(this.resources[resource.id].position);
+	delete this.resources[resource.id];
+	this.dn.resources[resource.id].remove();
+	delete this.dn.resources[resource.id];
 }
 
 org.sarsoft.controller.ResourceLocationMapController.prototype.isResourceVisible = function(resource) {
@@ -290,12 +378,32 @@ org.sarsoft.controller.CallsignMapController = function(imap) {
 	this.imap = imap;
 	this.imap.register("org.sarsoft.controller.CallsignMapController", this);
 
-	var showHide = new org.sarsoft.ToggleControl("CLL", "Show/Hide Nearby Callsigns", function(value) {
-		that.showCallsigns = value;
-		that.handleSetupChange();
-	});
-	this.imap.addMenuItem(showHide.node, 19);
-	this.showHide = showHide;
+	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
+		var dn = imap.registered["org.sarsoft.DataNavigator"];
+		this.dn = new Object();
+		var ctree = dn.addDataType("Callsigns");
+		ctree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		this.dn.cdiv = jQuery('<div></div>').appendTo(ctree.body);
+		this.dn.callsigns = new Object();
+		this.dn.callsigntoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(ctree.header).click(function(evt) {
+			that.showCallsigns=!that.showCallsigns;
+			if(that.showCallsigns) {
+				that.dn.callsigntoggle.html('(shown)');
+			} else {
+				that.dn.callsigntoggle.html('(hidden)');
+			}
+			that.handleSetupChange();
+			evt.stopPropagation();
+		});
+
+		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
+			jQuery('<span style="color: red; cursor: pointer">- Clear List</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(ctree.body)).click(function() {
+				that.callsignDAO._doGet("/clear", function() {
+					that.clearCallsigns();
+				});
+			});
+		}
+	}	
 	
 	this.callsignDAO.mark();
 	this.callsignDAO.loadAll(function(callsigns) {
@@ -323,7 +431,6 @@ org.sarsoft.controller.CallsignMapController.prototype.getConfig = function(conf
 }
 
 org.sarsoft.controller.CallsignMapController.prototype.handleSetupChange = function() {
-	this.showHide.setValue(this.showCallsigns);
 	for(var cs in this.callsigns) {
 		var callsign = this.callsigns[cs];
 		this.addCallsign(callsign);
@@ -341,15 +448,59 @@ org.sarsoft.controller.CallsignMapController.prototype.timer = function() {
 	});
 }
 
+org.sarsoft.controller.CallsignMapController.prototype.removeCallsign = function(callsign) {
+	this.dn.callsigns[callsign.name].remove();
+	this.dn.callsigns[callsign.name] = null;
+	this.imap.removeWaypoint(callsign.position);
+	delete this.callsigns[key];
+}
+
 org.sarsoft.controller.CallsignMapController.prototype.expireCallsigns = function() {
 	var timestamp = this.callsignDAO._timestamp;
 	for(var key in this.callsigns) {
 		var callsign = this.callsigns[key];
 		if(callsign.position != null && timestamp - (1*callsign.position.time) > 400000) {
-			this.imap.removeWaypoint(callsign.position);
-			delete this.callsigns[key];
+			this.removeCallsign(callsign);
 		}
 	}
+}
+
+org.sarsoft.controller.CallsignMapController.prototype.clearCallsigns = function() {
+	for(var key in this.callsigns) {
+		this.removeCallsign(this.callsigns[key]);
+	}
+}
+
+org.sarsoft.controller.CallsignMapController.prototype.DNAddCallsign = function(callsign) {
+	var that = this;
+	if(this.dn.cdiv == null) return;
+
+	if(this.dn.callsigns[callsign.name] == null) {
+		this.dn.callsigns[callsign.name] = jQuery('<div></div>').appendTo(this.dn.cdiv);
+	}
+	this.dn.callsigns[callsign.name].empty();
+	
+	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.callsigns[callsign.name]);
+
+	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(callsign.name) + '</span>');
+
+	s.appendTo(line).click(function() {
+		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
+		if(callsign.position != null) that.imap.setCenter(new google.maps.LatLng(that.callsigns[callsign.name].position.lat, that.callsigns[callsign.name].position.lng));
+	});
+	
+	var d = new Date(1*callsign.position.time);
+	s.attr("title", "Last Position " + GeoUtil.GLatLngToUTM(new google.maps.LatLng(callsign.position.lat, callsign.position.lng)) + " at " + (d.getMonth()+1) + "/" + (d.getDate()) + " " + d.toTimeString());
+
+	if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") && that.imap.registered["org.sarsoft.controller.ResourceLocationMapController"] != null) {
+		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
+			var dlg = that.imap.registered["org.sarsoft.controller.ResourceLocationMapController"].resourceDlg;
+			dlg.entityform.write(that.callsigns[callsign.name]);
+			dlg.show();
+		});
+	}
+
+	var line = jQuery('<div></div>').appendTo(this.dn.callsigns[callsign.name]);
 }
 
 org.sarsoft.controller.CallsignMapController.prototype.addCallsign = function(callsign) {
@@ -359,6 +510,8 @@ org.sarsoft.controller.CallsignMapController.prototype.addCallsign = function(ca
 	callsign.position.id = this._callsignId;
 	this._callsignId--;
 	var config = new Object();
+	this.DNAddCallsign(callsign);
+	
 	if(!this.showCallsigns) return;
 
 	var timestamp = this.callsignDAO._timestamp;

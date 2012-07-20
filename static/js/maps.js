@@ -1926,7 +1926,7 @@ org.sarsoft.DataNavigatorToggleControl.prototype.hideDataNavigator = function() 
 	if(this.mobile) {
 		this.imap.container.left.css({display: "none"});
 		this.imap.container.right.css({display: "block"});
-		this.imap.registered["org.sarsoft.view.MapDialog"] = null;
+		delete this.imap.registered["org.sarsoft.view.MapDialog"];
 	} else {
 		this.imap.container.top.css({"padding-left": "0"});
 		this.imap.container.left.css({width: "0", "margin-left": "0", display: "none", height: "100%"});
@@ -2437,7 +2437,7 @@ org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, s
 		if(that.imap.container != null) that.imap.container.right.css('visibility', 'visible');
 		that.imap.map.getDiv().style.height = that._originalContainerHeight;
 		google.maps.event.trigger(that.imap.map, 'resize');
-		that.imap.registered["org.sarsoft.view.MapDialog"] = null;
+		delete that.imap.registered["org.sarsoft.view.MapDialog"];
 		that.state = false;
 	});
 }
@@ -2468,7 +2468,7 @@ org.sarsoft.view.MapDialog.prototype.show = function() {
 }
 
 org.sarsoft.view.MapDialog.prototype.hide = function() {
-	this.imap.registered["org.sarsoft.view.MapDialog"] = null;
+	delete this.imap.registered["org.sarsoft.view.MapDialog"];
 	this.state = false;
 	this.dialog.hide();
 }
@@ -2589,7 +2589,7 @@ org.sarsoft.view.MapRightPane.prototype.show = function() {
 }
 
 org.sarsoft.view.MapRightPane.prototype.hide = function() {
-	this.imap.registered["org.sarsoft.view.MapDialog"] = null;
+	delete this.imap.registered["org.sarsoft.view.MapDialog"];
 	this.pane.css('display', 'none');
 	if(org.sarsoft.touch) $(this.imap.map.getDiv()).css('visibility', 'visible');
 }
