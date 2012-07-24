@@ -58,6 +58,7 @@ public class OperationalPeriodController extends JSONBaseController {
 	@RequestMapping(value="/op/{periodId}/map", method = RequestMethod.GET)
 	public String plansEditor(Model model, @PathVariable("periodId") long id) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
+		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
 		return app(model, "/plans");
 	}
 

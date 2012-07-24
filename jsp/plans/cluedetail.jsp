@@ -88,7 +88,7 @@ function updateLocation() {
 
 <c:if test="${clue.position ne null}">
 
-var utm = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(${clue.position.lat}, ${clue.position.lng})));
+var utm = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new google.maps.LatLng(${clue.position.lat}, ${clue.position.lng})));
 document.getElementById('utm_zone').value = utm.zone;
 document.getElementById('utm_e').value = utm.e;
 document.getElementById('utm_n').value = utm.n;

@@ -307,7 +307,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.showResource = fu
 		return;
 	}
 	if(timestamp - (1*resource.position.time) > 900000) {
-		config = { icon : org.sarsoft.MapUtil.createIcon(15, "/static/images/warning.png")}
+		config = { icon : org.sarsoft.MapUtil.createImage(16, "/static/images/warning.png")}
 	}
 	this.imap.addWaypoint(resource.position, config, tooltip, label);
 }
