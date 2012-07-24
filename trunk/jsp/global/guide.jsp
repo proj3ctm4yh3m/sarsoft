@@ -115,7 +115,7 @@ $('#datumDropDown').change(function() { org.sarsoft.map.datum = $('#datumDropDow
 function handleNewDatum() {
 <c:forEach var="marker" items="${markers}">
 
-var ll = new GLatLng(${marker.position.lat}, ${marker.position.lng});
+var ll = new google.maps.LatLng(${marker.position.lat}, ${marker.position.lng});
 var datumll = GeoUtil.fromWGS84(ll);
 var utm = GeoUtil.GLatLngToUTM(datumll);
 

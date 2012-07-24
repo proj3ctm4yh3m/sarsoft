@@ -26,7 +26,7 @@ Not currently on assignment.
 <c:when test="${resource.position ne null}">
 Latest position: <span id="latestposition"></span> at ${resource.lastFix}
 <script>
-document.getElementById('latestposition').innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(${resource.position.lat}, ${resource.position.lng}))).toHTMLString();
+document.getElementById('latestposition').innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new google.maps.LatLng(${resource.position.lat}, ${resource.position.lng}))).toHTMLString();
 </script>
 </c:when>
 <c:otherwise>
@@ -119,7 +119,7 @@ function updateLocation() {
 
 <c:if test="${resource.position ne null}">
 
-var utm = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new GLatLng(${resource.position.lat}, ${resource.position.lng})));
+var utm = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new google.maps.LatLng(${resource.position.lat}, ${resource.position.lng})));
 document.getElementById('utm_zone').value = utm.zone;
 document.getElementById('utm_e').value = utm.e;
 document.getElementById('utm_n').value = utm.n;

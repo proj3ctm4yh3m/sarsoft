@@ -14,8 +14,8 @@ org.sarsoft.Loader.queue(function() {
   searchDAO.load(function(config) {
 		if(config.value != null) {
 			var lkp = config.value;
-			map.setCenter(new GLatLng(lkp.lat, lkp.lng), 13);
-			map2.setCenter(new GLatLng(lkp.lat, lkp.lng), 13);
+			map.setCenter(new google.maps.LatLng(lkp.lat, lkp.lng), 13);
+			map2.setCenter(new google.maps.LatLng(lkp.lat, lkp.lng), 13);
 		}
 	}, "lkp");
   
@@ -124,7 +124,7 @@ function updateCombinedView() {
 	var dd = new OverlayDropdownMapControl();
 	map2.addControl(dd);
 	dd.updateMap(dd.types[dd.typeSelect.value], geotype, 1);
-	map2.setCenter(new GLatLng(1*georef.originlat, 1*georef.originlng), 12);
+	map2.setCenter(new google.maps.LatLng(1*georef.originlat, 1*georef.originlng), 12);
 	tabView.set('activeIndex', 2);
 }
 

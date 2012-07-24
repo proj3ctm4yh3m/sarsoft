@@ -465,7 +465,7 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.getSetupBlock = fun
 	return this._setupBlock;
 }
 
-org.sarsoft.controller.OperationalPeriodMapController = function(imap, operationalperiod) {
+org.sarsoft.controller.OperationalPeriodMapController = function(imap, operationalperiod, periods) {
 	var that = this;
 	this.imap = imap;
 	this.period = operationalperiod;
@@ -475,11 +475,13 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 	this.assignments = new Object();
 	this._assignmentAttrs = new Object();
 	this.showOtherPeriods = true;
-	this._mapsetup = {
-		past : { show : "ALL ASSIGNMENTS", colorby : "Disabled", fill : 0, opacity : 50},
-		present : { show : "ALL ASSIGNMENTS", colorby : "Assignment Number", fill : 10, opacity : 100},
-		showtracks : true
-		};
+	this._mapsetup = []
+	this._hide = []
+	for(var i = 0; i < periods + 1; i++) {
+		this._mapsetup[i] = {colorby : "Disabled", fill : 0, opacity : 50, showtracks: true, visible: true}
+		this._hide[i] = new Object();
+	}
+	this._mapsetup[operationalperiod.id] = {colorby : "Assignment Number", fill : 10, opacity : 100, showtracks: true, visible: true}
 
 	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
 		this.imap.addContextMenuItems([
@@ -540,54 +542,114 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 	
 	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
 		var dn = imap.registered["org.sarsoft.DataNavigator"];
-		this.dn = new Object();
-		var optree = dn.addDataType("Assignments");
-		optree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
-		this.dn.assignmentdiv = jQuery('<div></div>').appendTo(optree.body);
-		this.dn.assignments = new Object();
-		this.dn.config = jQuery('<div style="display: none; border-left-width: 1px; border-left-style: dashed; border-left-color: rgb(90, 142, 215); margin-left: 0.5em; padding-left: 0.5em; margin-top: 1ex; margin-bottom: 1ex;"></div>').appendTo(this.dn.assignmentdiv);
-		this.dn.assignmenttoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(setup)</div>').prependTo(optree.header).click(function(evt) {
-			if(that.dn.config.css('display')=='none') {
-				that.dn.assignmenttoggle.html('(done)');
-				that.dn.config.css('display', 'block');
-			} else {
-				that.dn.assignmenttoggle.html('(setup)');
-				that.dn.config.css('display', 'none');
-			}
-			evt.stopPropagation();
-		});
-
-		this.showTrackCB = jQuery('<input type="checkbox" checked="checked"/>').prependTo(jQuery('<div>Show Tracks?</div>').appendTo(this.dn.config)).change(function() {
-			that._mapsetup.showtracks = that.showTrackCB[0].checked;
-			that.handleSetupChange();
-		});
+		this.dn = [];
 		
-		this.dn.groupingSelect = jQuery('<select><option value="Assignment Number">N/A</option><option value="Resource Type">Type</option><option>POD</option><option value="Assignment Status">Status</option></select>').appendTo(jQuery('<div>Group By: </div>').appendTo(this.dn.config)).change(function() {
-			for(var key in that.dn.grouping) {
-				if(key == that.dn.groupingSelect.val()) {
-					that.dn.grouping[key].css('display', 'block');
-					that.dn.grouping[key].children().css('display', 'none');
+		var initDN = function(i) {
+			that.dn[i] = new Object();
+			var optree = dn.addDataType("OP " + i);
+			optree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+			that.dn[i].assignmentdiv = jQuery('<div></div>').appendTo(optree.body);
+			that.dn[i].assignments = new Object();
+			that.dn[i].config = jQuery('<div style="display: none; border-left-width: 1px; border-left-style: dashed; border-left-color: rgb(90, 142, 215); margin-left: 0.5em; padding-left: 0.5em; margin-top: 1ex; margin-bottom: 1ex;"></div>').appendTo(that.dn[i].assignmentdiv);
+			that.dn[i].cb = jQuery('<input type="checkbox" checked="checked"/>').prependTo(optree.header).click(function(evt) {
+				var val = that.dn[i].cb[0].checked;
+				if(val) {
+					that.dn[i].assignmentdiv.css('display', 'block');
+					that._mapsetup[i].visible = true;
+					optree.body.css('display', 'block');
 				} else {
-					that.dn.grouping[key].css('display', 'none');
+					that.dn[i].assignmentdiv.css('display', 'none');
+					that._mapsetup[i].visible = false;
+				}
+				evt.stopPropagation();
+				that.handleSetupChange();
+			});
+			that.dn[i].assignmenttoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(setup)</div>').prependTo(optree.header).click(function(evt) {
+					if(that.dn[i].config.css('display')=='none') {
+						that.dn[i].assignmenttoggle.html('(done)');
+						that.dn[i].config.css('display', 'block');
+					} else {
+						that.dn[i].assignmenttoggle.html('(setup)');
+						that.dn[i].config.css('display', 'none');
+					}
+					evt.stopPropagation();
+				});
+
+			that.dn[i].showTrackCB = jQuery('<input type="checkbox" checked="checked"/>').prependTo(jQuery('<div>Show Tracks?</div>').appendTo(that.dn[i].config)).change(function() {
+					that._mapsetup[i].showtracks = that.dn[i].showTrackCB[0].checked;
+					that.handleSetupChange();
+				});
+
+			that.dn[i].groupingSelect = jQuery('<select><option value="Assignment Number">N/A</option><option value="Resource Type">Type</option><option>POD</option><option value="Assignment Status">Status</option></select>').appendTo(jQuery('<div>Group By: </div>').appendTo(that.dn[i].config)).change(function() {
+				for(var key in that.dn[i].grouping) {
+					if(key == that.dn[i].groupingSelect.val()) {
+						that.dn[i].grouping[key].css('display', 'block');
+						that.dn[i].grouping[key].children().css('display', 'none');
+						that._hide[i] = new Object();
+					} else {
+						that.dn[i].grouping[key].css('display', 'none');
+					}
+				}
+				that.handleSetupChange();
+			});
+
+			that.dn[i].coloringSelect = jQuery('<select><option value="Assignment Number">Number</option><option value="Resource Type">Type</option><option>POD</option><option value="Assignment Status">Status</option></select>').appendTo(jQuery('<div>Color By: </div>').appendTo(that.dn[i].config)).change(function() {
+				that._mapsetup[i].colorby = that.dn[i].coloringSelect.val();
+				that.handleSetupChange();
+			});
+
+			that.dn[i].grouping = {
+					"Assignment Number": jQuery('<div style="display: block"><div></div><div></div></div>').appendTo(that.dn[i].assignmentdiv)
+//					"Resource Type": jQuery('<div style="display: none"><div grouping="GROUND"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">Ground</div></div><div grouping="DOG"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Dog</div></div><div grouping="OHV"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">OHV</div></div><div grouping="MOUNTED"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">Mounted</div></div></div>').appendTo(that.dn[i].assignmentdiv),
+//					"POD": jQuery('<div style="display: none"><div grouping="LOW"><div style="color: #0088FF; font-style: italic; font-size: 125%; text-align: center">Low</div></div><div grouping="MEDIUM"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Medium</div></div><div grouping="HIGH"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">High</div></div></div>').appendTo(that.dn[i].assignmentdiv),
+//					"Assignment Status": jQuery('<div style="display: none"><div grouping="DRAFT"><div style="color: #0088FF; font-style: italic; font-size: 125%; text-align: center">Draft</div></div><div grouping="PREPARED"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Prepared</div></div><div grouping="INPROGRESS"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">In Progress</div></div><div grouping="COMPLETED"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">Completed</div></div></div>').appendTo(that.dn[i].assignmentdiv)
+			}
+			
+			var groupings = {
+					"Resource Type": {"GROUND": ["Ground", "#FF0000"], "DOG": ["Dog", "#FF8800"], "OHV": ["OHV", "#8800FF"], "MOUNTED": ["Mounted", "#8800FF"]},
+					"POD": {"LOW": ["Low", "#0088FF"], "MEDIUM": ["Medium", "#FF8800"], "HIGH": ["High", "#FF0000"]},
+					"Assignment status": {"DRAFT": ["Draft", "#0088FF"], "PREPARED": ["Prepared", "#FF8800"], "INPROGRESS": ["In Progress", "#FF0000"], "COMPLETED": ["Completed", "#8800FF"]}					
+			}
+			
+			var fn = function(k2, d3) {
+				return function() {
+					var visible = !(d3.css("display")=="block");
+					if(visible) {
+						d3.css('display', 'block');
+						that._hide[i][k2] = false;
+					} else {
+						d3.css('display', 'none');
+						that._hide[i][k2] = true;
+					}
+					that.handleSetupChange();
 				}
 			}
-			that.handleSetupChange();
-		});
+			
+			for(var key in groupings) {
+				var div = jQuery('<div style="display: none"></div>').appendTo(that.dn[i].assignmentdiv);
+				that.dn[i].grouping[key] = div;
+				for(var k2 in groupings[key]) {
+					var d2 = jQuery('<div grouping="' + k2 + '"></div>').appendTo(div);
+					var d3 = jQuery('<div style="display: block"></div>').appendTo(d2);
+					jQuery('<div style="color: ' + groupings[key][k2][1] + '; font-style: italic; cursor: pointer; font-size: 125%; text-align: center">' + groupings[key][k2][0] + '</div>').prependTo(d2).click(fn(k2, d3));
+				}
+			}
+			
+			if(i != operationalperiod.id) {
+				that.dn[i].coloringSelect.prepend('<option value="Disabled">N/A</option>');
+				that.dn[i].coloringSelect.val('Disabled');
+			}
+			
+			that.dn[i].optree = optree;
+		}
 
-		this.dn.coloringSelect = jQuery('<select><option value="Assignment Number">Number</option><option value="Resource Type">Type</option><option>POD</option><option value="Assignment Status">Status</option></select>').appendTo(jQuery('<div>Color By: </div>').appendTo(this.dn.config)).change(function() {
-			that._mapsetup.present.colorby = that.dn.coloringSelect.val();
-			that.handleSetupChange();
-		});
-
-		this.dn.grouping = {
-				"Assignment Number": jQuery('<div style="display: block"></div>').appendTo(this.dn.assignmentdiv),
-				"Resource Type": jQuery('<div style="display: none"><div grouping="GROUND"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">Ground</div></div><div grouping="DOG"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Dog</div></div><div grouping="OHV"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">OHV</div></div><div grouping="MOUNTED"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">Mounted</div></div></div>').appendTo(this.dn.assignmentdiv),
-				"POD": jQuery('<div style="display: none"><div grouping="LOW"><div style="color: #0088FF; font-style: italic; font-size: 125%; text-align: center">Low</div></div><div grouping="MEDIUM"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Medium</div></div><div grouping="HIGH"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">High</div></div></div>').appendTo(this.dn.assignmentdiv),
-				"Assignment Status": jQuery('<div style="display: none"><div grouping="DRAFT"><div style="color: #0088FF; font-style: italic; font-size: 125%; text-align: center">Draft</div></div><div grouping="PREPARED"><div style="color: #FF8800; font-style: italic; font-size: 125%; text-align: center">Prepared</div></div><div grouping="INPROGRESS"><div style="color: #FF0000; font-style: italic; font-size: 125%; text-align: center">In Progress</div></div><div grouping="COMPLETED"><div style="color: #8800FF; font-style: italic; font-size: 125%; text-align: center">Completed</div></div></div>').appendTo(this.dn.assignmentdiv)
+		for(var j = 1; j < periods+1; j++) {
+			initDN(j);
 		}
 		
+		
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
-			jQuery('<span style="color: green; cursor: pointer">+ New Assignment</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(optree.body)).click(function() {
+			jQuery('<span style="color: green; cursor: pointer">+ New Assignment</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(that.dn[that.period.id].optree.body)).click(function() {
 				var center = that.imap.map.getCenter();
 				that.newAssignmentDlg.point = that.imap.projection.fromLatLngToContainerPixel(center);
 				that.newAssignmentDlg.original = null;
@@ -676,19 +738,20 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 org.sarsoft.controller.OperationalPeriodMapController._idx = 0;
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setConfig = function(config) {
-	if(config.OperationalPeriodMapController == null) return;
-	this._mapsetup.showtracks = config.OperationalPeriodMapController.showtracks;
-	if(config.OperationalPeriodMapController.present != null) this._mapsetup.present = config.OperationalPeriodMapController.present;
-	if(config.OperationalPeriodMapController.past != null) this._mapsetup.past = config.OperationalPeriodMapController.past;
+	if(config.OperationalPeriodMapController == null || config.OperationalPeriodMapController.ops == null) return;
+	for(var i = 0; i < config.OperationalPeriodMapController.ops.length; i++) {
+		this._mapsetup[i] = config.OperationalPeriodMapController.ops[i]
+	}
 	this.handleSetupChange();
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
 	if(config.OperationalPeriodMapController == null) config.OperationalPeriodMapController = new Object();
-	config.OperationalPeriodMapController.showtracks = this._mapsetup.showtracks;
-	config.OperationalPeriodMapController.present = this._mapsetup.present;
-	config.OperationalPeriodMapController.past = this._mapsetup.past;
+	if(config.OperationalPeriodMapController.ops == null) config.OperationalPeriodMapController.ops = [];
+	for(var i = 0; i < this._mapsetup.length; i++) {
+		config.OperationalPeriodMapController.ops[i] = this._mapsetup[i];
+	}
 	return config;
 }
 
@@ -714,7 +777,11 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFr
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChange = function() {
-	this.showTrackCB[0].checked = this._mapsetup.showtracks;
+	for(var i = 0; i < this.dn.length; i++) {
+		if(this.dn[i] != null) {
+			this.dn[i].showTrackCB[0].checked = this._mapsetup[i].showtracks;
+		}
+	}
 
 	for(var id in this.assignments) {
 		var assignment = this.assignments[id];
@@ -723,12 +790,6 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChang
 		}
 		this.addAssignment(assignment);
 	}
-//	this.placeLkp(this.lkp);
-//	this.reprocessResourceData();
-	var info = "This OP: " + this._mapsetup.present.show;
-	info += " Prev OP: " + this._mapsetup.past.show;
-
-	this.imap.setMapInfo("org.sarsoft.controller.OperationalPeriodMapController", 20, info);
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.timer = function() {
@@ -828,7 +889,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.removeAssignment
 org.sarsoft.controller.OperationalPeriodMapController.prototype.getColorForAssignmentId = function(id) {
 	var assignment = this.assignments[id];
 	if(assignment == null) return "#000000";
-	var setup = (assignment.operationalPeriodId == this.period.id) ? this._mapsetup.present : this._mapsetup.past;
+	var setup = this._mapsetup[assignment.operationalPeriodId];
 	
 	if(setup.colorby == "Disabled") {
 		return "#000000";
@@ -844,33 +905,21 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.getColorForAssig
 
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.isAssignmentVisible = function(assignment) {
-	if(assignment.operationalPeriodId > this.period.id) return false;
-	if(assignment.operationalPeriodId < this.period.id && !this.showOtherPeriods) return false;
-	var setup = this._mapsetup.past;
-	if(assignment.operationalPeriodId == this.period.id) {
-		setup = this._mapsetup.present;
-	}
-	if(setup.show != "ALL ASSIGNMENTS" && setup.show != assignment.resourceType) return false;
-	return true;
-}
-
 org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = function(assignment, handler) {
 	var that = this;
 	this.assignments[assignment.id] = assignment;
-	if(!this.isAssignmentVisible(assignment)) return;
 	var config = new Object();
-	var setup = this._mapsetup.past;
+	var setup = this._mapsetup[assignment.operationalPeriodId];
 	config.clickable = false;
 	if(assignment.operationalPeriodId == this.period.id) {
-		setup = this._mapsetup.present;
 		config.clickable = true;
 	}
 
 	config.color = this.getColorForAssignmentId(assignment.id);
 	config.fill = setup.fill;
 	config.opacity = setup.opacity;
-	config.showtracks = this._mapsetup.showtracks;
+	config.showtracks = setup.showtracks;
+	config.visible = setup.visible;
 
 	this.setAssignmentAttr(assignment, "clickable", config.clickable);
 
@@ -880,7 +929,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 	} else {
 		this._addAssignmentCallback(config, assignment.ways, assignment);
 		if(typeof(handler) != "undefined") handler();
-		}
+	}
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype._refreshAssignmentCallback = function(config, ways, assignment) {
@@ -894,19 +943,32 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._refreshAssignme
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCallback = function(config, ways, assignment) {
-	for(var i = 0; i < ways.length; i++) {
-		var way = ways[i];
-		way.waypoints = way.zoomAdjustedWaypoints;
-		way.displayMessage = "Assignment " + assignment.id + ": " + assignment.status + " " + assignment.formattedSize + " " + assignment.timeAllocated + "hr " + assignment.resourceType + ".  <a href='/assignment/" + assignment.id + "' target='_new'>Details</a>";
-		var label = null;
-		label = way.name;
-		if(way.type == "ROUTE") label = assignment.id
-		if(way.type == "ROUTE" || config.showtracks) this.imap.addWay(way, config, label);
+	var visible = config.visible;
+	var op = 1*assignment.operationalPeriodId;
+	var grouping = this.dn[op].groupingSelect.val();
+	if(grouping == "Resource Type") {
+		if(this._hide[op][assignment.resourceType]) visible = false;
+	} else if(grouping == "POD") {
+		if(this._hide[op][assignment.responsivePOD]) visible = false;
+	} else if(grouping == "Assignment Status") {
+		if(this._hide[op][assignment.status]) visible = false;
 	}
-	if(config.clickable && config.showtracks) {
-		for(var i = 0; i < assignment.waypoints.length; i++) {
-			var wpt = assignment.waypoints[i];
-			this.imap.addWaypoint(wpt, config, wpt.name, wpt.name);
+
+	if(visible) {
+		for(var i = 0; i < ways.length; i++) {
+			var way = ways[i];
+			way.waypoints = way.zoomAdjustedWaypoints;
+			way.displayMessage = "Assignment " + assignment.id + ": " + assignment.status + " " + assignment.formattedSize + " " + assignment.timeAllocated + "hr " + assignment.resourceType + ".  <a href='/assignment/" + assignment.id + "' target='_new'>Details</a>";
+			var label = null;
+			label = way.name;
+			if(way.type == "ROUTE") label = assignment.id
+			if(way.type == "ROUTE" || config.showtracks) this.imap.addWay(way, config, label);
+		}
+		if(config.clickable && config.showtracks) {
+			for(var i = 0; i < assignment.waypoints.length; i++) {
+				var wpt = assignment.waypoints[i];
+				this.imap.addWaypoint(wpt, config, wpt.name, wpt.name);
+			}
 		}
 	}
 
@@ -927,35 +989,36 @@ org.sarsoft.controller.OperationalPeriodMapController.getIconForAssignment = fun
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.DNAddAssignment = function(config, ways, assignment) {
 	var that = this;
-	if(this.dn.assignmentdiv == null) return;
+	var op = 1*assignment.operationalPeriodId;
+	if(this.dn[op].assignmentdiv == null) return;
 	
-	var grouping = this.dn.groupingSelect.val();
-	var adiv = this.dn.grouping[grouping];
+	var grouping = this.dn[op].groupingSelect.val();
+	var adiv = this.dn[op].grouping[grouping];
 
 	if(grouping == "Resource Type") {
-		var child = this.dn.grouping["Resource Type"].children('[grouping="' + assignment.resourceType + '"]');
+		var child = this.dn[op].grouping["Resource Type"].children('[grouping="' + assignment.resourceType + '"]');
 		if(child.length > 0) adiv = child[0];
 	} else if(grouping == "POD") {
-		var child = this.dn.grouping["POD"].children('[grouping="' + assignment.responsivePOD + '"]');
+		var child = this.dn[op].grouping["POD"].children('[grouping="' + assignment.responsivePOD + '"]');
 		if(child.length > 0) adiv = child[0];
 	} else if(grouping == "Assignment Status") {
-		var child = this.dn.grouping["Assignment Status"].children('[grouping="' + assignment.status + '"]');
+		var child = this.dn[op].grouping["Assignment Status"].children('[grouping="' + assignment.status + '"]');
 		if(child.length > 0) adiv = child[0];
 	}
 	
-	adiv = $(adiv);
-	adiv.css('display', 'block');
+	$(adiv).css('display', 'block');
+	adiv = $(adiv).children().last();
 
-	if(this.dn.assignments[assignment.id] == null) {
-		this.dn.assignments[assignment.id] = jQuery('<div></div>');
-		this.dn.assignments[assignment.id][0].aid = assignment.id;
+	if(this.dn[op].assignments[assignment.id] == null) {
+		this.dn[op].assignments[assignment.id] = jQuery('<div></div>');
+		this.dn[op].assignments[assignment.id][0].aid = assignment.id;
 	}
 	
-	this.dn.assignments[assignment.id].empty().appendTo(adiv);
+	this.dn[op].assignments[assignment.id].empty().appendTo(adiv);
 	
 	adiv.children().sort(function(a, b) { return (1*a.aid > 1*b.aid) ? 1 : (1*a.aid < 1*b.aid) ? -1 : 0}).appendTo(adiv);
 	
-	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.assignments[assignment.id]);
+	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn[op].assignments[assignment.id]);
 	line.append(org.sarsoft.controller.OperationalPeriodMapController.getIconForAssignment(assignment, config));
 
 	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + assignment.id + '&nbsp;&nbsp;(' + assignment.resourceType[0] + '/' + assignment.responsivePOD[0] + ')</span>');
@@ -988,75 +1051,11 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.DNAddAssignment 
 			that.profile(assignment);
 		});
 
-	var line = jQuery('<div></div>').appendTo(this.dn.assignments[assignment.id]);
+	var line = jQuery('<div></div>').appendTo(this.dn[op].assignments[assignment.id]);
 //	if(assignment.details != null && assignment.details.length > 0) {
 //		jQuery('<div style="border-left: 1px solid #945e3b; padding-left: 1ex" class="shape_desc_line_item pre"></div>').append(org.sarsoft.htmlescape(assignment.details)).appendTo(line);
 //	}
 
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.getSetupBlock = function() {
-	var that = this;
-	if(this._setupForm1 == null) {
-		this._setupForm1 = new org.sarsoft.view.EntityForm([
-       		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","GROUND","DOG","MOUNTED","OHV"]},
-       		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
-       		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
-       		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"}
-       	]);
-		this._setupForm2 = new org.sarsoft.view.EntityForm([
-	   		{ name: "show", label: "Show", type : ["ALL ASSIGNMENTS","NONE","GROUND","DOG","MOUNTED","OHV"]},
-	   		{ name : "colorby", label: "Color By", type : ["Disabled","Assignment Number","Resource Type","POD","Assignment Status"] },
-	   		{ name : "opacity", label: "Line Opacity (0-100)", type : "number"},
-	   		{ name : "fill", label: "Fill Opacity (0-100)", type: "number"}
-	   	]);
-		var node = jQuery('<div style="width: 100%"></div>');
-		var present = jQuery('<div style="width: 235px; float: left"><span style="font-weight: bold; text-decoration: underline">This OP:</span><br/></div>').appendTo(node)[0];
-		var past = jQuery('<div style="width: 235px; float: right"><span style="font-weight: bold; text-decoration: underline">Previous OPs:</span><br/></div>').appendTo(node)[0];
-		
-		this._setupForm1.create(present);
-		this._setupForm2.create(past);
-		this._setupBlock = {order : 1, node : node[0], handler : function() {
-			that._mapsetup.present = that._setupForm1.read();
-			that._mapsetup.past = that._setupForm2.read();
-			that.handleSetupChange();
-		}};
-	}
-
-	this._setupForm1.write(this._mapsetup.present);
-	this._setupForm2.write(this._mapsetup.past);
-	return this._setupBlock;
-}
-
-org.sarsoft.controller.OperationalPeriodMapController.prototype.getFindBlock = function() {
-	var that = this;
-	var node = document.createElement("div");
-	node.appendChild(document.createTextNode("Assignment: "));
-	var select = document.createElement("select");
-	node.appendChild(select);
-	var opt = document.createElement("option");
-	opt.appendChild(document.createTextNode("--"));
-	opt.value = "--";
-	select.appendChild(opt);
-	for(var id in this.assignments) {
-		if(this.isAssignmentVisible(this.assignments[id])) {
-			opt = document.createElement("option");
-			opt.appendChild(document.createTextNode(id));
-			opt.value=id;
-			select.appendChild(opt);
-		}
-	}
-	this._findBlock = {order : 5, node : node, handler : function() {
-		var id = select.options[select.selectedIndex].value;
-		if(id != "--") {
-			var bb = that.assignments[id].boundingBox;
-			that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(bb[0].lat, bb[0].lng), new google.maps.LatLng(bb[1].lat, bb[1].lng)));
-			return true;
-		}
-		return false;
-	}};
-
-	return this._findBlock;
 }
 
 org.sarsoft.view.BulkGPXDlg = function(id, url, dest) {
