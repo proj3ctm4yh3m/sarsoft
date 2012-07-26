@@ -58,7 +58,12 @@ public class OperationalPeriodController extends JSONBaseController {
 	@RequestMapping(value="/op/{periodId}/map", method = RequestMethod.GET)
 	public String plansEditor(Model model, @PathVariable("periodId") long id) {
 		model.addAttribute("period", dao.load(OperationalPeriod.class, id));
-		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
+		List<OperationalPeriod> periods = dao.loadAll(OperationalPeriod.class);
+		int max = 0;
+		for(OperationalPeriod period : periods) {
+			max = Math.max(max, (int) period.getId().longValue());
+		}
+		model.addAttribute("maxId", max);
 		return app(model, "/plans");
 	}
 

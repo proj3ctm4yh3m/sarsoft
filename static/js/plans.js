@@ -386,6 +386,15 @@ org.sarsoft.controller.SearchWaypointMapController = function(imap) {
 	}
 	this.rangerings = "500,1000,1500";
 
+	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
+		var dn = imap.registered["org.sarsoft.DataNavigator"];
+		this.dn = new Object();
+		var stree = dn.addDataType("Search");
+		stree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		this.dn.sdiv = jQuery('<div></div>').appendTo(stree.body);
+		this.dn.waypoints = new Object();
+	}
+	
 	this.searchDAO.load(function(lkp) {
 			if(lkp.value != null) {
 				that.place("LKP", lkp.value);
@@ -420,7 +429,7 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.getConfig = functio
 }
 
 org.sarsoft.controller.SearchWaypointMapController.prototype.set = function(type, point) {
-	var wpt = this.imap.map.fromContainerPixelToLatLng(new google.maps.Point(point.x, point.y));
+	var wpt = this.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(point.x, point.y));
 	wpt = {lat: wpt.lat(), lng: wpt.lng()};
 	this.searchDAO.save(type.toLowerCase(), { value: wpt });
 	wpt.id = type;
@@ -429,6 +438,7 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.set = function(type
 
 
 org.sarsoft.controller.SearchWaypointMapController.prototype.place = function(type, wpt) {
+	var that = this;
 	if(this.waypoints[type] != null) this.imap.removeWaypoint(this.waypoints[type]);
 	this.waypoints[type] = wpt;
 	if(type == "CP") {
@@ -446,6 +456,29 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.place = function(ty
 			}
 		}
 	}
+	
+	// fubar
+	if(this.dn.sdiv == null) return;
+
+	if(this.dn.waypoints[type] == null) {
+		this.dn.waypoints[type] = jQuery('<div></div>').appendTo(this.dn.sdiv);
+	}
+	this.dn.waypoints[type].empty();
+	
+	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.waypoints[type]);
+	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + type + '</span>');
+	s.appendTo(line).click(function() {
+		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
+		that.imap.setCenter(new google.maps.LatLng(wpt.lat, wpt.lng));
+	});
+	
+	if(type == "LKP") {
+		this.rrInput = jQuery('<input type="text" size="10" value="' + this.rangerings + '"/>').appendTo(jQuery('<div>Range Rings: </div>').appendTo(line)).change(function() {
+			that.rangerings = that.rrInput.val();
+			that.place("LKP", wpt);
+		});
+	}
+	
 }
 
 org.sarsoft.controller.SearchWaypointMapController.prototype.getSetupBlock = function() {
@@ -465,7 +498,7 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.getSetupBlock = fun
 	return this._setupBlock;
 }
 
-org.sarsoft.controller.OperationalPeriodMapController = function(imap, operationalperiod, periods) {
+org.sarsoft.controller.OperationalPeriodMapController = function(imap, operationalperiod, maxId) {
 	var that = this;
 	this.imap = imap;
 	this.period = operationalperiod;
@@ -477,15 +510,20 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 	this.showOtherPeriods = true;
 	this._mapsetup = []
 	this._hide = []
-	for(var i = 0; i < periods + 1; i++) {
-		this._mapsetup[i] = {colorby : "Disabled", fill : 0, opacity : 50, showtracks: true, visible: true}
+	for(var i = 0; i <= maxId; i++) {
+		if(i < operationalperiod) {
+			this._mapsetup[i] = {colorby : "Disabled", fill : 0, opacity : 50, showtracks: true, visible: true}
+		} else if(i == operationalperiod) {
+			this._mapsetup[i] = {colorby : "Assignment Number", fill : 10, opacity : 100, showtracks: true, visible: true}
+		} else {
+			this._mapsetup[i] = {colorby : "Disabled", fill : 0, opacity : 50, showtracks: true, visible: false}
+		}
 		this._hide[i] = new Object();
 	}
-	this._mapsetup[operationalperiod.id] = {colorby : "Assignment Number", fill : 10, opacity : 100, showtracks: true, visible: true}
 
 	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
 		this.imap.addContextMenuItems([
-			{text : "New Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.original = null; that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true}); }},
+			{text : "New Assignment", applicable : function(obj) { return obj == null }, handler : function(data) { that.newAssignmentDlg.point = data.point; that.newAssignmentDlg.original = null; that.newAssignmentDlg.show({operationalPeriodId : that.period, polygon: true}); }},
 			{text : "Modify Points", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.edit(that._getAssignmentFromWay(data.subject)) }}
 			]);
 	}
@@ -497,7 +535,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 			{text : "Redraw", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { that.redraw(that._getAssignmentFromWay(data.subject)) }},
 			{text : "Delete Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return obj != null && obj.type != "TRACK" && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable") && assignment.status == "DRAFT"; }, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.assignmentDAO.del(assignment.id); that.removeAssignment(assignment); }},
 			{text : "Clone Assignment", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return obj != null && obj.type != "TRACK" && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable")}, handler : function(data) { var assignment = that._getAssignmentFromWay(data.subject); that.newAssignmentDlg.point = null; that.newAssignmentDlg.original = assignment;
-				that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true, resourceType: assignment.resourceType, unresponsivePOD: assignment.unresponsivePOD, responsivePOD: assignment.responsivePOD, cluePOD: assignment.cluePOD, timeAllocated: assignment.timeAllocated, details: assignment.details}); }},
+				that.newAssignmentDlg.show({operationalPeriodId : that.period, polygon: true, resourceType: assignment.resourceType, unresponsivePOD: assignment.unresponsivePOD, responsivePOD: assignment.responsivePOD, cluePOD: assignment.cluePOD, timeAllocated: assignment.timeAllocated, details: assignment.details}); }},
 			{text : "Delete Track", applicable : function(obj) { var assignment = that._getAssignmentFromWay(obj); return obj != null && obj.type == "TRACK" && assignment != null && !that.getAssignmentAttr(assignment, "inedit") && that.getAssignmentAttr(assignment, "clickable"); }, handler : function(data) { 
 				var assignment = that._getAssignmentFromWay(data.subject);
 				var idx = 100;
@@ -525,10 +563,10 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 			]);
 	}
 	
-	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.period.id + "?", "Leave", "Cancel", function() {
-		window.location = "/op/" + that.period.id;		
+	var leaveDlg = org.sarsoft.view.CreateDialog("Leave Map View", "Leave the map view and return to the page for Operational Period " + this.period + "?", "Leave", "Cancel", function() {
+		window.location = "/op/" + that.period;		
 	});
-	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Back to operational period ' + this.period.id + '"/>')[0];
+	var goback = jQuery('<img src="/static/images/home.png" style="cursor: pointer; vertical-align: middle" title="Back to operational period ' + this.period + '"/>')[0];
 	google.maps.event.addDomListener(goback, "click", function() {
 		leaveDlg.show();
 	});
@@ -548,10 +586,10 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 			that.dn[i] = new Object();
 			var optree = dn.addDataType("OP " + i);
 			optree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
-			that.dn[i].assignmentdiv = jQuery('<div></div>').appendTo(optree.body);
+			that.dn[i].assignmentdiv = jQuery('<div' + (that._mapsetup[i].visible ? '' : ' style="display: none"') + '></div>').appendTo(optree.body);
 			that.dn[i].assignments = new Object();
 			that.dn[i].config = jQuery('<div style="display: none; border-left-width: 1px; border-left-style: dashed; border-left-color: rgb(90, 142, 215); margin-left: 0.5em; padding-left: 0.5em; margin-top: 1ex; margin-bottom: 1ex;"></div>').appendTo(that.dn[i].assignmentdiv);
-			that.dn[i].cb = jQuery('<input type="checkbox" checked="checked"/>').prependTo(optree.header).click(function(evt) {
+			that.dn[i].cb = jQuery('<input type="checkbox"' + (that._mapsetup[i].visible ? ' checked="checked"' : '') + '/>').prependTo(optree.header).click(function(evt) {
 				var val = that.dn[i].cb[0].checked;
 				if(val) {
 					that.dn[i].assignmentdiv.css('display', 'block');
@@ -573,11 +611,6 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 						that.dn[i].config.css('display', 'none');
 					}
 					evt.stopPropagation();
-				});
-
-			that.dn[i].showTrackCB = jQuery('<input type="checkbox" checked="checked"/>').prependTo(jQuery('<div>Show Tracks?</div>').appendTo(that.dn[i].config)).change(function() {
-					that._mapsetup[i].showtracks = that.dn[i].showTrackCB[0].checked;
-					that.handleSetupChange();
 				});
 
 			that.dn[i].groupingSelect = jQuery('<select><option value="Assignment Number">N/A</option><option value="Resource Type">Type</option><option>POD</option><option value="Assignment Status">Status</option></select>').appendTo(jQuery('<div>Group By: </div>').appendTo(that.dn[i].config)).change(function() {
@@ -635,7 +668,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 				}
 			}
 			
-			if(i != operationalperiod.id) {
+			if(i != operationalperiod) {
 				that.dn[i].coloringSelect.prepend('<option value="Disabled">N/A</option>');
 				that.dn[i].coloringSelect.val('Disabled');
 			}
@@ -643,17 +676,18 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 			that.dn[i].optree = optree;
 		}
 
-		for(var j = 1; j < periods+1; j++) {
+		for(var j = 1; j <= maxId; j++) {
 			initDN(j);
 		}
 		
 		
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
-			jQuery('<span style="color: green; cursor: pointer">+ New Assignment</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(that.dn[that.period.id].optree.body)).click(function() {
+			this.dn.newAssignment = jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(that.dn[that.period].optree.body);
+			jQuery('<span style="color: green; cursor: pointer">+ New Assignment</span>').appendTo(this.dn.newAssignment).click(function() {
 				var center = that.imap.map.getCenter();
 				that.newAssignmentDlg.point = that.imap.projection.fromLatLngToContainerPixel(center);
 				that.newAssignmentDlg.original = null;
-				that.newAssignmentDlg.show({operationalPeriodId : that.period.id, polygon: true});
+				that.newAssignmentDlg.show({operationalPeriodId : that.period, polygon: true});
 			});
 		}
 	}
@@ -674,7 +708,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 				that.imap.growInitialMap(new google.maps.LatLng(bb[0].lat, bb[0].lng));
 				that.imap.growInitialMap(new google.maps.LatLng(bb[1].lat, bb[1].lng));
 			}
-	}, that.period.id);
+	}, that.period);
 
 	this.newAssignmentDlg = new org.sarsoft.view.MapEntityDialog(this.imap, "Create Assignment", new org.sarsoft.view.SearchAssignmentForm(), function(assignment) {
 		var way = { name: assignment.name, polygon: assignment.polygon };
@@ -731,7 +765,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 
 	this.assignmentDAO.mark();
 
-	this.imap.message("Operational Period " + this.period.id + ".  Right click to create/edit assignments.", 30000);
+	this.imap.message("Operational Period " + this.period + ".  Right click to create/edit assignments.", 30000);
 
 }
 
@@ -739,19 +773,19 @@ org.sarsoft.controller.OperationalPeriodMapController._idx = 0;
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.setConfig = function(config) {
 	if(config.OperationalPeriodMapController == null || config.OperationalPeriodMapController.ops == null) return;
-	for(var i = 0; i < config.OperationalPeriodMapController.ops.length; i++) {
-		this._mapsetup[i] = config.OperationalPeriodMapController.ops[i]
-	}
+//	for(var i = 0; i < config.OperationalPeriodMapController.ops.length; i++) {
+//		this._mapsetup[i] = config.OperationalPeriodMapController.ops[i]
+//	}
 	this.handleSetupChange();
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.getConfig = function(config) {
 	if(config == null) config = new Object();
 	if(config.OperationalPeriodMapController == null) config.OperationalPeriodMapController = new Object();
-	if(config.OperationalPeriodMapController.ops == null) config.OperationalPeriodMapController.ops = [];
-	for(var i = 0; i < this._mapsetup.length; i++) {
-		config.OperationalPeriodMapController.ops[i] = this._mapsetup[i];
-	}
+//	if(config.OperationalPeriodMapController.ops == null) config.OperationalPeriodMapController.ops = [];
+//	for(var i = 0; i < this._mapsetup.length; i++) {
+//		config.OperationalPeriodMapController.ops[i] = this._mapsetup[i];
+//	}
 	return config;
 }
 
@@ -777,9 +811,25 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._getAssignmentFr
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChange = function() {
+	var p = 0;
 	for(var i = 0; i < this.dn.length; i++) {
 		if(this.dn[i] != null) {
-			this.dn[i].showTrackCB[0].checked = this._mapsetup[i].showtracks;
+			if(this.dn[i].cb[0].checked) p = i;
+		}
+	}
+	
+	if(p != this.period) {
+		this._mapsetup[this.period].colorby = "Disabled";
+		this._mapsetup[this.period].fill = 0;
+		this._mapsetup[this.period].opacity = 50;
+		this.period = p;
+		this._mapsetup[this.period].colorby = "Assignment Number";
+		this._mapsetup[this.period].fill = 10;
+		this._mapsetup[this.period].opacity = 100;
+		if(p > 0) {
+			this.dn.newAssignment.appendTo(this.dn[this.period].optree.body);
+		} else {
+			this.dn.newAssignment.remove();
 		}
 	}
 
@@ -911,7 +961,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 	var config = new Object();
 	var setup = this._mapsetup[assignment.operationalPeriodId];
 	config.clickable = false;
-	if(assignment.operationalPeriodId == this.period.id) {
+	if(assignment.operationalPeriodId == this.period) {
 		config.clickable = true;
 	}
 
@@ -922,27 +972,29 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.addAssignment = 
 	config.visible = setup.visible;
 
 	this.setAssignmentAttr(assignment, "clickable", config.clickable);
+	this.setAssignmentAttr(assignment, "config", config);
 
 	if(config.clickable) {
-		this._addAssignmentCallback(config, assignment.ways, assignment);
-		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(config, obj, assignment); if(typeof(handler) != "undefined") handler(); }, assignment, 10);
+		this._addAssignmentCallback(assignment.ways, assignment);
+		this.assignmentDAO.getWays(function(obj) { that._refreshAssignmentCallback(obj, assignment); if(typeof(handler) != "undefined") handler(); }, assignment, 10);
 	} else {
-		this._addAssignmentCallback(config, assignment.ways, assignment);
+		this._addAssignmentCallback(assignment.ways, assignment);
 		if(typeof(handler) != "undefined") handler();
 	}
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype._refreshAssignmentCallback = function(config, ways, assignment) {
+org.sarsoft.controller.OperationalPeriodMapController.prototype._refreshAssignmentCallback = function( ways, assignment) {
 	for(var i = 0; i < ways.length; i++) {
 		this.imap.removeWay(ways[i]);
 	}
 	for(var i = 0; i < assignment.waypoints.length; i++) {
 		this.imap.removeWaypoint(assignment.waypoints[i]);
 	}
-	this._addAssignmentCallback(config, ways, assignment);
+	this._addAssignmentCallback(ways, assignment);
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCallback = function(config, ways, assignment) {
+org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCallback = function(ways, assignment) {
+	var config = this.getAssignmentAttr(assignment, "config");
 	var visible = config.visible;
 	var op = 1*assignment.operationalPeriodId;
 	var grouping = this.dn[op].groupingSelect.val();
@@ -972,11 +1024,12 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype._addAssignmentCa
 		}
 	}
 
-	this.DNAddAssignment(config, ways, assignment);
+	this.DNAddAssignment(ways, assignment);
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.getIconForAssignment = function(assignment, config) {
+org.sarsoft.controller.OperationalPeriodMapController.prototype.getIconForAssignment = function(assignment) {
 	// TODO replace assignment.ways[0] with the actual route
+	var config = this.getAssignmentAttr(assignment, "config");
 	if(assignment.ways[0].polygon) {
 		var div = jQuery('<div style="float: left; height: 0.6em; width: 1.5em; margin-right: 0.5em"></div>');
 		div.css({"border-top": config.weight + 'px solid ' + config.color, "border-bottom": config.weight + 'px solid ' + config.color});
@@ -987,7 +1040,7 @@ org.sarsoft.controller.OperationalPeriodMapController.getIconForAssignment = fun
 	}
 }
 
-org.sarsoft.controller.OperationalPeriodMapController.prototype.DNAddAssignment = function(config, ways, assignment) {
+org.sarsoft.controller.OperationalPeriodMapController.prototype.DNAddAssignment = function(ways, assignment) {
 	var that = this;
 	var op = 1*assignment.operationalPeriodId;
 	if(this.dn[op].assignmentdiv == null) return;
@@ -1019,7 +1072,7 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.DNAddAssignment 
 	adiv.children().sort(function(a, b) { return (1*a.aid > 1*b.aid) ? 1 : (1*a.aid < 1*b.aid) ? -1 : 0}).appendTo(adiv);
 	
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn[op].assignments[assignment.id]);
-	line.append(org.sarsoft.controller.OperationalPeriodMapController.getIconForAssignment(assignment, config));
+	line.append(this.getIconForAssignment(assignment));
 
 	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + assignment.id + '&nbsp;&nbsp;(' + assignment.resourceType[0] + '/' + assignment.responsivePOD[0] + ')</span>');
 	if(assignment.details != null && assignment.details.length > 0) {
@@ -1173,16 +1226,19 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 		cluetree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
 		this.dn.cluediv = jQuery('<div></div>').appendTo(cluetree.body);
 		this.dn.clues = new Object();
-		this.dn.cluetoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(cluetree.header).click(function(evt) {
-			that.showClues=!that.showClues;
-			if(that.showClues) {
-				that.dn.cluetoggle.html('(shown)');
+		this.dn.cb = jQuery('<input type="checkbox"' + (that.showClues ? ' checked="checked"' : '') + '/>').prependTo(cluetree.header).click(function(evt) {
+			var val = that.dn.cb[0].checked;
+			if(val) {
+				that.showClues = true;
+				cluetree.body.css('display', 'block');
+				cluetree._lock = false;
 			} else {
-				that.dn.cluetoggle.html('(hidden)');
+				that.showClues = false;
+				cluetree.body.css('display', 'none');
+				cluetree._lock = true;
 			}
-			that.handleSetupChange();
-			// currently, do nothing - this needs to be replaced, maybe with something to toggle tracks
 			evt.stopPropagation();
+			that.handleSetupChange();
 		});
 		
 		if(!this.showClues) this.dn.cluetoggle.click();
@@ -1370,3 +1426,144 @@ org.sarsoft.controller.ClueLocationMapController.prototype.handleSetupChange = f
 		}
 	}
 }
+
+
+org.sarsoft.view.SearchIO = function(imap, controller, mcontroller) {
+	var that = this;
+	this.controller = controller;
+	this.mcontroller = mcontroller;
+	var dn = imap.registered["org.sarsoft.DataNavigator"];
+	this.dn = new Object();
+	var bn = jQuery('<div></div>');
+	var pane = new org.sarsoft.view.MapRightPane(imap, bn);
+
+	// TODO handle assignment track imports
+	if(false && org.sarsoft.userPermissionLevel != "READ") {
+		
+		var imp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>');
+		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, null, "Cancel", function() {
+		});
+		if(dn.defaults.imp != null) dn.defaults.imp.click(function() { that.impcomms.clear(); that.impDlg.swap(); });
+	
+		var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
+		gpsin.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(imp));
+		gpsin.click(function() {
+			that.impHeader.css('visibility', 'inherit');
+			that.impcomms.init(false, "/fubar/restgpxupload", "");
+		});
+		
+		this.impHeader = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(imp);
+		this.impcomms = new org.sarsoft.GPSComms(this.impHeader);
+
+	} else {
+		if(dn.defaults.imp != null) dn.defaults.imp.css('display', 'none');
+	}
+	
+	var exp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To export data, click on the file type you wish to export to:</div></div>');
+	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, null, "Export Complete", function() {
+	});
+	if(dn.defaults.exp != null) dn.defaults.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
+
+	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
+	gpsout.click(function() {
+		that.expHeader.css('visibility', 'inherit');
+		var val = that.exportables._selected;
+		var url = ""
+		if(val == null) {
+			url=window.location.href+'&format=GPX';
+		} else if(val.operationalPeriodId != null) {
+			url="/rest/assignment/" + val.id + ""
+		} else if(val.url == null) {
+			url="/rest/fubar/" + val.id + "?format=GPX";
+		}
+		that.expcomms.init(true, url, "");
+	});
+
+	var gpxout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>');
+	gpxout.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
+	gpxout.click(function() {
+		var val = that.exportables._selected;
+		if(val == null) {
+			window.location='/rest/search/?format=GPX&tid=' + org.sarsoft.tenantid;
+		} else if(val.operationalPeridId != null) {
+			window.location="/rest/assignment/" + val.id + "?format=GPX&tid=" + org.sarsoft.tenantid;
+		} else if(val.url == null) {
+			window.location="/rest/assignment/" + val.id + "?format=GPX&tid=" + org.sarsoft.tenantid;
+		}
+	});
+
+	var kmlout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
+	kmlout.click(function() {
+		var val = that.exportables._selected;
+		if(val == null) {
+			window.location='/rest/fubar/&format=KML';
+		} else if(val.operationalPeriodId != null) {
+			window.location="/rest/assignment/" + val.id + "?format=KML&tid=" + org.sarsoft.tenantid;
+		} else if(val.url == null) {
+			window.location="/rest/fubar/" + val.id + "?format=KML";
+		}
+	});
+
+	
+	this.expHeader = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(exp);
+	this.expcomms = new org.sarsoft.GPSComms(this.expHeader);
+	this.exportables = jQuery('<div style="clear: both; width: 100%; padding-top: 10px"></div>').appendTo(exp);
+}
+
+org.sarsoft.view.SearchIO.prototype.refreshExportables = function() {
+	var that = this;
+	this.exportables.empty();
+	var header = jQuery('<div style="font-size: 120%; margin-bottom: 5px"></div>').appendTo(this.exportables);
+	var expcb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>').appendTo(header).change(function() {
+		if(!expcb[0].checked) {
+			that.exportables._selected = null;
+			that.exportables.children().css('background-image', 'none');
+		}
+	});
+	header.append('Limit export to a single object:');
+
+	for(var key in this.controller.assignments) {
+		var assignment = this.controller.assignments[key];
+		if(assignment != null) {
+			var a = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"></div>').append(this.controller.getIconForAssignment(assignment)).append(assignment.id).appendTo(this.exportables);
+			var devnull = function(dom, obj) {
+				dom.click(function() {
+					expcb[0].checked = true;
+					that.exportables._selected = obj;
+					that.exportables.children().css('background-image', 'none');
+					dom.css('background-image', 'url(' + org.sarsoft.imgPrefix + '/ok.png)');
+				});
+			}(a, assignment);
+		}
+	}
+	
+	for(var key in this.mcontroller.markers) {
+		var marker = this.mcontroller.markers[key];
+		if(marker.label != null && marker.label.length > 0) {
+			var m = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"><img style="vertical-align: middle; width: 16px; height: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>' + org.sarsoft.htmlescape(marker.label) + '</div>').appendTo(this.exportables);
+			var devnull = function(dom, obj) {
+				dom.click(function() {
+					expcb[0].checked = true;
+					that.exportables._selected = obj;
+					that.exportables.children().css('background-image', 'none');
+					dom.css('background-image', 'url(' + org.sarsoft.imgPrefix + '/ok.png)');
+				});
+			}(m, marker);
+		}
+	}
+	for(var key in this.mcontroller.shapes) {
+		var shape = this.mcontroller.shapes[key];
+		if(shape.label != null && shape.label.length > 0) {
+			var s = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"></div>').append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape)).append(org.sarsoft.htmlescape(shape.label)).appendTo(this.exportables);
+			var devnull = function(dom, obj) {
+				dom.click(function() {
+					expcb[0].checked = true;
+					that.exportables._selected = obj;
+					that.exportables.children().css('background-image', 'none');
+					dom.css('background-image', 'url(' + org.sarsoft.imgPrefix + '/ok.png)');
+				});
+			}(s, shape);
+		}
+	}
+}
+

@@ -373,7 +373,7 @@ org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
 	}
 }
 
-org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embedded) {
+org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embedded, hideIfEmpty) {
 	var that = this;
 	this.imap = imap;
 	this.imap.register("org.sarsoft.controller.MarkupMapController", this);
@@ -402,6 +402,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		this.dn = new Object();
 		var mtree = dn.addDataType("Markers");
 		mtree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		if(hideIfEmpty) mtree.body.css('display', 'none');
 		this.dn.markerdiv = jQuery('<div></div>').appendTo(mtree.body);
 		this.dn.markers = new Object();
 		this.dn.markertoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(mtree.header).click(function(evt) {
@@ -417,6 +418,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		
 		var stree = dn.addDataType("Shapes");
 		stree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+		if(hideIfEmpty) stree.body.css('display', 'none');
 		this.dn.shapediv = jQuery('<div></div>').appendTo(stree.body);
 		this.dn.shapes = new Object();
 		this.dn.shapetoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(stree.header).click(function(evt) {
@@ -575,6 +577,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	}
 
 	this.markerDAO.loadAll(function(markers) {
+		if(markers.length > 0 && hideIfEmpty) mtree.body.css('display', 'block');
 		that.refreshMarkers(markers);
 		for(var i = 0; i < markers.length; i++) {
 			that.imap.growInitialMap(new google.maps.LatLng(markers[i].position.lat, markers[i].position.lng));
@@ -583,6 +586,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.markerDAO.mark();
 
 	this.shapeDAO.loadAll(function(shapes) {
+		if(shapes.length > 0 && hideIfEmpty) stree.body.css('display', 'block');
 		that.refreshShapes(shapes);
 		for(var i = 0; i < shapes.length; i++) {
 			var bb = shapes[i].way.boundingBox;
