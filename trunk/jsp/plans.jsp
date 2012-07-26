@@ -10,20 +10,21 @@ function doload() {
 org.sarsoft.Loader.queue(function() {
   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true, container: $('#page_container')[0]});
-  plansController = new org.sarsoft.controller.OperationalPeriodMapController(imap, {id : ${period.id}}, ${fn:length(periods)});
   waypointController = new org.sarsoft.controller.SearchWaypointMapController(imap);
+  plansController = new org.sarsoft.controller.OperationalPeriodMapController(imap, ${period.id}, ${maxId});
   resourceController = new org.sarsoft.controller.ResourceLocationMapController(imap);
   callsignController = new org.sarsoft.controller.CallsignMapController(imap);
   clueController = new org.sarsoft.controller.ClueLocationMapController(imap);
-  markupController = new org.sarsoft.controller.MarkupMapController(imap, true);
+  markupController = new org.sarsoft.controller.MarkupMapController(imap, true, false, true);
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
+  searchIO = new org.sarsoft.view.SearchIO(imap, plansController, markupController);
   setInterval("imap.timer()", org.sarsoft.map.refreshInterval);
 });
 }
 </script>
 </head>
-<body onload="doload()" onunload="GUnload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
+<body onload="doload()" class="yui-skin-sam" style="border: 0px; margin: 0px; padding: 0px">
 <div id="page_container" style="height: 100%">
  <div id="map_left">
  </div>

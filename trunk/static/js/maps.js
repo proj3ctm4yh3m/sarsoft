@@ -2977,7 +2977,7 @@ org.sarsoft.InteractiveMap.prototype.addRangeRing = function(center, radius, ver
 
 org.sarsoft.InteractiveMap.prototype.removeRangeRings = function() {
 	for(var i = 0; i < this.rangerings.length; i++) {
-		this.map.removeOverlay(this.rangerings[i]);
+		this.rangerings[i].setMap(null);
 	}
 	this.rangerings = new Array();
 }

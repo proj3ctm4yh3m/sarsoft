@@ -127,15 +127,19 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 		rtree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
 		this.dn.rdiv = jQuery('<div></div>').appendTo(rtree.body);
 		this.dn.resources = new Object();
-		this.dn.resourcetoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(rtree.header).click(function(evt) {
-			that.showLocations=!that.showLocations;
-			if(that.showLocations) {
-				that.dn.resourcetoggle.html('(shown)');
+		this.dn.cb = jQuery('<input type="checkbox"' + (that.showLocations ? ' checked="checked"' : '') + '/>').prependTo(rtree.header).click(function(evt) {
+			var val = that.dn.cb[0].checked;
+			if(val) {
+				that.showLocations = true;
+				rtree.body.css('display', 'block');
+				rtree._lock = false;
 			} else {
-				that.dn.resourcetoggle.html('(hidden)');
+				that.showLocations = false;
+				rtree.body.css('display', 'none');
+				rtree._lock = true;
 			}
-			that.handleSetupChange();
 			evt.stopPropagation();
+			that.handleSetupChange();
 		});
 
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
@@ -237,7 +241,7 @@ org.sarsoft.controller.ResourceLocationMapController.prototype.DNAddResource = f
 	
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.resources[resource.id]);
 
-	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(resource.name) + '</span>');
+	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(resource.name) + (resource.assignmentId != null && resource.assignmentId.length > 0 ? ' (' + resource.assignmentId + ')' : '') + '</span>');
 
 	s.appendTo(line).click(function() {
 		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
@@ -385,15 +389,19 @@ org.sarsoft.controller.CallsignMapController = function(imap) {
 		ctree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
 		this.dn.cdiv = jQuery('<div></div>').appendTo(ctree.body);
 		this.dn.callsigns = new Object();
-		this.dn.callsigntoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(ctree.header).click(function(evt) {
-			that.showCallsigns=!that.showCallsigns;
-			if(that.showCallsigns) {
-				that.dn.callsigntoggle.html('(shown)');
+		this.dn.cb = jQuery('<input type="checkbox"' + (that.showCallsigns ? ' checked="checked"' : '') + '/>').prependTo(ctree.header).click(function(evt) {
+			var val = that.dn.cb[0].checked;
+			if(val) {
+				that.showCallsigns = true;
+				ctree.body.css('display', 'block');
+				ctree._lock = false;
 			} else {
-				that.dn.callsigntoggle.html('(hidden)');
+				that.showCallsigns = false;
+				ctree.body.css('display', 'none');
+				ctree._lock = true;
 			}
-			that.handleSetupChange();
 			evt.stopPropagation();
+			that.handleSetupChange();
 		});
 
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
