@@ -11,7 +11,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
@@ -49,6 +51,12 @@ public class CollaborativeMapController extends JSONBaseController {
 
 	@Autowired
 	SearchController searchController;
+	
+	@Autowired
+	ShapeController shapeController;
+
+	@Autowired
+	MarkerController markerController;
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> searchClassHints = new HashMap<String, Class>();
@@ -70,7 +78,7 @@ public class CollaborativeMapController extends JSONBaseController {
 
 	@SuppressWarnings("unused")
 	@RequestMapping(value="/maps", method = RequestMethod.GET)
-	public String homePage(Model model) {
+	public String homePage(Model model, HttpServletRequest request) {
 		String tenant = RuntimeProperties.getTenant();
 		if(tenant != null) {
 			// Pre-load map object so that it gets instantiated as a CollaborativeMap and not as a Tenant
@@ -176,7 +184,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			return app(model, "/collabmap");
 		}
 	}
-
+	
 	@RequestMapping(value="/map", method = RequestMethod.POST)
 	public String createNewMap(Model model, HttpServletRequest request) {
 		String val = adminController.createNewTenant(model, CollaborativeMap.class, request);
@@ -211,11 +219,21 @@ public class CollaborativeMapController extends JSONBaseController {
 				}
 				dao.save(map);
 			}
+			JSONArray shapes = (JSONArray) JSONSerializer.toJSON(request.getParameter("shapes"));
+			int size = shapes.size();
+			for(int i = 0; i < size; i++) {
+				shapeController.create((JSONObject) shapes.get(i));
+			}
+			JSONArray markers = (JSONArray) JSONSerializer.toJSON(request.getParameter("markers"));
+			size = shapes.size();
+			for(int i = 0; i < size; i++) {
+				markerController.create((JSONObject) markers.get(i));
+			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
 		}
 		return val;
 	}
-
+	
 	@RequestMapping(value = "/rest/tenant/center", method = RequestMethod.POST)
 	public String setDefaultCenter(Model model, JSONForm params, HttpServletRequest request) {
 		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());

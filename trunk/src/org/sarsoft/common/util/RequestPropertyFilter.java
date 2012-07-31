@@ -41,7 +41,7 @@ public class RequestPropertyFilter implements Filter {
 				}
 			}
 		}
-
+		
 		RuntimeProperties.setTenant(name);
 		RuntimeProperties.setUsername((String) servletRequest.getSession(true).getAttribute("username"));
 		RuntimeProperties.setUserPermission(permission);

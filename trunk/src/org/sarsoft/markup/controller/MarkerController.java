@@ -6,6 +6,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.json.JSONObject;
+
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
@@ -21,9 +23,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class MarkerController extends JSONBaseController {
 
-	@RequestMapping(value="/rest/marker", method = RequestMethod.POST)
-	public String createMarker(JSONForm params, Model model, HttpServletRequest request) {
-		Marker marker = Marker.createFromJSON(parseObject(params));
+	public Marker create(JSONObject json) {
+		Marker marker = Marker.createFromJSON(json);
 		List<Marker> markers = dao.loadAll(Marker.class);
 		long maxId = 0L;
 		for(Marker obj : markers) {
@@ -31,6 +32,12 @@ public class MarkerController extends JSONBaseController {
 		}
 		marker.setId(maxId+1);
 		dao.save(marker);
+		return marker;
+	}
+	
+	@RequestMapping(value="/rest/marker", method = RequestMethod.POST)
+	public String createMarker(JSONForm params, Model model, HttpServletRequest request) {
+		Marker marker = create(parseObject(params));
 		return json(model, marker);
 	}
 	

@@ -28,6 +28,11 @@ public class CommonController extends JSONBaseController {
 		if(RuntimeProperties.getProperty("sarsoft.ui.quickmap.message") != null) {
 			model.addAttribute("uimessage", RuntimeProperties.getProperty("sarsoft.ui.quickmap.message"));
 		}
+		String clientState = (String) session.getAttribute("client_state");
+		if(clientState != null) {
+			request.getSession().removeAttribute("client_state");
+			model.addAttribute("clientState", clientState);
+		}
 		return app(model, "/map");
 	}
 	
