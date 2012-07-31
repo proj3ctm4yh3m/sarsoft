@@ -263,12 +263,16 @@ public class AdminController extends JSONBaseController {
 		return null;
 	}
 
-	@RequestMapping(value="/app/openidrequest", method = RequestMethod.GET)
+	@RequestMapping(value="/app/openidrequest")
 	public void login(@RequestParam("domain") String domain, HttpServletRequest request, HttpServletResponse response) {
 		try {
 			String dest = request.getParameter("dest");
 			if(dest != null && dest.length() > 0) {
 				request.getSession(true).setAttribute("login_dest", dest);
+			}
+			String clientState = request.getParameter("clientState");
+			if(clientState != null && clientState.length() > 0) {
+				request.getSession(true).setAttribute("client_state", clientState);
 			}
 			String server = RuntimeProperties.getServerUrl();
 			if(consumer == null) consumer = new OIDConsumer(server);

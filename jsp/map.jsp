@@ -1,5 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <html xmlns="http://www.w3.org/TR/html4/loose.dtd">
 <head>
 <meta content='True' name='HandheldFriendly' />
@@ -24,6 +25,11 @@ org.sarsoft.Loader.queue(function() {
 	imap = new org.sarsoft.InteractiveMap(map, opts);
 	urlwidget = new org.sarsoft.MapURLHashWidget(imap, embed);
 	if(!embed) {
+		markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
+		<c:if test="${fn:length(clientState)>0}">
+			var clientState = YAHOO.lang.JSON.parse('${clientState}');
+			markupController.rehydrate(clientState["org.sarsoft.controller.MarkupMapController"]);
+		</c:if>
 		configWidget = new org.sarsoft.view.CookieConfigWidget(imap, true);
 		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity, alphaOverlays : urlwidget.config.alphaOverlays, center: {lat: map.getCenter().lat(), lng: map.getCenter().lng()}, zoom: map.getZoom()});
 		toolsController = new org.sarsoft.controller.MapToolsController(imap);

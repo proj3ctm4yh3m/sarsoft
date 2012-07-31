@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.controller.JSONBaseController;
@@ -30,9 +31,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class ShapeController extends JSONBaseController {
 
-	@RequestMapping(value="/rest/shape", method = RequestMethod.POST)
-	public String createShape(JSONForm params, Model model, HttpServletRequest request) {
-		Shape shape = Shape.createFromJSON(parseObject(params));
+	public Shape create(JSONObject json) {
+		Shape shape = Shape.createFromJSON(json);
 		List<Shape> shapes = dao.loadAll(Shape.class);
 		long maxId = 0L;
 		for(Shape obj : shapes) {
@@ -40,6 +40,12 @@ public class ShapeController extends JSONBaseController {
 		}
 		shape.setId(maxId+1);
 		dao.save(shape);
+		return shape;
+	}
+
+	@RequestMapping(value="/rest/shape", method = RequestMethod.POST)
+	public String createShape(JSONForm params, Model model, HttpServletRequest request) {
+		Shape shape = create(parseObject(params));
 		return json(model, shape);
 	}
 	

@@ -48,7 +48,7 @@ org.sarsoft.Loader.queue(function() {
 	dn.defaults.pwd.block.css('display', 'block');
   </c:if>
   <c:if test="${userPermission eq admin}">
-	dn.defaults.sharinghandler = function() { $('#sharingform').submit(); }
+	dn.defaults.sharing.handler = function() { $('#sharingform').submit(); }
 	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/details.png"/>Details</div>').insertBefore(dn.defaults.layers.block);
 	var settings_details = jQuery('<div></div>').append($('#detailsform').css('display', 'block'));
 	var detailsDlg = new org.sarsoft.view.MapDialog(imap, "Details", settings_details, "OK", "Cancel", function() {

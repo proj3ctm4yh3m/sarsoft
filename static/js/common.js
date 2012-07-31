@@ -4,6 +4,10 @@ if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
 org.sarsoft.touch = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/);
 org.sarsoft.mobile = org.sarsoft.touch && $(window).width() < 600;
+org.sarsoft.writeable = (org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.tenantid == null)
+org.sarsoft.async = function(fn) {
+	window.setTimeout(fn, 0);
+}
 
 org.sarsoft.setCookieProperty = function(cookie, prop, value) {
 	var obj = {}
@@ -27,8 +31,47 @@ org.sarsoft.htmlescape = function(str, newline) {
 	return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-org.sarsoft.BaseDAO = function() {
-//	this._timestamp = 0;
+org.sarsoft.BaseDAO = function(offline) {
+	this.objs = []
+	this.offline = offline && (org.sarsoft.tenantid == null);
+}
+
+org.sarsoft.BaseDAO.addListener = function(fn) {
+	if(org.sarsoft.BaseDAO.listeners == null) org.sarsoft.BaseDAO.listeners = [];
+	org.sarsoft.BaseDAO.listeners.push(fn);
+}
+
+org.sarsoft.BaseDAO.trigger = function(success) {
+	if(org.sarsoft.BaseDAO.listeners == null) return;
+	for(var i = 0; i < org.sarsoft.BaseDAO.listeners.length; i++) {
+		org.sarsoft.BaseDAO.listeners[i](success);
+	}
+}
+
+org.sarsoft.BaseDAO.prototype.setObj = function(id, obj) {
+	this.objs[id] = obj;
+}
+
+org.sarsoft.BaseDAO.prototype.getObj = function(id) {
+	return this.objs[id];
+}
+
+org.sarsoft.BaseDAO.prototype.sanitize = function(obj) {
+	for(var k in obj) {
+		var v = obj[k];
+		if(typeof(v) == "string" && v.length > 0 && 1*v==v) obj[k] = 1*v;
+	}
+	return obj;
+}
+
+org.sarsoft.BaseDAO.prototype.dehydrate = function() {
+	return this.objs;
+}
+
+org.sarsoft.BaseDAO.prototype.rehydrate = function(state) {
+	for(var i = 0; i < state.length; i++) {
+		this.objs[i] = this.sanitize(state[i]);
+	}
 }
 
 org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
@@ -40,12 +83,14 @@ org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 	YAHOO.util.Connect.asyncRequest('POST', this.baseURL + url, { success : function(response) {
+			org.sarsoft.BaseDAO.trigger(true);
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
 			if(!org.sarsoft._saveAlertFlag) {
 				org.sarsoft._saveAlertFlag = true;
 				alert("Server Communication Error!  Data may not be getting saved properly, reloading this page may solve the problem.  This message will not be shown again until you reload the page, but the problem may persist");
 			}
+			org.sarsoft.BaseDAO.trigger(false);
 			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
 		}}, postdata);
 }
@@ -62,23 +107,56 @@ org.sarsoft.BaseDAO.prototype._doGet = function(url, handler) {
 }
 
 org.sarsoft.BaseDAO.prototype.create = function(handler, obj) {
-	this._doPost("/", handler, obj);
+	var that = this;
+	obj = this.sanitize(obj);
+	if(this.offline) {
+		obj.id = this.objs.length;
+		this.setObj(obj.id, obj);
+		org.sarsoft.async(function() {handler(obj)});;
+	} else {
+		this._doPost("/", function(r) { that.objs[r.id] = r; handler(r) }, obj);
+	}
 }
 
 org.sarsoft.BaseDAO.prototype.save = function(id, obj, handler) {
-	this._doPost("/" + id + ".do", function(obj) {if(handler != null) handler(obj);}, obj);
+	var that = this;
+	obj = this.sanitize(obj);
+	if(this.offline) {
+		var mine = this.getObj(id);
+		if(mine == null) {
+			this.setObj(id, obj);
+		} else {
+			for(var k in obj) {
+				mine[k] = obj[k];
+			}
+		}
+		if(handler != null) org.sarsoft.async(function() {handler(mine)});
+	} else {
+		this._doPost("/" + id + ".do", function(r) {that.setObj(r.id, r); if(handler != null) handler(r);}, obj);
+	}
 }
 
 org.sarsoft.BaseDAO.prototype.del = function(id) {
-	this._doPost("/" + id + ".do", function() {}, new Object(), "action=delete");
+	var that = this;
+	if(this.offline) {
+		delete this.objs[id];
+	} else {
+		this._doPost("/" + id + ".do", function() { delete that.objs[id] }, new Object(), "action=delete");
+	}
 }
 
 org.sarsoft.BaseDAO.prototype.load = function(handler, id) {
-	this._doGet("/" + id + ".do", handler);
+	var that = this;
+	if(this.offline) {
+		org.sarsoft.async(function() {handler(this.getObj(id))});
+	} else {
+		this._doGet("/" + id + ".do", function(r) {that.setObj(r.id, r); handler(r) });
+	}
 }
 
 org.sarsoft.BaseDAO.prototype.mark = function() {
 	var that = this;
+	if(this.offline) return;
 	var url = "/rest/timestamp";
 	if(org.sarsoft.tenantid != null) url = url + "?tid=" + encodeURIComponent(org.sarsoft.tenantid);
 	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
@@ -89,11 +167,32 @@ org.sarsoft.BaseDAO.prototype.mark = function() {
 }
 
 org.sarsoft.BaseDAO.prototype.loadSince = function(handler) {
-	this._doGet("/since/" + this._timestamp, handler);
+	if(this.offline) {
+		handler([]);
+	} else {
+		// TODO update objects
+		this._doGet("/since/" + this._timestamp, handler);
+	}
 }
 
 org.sarsoft.BaseDAO.prototype.loadAll = function(handler) {
-	this._doGet("/", handler);
+	var that = this;
+	if(this.offline) {
+		org.sarsoft.async(function() {
+			var r = []
+			for(var i = 0; i < that.objs.length; i++) {
+				r[i] = that.getObj(i);
+			}
+			handler(r)
+		});
+	} else {
+		this._doGet("/", function(r) {
+			for(var i = 0; i < r.length; i++) {
+				that.setObj(r[i].id, r[i]);
+			}
+			handler(r);
+		});
+	}
 }
 
 org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
