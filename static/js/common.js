@@ -905,12 +905,19 @@ org.sarsoft.GPSComms.prototype.retry = function() {
 		  this.console("Retrieving GPS data from server . . .");
 		  var url = this._url;
 		  if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
-		  YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
-			  	that.gpxstr = response.responseText;
-				that.control.findDevices();
-			}, failure : function(response) {
-				that.console('<span class="warning">Error loading GPX file from server</span>');
-			}});
+		  if(url.submit != null) {
+			  $.ajax({type: 'POST', cache: false, url: url.attr("action"), data: url.serialize(), dataType: 'text', success: function(msg) { 
+				  that.gpxstr = msg;
+				  that.control.findDevices();
+			  	}});
+		  } else {
+			  YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
+				  	that.gpxstr = response.responseText;
+					that.control.findDevices();
+				}, failure : function(response) {
+					that.console('<span class="warning">Error loading GPX file from server</span>');
+				}});
+		  }
 		} else {
 			that.control.findDevices();
 		}

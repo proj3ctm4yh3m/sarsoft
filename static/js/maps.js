@@ -1471,21 +1471,32 @@ org.sarsoft.DataNavigator = function(imap) {
 		this.savedAt = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>').appendTo(this.defaults.tenant.body);
 		org.sarsoft.BaseDAO.addListener(function(success) {
 			if(success) {
-				that.savedAt.css('display', 'block').html('Last saved at ' + (new Date()).toLocaleTimeString());
+				var d = new Date();
+				var pm = false;
+				var hours = d.getHours();
+				if(hours > 12) {
+					hours = hours - 12;
+					pm = true;
+				}
+				that.savedAt.css('display', 'block').html('Last saved at ' + hours + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes() + ':' + (d.getSeconds() < 10 ? '0' : '') + d.getSeconds() + (pm ? ' PM' : ' AM'));
 			} else {
 				that.savedAt.css({'display': 'block', 'font-style': 'normal', 'font-weight': 'bold', 'color': 'red'}).html('CHANGES NOT SAVED');
 			}
 		});
 	}
 
-	this.defaults.pwd = new org.sarsoft.DNTree(this.defaults.tenant.body, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/key.png"/>Enter Password for Write Access');
-	this.defaults.pwd.block.css({display: 'none'});
-	var pwdform = jQuery('<form action="/password" method="post"><input type="hidden" name="dest" value="' + window.location + '"/><input type="password" name="password"/></form>').appendTo(this.defaults.pwd.body);
-	jQuery('<button>Enter Password</button>').appendTo(pwdform).click(function() { pwdform.submit(); });
-	
 	this.defaults.sharing = new org.sarsoft.widget.Sharing(imap, this.defaults.tenant.body);
 	this.defaults.layers = new org.sarsoft.widget.MapLayers(imap, this.defaults.tenant.body);
 
+	if(org.sarsoft.userPermissionLevel=="READ" && org.sarsoft.tenantid != null) {
+		var pwd = jQuery('<div style="padding-top: 1em"></div>').appendTo(this.defaults.sharing.collaborate);
+		var pwdform = jQuery('<form action="/password" method="post"><input type="hidden" name="dest" value="' + window.location + '"/></form>').appendTo(pwd);
+		pwdform.append('If this map\'s owner has set a password, you can enter it for write acess:');
+		pwdform.append('<input type="password" name="password"/>');
+		jQuery('<button>Enter Password</button>').appendTo(pwdform).click(function() { pwdform.submit(); });
+	}
+	
+	
 	if(!org.sarsoft.touch) {
 		this.defaults.io = new org.sarsoft.widget.ImportExport(imap, this.defaults.tenant.body);
 	}
@@ -1772,14 +1783,6 @@ org.sarsoft.MapSizeWidget = function(imap) {
 
 	imap.addMenuItem(img[0], 30);
 }
-
-org.sarsoft.MapPermissionWidget = function(imap) {
-	if(org.sarsoft.userPermissionLevel == "READ" || org.sarsoft.userPermissionLevel == "NONE") {
-		var passwordDlg = new org.sarsoft.PasswordDialog();	
-		imap.addContextMenuItems([{text : "Enter password for write access", applicable : function(obj) { return obj == null }, handler: function(data) { passwordDlg.show();}}]);
-	}
-}
-
 
 org.sarsoft.MapFindWidget = function(imap) {
 	var that = this;
@@ -2344,9 +2347,6 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options == null) options = {};
 	if(options.positionWindow || options.standardControls) {
 		this.positionInfoControl = new org.sarsoft.PositionInfoControl(this);
-	}
-	if(!options.suppressPermissionWidget) {
-		new org.sarsoft.MapPermissionWidget(this);
 	}
 	var dc = new org.sarsoft.MapDatumWidget(this, options.switchableDatum);
 	var mn = new org.sarsoft.MapDeclinationWidget(this);
@@ -3338,12 +3338,21 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 org.sarsoft.widget.Sharing = function(imap, container) {
 	var that = this;
 	
-	if(org.sarsoft.tenantid != null) {
-		this.container = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing');
+	this.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing</div>').appendTo(container);
+	this.settings = jQuery('<div></div>');
+	var body = jQuery('<div></div>').append(this.settings);
+	var sharingDlg = new org.sarsoft.view.MapDialog(imap, "Sharing", body, "OK", "Cancel", function() {
+		if(that.handler != null) that.handler();
+	});
+	this.sharing.click(function() {sharingDlg.swap();});
 
-		this.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Share this map</div>').appendTo(this.container.body);
+	if(org.sarsoft.tenantid != null) {
+
+		body.prepend('<div style="font-size: 120%; color: #5a8ed7">Share</div>');
 		
-		this.sync = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Sync map to changes made by other users</div>').appendTo(this.container.body));
+		this.collaborate = jQuery('<div><div style="font-size: 120%; color: #5a8ed7; padding-top: 5px">Collaborate</div></div>').appendTo(body);
+				
+		this.sync = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Sync map to changes made by other users.  Work on the same map together.</div>').appendTo(this.collaborate));
 		this.sync.change(function() {
 			if(that.timer != null) {
 				clearInterval(that.timer);
@@ -3364,14 +3373,7 @@ org.sarsoft.widget.Sharing = function(imap, container) {
 		if(org.sarsoft.map.autoRefresh) {
 			this.sync.attr("checked", "checked");
 		}
-	} else {
-		this.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing</div>').appendTo(container);
-	}	
-	this.settings = jQuery('<div></div>');
-	var sharingDlg = new org.sarsoft.view.MapDialog(imap, "Sharing", this.settings, "OK", "Cancel", function() {
-		if(that.handler != null) that.handler();
-	});
-	this.sharing.click(function() {sharingDlg.swap();});
+	}
 	
 }
 
