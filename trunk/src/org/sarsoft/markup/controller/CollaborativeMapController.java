@@ -87,22 +87,27 @@ public class CollaborativeMapController extends JSONBaseController {
 		return app(model, "Pages.Maps");
 	}
 	
-	private Map<String, Object> gpxifyMap(){
+	private Map<String, Object> gpxify(List<Shape> shapes, List<Marker> markers) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		List<Shape> shapes = dao.loadAll(Shape.class);
 		List<Map<String, Object>> fakeShapes = new ArrayList<Map<String, Object>>();
 		if(shapes != null) for(Shape shape : shapes) {
 			shape.getWay().setPrecision(0);
 			fakeShapes.add(gpxifyShape(shape));
 		}		
 		map.put("shapes", fakeShapes);
-		List<Marker> markers = dao.loadAll(Marker.class);
 		List<Map<String, Object>> fakeMarkers = new ArrayList<Map<String, Object>>();
 		if(markers != null) for(Marker marker : markers) {
 			fakeMarkers.add(gpxifyMarker(marker));
 		}		
 		map.put("markers", fakeMarkers);
 		return map;
+		
+	}
+	
+	private Map<String, Object> gpxifyMap(){
+		List<Shape> shapes = dao.loadAll(Shape.class);
+		List<Marker> markers = dao.loadAll(Marker.class);
+		return gpxify(shapes, markers);
 	}
 	
 	private Map<String, Object> gpxifyShape(Shape shp) {
@@ -137,7 +142,34 @@ public class CollaborativeMapController extends JSONBaseController {
 		map.put("desc", SearchAssignmentGPXHelper.encodeAttrs(attrs));
 		return map;
 	}
-
+	
+	@RequestMapping(value="/hastymap")
+	public String hastyExport(Model model, @RequestParam("shapes") String shapestr, @RequestParam("markers") String markerstr, HttpServletRequest request, HttpServletResponse response) {
+		JSONArray jshapes = (JSONArray) JSONSerializer.toJSON(shapestr);
+		List<Shape> shapes = new ArrayList<Shape>();
+		int size = jshapes.size();
+		for(int i = 0; i < size; i++) {
+			shapes.add(Shape.createFromJSON((JSONObject) jshapes.get(i)));
+		}
+		JSONArray jmarkers = (JSONArray) JSONSerializer.toJSON(markerstr);
+		List<Marker> markers = new ArrayList<Marker>();
+		size = jmarkers.size();
+		for(int i = 0; i < size; i++) {
+			markers.add(Marker.createFromJSON((JSONObject) jmarkers.get(i)));
+		}
+		
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.GPX;
+		switch(format) {
+		case GPX :
+			response.setHeader("Content-Disposition", "attachment; filename=export.gpx");
+			return gpx(model, gpxify(shapes, markers), "Map");
+		case KML :
+			response.setHeader("Content-Disposition", "attachment; filename=export.kml");
+			return kml(model, gpxify(shapes, markers), "Map");
+		}
+		return "";
+	}
+	
 	@RequestMapping(value="/map", method = RequestMethod.GET)
 	public String setMap(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
 		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
@@ -225,7 +257,7 @@ public class CollaborativeMapController extends JSONBaseController {
 				shapeController.create((JSONObject) shapes.get(i));
 			}
 			JSONArray markers = (JSONArray) JSONSerializer.toJSON(request.getParameter("markers"));
-			size = shapes.size();
+			size = markers.size();
 			for(int i = 0; i < size; i++) {
 				markerController.create((JSONObject) markers.get(i));
 			}

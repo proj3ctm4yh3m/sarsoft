@@ -14,7 +14,7 @@ org.sarsoft.Loader.queue(function() {
 
 	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
 	var embed = !(window==top);
-	var opts = {UTM: true, switchableDatum: true, supressPermissionWidget: true}
+	var opts = {UTM: true, switchableDatum: true}
 	if(!embed) {
 		opts.positionWindow = true;
 		opts.size = !org.sarsoft.mobile;

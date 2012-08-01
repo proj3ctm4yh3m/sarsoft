@@ -343,6 +343,13 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		if(dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
 	}
 	
+	// TODO IE may require form to be in DOM
+	this.exp = new Object();
+	this.exp.form = jQuery('<form action="/hastymap" method="POST"></form>');
+	this.exp.format = jQuery('<input type="hidden" name="format"/>').appendTo(this.exp.form);
+	this.exp.shapes = jQuery('<input type="hidden" name="shapes"/>').appendTo(this.exp.form);
+	this.exp.markers = jQuery('<input type="hidden" name="markers"/>').appendTo(this.exp.form);
+
 	var exp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To export data, click on the file type you wish to export to:</div></div>');
 	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, null, "Export Complete", function() {
 	});
@@ -351,47 +358,65 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	gpsout.click(function() {
 		that.expHeader.css('visibility', 'inherit');
-		var val = that.exportables._selected;
-		var url = ""
-		if(val == null) {
-			url=window.location.href+'&format=GPX';
-		} else if(val.url == null) {
-			url="/rest/shape/" + val.id + "?format=GPX";
-		} else {
-			url="/rest/marker/" + val.id + "?format=GPX";
-		}
-		that.expcomms.init(true, url, "");
+		that.doexport("GPS");
 	});
 
 	var gpxout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>');
 	gpxout.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	gpxout.click(function() {
-		var val = that.exportables._selected;
-		if(val == null) {
-			window.location=window.location.href+'&format=GPX';
-		} else if(val.url == null) {
-			window.location="/rest/shape/" + val.id + "?format=GPX";
-		} else {
-			window.location="/rest/marker/" + val.id + "?format=GPX";
-		}
+		that.doexport("GPX");
 	});
 
 	var kmlout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	kmlout.click(function() {
-		var val = that.exportables._selected;
-		if(val == null) {
-			window.location=window.location.href+'&format=KML';
-		} else if(val.url == null) {
-			window.location="/rest/shape/" + val.id + "?format=KML";
-		} else {
-			window.location="/rest/marker/" + val.id + "?format=KML";
-		}
+		that.doexport("KML");
 	});
 
-	
 	this.expHeader = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(exp);
 	this.expcomms = new org.sarsoft.GPSComms(this.expHeader);
 	this.exportables = jQuery('<div style="clear: both; width: 100%; padding-top: 10px"></div>').appendTo(exp);
+}
+
+org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
+	var val = this.exportables._selected;
+
+	var gps = false;
+	if(format == "GPS") {
+		gps = true;
+		format = "GPX";
+	}
+	this.exp.format.val(format);
+
+	var url = "";
+	if(val == null) {
+		url = window.location.href+"&format=" + format;
+		this.exp.markers.val(YAHOO.lang.JSON.stringify(this.controller.markerDAO.objs));
+		this.exp.shapes.val(YAHOO.lang.JSON.stringify(this.controller.shapeDAO.objs));
+	} else if(val.url == null) {
+		url = "/rest/marker/" + val.id + "?format=" + format;
+		this.exp.markers.val(YAHOO.lang.JSON.stringify([]));
+		this.exp.shapes.val(YAHOO.lang.JSON.stringify([this.controller.shapes[val.id]]));
+	} else {
+		url = "/rest/shape/" + val.id + "?format=" + format;
+		this.exp.markers.val(YAHOO.lang.JSON.stringify([this.controller.markers[val.id]]));
+		this.exp.shapes.val(YAHOO.lang.JSON.stringify([]));
+	}
+	
+	if(org.sarsoft.tenantid != null) {
+		if(gps) {
+			this.expcomms.init(true, url, "");
+		} else {
+			window.location = url;
+		}
+	} else {
+		if(gps) {
+			this.expcomms.init(true, this.exp.form, "");
+		} else {
+			this.exp.form.submit();
+		}
+		
+	}
+
 }
 
 org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
