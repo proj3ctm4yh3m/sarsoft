@@ -170,6 +170,11 @@
 		<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
 			<xsl:call-template name="WaypointToRtept"/>
 		</xsl:for-each>
+		<xsl:if test="string(json:polygon)='true'">
+	      	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e[position()=1]">
+			<xsl:call-template name="WaypointToRtept"/>
+	      	</xsl:for-each>
+		</xsl:if>
 	</rte>
 	</xsl:when>
 	<xsl:otherwise>
