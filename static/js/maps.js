@@ -3436,7 +3436,7 @@ org.sarsoft.widget.Account = function(imap, container) {
 		
 	var tenantDAO = new org.sarsoft.TenantDAO();
 	var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : true, sharing : true, actions : false});
-	yourTable.create(jQuery('<div></div>').appendTo(bn)[0]);
+	yourTable.create(jQuery('<div class="growYUITable"></div>').appendTo(bn)[0]);
 	
 	tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
 		yourTable.update(rows);
