@@ -36,9 +36,16 @@ org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
 		if(obj.way.boundingBox == null) {
 			this.addBoundingBox(obj.way);
 		}
-		obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
+		if(obj.way.zoomAdjustedWaypoints == null) obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
+		if(obj.way.waypoints == null) obj.way.waypoints = obj.way.zoomAdjustedWaypoints;
 	}
 	return obj;
+}
+
+org.sarsoft.ShapeDAO.prototype.offlineLoad = function(shape) {
+	this.sanitize(shape);
+	shape.id = this.objs.length;
+	this.setObj(shape.id, shape);
 }
 
 org.sarsoft.ShapeDAO.prototype.getWaypoints = function(handler, shape, precision) {
@@ -80,6 +87,12 @@ org.sarsoft.MarkerDAO.prototype.sanitize = function(obj) {
 		}
 	}
 	return obj;
+}
+
+org.sarsoft.MarkerDAO.prototype.offlineLoad = function(marker) {
+	this.sanitize(marker);
+	marker.id = this.objs.length;
+	this.setObj(marker.id, marker);
 }
 
 org.sarsoft.MarkerDAO.prototype.updatePosition = function(id, position, handler) {
@@ -311,28 +324,61 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		var imp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>');
 		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, null, "Cancel", function() {
 		});
-		if(dn.defaults.io.imp != null) dn.defaults.io.imp.click(function() { that.impcomms.clear(); that.impDlg.swap(); });
+		if(dn.defaults.io.imp != null) dn.defaults.io.imp.click(function() { that.impcomms.clear(); that.refreshImportables(); that.impDlg.swap(); });
+		
+		var hastyHandler = function(data) {
+			for(var i = 0; i < data.shapes.length; i++) {
+				var shape = data.shapes[i];
+				shape.id = null;
+				shape.way.id = null;
+				that.controller.shapeDAO.offlineLoad(shape);
+				that.controller.showShape(shape);
+			}
+			for(var i = 0; i < data.markers.length; i++) {
+				var marker = data.markers[i];
+				marker.id = null;
+				marker.position.id = null;
+				that.controller.markerDAO.offlineLoad(marker);
+				that.controller.showMarker(marker);
+			}			
+		}
 	
 		var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
 		gpsin.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(imp));
 		gpsin.click(function() {
 			that.impHeader.css('visibility', 'inherit');
-			that.impcomms.init(false, "/map/restgpxupload", "");
+			if(org.sarsoft.tenantid == null) {
+				that.impcomms.init(false, "/hastyupload", "", hastyHandler);
+			} else {
+				that.impcomms.init(false, "/rest/gpxupload", "");
+			}
 		});
 		
-		var gpxin = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/></form>');
-		var gpxfile = jQuery('<input type="file" name="file" style="margin-top: 40px; margin-left: 10px"/>').appendTo(gpxin);
-		var gpxval = jQuery('<div style="margin-left: 10px; margin-top: 5px"></div>').appendTo(gpxin);
-		gpxfile.change(function() {
-			gpxval.html(gpxfile.val());
+		this.gpxin = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/></form>');
+		this.gpxfile = jQuery('<input type="file" name="file" style="margin-top: 40px; margin-left: 10px"/>').appendTo(this.gpxin);
+		this.gpxval = jQuery('<div style="margin-left: 10px; margin-top: 5px"></div>').appendTo(this.gpxin);
+		// TODO after cloning, this won't work
+		this.gpxfile.change(function() {
+			that.gpxval.html(that.gpxfile.val());
 		})
 		var gpxicon = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>');
-		jQuery('<div style="display: inline-block"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(gpxin)).appendTo(imp);
+		jQuery('<div style="display: inline-block"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(this.gpxin)).appendTo(imp);
 		gpxicon.click(function() {
-			if("" == gpxfile.val()) {
+			if("" == that.gpxfile.val()) {
 				alert("Please choose a GPX file to import.");
 			} else {
-				gpxin.submit();
+				if(org.sarsoft.tenantid != null) {
+					that.gpxin.submit();
+				} else {
+					if(that.bgframe == null)  {
+						that.bgframe = jQuery('<iframe name="markupIOFrame" id="markupIOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
+						that.bgform = jQuery('<form name="gpsform" action="/hastyupload" target="markupIOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>')
+					}
+					jsonFrameCallback = hastyHandler;
+					_bgframe = that.bgframe;
+					that.gpxfile.appendTo(that.bgform);
+					that.bgform.submit();
+				}
 			}
 		});
 
@@ -417,6 +463,10 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 		
 	}
 
+}
+
+org.sarsoft.view.MarkupIO.prototype.refreshImportables = function() {
+	this.gpxfile.insertBefore(this.gpxval);
 }
 
 org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {

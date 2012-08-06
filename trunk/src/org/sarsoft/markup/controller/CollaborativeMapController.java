@@ -169,7 +169,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		}
 		return "";
 	}
-	
+		
 	@RequestMapping(value="/map", method = RequestMethod.GET)
 	public String setMap(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
 		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
@@ -303,6 +303,83 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked"})
+	private Shape reconstructShape(Map mapobj) {
+		Way way = new Way();
+		way.setWaypoints((List<Waypoint>) mapobj.get("waypoints"));
+		way.setType(WayType.valueOf((String) mapobj.get("type")));
+		List<Waypoint> wpts = way.getWaypoints();
+		if(way.getType() == WayType.ROUTE && wpts.get(0).equals(wpts.get(wpts.size() - 1))) way.setPolygon(true);
+		Shape shape = new Shape();
+		shape.setWay(way);
+		shape.setLabel((String) mapobj.get("name"));
+		String desc = (String) mapobj.get("desc");
+		shape.setWeight(2);
+		shape.setFill(0);
+		shape.setColor("#FF0000");
+
+		Map<String, String> attrs = (Map<String, String>) SearchAssignmentGPXHelper.decodeAttrs(desc);
+		if(attrs.containsKey("weight")) shape.setWeight(Float.parseFloat(attrs.get("weight")));
+		if(attrs.containsKey("fill")) shape.setFill(Float.parseFloat(attrs.get("fill")));
+		if(attrs.containsKey("color")) shape.setColor(attrs.get("color"));
+		if(attrs.containsKey("comments")) shape.setComments(attrs.get("comments"));
+		
+		return shape;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked"})
+	private Marker reconstructMarker(Map mapobj) {
+		Waypoint wpt = new Waypoint();
+		wpt.setLat((Double) mapobj.get("lat"));
+		wpt.setLng((Double) mapobj.get("lng"));
+		Marker marker = new Marker();
+		marker.setPosition(wpt);
+
+		marker.setLabel((String) mapobj.get("name"));
+		if(mapobj.get("desc") != null) {
+			Map<String, String> attrs = (Map<String, String>) SearchAssignmentGPXHelper.decodeAttrs((String) mapobj.get("desc"));
+			if(attrs.containsKey("url")) marker.setUrl(attrs.get("url"));
+			if(attrs.containsKey("comments")) marker.setComments(attrs.get("comments"));
+		}
+		if(marker.getUrl() == null || marker.getUrl().length() == 0) marker.setUrl("#FF0000");
+		return marker;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked"})
+	@RequestMapping(value="/hastyupload")
+	public String hastyImport(Model model, JSONForm params, HttpServletRequest request) {
+		JSONObject obj = null;
+		if(params.getFile() != null) {
+			obj = (JSONObject) parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2shapes.xsl");
+		} else {
+			obj = (JSONObject) parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2shapes.xsl");
+		}
+
+		Map m = (Map) JSONObject.toBean(obj, Map.class, searchClassHints);
+
+		List ways = (List) m.get("shapes");
+		List<Shape> shapes = new ArrayList<Shape>();
+		for(int i = 0; i < ways.size(); i++) {
+			shapes.add(reconstructShape((Map) ways.get(i)));
+		}
+		
+		List waypoints = (List) m.get("markers");
+		List<Marker> markers = new ArrayList<Marker>();
+		for(int i = 0; i < waypoints.size(); i++) {
+			markers.add(reconstructMarker((Map) waypoints.get(i)));
+		}
+		
+		Map map = new HashMap();
+		map.put("shapes", shapes);
+		map.put("markers", markers);
+		if("frame".equals(request.getParameter("responseType"))) {
+			return jsonframe(model, map);
+		} else {
+			return json(model, map);
+		}
+	}
+	
+	
+	@SuppressWarnings({ "rawtypes", "unchecked"})
 	@RequestMapping(value="/map/gpxupload", method = RequestMethod.POST)
 	public String gpxUpload(JSONForm params, Model model, HttpServletRequest request) {
 
@@ -318,31 +395,14 @@ public class CollaborativeMapController extends JSONBaseController {
 		List ways = (List) m.get("shapes");
 		for(int i = 0; i < ways.size(); i++) {
 			Map mapobj = (Map) ways.get(i);
-			Way way = new Way();
-			way.setWaypoints((List<Waypoint>) mapobj.get("waypoints"));
-			way.setType(WayType.valueOf((String) mapobj.get("type")));
-			List<Waypoint> wpts = way.getWaypoints();
-			if(way.getType() == WayType.ROUTE && wpts.get(0).equals(wpts.get(wpts.size() - 1))) way.setPolygon(true);
-			Shape shape = new Shape();
-			shape.setWay(way);
+			Shape shape = reconstructShape(mapobj);
 			List<Shape> shapes = dao.loadAll(Shape.class);
 			long maxId = 0L;
 			for(Shape shp : shapes) {
 				maxId = Math.max(maxId, shp.getId());
 			}
 			shape.setId(maxId+1);
-			shape.setLabel((String) mapobj.get("name"));
-			String desc = (String) mapobj.get("desc");
-			shape.setWeight(2);
-			shape.setFill(0);
-			shape.setColor("#FF0000");
 
-			Map<String, String> attrs = (Map<String, String>) SearchAssignmentGPXHelper.decodeAttrs(desc);
-			if(attrs.containsKey("weight")) shape.setWeight(Float.parseFloat(attrs.get("weight")));
-			if(attrs.containsKey("fill")) shape.setFill(Float.parseFloat(attrs.get("fill")));
-			if(attrs.containsKey("color")) shape.setColor(attrs.get("color"));
-			if(attrs.containsKey("comments")) shape.setComments(attrs.get("comments"));
-			
 			boolean exists = false;
 			shapes = dao.loadAll(Shape.class);
 			if(shapes != null) for(Shape similar : shapes) {
@@ -363,25 +423,13 @@ public class CollaborativeMapController extends JSONBaseController {
 		List waypoints = (List) m.get("markers");
 		for(int i = 0; i < waypoints.size(); i++) {
 			Map mapobj = (Map) waypoints.get(i);
-			Waypoint wpt = new Waypoint();
-			wpt.setLat((Double) mapobj.get("lat"));
-			wpt.setLng((Double) mapobj.get("lng"));
-			Marker marker = new Marker();
-			marker.setPosition(wpt);
+			Marker marker = reconstructMarker(mapobj);
 			List<Marker> markers = dao.loadAll(Marker.class);
 			long maxId = 0L;
 			for(Marker mrk : markers) {
 				maxId = Math.max(maxId, mrk.getId());
 			}
 			marker.setId(maxId+1);
-
-			marker.setLabel((String) mapobj.get("name"));
-			if(mapobj.get("desc") != null) {
-				Map<String, String> attrs = (Map<String, String>) SearchAssignmentGPXHelper.decodeAttrs((String) mapobj.get("desc"));
-				if(attrs.containsKey("url")) marker.setUrl(attrs.get("url"));
-				if(attrs.containsKey("comments")) marker.setComments(attrs.get("comments"));
-			}
-			if(marker.getUrl() == null || marker.getUrl().length() == 0) marker.setUrl("#FF0000");
 			
 			boolean exists = false;
 			markers = dao.loadAll(Marker.class);
