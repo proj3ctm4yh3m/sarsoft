@@ -95,10 +95,10 @@
         <width><xsl:value-of select="json:weight"/></width>
       </LineStyle>
       <PolyStyle>
-      	<fill>0</fill>
+      	<fill>1</fill>
       	<outline>1</outline>
       	<width><xsl:value-of select="json:weight"/></width>
-        <color><xsl:value-of select="concat('FF', $color)"/></color>
+        <color><xsl:value-of select="concat('44', $color)"/></color>
       </PolyStyle>
     </Style>
     <name><xsl:value-of select="$name"/></name>
@@ -176,6 +176,9 @@
     	  <LinearRing>
     	    <coordinates>
 		      	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
+		      	  <xsl:call-template name="WaypointToKml"/>
+		      	</xsl:for-each>
+		      	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e[position()=1]">
 		      	  <xsl:call-template name="WaypointToKml"/>
 		      	</xsl:for-each>
     	    </coordinates>
