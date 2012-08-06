@@ -328,11 +328,10 @@ public abstract class JSONBaseController {
 		}
 		return getCommonHeader(checkTenant);
 	}
-	
 
 	@SuppressWarnings("rawtypes")
-	protected String json(Model model, Object obj) {
-		if(obj == null) return "/json";
+	private void addJsonToModel(Model model, Object obj) {
+		if(obj == null) return;
 		if(obj instanceof List) {
 			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray((List) obj));
 		} else if(obj instanceof Set) {
@@ -341,7 +340,16 @@ public abstract class JSONBaseController {
 			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray(obj));
 		} else {
 			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(obj));
-		}
+		}		
+	}
+	
+	protected String jsonframe(Model model, Object obj) {
+		addJsonToModel(model, obj);
+		return "/jsonframe";
+	}
+
+	protected String json(Model model, Object obj) {
+		addJsonToModel(model, obj);
 		return "/json";
 	}
 

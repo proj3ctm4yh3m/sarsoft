@@ -864,12 +864,18 @@ org.sarsoft.GPSComms.prototype.onException = function() {
 }
 
 org.sarsoft.GPSComms.prototype.onFinishReadFromDevice = function() {
+	var that = this;
 	var gpx = this.control.gpsDataString;
 	globalgpx = gpx;
 	this.console('<span style="font-weight: bold; color: green">Done!</span>');
     var dao = new org.sarsoft.BaseDAO();
     dao.baseURL = "";
-	dao._doPost(this._url, function() { window.location.reload(); }, {gpx:gpx}, this._poststr);
+	dao._doPost(this._url, function(response) {
+		if(that._handler == null) {
+			window.location.reload();
+		} else {
+			that._handler(response);
+		}}, {gpx:gpx}, this._poststr);
 }
 
 org.sarsoft.GPSComms.prototype.clear = function() {
@@ -929,6 +935,7 @@ org.sarsoft.GPSComms.prototype.init = function(write, url, name, handler, postst
 	this._url = url;
 	this._name = name;
 	this._poststr = poststr;
+	this._handler = handler;
 	
 	if(typeof(__garminJSLoaded) == "undefined") {
 		jQuery.getScript("/static/js/garmin.js", function() {
