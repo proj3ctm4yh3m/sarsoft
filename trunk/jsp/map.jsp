@@ -20,6 +20,7 @@ org.sarsoft.Loader.queue(function() {
 		opts.size = !org.sarsoft.mobile;
 		opts.separators = true;
 		opts.find = true;
+		opts.label = true;
 		opts.container = $('#page_container')[0];
 	}
 	imap = new org.sarsoft.InteractiveMap(map, opts);
