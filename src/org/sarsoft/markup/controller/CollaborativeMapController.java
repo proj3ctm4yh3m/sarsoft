@@ -93,7 +93,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		if(shapes != null) for(Shape shape : shapes) {
 			shape.getWay().setPrecision(0);
 			fakeShapes.add(gpxifyShape(shape));
-		}		
+		}
 		map.put("shapes", fakeShapes);
 		List<Map<String, Object>> fakeMarkers = new ArrayList<Map<String, Object>>();
 		if(markers != null) for(Marker marker : markers) {

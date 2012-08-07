@@ -16,7 +16,7 @@
 	</xsl:for-each>
 </shapes>
 <markers class="array">
-	<xsl:for-each select="gpx:wpt">
+	<xsl:for-each select="gpx:wpt | gpx0:wpt">
 		<e class="object">
 		<xsl:call-template name="GpxToWaypoint">
 			<xsl:with-param name="copyMetaData" select="true()"/>
