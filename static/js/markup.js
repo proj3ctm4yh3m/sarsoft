@@ -594,30 +594,38 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		if(hideIfEmpty) mtree.body.css('display', 'none');
 		this.dn.markerdiv = jQuery('<div></div>').appendTo(mtree.body);
 		this.dn.markers = new Object();
-		this.dn.markertoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(mtree.header).click(function(evt) {
-			that.showMarkers=!that.showMarkers;
-			that.handleMarkerSetupChange();
-			if(that.showMarkers) {
-				that.dn.markertoggle.html('(shown)');
+		this.dn.markercb = jQuery('<input style="display: none" type="checkbox"' + (that.showMarkers ? ' checked="checked"' : '') + '/>').prependTo(mtree.header).click(function(evt) {
+			var val = that.dn.markercb[0].checked;
+			if(val) {
+				that.showMarkers = true;
+				mtree.body.css('display', 'block');
+				mtree._lock = false;
 			} else {
-				that.dn.markertoggle.html('(hidden)');
+				that.showMarkers = false;
+				mtree.body.css('display', 'none');
+				mtree._lock = true;
 			}
 			evt.stopPropagation();
+			that.handleMarkerSetupChange();
 		});
-		
+
 		var stree = dn.addDataType("Shapes");
 		if(hideIfEmpty) stree.body.css('display', 'none');
 		this.dn.shapediv = jQuery('<div></div>').appendTo(stree.body);
 		this.dn.shapes = new Object();
-		this.dn.shapetoggle = jQuery('<div style="float: right; font-size: 83%; cursor: pointer">(shown)</div>').prependTo(stree.header).click(function(evt) {
-			that.showShapes=!that.showShapes;
-			that.handleShapeSetupChange();
-			if(that.showShapes) {
-				that.dn.shapetoggle.html('(shown)');
+		this.dn.shapecb = jQuery('<input style="display: none" type="checkbox"' + (that.showShapes ? ' checked="checked"' : '') + '/>').prependTo(stree.header).click(function(evt) {
+			var val = that.dn.shapecb[0].checked;
+			if(val) {
+				that.showShapes = true;
+				stree.body.css('display', 'block');
+				stree._lock = false;
 			} else {
-				that.dn.shapetoggle.html('(hidden)');
+				that.showShapes = false;
+				stree.body.css('display', 'none');
+				stree._lock = true;
 			}
 			evt.stopPropagation();
+			that.handleShapeSetupChange();
 		});
 
 		if(org.sarsoft.writeable) {
@@ -798,8 +806,10 @@ org.sarsoft.controller.MarkupMapController.prototype.rehydrate = function(state)
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function() {
+	var mkeys = Object.keys(this.markers).length;
+	var skeys = Object.keys(this.shapes).length;
 	if(org.sarsoft.tenantid == null) {
-		if(Object.keys(this.markers).length > 0 || Object.keys(this.shapes).length > 0) {
+		if(mkeys > 0 || skeys > 0) {
 			if(this.dn.saveAs.tree.block.css('display') != "block") {
 				this.dn.saveAs.tree.block.css('display', 'block');
 				imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.sharing.css('display', 'none');
@@ -810,7 +820,17 @@ org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function()
 				imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.sharing.css('display', 'block');
 			}
 		}
-	}	
+	}
+	if(mkeys > 0) {
+		this.dn.markercb.css('display', 'inline');
+	} else {
+		this.dn.markercb.css('display', 'none');
+	}
+	if(skeys > 0) {
+		this.dn.shapecb.css('display', 'inline');
+	} else {
+		this.dn.shapecb.css('display', 'none');
+	}
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.setMarkerAttr = function(marker, key, value) {
