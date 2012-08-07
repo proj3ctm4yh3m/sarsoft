@@ -11,6 +11,8 @@ ${head}
 
 function doload() {
 org.sarsoft.Loader.queue(function() {
+	
+	org.sarsoft.userPermissionLevel="ADMIN";
 
 	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
 	var embed = !(window==top);
