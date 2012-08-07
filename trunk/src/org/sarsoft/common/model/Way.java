@@ -108,24 +108,64 @@ public class Way extends SarModelObject implements IPreSave {
 		this.precision = precision;
 	}
 
+	public static double distance(Waypoint p0, Waypoint p1, Waypoint p2) {
+		double dx = p2.getLng() - p1.getLng();
+		double dy = p2.getLat() - p1.getLat();
+		
+		if(dx != 0 || dy != 0) {
+			double t = ((p0.getLng() - p1.getLng()) * dx + (p0.getLat() - p1.getLat()) * dy) / (dx*dx + dy*dy);
+			if(t > 1) {
+				dx = p0.getLng() - p2.getLng();
+				dy = p0.getLat() - p2.getLat();
+				return dx*dx + dy*dy;
+			} else if(t > 0) {
+				dx = p0.getLng() - (p1.getLng() + (dx * t));
+				dy = p0.getLat() - (p1.getLat() + (dx * t));
+				return dx*dx + dy*dy;
+			} else {
+				dx = p0.getLng() - p1.getLng();
+				dy = p0.getLat() - p1.getLat();
+				return dx*dx + dy*dy;
+			}
+		}
+		
+		dx = p0.getLng()-p1.getLng();
+		dy = p0.getLat()-p1.getLat();
+		return dx*dx+dy*dy;
+	}
+	
+	public static List<Waypoint> douglasPeucker(List<Waypoint> points, double epsilon) {
+		if(points.size() == 2) return points;
+		double dmax = 0;
+		int index = 0;
+		for(int i = 1; i < points.size() - 1; i++) {
+			double d = distance(points.get(i), points.get(0), points.get(points.size()-1));
+			if(d > dmax) {
+				index = i;
+				dmax = d;
+			}
+		}
+		
+		List<Waypoint> results = new ArrayList<Waypoint>();
+		if(dmax >= epsilon*epsilon) {
+			List<Waypoint> r1 = douglasPeucker(points.subList(0, index+1), epsilon);
+			List<Waypoint> r2 = douglasPeucker(points.subList(index, points.size()), epsilon);
+			results.addAll(r1.subList(0, r1.size()-1));
+			results.addAll(r2);			
+		} else {
+			results.add(points.get(0));
+			results.add(points.get(points.size()-1));
+		}
+		return results;
+	}
+	
 	@JSONSerializable
 	@Transient
 	public List<Waypoint> getZoomAdjustedWaypoints() {
-		if(type == WayType.ROUTE) return waypoints;
-		List<Waypoint> list = new ArrayList<Waypoint>();
-		for(Waypoint wpt : waypoints) {
-			if(list.size() == 0) {
-				list.add(wpt);
-			} else {
-				Waypoint lastwpt = list.get(list.size() - 1);
-				if(wpt.distanceFrom(lastwpt) > precision) {
-					list.add(wpt);
-				}
-			}
-		}
-		return list;
+		if(precision == 0) return this.waypoints;
+		return douglasPeucker(this.waypoints, 0.0001);
 	}
-
+	
 	public String toString() {
 		String str = "Way " + id + "\n";
 		for(Waypoint wpt : waypoints) {
@@ -189,5 +229,5 @@ public class Way extends SarModelObject implements IPreSave {
 
 		return new Waypoint[] { new Waypoint(minLat, minLng), new Waypoint(maxLat, maxLng) };
 	}
-
+	
 }
