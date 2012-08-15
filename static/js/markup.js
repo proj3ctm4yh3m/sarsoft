@@ -340,7 +340,8 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 				marker.position.id = null;
 				that.controller.markerDAO.offlineLoad(marker);
 				that.controller.showMarker(marker);
-			}			
+			}
+			that.impDlg.hide();
 		}
 	
 		var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
@@ -372,7 +373,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 				} else {
 					if(that.bgframe == null)  {
 						that.bgframe = jQuery('<iframe name="markupIOFrame" id="markupIOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
-						that.bgform = jQuery('<form name="gpsform" action="/hastyupload" target="markupIOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>')
+						that.bgform = jQuery('<form style="display: none" name="gpsform" action="/hastyupload" target="markupIOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
 					}
 					jsonFrameCallback = hastyHandler;
 					_bgframe = that.bgframe;
@@ -391,7 +392,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	
 	// TODO IE may require form to be in DOM
 	this.exp = new Object();
-	this.exp.form = jQuery('<form action="/hastymap" method="POST"></form>');
+	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"></form>').appendTo(document.body);
 	this.exp.format = jQuery('<input type="hidden" name="format"/>').appendTo(this.exp.form);
 	this.exp.shapes = jQuery('<input type="hidden" name="shapes"/>').appendTo(this.exp.form);
 	this.exp.markers = jQuery('<input type="hidden" name="markers"/>').appendTo(this.exp.form);
@@ -516,7 +517,7 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 	this.tree.body.css({'display': 'none'});
 	
 	if(org.sarsoft.username != null) {
-		var newform = jQuery('<form action="/map" method="post" id="newmapform">').appendTo(this.tree.body);
+		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(this.tree.body);
 		var saveAsName = jQuery('<input type="text" name="name"/>').appendTo(newform);
 			
 		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
@@ -525,8 +526,12 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 		var shapes = jQuery('<input type="hidden" name="shapes"/>').appendTo(newform);
 		var markers = jQuery('<input type="hidden" name="markers"/>').appendTo(newform);
 
-		jQuery('<button>Save</button>').appendTo(this.tree.body).click(function() {
-			// TODO use dehydrate method
+		jQuery('<button>Save</button>').appendTo(this.tree.body).click(function(evt) {
+			var name = saveAsName.val();
+			if(name == null || name == "") {
+				alert('Please enter a name for this map.');
+				return;
+			}
 			shapes.val(YAHOO.lang.JSON.stringify(markupController.shapeDAO.objs));
 			markers.val(YAHOO.lang.JSON.stringify(markupController.markerDAO.objs));
 			var center = imap.map.getCenter();
@@ -821,6 +826,12 @@ org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function()
 			}
 		}
 	}
+	if(mkeys > 0 || skeys > 0) {
+		this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'block');
+	} else {
+		this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'none');
+	}
+	
 	if(mkeys > 0) {
 		this.dn.markercb.css('display', 'inline');
 	} else {

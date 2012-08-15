@@ -40,23 +40,6 @@ org.sarsoft.Loader.queue(function() {
 
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 
-	if(!embed && !org.sarsoft.mobile) {
-
-		var leaveImg = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>');
-		var leaveDD = new org.sarsoft.view.MenuDropdown(leaveImg, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
-
-		var leaveBody = jQuery('<div style="padding-top: 5px">Leave map view and return to the home page?<br/><br/></div>').appendTo(leaveDD.div);
-		var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads</input>').appendTo(leaveBody);
-		jQuery('<br/><br/>').appendTo(leaveBody);
-
-		jQuery('<button>Leave</button>').appendTo(leaveBody).click(function() {
-			if(leaveCB.attr("checked")=="checked") configWidget.saveConfig();
-			window.location = "/maps";
-		});
-
-		imap.addMenuItem(leaveDD.container, 40);
-	}
-
 	<c:if test="${uimessage ne null}">
 	  imap.message('${uimessage}', 20000);
 	</c:if>

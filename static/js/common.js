@@ -781,7 +781,7 @@ org.sarsoft.view.AlertDialog = function(title, bodynode, style) {
 }
 
 org.sarsoft.PasswordDialog = function() {
-	var bodynode = jQuery('<form action="/password" method="post">This will reload the page you are on.<br/>' +
+	var bodynode = jQuery('<form saction="/password" method="post">This will reload the page you are on.<br/>' +
 			'<input type="hidden" name="dest" value="' + window.location + '"/><label for="password">Password:</label><input type="password" name="password" length="10"/></form>');
 	return new org.sarsoft.view.CreateDialog("Enter Password", bodynode, "Enter", "Cancel", function() {
 		bodynode.submit();
