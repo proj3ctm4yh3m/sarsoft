@@ -46,7 +46,7 @@ org.sarsoft.Loader.queue(function() {
   $('#sharingpermissions').appendTo(dn.defaults.sharing.settings).css('display', 'block');
   <c:if test="${userPermission eq admin}">
 	dn.defaults.sharing.handler = function() { $('#sharingform').submit(); }
-	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/details.png"/>Details</div>').insertBefore(dn.defaults.layers.block);
+	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/details.png"/>Details</div>').insertBefore(dn.defaults.layers.tree.block);
 	var settings_details = jQuery('<div></div>').append($('#detailsform').css('display', 'block'));
 	var detailsDlg = new org.sarsoft.view.MapDialog(imap, "Details", settings_details, "OK", "Cancel", function() {
 		$('#detailsform').submit();
@@ -64,33 +64,6 @@ org.sarsoft.Loader.queue(function() {
   if(!embed) {
 	imap.message("Right click on map background to create shapes", 30000);
 
-	if(!org.sarsoft.mobile) {
-		var leaveImg = jQuery('<img src="' + org.sarsoft.imgPrefix + '/home.png" style="cursor: pointer; vertical-align: middle" title="Return to home page"/>');
-		var leaveDD = new org.sarsoft.view.MenuDropdown(leaveImg, 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
-
-		var leaveBody = jQuery('<div style="padding-top: 5px">Leave map view?<br/><br/></div>').appendTo(leaveDD.div);
-		var leaveCB = jQuery('<input type="checkbox" value="save">Save map settings for future page loads (data is automatically saved as you work on it)</input>');
-		if(org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.userPermissionLevel == "WRITE") {
-			leaveCB.appendTo(leaveBody);
-			jQuery('<br/><br/>').appendTo(leaveBody);
-		}
-		
-		leaveHandler = function(url) {
-			if(leaveCB.attr("checked")=="checked") {
-				configWidget.saveConfig(function() {
-					window.location = url;
-				});
-			} else {
-				window.location = url;
-			}
-		}
-		var bottomRow = jQuery('<div>Go To:</div>').appendTo(leaveBody);
-		jQuery('<a href="javascript:leaveHandler(\'/maps\')" style="margin-left: 5px">Home Page</a>').appendTo(bottomRow);
-		jQuery('<a href="javascript:leaveHandler(\'/guide?id=${tenant.name}\')" style="margin-left: 20px">Printable Guide</a>').appendTo(bottomRow);
-		
-		imap.addMenuItem(leaveDD.container, 40);
-	}
-	
 	google.maps.event.trigger(map, "resize");
 	
   }
@@ -138,32 +111,35 @@ Embed it in a webpage or forum:
 <input type="hidden" name="tid" value="${tenant.name}"/>
 
 <c:if test="${hosted}">
-<div style="padding-top: 5px">
+<div>
+
+<div style="font-size: 120%; color: #5a8ed7; padding-top: 5px">Permissions</div>
 <input type="checkbox" name="shared" value="true" id="sharedcb"<c:if test="${tenant.shared}"> checked="checked"</c:if>/> 
- <span>Make this map <a href="/find" target="_new">visible to everyone</a>.<br/>
-<label for="allUsers">Allow anyone you share this map with</label>
+ <span>Allow people to <a href="/find" target="_new">find this map</a> without the URL.<br/>
+<label for="allUsers">Grant</label>
 <select name="allUsers" id="allusersdd">
-  <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>do nothing - data is password protected</option>
-  <option value="READ"<c:if test="${tenant.allUserPermission eq read}"> selected="selected"</c:if>>view the map</option>
-  <option value="WRITE"<c:if test="${tenant.allUserPermission eq write}"> selected="selected"</c:if>>edit the map</option>
-</select>
+  <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>No</option>
+  <option value="READ"<c:if test="${tenant.allUserPermission eq read}"> selected="selected"</c:if>>Read</option>
+  <option value="WRITE"<c:if test="${tenant.allUserPermission eq write}"> selected="selected"</c:if>>Write</option>
+</select> access to all users
 <br/>
 
-<label for="passwordUsers">If you set a password below and give it to someone, they can</label>
+<label for="passwordUsers">Grant</label>
 <select name="passwordUsers">
- <option value="NONE"<c:if test="${tenant.passwordProtectedUserPermission eq none}"> selected="selected"</c:if>>do nothing - data is private</option>
- <option value="READ"<c:if test="${tenant.passwordProtectedUserPermission eq read}"> selected="selected"</c:if>>view the map</option>
- <option value="WRITE"<c:if test="${tenant.passwordProtectedUserPermission eq write}"> selected="selected"</c:if>>edit the map</option>
-</select>
+ <option value="NONE"<c:if test="${tenant.passwordProtectedUserPermission eq none}"> selected="selected"</c:if>>No</option>
+ <option value="READ"<c:if test="${tenant.passwordProtectedUserPermission eq read}"> selected="selected"</c:if>>Read</option>
+ <option value="WRITE"<c:if test="${tenant.passwordProtectedUserPermission eq write}"> selected="selected"</c:if>>Write</option>
+</select> access to users with the password (if set):
 <br/>
 
-Password:
+<span style="padding-left: 3em">Password:
 <input type="password" size="15" name="password"/> 
 <span class="hint">
  <c:choose>
  <c:when test="${fn:length(tenant.password) eq 0}">No password currently set</c:when>
  <c:otherwise>Leave blank to keep the current password</c:otherwise>
 </c:choose>
+</span>
 </span>
 </div>
 </c:if>

@@ -165,6 +165,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			return gpx(model, gpxify(shapes, markers), "Map");
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=export.kml");
+			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
 			return kml(model, gpxify(shapes, markers), "Map");
 		}
 		return "";
@@ -183,12 +184,15 @@ public class CollaborativeMapController extends JSONBaseController {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.WEB;
 		Tenant tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 		if(tenant == null) tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		String filename = (tenant.getDescription() != null && tenant.getDescription().length() > 0) ? tenant.getDescription() : tenant.getName();
+		filename = filename.replaceAll(" ", "_");
 		switch (format) {
 		case GPX :
-			response.setHeader("Content-Disposition", "attachment; filename=" + tenant.getDescription() + ".gpx");
+			response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".gpx");
 			return gpx(model, gpxifyMap(), "Map");
 		case KML :
-			response.setHeader("Content-Disposition", "attachment; filename=" + tenant.getDescription() + ".kml");
+			response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".kml");
+			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
 			return kml(model, gpxifyMap(), "Map");
 		default :
 			if(id != null) {
@@ -251,15 +255,19 @@ public class CollaborativeMapController extends JSONBaseController {
 				}
 				dao.save(map);
 			}
-			JSONArray shapes = (JSONArray) JSONSerializer.toJSON(request.getParameter("shapes"));
-			int size = shapes.size();
-			for(int i = 0; i < size; i++) {
-				shapeController.create((JSONObject) shapes.get(i));
+			if(request.getParameter("shapes") != null) {
+				JSONArray shapes = (JSONArray) JSONSerializer.toJSON(request.getParameter("shapes"));
+				int size = shapes.size();
+				for(int i = 0; i < size; i++) {
+					shapeController.create((JSONObject) shapes.get(i));
+				}
 			}
-			JSONArray markers = (JSONArray) JSONSerializer.toJSON(request.getParameter("markers"));
-			size = markers.size();
-			for(int i = 0; i < size; i++) {
-				markerController.create((JSONObject) markers.get(i));
+			if(request.getParameter("markers") != null) {
+				JSONArray markers = (JSONArray) JSONSerializer.toJSON(request.getParameter("markers"));
+				int size = markers.size();
+				for(int i = 0; i < size; i++) {
+					markerController.create((JSONObject) markers.get(i));
+				}
 			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
 		}

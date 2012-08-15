@@ -1508,7 +1508,7 @@ org.sarsoft.DataNavigator = function(imap) {
 		} else {
 			window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
 		}
-	});
+	}).attr("title", org.sarsoft.tenantid == null ? "Close Unsaved Map" : "Close " + org.sarsoft.tenantname);
 	
 	if(org.sarsoft.tenant)
 	
@@ -2198,7 +2198,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	if(color == null) color = "#FF0000";
 	var width = this.div.width();
 	
-	var svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
+	var svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 100%">' +
 		'<line x1="' + 0 + '" y1="' + 0 + '" x2="' + width + '" y2="' + 0 + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
 		'<line x1="' + 0 + '" y1="' + this.height + '" x2="' + width + '" y2="' + this.height + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
 		'<line x1="' + 0 + '" y1="' + 0 + '" x2="' + 0 + '" y2="' + this.height + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
@@ -3172,13 +3172,13 @@ if(typeof org.sarsoft.widget == "undefined") org.sarsoft.widget = new Object();
 org.sarsoft.widget.BrowserSettings = function(imap, container) {
 	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/config.png"/>Browser Settings');
 	var cbcontainer = jQuery('<div style="padding-top: 3px; padding-bottom: 3px"></div>').appendTo(this.tree.body);
-	var pos = jQuery('<select>' + (org.sarsoft.touch ? '' : '<option value="1">Cursor</option>') + '<option value="2">Center</option><option value="0">None</option></select>').appendTo(jQuery('<div style="white-space: nowrap">Coordinates:</div>').appendTo(cbcontainer)).change(function() {
+	var pos = jQuery('<select style="margin-left: 1em">' + (org.sarsoft.touch ? '' : '<option value="1">Cursor</option>') + '<option value="2">Center</option><option value="0">None</option></select>').appendTo(jQuery('<div style="white-space: nowrap">Show Position:</div>').appendTo(cbcontainer)).change(function() {
 		var val = 1*pos.val();
 		imap.registered["org.sarsoft.PositionInfoControl"].setValue(val);
 		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", val);
 	});
 
-	var llContainer = jQuery('<div>Show lat/lng as:</div>').appendTo(cbcontainer);
+	var llContainer = jQuery('<div>Lat/Lng Format:</div>').appendTo(cbcontainer);
 	var llSelect = jQuery('<select style="margin-left: 1em"><option value="DD">DD</option><option value="DDMMHH">DMH</option><option value="DDMMSS">DMS</option></select>').appendTo(llContainer).change(function() {
 		var val = llSelect.val();
 		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "coordinates", val);
@@ -3228,7 +3228,7 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 	var that = this;
 	
 	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers');
-	this.tree.body.css('display', 'none');
+	if(org.sarsoft.tenantid != null) this.tree.body.css('display', 'none');
 
 	this.availableLayers = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Available Data Sources</div>').appendTo(this.tree.body);
 	
@@ -3383,14 +3383,20 @@ org.sarsoft.widget.Sharing = function(imap, container) {
 org.sarsoft.widget.ImportExport = function(imap, container) {
 	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Data Transfer');
 	this.imp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/right.png"/>Import Data</div>').appendTo(this.tree.body);
-	this.exp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/left.png"/>Export Data</div>').appendTo(this.tree.body);
+	this.exp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px; display: none"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/left.png"/>Export Data</div>').appendTo(this.tree.body);
 	this.kml = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>Export to Google Earth</div>').appendTo(this.tree.body);
 
 	var kmlBody = jQuery('<div>Export map layers to Google Earth.  Export will be limited to the current map bounds; zooming in can give you a higher resolution export.<br/><br/></div>');
 	var supersize = jQuery('<input type="checkbox"/>').appendTo(kmlBody);
-	kmlBody.append('<span>Super size this export (more tiles, more coverage, larger file)</span><br/><br/><span>Select Base Layer:&nbsp;&nbsp;</span>');
-	var kmlSelect = jQuery('<select></select>').appendTo(kmlBody);
-	kmlBody.append('<br/>');
+	kmlBody.append('<span>Super size this export (more tiles, more coverage, larger file)</span><br/><br/>');
+
+	var kmlTable = jQuery('<tbody></tbody').appendTo(jQuery('<table></table>').appendTo(kmlBody));
+	var baseRow = jQuery('<tr><td valign="top" style="font-weight: bold; color: #5a8ed7">Base Layer</td></tr>').appendTo(kmlTable);
+	var kmlSelect = jQuery('<select></select>').appendTo(jQuery('<td></td>').appendTo(baseRow));
+	
+	var overlayRow = jQuery('<tr><td valign="top" style="font-weight: bold; color: #5a8ed7">Overlays</td></tr>').appendTo(kmlTable);
+	var overlayCell = jQuery('<td></td>').appendTo(overlayRow);
+	
 	var kmlAlphaOverlays = [];
 	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
@@ -3398,8 +3404,8 @@ org.sarsoft.widget.ImportExport = function(imap, container) {
 			if(!type.alphaOverlay) {
 				jQuery('<option value="' + type.alias + '">' + type.name + '</option>').appendTo(kmlSelect);
 			} else {
-				kmlAlphaOverlays.push(jQuery('<input type="checkbox" value="' + type.alias + '"/>').appendTo(kmlBody));
-				kmlBody.append(type.name + '<br/>');
+				kmlAlphaOverlays.push(jQuery('<input type="checkbox" value="' + type.alias + '"/>').appendTo(overlayCell));
+				overlayCell.append(type.name + '<br/>');
 			}
 		}
 	}
@@ -3439,11 +3445,43 @@ org.sarsoft.widget.Account = function(imap, container) {
 		
 	var tenantDAO = new org.sarsoft.TenantDAO();
 	var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : true, sharing : true, actions : false});
-	yourTable.create(jQuery('<div class="growYUITable"></div>').appendTo(bn)[0]);
+	yourTable.create(jQuery('<div class="growYUITable" style="clear: both"></div>').appendTo(bn)[0]);
 	
 	tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
 		yourTable.update(rows);
 	});
+
+	var newmap = new org.sarsoft.DNTree(this.tree.body, 'New Map');
+	newmap.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+	newmap.body.css({'display': 'none', 'left': '-28px', 'position': 'relative'});
+
+	var newform = jQuery('<form action="/map" method="post" id="createmapform">').appendTo(newmap.body);
+	var newName = jQuery('<input type="text" name="name"/>').appendTo(newform);
+	
+	var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
+	var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
+	var mapcfg = jQuery('<input type="hidden" name="mapcfg"/>').appendTo(newform);
+
+	jQuery('<button>Create</button>').appendTo(newmap.body).click(function(evt) {
+		var name = newName.val();
+		if(name == null || name == "") {
+			alert('Please enter a name for this map.');
+			return;
+		}
+		var center = imap.map.getCenter();
+		newlat.val(center.lat());
+		newlng.val(center.lng());
+		var bcw = imap.registered["org.sarsoft.view.BaseConfigWidget"];
+		var cfg = {}
+		if(bcw != null) {
+			cfg = bcw._toConfigObj();
+		} else {
+			cfg = imap.getConfig();
+		}
+		mapcfg.val(YAHOO.lang.JSON.stringify(cfg));				
+		newform.submit();
+	});
+	
 	
 }
 

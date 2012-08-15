@@ -162,8 +162,8 @@ public class Way extends SarModelObject implements IPreSave {
 	@JSONSerializable
 	@Transient
 	public List<Waypoint> getZoomAdjustedWaypoints() {
-		if(precision == 0) return this.waypoints;
-		return douglasPeucker(this.waypoints, 0.0001);
+		if(precision == 0 || waypoints.size() < 4) return waypoints;
+		return douglasPeucker(waypoints, 0.0001);
 	}
 	
 	public String toString() {
