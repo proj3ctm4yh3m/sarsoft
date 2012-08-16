@@ -686,6 +686,13 @@ google.maps.Marker.prototype.getPosition = function() {
 	return google.maps.LatLng.fromLonLat(new OpenLayers.LonLat(this.ol.marker.geometry.x, this.ol.marker.geometry.y));
 }
 
+google.maps.Marker.prototype.setPosition = function(position) {
+	var ll = google.maps.LatLng.toLonLat(position);
+	this.map.ol.vectorLayer.removeFeatures([this.ol.marker]);
+	this.ol.marker.geometry = new OpenLayers.Geometry.Point(ll.lon, ll.lat)
+	this.map.ol.vectorLayer.addFeatures([this.ol.marker]);
+}
+
 google.maps.Marker.prototype.setDraggable = function(val) {
 	var that = this;
 	if(val) {
@@ -791,3 +798,58 @@ google.maps.drawing.DrawingManager.prototype.setDrawingMode = function(type) {
 	});
 	
 }
+
+google.maps.ElevationService = function() {
+}
+
+google.maps.ElevationService.prototype.resamplePath = function(path, samples) {
+	var length = google.maps.geometry.spherical.computeLength(path);
+	var interval = length / (samples - 1);
+	
+	var s_index = 1;
+	var leg = 0;
+	var rpt = path[0];
+	var resampled = []
+	resampled.push(path[0])
+
+	while(resampled.length < samples) {
+		var d = google.maps.geometry.spherical.computeDistanceBetween(rpt, path[s_index]);
+		if(d + leg < interval) {
+			leg += d;
+			rpt = path[s_index];
+			s_index++;
+			if(s_index >= path.length) {
+				resampled.push(path[path.length-1]);
+				return resampled;
+			}
+		} else {
+			var ratio = (interval-leg)/d;
+			rpt = new google.maps.LatLng(rpt.lat()*(1-ratio) + path[s_index].lat()*ratio, rpt.lng()*(1-ratio) + path[s_index].lng()*ratio);
+			resampled.push(rpt);
+			leg = 0;
+		}
+	}
+	
+	return resampled;
+	
+}
+
+google.maps.ElevationService.prototype.getElevationAlongPath = function(obj, handler) {
+	var path = this.resamplePath(obj.path, obj.samples);
+	var url = "/resource/elevation?locations=";
+	for(var i = 0; i < path.length; i++) {
+		url = url + (i > 0 ? "|" : "") + path[i].lat() + "," + path[i].lng();
+	}
+	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
+		var obj = YAHOO.lang.JSON.parse(response.responseText);
+		var results = []
+		for(var i = 0; i < obj.results.length; i++) {
+			results[i] = { elevation: obj.results[i].elevation, location: new google.maps.LatLng(obj.results[i].location.lat, obj.results[i].location.lng)};
+		}
+		handler(results, obj.status);
+	}, failure : function(response) {
+		throw("AJAX ERROR getting elevation: " + response.responseText);
+	}});
+}
+
+google.maps.ElevationStatus = { OK : "OK" }
