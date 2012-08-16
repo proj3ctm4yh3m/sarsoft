@@ -65,6 +65,12 @@ public class WebMercator {
     public static int GoogleY(int y, int z) {
     	return ((int) Math.pow(2, z)) - 1 - y;
     }
+    
+    public static int[] MetersToTile(double mx, double my, int zoom) {
+    	double[] pixels = MetersToPixels(mx, my, zoom);
+    	int[] tile = PixelsToTile(pixels[0], pixels[1]);
+    	return new int[] {tile[0], tile[1], (int) pixels[0] - (tile[0] * tilesize), (int) pixels[1] - (tile[1] * tilesize)};
+    }
 	
 }
 
