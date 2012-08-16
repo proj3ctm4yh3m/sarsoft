@@ -12,23 +12,40 @@ org.sarsoft.SearchAssignmentDAO = function(errorHandler, baseURL) {
 org.sarsoft.SearchAssignmentDAO.prototype = new org.sarsoft.BaseDAO();
 
 org.sarsoft.SearchAssignmentDAO.prototype.getWays = function(handler, assignment, precision) {
-	this._doGet("/" + assignment.id + "/way?precision=" + precision, handler);
+	handler(this.getObj(assignment.id).ways);
+//	this._doGet("/" + assignment.id + "/way?precision=" + precision, handler);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.createWay = function(handler, assignment, way) {
-	this._doPost("/" + assignment.id + "/way", handler, route);
+	var that = this;
+	this._doPost("/" + assignment.id + "/way", function(ways) {
+		that.getObj(assignment.id).ways = ways;
+		handler(ways);
+	}, route);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.deleteWay = function(handler, assignment, idx, way) {
-	this._doPost("/" + assignment.id + "/way/" + idx + "?action=delete", handler, way);
+	var that = this;
+	this._doPost("/" + assignment.id + "/way/" + idx + "?action=delete", function() {
+		delete that.getObj(assignment.id).ways[idx];
+		if(handler != null) handler();
+	}, way);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.saveWaypoints = function(assignment, idx, waypoints, callback) {
-	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", callback || function() {}, waypoints);
+	var that = this;
+	this._doPost("/" + assignment.id + "/way/" + idx + "/waypoints", function(way) {
+		that.getObj(assignment.id).ways[idx] = way;
+		if(callback != null) callback(way);
+	}, waypoints);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.deleteWaypoint = function(handler, assignment, idx, wpt) {
-	this._doPost("/" + assignment.id + "/wpt/" + idx + "?action=delete", handler, wpt);
+	var that = this;
+	this._doPost("/" + assignment.id + "/wpt/" + idx + "?action=delete", function() {
+		delete that.getObj(assignment.id).waypoints[idx];
+		if(handler != null) handler();
+	}, wpt);
 }
 
 org.sarsoft.SearchAssignmentDAO.prototype.createWaysFromGpx = function(handler, id, obj, type) {
@@ -225,7 +242,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 			that.fmap.addWay(way, (way.type == "ROUTE") ? config : trackConfig, (way.type == "ROUTE") ? null : way.name);
 		}
 	}, assignment, 10);
-
+	
 	for(var i = 0; i < assignment.waypoints.length; i++) {
 		var wpt = assignment.waypoints[i];
 		that.fmap.addWaypoint(wpt, config, wpt.name, wpt.name);
@@ -641,7 +658,7 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 			var groupings = {
 					"Resource Type": {"GROUND": ["Ground", "#FF0000"], "DOG": ["Dog", "#FF8800"], "OHV": ["OHV", "#8800FF"], "MOUNTED": ["Mounted", "#8800FF"]},
 					"POD": {"LOW": ["Low", "#0088FF"], "MEDIUM": ["Medium", "#FF8800"], "HIGH": ["High", "#FF0000"]},
-					"Assignment status": {"DRAFT": ["Draft", "#0088FF"], "PREPARED": ["Prepared", "#FF8800"], "INPROGRESS": ["In Progress", "#FF0000"], "COMPLETED": ["Completed", "#8800FF"]}					
+					"Assignment Status": {"DRAFT": ["Draft", "#0088FF"], "PREPARED": ["Prepared", "#FF8800"], "INPROGRESS": ["In Progress", "#FF0000"], "COMPLETED": ["Completed", "#8800FF"]}					
 			}
 			
 			var fn = function(k2, d3) {
