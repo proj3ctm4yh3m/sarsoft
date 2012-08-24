@@ -12,9 +12,6 @@
 <c:if test="${userPermissionLevel eq admin}">
  <li><a href="/admin.html">Search Admin.</a>  Change search name and sharing.</li>
 </c:if>
- <c:if test="${imageUploadEnabled and (userPermissionLevel eq write or userPermissionLevel eq admin)}">
-  <li><a href="/app/imagery/georef">Map Imagery.</a>  Turn JPEG files into custom map backgrounds.</li>
- </c:if>
  <li><a href="/app/location/status">Location Tracking.</a>  Debug location tracking issues.</li>
 </ul>
  

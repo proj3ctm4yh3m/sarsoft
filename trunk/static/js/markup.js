@@ -649,7 +649,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 			    that.shapeDlg.point=new google.maps.Point(Math.round(div.width()/2), Math.round(div.height()/2));
 			    that.shapeDlg.show();
 			});
-			jQuery('<div style="float: left; padding-top: 1em; cursor: pointer; color: green; font-size: 120%">+ New Polygon</div>').appendTo(stree.body).click(function() {
+			jQuery('<div style="float: left; padding-top: 1em; cursor: pointer; color: green; font-size: 120%; padding-bottom: 5px">+ New Polygon</div>').appendTo(stree.body).click(function() {
 			    that.shapeDlg.shape=null;
 			    that.shapeDlg.polygon=true;
 			    that.shapeDlg.entityform.write({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10});

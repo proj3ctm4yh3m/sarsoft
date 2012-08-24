@@ -36,6 +36,7 @@ org.sarsoft.Loader.queue(function() {
 		configWidget = new org.sarsoft.view.CookieConfigWidget(imap, true);
 		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity, alphaOverlays : urlwidget.config.alphaOverlays, center: {lat: map.getCenter().lat(), lng: map.getCenter().lng()}, zoom: map.getZoom()});
 		toolsController = new org.sarsoft.controller.MapToolsController(imap);
+		georefController = new org.sarsoft.controller.CustomLayerController(imap);
 	}
 
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
