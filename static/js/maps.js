@@ -150,8 +150,6 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		}
 	}
 	
-	map.geoRefImages = org.sarsoft.EnhancedGMap.geoRefImages.slice(0);
-
 	if(center == null) center = new google.maps.LatLng(org.sarsoft.map._default.lat, org.sarsoft.map._default.lng);
 	if(zoom == null) zoom = org.sarsoft.map._default.zoom;
 	map.setCenter(center);
@@ -246,6 +244,12 @@ OverlayDropdownMapControl.prototype.addOverlayType = function(alias) {
 	var type = this.map.mapTypes.get(alias);
 	this.overlayDM.addItem(type.name, alias, group);
 	this.types[alias] = type;
+}
+
+OverlayDropdownMapControl.prototype.addGeorefType = function(id, type) {
+	var id = "_gr" + id;
+	this.overlayDM.addItem(type.name, id);
+	this.types[id] = type;
 }
 
 OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
@@ -413,12 +417,43 @@ OverlayDropdownMapControl.prototype.resetMapTypes = function(type) {
 		}
 	}
 
-	for(var i = 0; i < this.map.geoRefImages.length; i++) {
-		this.addOverlayType(this.map.geoRefImages[i]);
+	for(var i = 0; i < org.sarsoft.EnhancedGMap.geoRefImages.length; i++) {
+		var gr = org.sarsoft.EnhancedGMap.geoRefImages[i];
+		this.addGeorefType(gr.id, new org.sarsoft.GeoRefImageOverlay(null, gr.name, gr.url, new google.maps.Point(gr.x1, gr.y1), new google.maps.Point(gr.x2, gr.y2), new google.maps.LatLng(gr.lat1, gr.lng1), new google.maps.LatLng(gr.lat2, gr.lng2), 1));
 	}
 
 	this.hasAlphaOverlays = false;
 	this.updateMap(this.map.getMapTypeId(), this.map.getMapTypeId(), 0);
+}
+
+OverlayDropdownMapControl.prototype._isOverlayView = function(alias) {
+	return (this.types[alias] != null && this.types[alias].setMap != null);
+}
+
+OverlayDropdownMapControl.prototype._getOverlayType = function(alias) {
+	if(this._isOverlayView(alias)) return this.types[alias];
+	return this.map.mapTypes.get(alias);
+}
+
+OverlayDropdownMapControl.prototype._addOverlay = function(alias) {
+	var type = this._getOverlayType(alias);
+	if(this._isOverlayView(alias)) {
+		type.setMap(this.map);
+		this.ovtype = type;
+	} else {
+		this.map.overlayMapTypes.insertAt(0, type);
+	}	
+	this.overlayName = alias;
+}
+
+OverlayDropdownMapControl.prototype._removeOverlay = function() {
+	if(this.ovtype != null) {
+		this.ovtype.setMap(null);
+		this.ovtype = null;
+	} else {
+		this.map.overlayMapTypes.removeAt(0);
+	}
+	this.overlayName = null;	
 }
 
 OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity, alphaOverlays) {
@@ -448,10 +483,11 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		if(overlay == "roadmap") overlay = "om";
 	}
 	
+	
 	// 2. Set up variables
 	opacity = opacity*1;
 	var baseType = this.map.mapTypes.get(base);
-	var overlayType = this.map.mapTypes.get(overlay);
+	var overlayType = this._getOverlayType(overlay);
 	var infoString = "";
 	
 	// 3. Reset base iff changed
@@ -466,23 +502,17 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		// pass
 	} else if(opacity == 0 && !(this.opacity == 0)) {
 		// Clear overlay iff opacity just set to 0
-		this.map.overlayMapTypes.removeAt(0);
-		this.overlayName = null;
+		this._removeOverlay();
 	} else if(this.overlayName == overlay) {
 		// Iff overlay unchanged, just set opacity
 		if(overlayType != null && overlayType.setOpacity != null && baseType != overlayType) overlayType.setOpacity(opacity);
 	} else {
 		// Do it all
-		if(this.opacity > 0) this.map.overlayMapTypes.removeAt(0);
+		if(this.opacity > 0) this._removeOverlay();
 		if(overlayType != null && overlayType.setOpacity != null && baseType != overlayType) overlayType.setOpacity(opacity);
-		this.map.overlayMapTypes.insertAt(0, overlayType);
-		this.overlayName = overlay;
+		this._addOverlay(overlay);
 	}
 	this.opacity = opacity;
-
-//  TODO: georef image overlays if overlaType.angle != null
-//	this._overlays[0] = new GeoRefImageOverlay(new google.maps.Point(1*overlay.originx, 1*overlay.originy), new google.maps.LatLng(1*overlay.originlat, 1*overlay.originlng), overlay.angle, overlay.scale, overlay.id, new google.maps.Size(1*overlay.width, 1*overlay.height), opacity);
-//	this.map.addOverlay(this._overlays[0]);
 
 	// 5. AlphaOverlays
 	if(alphaOverlays == null && this.alphaOverlays == null) {
@@ -491,8 +521,8 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		// pass
 	} else {
 		// clear existing overlays
-		while(this.map.overlayMapTypes.getLength() > (this.opacity > 0 ? 1 : 0)) {
-			this.map.overlayMapTypes.removeAt(this.opacity > 0 ? 1 : 0);
+		while(this.map.overlayMapTypes.getLength() > ((this.opacity > 0 && this.ovtype == null) ? 1 : 0)) {
+			this.map.overlayMapTypes.removeAt((this.opacity > 0 && this.ovtype == null) ? 1 : 0);
 		}
 		
 		this.alphaOverlays = null;
@@ -4438,15 +4468,17 @@ Label.prototype.draw = function() {
 	this.div2_.style.top = Math.round(p.y +this.pixelOffset.height + h * this.centerOffset.height) + "px";
 };
 
-org.sarsoft.GeoRefImageOverlay = function(map, url, p1, p2, ll1, ll2, opacity) {
+org.sarsoft.GeoRefImageOverlay = function(map, name, url, p1, p2, ll1, ll2, opacity, top) {
 	this.set("p1", p1);
 	this.set("p2", p2);
 	this.set("ll1", ll1);
 	this.set("ll2", ll2);
 	this.set("url", url);
+	this.set("top", top);
+	this.set("name", name);
 	
 	this.div = jQuery('<img src="' + url + '"/>');
-	this.div.css({position: 'absolute', 'z-index': '2', opacity: opacity});
+	this.div.css({position: 'absolute', 'z-index': (top ? '2' : '0'), opacity: opacity});
 
 	this._olcapable = true;
 	this.opacity = opacity;
@@ -4531,17 +4563,24 @@ org.sarsoft.GeoRefImageOverlay.prototype._checkImageLoad = function() {
 		}
 	}
 	this._calc();
+	this.div.css('opacity', this.get('opacity'));
 	if(this._drawImageOnLoad) {
 		this._drawImageOnLoad = false;
 		this.draw();
 	}
 }
 
+org.sarsoft.GeoRefImageOverlay.prototype.setOpacity = function(opacity) {
+	this.set("opacity", opacity);
+}
+
 org.sarsoft.GeoRefImageOverlay.prototype.onAdd = function() {
 	var that = this;
-	var pane = this.getPanes().overlayLayer;
-	this.div.appendTo(pane);
-		
+	if(this.top) {
+		this.div.appendTo(this.getPanes().overlayLayer);
+	} else {
+		this.div.prependTo(this.getPanes().mapPane);
+	}
 	this._checkImageLoad();
 
 	this.listeners_ = [
@@ -4597,6 +4636,9 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 			that.write({url: url});
 		}
 	});
+	
+	var line = jQuery('<div></div>').appendTo(container);
+	this.form.name = jQuery('<input type="text" size="20"/>').appendTo(line);
 
 	var line = jQuery('<div><span style="float: left">Opacity: </span></div>').appendTo(container);
 	this.form.opacitySlider = org.sarsoft.view.CreateSlider(line);
@@ -4631,7 +4673,6 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 		var angle = angle = -1*GeoUtil.DegToRad(that.reference.angle);
 		var rotated = new google.maps.Point(scaled.x*Math.cos(angle) + scaled.y*Math.sin(angle), scaled.y*Math.cos(angle) - scaled.x*Math.sin(angle));
 		
-		// TODO translate from screen XY to image XY
 		that.form["p" + idx].val(Math.round(that.reference.size.w/2 + rotated.x) + "," + Math.round(that.reference.size.h/2 - rotated.y));
 		that.form["u" + idx].click();
 	}
@@ -4643,7 +4684,12 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 	}
 
 	this.dlg = new org.sarsoft.view.MapDialog(imap, "Layer Georeferencing", container, "Save", "Cancel", function() {
-		handler({url: that.reference.url, p1: that.reference.p1, p2: that.reference.p2, ll1: that.reference.ll1, ll2: that.reference.ll2});
+		var name = that.form.name.val();
+		if(name == null || name.length == 0) {
+			var url = that.reference.url.split("/");
+			name = url[url.length-1];
+		}
+		handler({name: name, url: that.reference.url, x1: that.reference.p1.x, y1: that.reference.p1.y, x2: that.reference.p2.x, y2: that.reference.p2.y, lat1: that.reference.ll1.lat(), lng1: that.reference.ll1.lng(), lat2: that.reference.ll2.lat(), lng2: that.reference.ll2.lng()});
 	});
 
 	this.dlg.dialog.hideEvent.subscribe(function() { 
@@ -4664,34 +4710,63 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 }
 
 org.sarsoft.GeoRefImageDlg.prototype.write = function(gr) {
-	var bounds = imap.map.getBounds();
+	var bounds = imap.map.getBounds();	
+	this.form.opacitySlider.setValue(100);
 	
 	if(gr == null)  {
 		this.form.p1.val("");
 		this.form.p2.val("");
 		this.form.l1.val("");
 		this.form.l2.val("");
+		this.form.name.val("");
 		return;
 	}
 	
-	if(gr.p1 == null) gr.p1 = new google.maps.Point(-1, -1);
-	if(gr.p2 == null) gr.p2 = new google.maps.Point(-1, -1);
-	if(gr.ll1 == null) gr.ll1 = bounds.getSouthWest();
-	if(gr.ll2 == null) gr.ll2 = bounds.getNorthEast();
+	if(gr.x1 == null) {
+		gr.x1 = -1;
+		gr.y1 = -1;
+	}
+	if(gr.x2 == null) {
+		gr.x2 = -1;
+		gr.y2 = -1;
+	}
+	if(gr.lat1 == null) {
+		gr.lat1 = bounds.getSouthWest().lat();
+		gr.lng1 = bounds.getSouthWest().lng();
+	}
+	if(gr.lat2 == null) {
+		gr.lat2 = bounds.getNorthEast().lat();
+		gr.lng2 = bounds.getNorthEast().lng();
+	}
 
-	this.form.p1.val(gr.p1.x + "," + gr.p1.y);
-	this.form.p2.val(gr.p2.x + "," + gr.p2.y);
-	this.form.l1.val(gr.ll1.lat() + "," + gr.ll1.lng());
-	this.form.l2.val(gr.ll2.lat() + "," + gr.ll2.lng());
+	this.form.p1.val(gr.x1 + "," + gr.y1);
+	this.form.p2.val(gr.x2 + "," + gr.y2);
+	this.form.l1.val(gr.lat1 + "," + gr.lng1);
+	this.form.l2.val(gr.lat2 + "," + gr.lng2);
+	this.form.url.val(gr.url);
+	this.form.name.val(gr.name);
 	
-	this.form.opacitySlider.setValue(1);
-	
-	this.reference = new org.sarsoft.GeoRefImageOverlay(this.imap.map, gr.url, gr.p1, gr.p2, gr.ll1, gr.ll2, 1);
+	this.reference = new org.sarsoft.GeoRefImageOverlay(this.imap.map, null, gr.url, new google.maps.Point(gr.x1, gr.y1), new google.maps.Point(gr.x2, gr.y2), new google.maps.LatLng(gr.lat1, gr.lng1), new google.maps.LatLng(gr.lat2, gr.lng2), 1, true);
 }
 
 org.sarsoft.GeoRefImageDlg.prototype.show = function(gr) {
-	this.write(gr);
 	this.dlg.show();
+	this.write(gr);
+}
+
+org.sarsoft.GeoRefDAO = function(errorHandler, baseURL) {
+	if(typeof baseURL == "undefined") baseURL = "/rest/georef";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+	this.nextId = 0;
+}
+
+org.sarsoft.GeoRefDAO.prototype = new org.sarsoft.BaseDAO(true);
+
+org.sarsoft.GeoRefDAO.prototype.offlineLoad = function(georef) {
+	this.sanitize(georef);
+	georef.id = this.objs.length;
+	this.setObj(georef.id, georef);
 }
 
 org.sarsoft.controller.CustomLayerController = function(imap) {
@@ -4699,6 +4774,7 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 	this.imap = imap;
 	this.imap.register("org.sarsoft.controller.CustomLayerController", this);
 	this.gr = new Object();
+	this.dao = new org.sarsoft.GeoRefDAO();
 	
 	var dcbody = jQuery('<div>Delete - Are You Sure?</div>');
 	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", dcbody, "Delete", "Cancel", function() {
@@ -4731,16 +4807,45 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 	this.georefDlg = new org.sarsoft.GeoRefImageDlg(imap, function(gr) {
 		gr.id = that.georefDlg.id;
 		that.georefDlg.id = null;
-		that.addGR(gr);
+		if(gr.id == null) {
+			that.dao.create(function(obj) {
+				that.refreshLayers(obj);
+				that.addGR(obj);
+			}, gr);
+		} else {
+			that.dao.save(gr.id, gr, function(obj) {
+				that.refreshLayers(obj);
+				that.addGR(obj);
+			});
+		}		
 	});
+	
+	this.dao.loadAll(function(georefs) {
+		for(var i = 0; i < georefs.length; i++) {
+			that.addGR(georefs[i]);
+		}
+	});
+	this.dao.mark();
+	
+}
 
+org.sarsoft.controller.CustomLayerController.prototype.refreshLayers = function(gr) {
+	var updated = false;
+	var grlist = org.sarsoft.EnhancedGMap.geoRefImages;
+	for(var i = 0; i < grlist.length; i++) {
+		if(grlist[i].id == gr.id) {
+			grlist[i] = gr;
+			updated = true;
+		}
+	}
+	if(!updated) grlist.push(gr);
+	var config = this.imap.getConfig();
+	this.imap.map._overlaydropdownmapcontrol.resetMapTypes();
+	this.imap.setConfig(config);
 }
 
 org.sarsoft.controller.CustomLayerController.prototype.addGR = function(gr) {
 	var that = this;
-	var url = gr.url.split("/");
-	url = url[url.length-1];
-	if(gr.id == null) gr.id = url;
 	this.gr[gr.id] = gr;
 
 	if(this.dn.layerdiv == null) return;
@@ -4752,24 +4857,36 @@ org.sarsoft.controller.CustomLayerController.prototype.addGR = function(gr) {
 
 	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.layers[gr.id]);
 	line.append('<img style="vertical-align: middle; padding-right: 0.5em; height: 16px; width: 16px" src="' + gr.url + '"/>');
-	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(url) + '</span>';
+	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(gr.name) + '</span>';
 	jQuery(s).appendTo(line).click(function() {
-		// show/hide opacity toggle?
+		var config = that.imap.getConfig();
+		config.overlay = "_gr" + gr.id;
+		config.opacity = 1;
+		that.imap.setConfig(config);
 	});
 	
 	if(org.sarsoft.writeable) {	
 		jQuery('<span title="Delete" style="cursor: pointer; float: right; margin-right: 10px; font-weight: bold; color: red">-</span>').appendTo(line).click(function() {
-			that.del(function() { that.removeGR(gr.id); that.georefDAO.del(gr.id); });
+			that.del(function() { that.removeGR(gr.id); that.dao.del(gr.id); });
 		});
 		jQuery('<span title="Edit" style="cursor: pointer; float: right; margin-right: 5px;"><img src="' + org.sarsoft.imgPrefix + '/edit.png"/></span>').appendTo(line).click(function() {
+			var config = that.imap.getConfig();
+			if(config.overlay == "_gr" + gr.id) {
+				config.overlay = null;
+				config.opacity = 0;
+				that.imap.setConfig(config);
+			}
 			that.georefDlg.show(gr);
 			that.georefDlg.id = gr.id;
 		});
 	}
-	
-/*	var line = jQuery('<div></div>').appendTo(this.dn.layers[gr.id]);
-	if(marker.comments != null && marker.comments.length > 0) {
-		line.append(jQuery('<div style="border-left: 1px solid #945e3b; padding-left: 1ex" class="marker_desc_line_item pre"></div>').append(marker.comments));
-	} */
-	
+		
+}
+
+org.sarsoft.controller.CustomLayerController.prototype.removeGR = function(id) {
+	delete this.gr[id];
+	if(this.dn.layers[id] != null) {
+		this.dn.layers[id].remove();
+		delete this.dn.layers[id];
+	}
 }

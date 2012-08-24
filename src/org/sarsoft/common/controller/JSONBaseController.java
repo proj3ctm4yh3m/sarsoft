@@ -27,7 +27,7 @@ import net.sf.json.xml.XMLSerializer;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.dao.GenericHibernateDAO;
-import org.sarsoft.common.model.GeoRefImage;
+import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
@@ -202,10 +202,11 @@ public abstract class JSONBaseController {
 			header = header + "org.sarsoft.EnhancedGMap.geoRefImages = [";
 	
 			boolean first = true;
-			for(GeoRefImage image : dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE)) {
-				header = header + ((first) ? "" : ",") + "{getName: function() { return \"" + image.getName() + "\"}, name:\"" + image.getName() + "\", alias: \"" + image.getName() + "\", id: " + image.getId() + ", angle: " + image.getAngle() +
-					", scale: " + image.getScale() + ", originx: " + image.getOriginx() + ", originy: " + image.getOriginy() + ", originlat: " + image.getOriginlat() +
-					", originlng: " + image.getOriginlng() + ", width: " + image.getWidth() + ", height: " + image.getHeight() + "}";
+			for(GeoRef image : dao.loadAll(GeoRef.class)) {
+				// TODO htmlescape this
+				header = header + ((first) ? "" : ",") + "{getName: function() { return \"" + image.getName() + "\"}, name:\"" + image.getName() + "\", alias: \"" + image.getName() + "\", id: " + image.getId() +
+					", x1: " + image.getX1() + ", y1: " + image.getY1() + ", x2: " + image.getX2() + ", y2: " + image.getY2() + ", lat1: " + image.getLat1() + ", lng1: " + image.getLng1() +
+					", lat2: " + image.getLat2() + ", lng2: " + image.getLng2() + ", " + "url: \"" + image.getUrl() + "\"}";
 				first = false;
 			}
 			header = header + "];\n\norg.sarsoft.EnhancedGMap.visibleMapTypes = [\n";
@@ -412,7 +413,7 @@ public abstract class JSONBaseController {
 
 	protected String app(Model model, String view) {
 		model.addAttribute("mapSources", getMapSources());
-		model.addAttribute("geoRefImages", dao.getAllByAttr(GeoRefImage.class, "referenced", Boolean.TRUE));
+		model.addAttribute("geoRefImages", dao.loadAll(GeoRef.class));
 		model.addAttribute("hosted", isHosted());
 		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
 		model.addAttribute("version", getProperty("sarsoft.version"));

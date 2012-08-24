@@ -14,9 +14,6 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
-import org.sarsoft.common.model.GeoRefImage;
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
-import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
@@ -25,7 +22,6 @@ import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.markup.model.Marker;
 import org.sarsoft.markup.model.Shape;
-import org.sarsoft.plans.Constants;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

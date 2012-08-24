@@ -32,7 +32,8 @@ import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
-import org.sarsoft.common.model.GeoRefImage;
+import org.sarsoft.common.model.GeoRef;
+import org.sarsoft.markup.model.Marker;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -48,7 +49,6 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 public class ImageryController extends JSONBaseController {
 		
 	private static String EXTERNAL_TILE_DIR = null;
-	private static String GEOREF_IMAGE_DIR = ".sarsoft/imagery/georef/";
 	private Logger logger = Logger.getLogger(ImageryController.class);
 	
 	@InitBinder
@@ -264,134 +264,52 @@ public class ImageryController extends JSONBaseController {
 		image.flush();
 	}
 
-	@RequestMapping(value="/resource/imagery/georef/{id}.png", method=RequestMethod.GET)
-	public void getImage(HttpServletResponse response, @PathVariable("id") long id, @RequestParam(value="angle", required=false) Double angle, 
-			@RequestParam(value="originy", required=false) Integer originy, @RequestParam(value="originx", required=false) Integer originx) {
-		if(angle != null) response.setHeader("Cache-Control", "max-age=3600, public");
-		response.setContentType("image/png");
-		GeoRefImage georefimage = dao.load(GeoRefImage.class, id);
-		try {
-			BufferedImage original = ImageIO.read(new File(GEOREF_IMAGE_DIR + georefimage.getPk() + ".png"));
-			int height = original.getHeight();
-			int width = original.getWidth();
-			
-			BufferedImage rotated = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-			Graphics2D g = rotated.createGraphics();
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-			g.setBackground(new Color(255, 255, 255, 0));
-			g.clearRect(0, 0, width, height);
-			if(angle != null) {
-				double radians = (angle * Math.PI / 180);
-				g.rotate(radians, originx, originy);
-			}
-			g.drawImage(original, 0, 0, width, height, null);
-			
-			ImageIO.write(rotated, "png", response.getOutputStream());
-			g.dispose();
-			rotated.flush();
-		} catch (IOException e) {
-			logger.error("Couldn't serve georeferenced image " + id, e);
-		}
+	@RequestMapping(value="/rest/georef", method=RequestMethod.GET)
+	public String getGeoRefs(Model model) {
+		return json(model, dao.loadAll(GeoRef.class));
 	}
 	
-	@RequestMapping(value="/app/imagery/georef", method=RequestMethod.GET)
-	public String georef(Model model) {
-		model.addAttribute("images", dao.loadAll(GeoRefImage.class));
-		return app(model, "GeoRefImageList");
-	}
-	
-	@RequestMapping(value="/app/imagery/georef", method = RequestMethod.POST)
-	public String createGeoReferencedImage(Model model, HttpServletRequest request, ImageForm params) {
-		if(!Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled"))) return "redirect:/";
-		List<GeoRefImage> images = dao.loadAll(GeoRefImage.class);
+	@RequestMapping(value="/rest/georef", method = RequestMethod.POST)
+	public String createGeoRef(JSONForm params, Model model, HttpServletRequest request) {
+		GeoRef georef = GeoRef.createFromJSON(parseObject(params));
+		List<GeoRef> georefs = dao.loadAll(GeoRef.class);
 		long maxId = 0L;
-		for(GeoRefImage image : images) {
-			if(image.getId() != null) maxId = Math.max(maxId, image.getId());
+		for(GeoRef obj : georefs) {
+			maxId = Math.max(maxId, obj.getId());
 		}
-		GeoRefImage image = new GeoRefImage();
-		image.setId(maxId+1);
-		image.setName(params.getName());
-		image.setReferenced(false);
-		dao.save(image);
-		image = dao.load(GeoRefImage.class, maxId+1);
-		try {
-			File file = new File(GEOREF_IMAGE_DIR);
-			file.mkdirs();
-			FileOutputStream os = new FileOutputStream(GEOREF_IMAGE_DIR + image.getPk() + ".png");
-			
-			BufferedImage original = ImageIO.read(new ByteArrayInputStream(params.getBinaryData()));
-			int height = original.getHeight();
-			int width = original.getWidth();
-			BufferedImage resized = new BufferedImage(width*2, height*2, BufferedImage.TYPE_4BYTE_ABGR);
-			Graphics2D g = resized.createGraphics();
-			g.setBackground(new Color(255, 255, 255, 0));
-			g.clearRect(0, 0, width*2, height*2);
-			g.drawImage(original, width/2, height/2, width, height, null);
-			ImageIO.write(resized, "png", os);
-			os.close();
-			g.dispose();
-			original.flush();
-			resized.flush();
-		} catch (Exception e) {
-			logger.error("Unable to resize uploaded georef image", e);
-		}
-		return editGeoRefImage(model, request, image.getId());
+		georef.setId(maxId+1);
+		dao.save(georef);
+		return json(model, georef);
 	}
 	
-	
-	@RequestMapping(value="/app/imagery/georef/{id}", method=RequestMethod.GET)
-	public String editGeoRefImage(Model model, HttpServletRequest request, @PathVariable("id") long id) {
-		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.VIEW;
-		GeoRefImage image = dao.load(GeoRefImage.class, id);
-		if(action == Action.DELETE) {
-			dao.delete(image);
-			new File(GEOREF_IMAGE_DIR + image.getPk() + ".png").delete();
-			return georef(model);
-		}
-		model.addAttribute("image", image);
-		try {
-			BufferedImage rawImage = ImageIO.read(new File(GEOREF_IMAGE_DIR + image.getPk() + ".png"));
-			model.addAttribute("width", rawImage.getWidth());
-			model.addAttribute("height", rawImage.getHeight());
-			rawImage.flush();
-		} catch (Exception e) {
-			logger.error("Unable to read height/width from georeferenced image " + id, e);
-			return georef(model);
-		}
-		return app(model, "/imagery/georef");
+	@RequestMapping(value="/rest/georef/{id}", method=RequestMethod.GET)
+	public String getGeoRef(Model model, @PathVariable("id") long id) {
+		return json(model, dao.load(GeoRef.class, id));
 	}
 	
-	@RequestMapping(value="/rest/georefimage", method = RequestMethod.GET)
-	public String getAllGeorefImages(Model model) {
-		return json(model, dao.loadAll(GeoRefImage.class));
-	}
-
-	@RequestMapping(value="/rest/georefimage/{id}", method = RequestMethod.POST)
+	@RequestMapping(value="/rest/georef/{id}", method = RequestMethod.POST)
 	public String updateGeoRefImage(@PathVariable("id") long id, Model model, JSONForm params, HttpServletRequest request) {
-		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
-
-		GeoRefImage imagePrime = GeoRefImage.createFromJSON(parseObject(params));
-		GeoRefImage image = dao.load(GeoRefImage.class, id);
+		GeoRef georef = dao.load(GeoRef.class, id);
+		GeoRef updated = GeoRef.createFromJSON(parseObject(params));
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		switch(action) {
+		case UPDATE :
+			georef.setName(updated.getName());
+			georef.setUrl(updated.getUrl());
+			georef.setLat1(updated.getLat1());
+			georef.setLng1(updated.getLng1());
+			georef.setLat2(updated.getLat2());
+			georef.setLng2(updated.getLng2());			
+			georef.setX1(updated.getX1());
+			georef.setY1(updated.getY1());
+			georef.setX2(updated.getX2());
+			georef.setY2(updated.getY2());
+			dao.save(georef);
+			break;
 		case DELETE :
-			dao.delete(image);
-			new File(GEOREF_IMAGE_DIR + image.getPk() + ".png").delete();
-			return json(model, image);
+			dao.delete(georef);
 		}
-		image.setAngle(imagePrime.getAngle());
-		image.setHeight(imagePrime.getHeight());
-		image.setOriginlat(imagePrime.getOriginlat());
-		image.setOriginlng(imagePrime.getOriginlng());
-		image.setOriginx(imagePrime.getOriginx());
-		image.setOriginy(imagePrime.getOriginy());
-		image.setScale(imagePrime.getScale());
-		image.setWidth(imagePrime.getWidth());
-		image.setReferenced(true);
-		dao.save(image);
-		return json(model, image);
+		return json(model, georef);
 	}
-
 	
 }

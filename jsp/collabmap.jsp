@@ -38,6 +38,7 @@ org.sarsoft.Loader.queue(function() {
   markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
   if(!embed) {
 	toolsController = new org.sarsoft.controller.MapToolsController(imap);
+	georefController = new org.sarsoft.controller.CustomLayerController(imap);
   }
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
   configWidget.loadConfig();
