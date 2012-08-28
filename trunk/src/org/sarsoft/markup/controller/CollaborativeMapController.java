@@ -16,6 +16,7 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.controller.AdminController;
+import org.sarsoft.common.controller.ImageryController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
@@ -57,6 +58,9 @@ public class CollaborativeMapController extends JSONBaseController {
 
 	@Autowired
 	MarkerController markerController;
+	
+	@Autowired
+	ImageryController imageryController;
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> searchClassHints = new HashMap<String, Class>();
@@ -267,6 +271,13 @@ public class CollaborativeMapController extends JSONBaseController {
 				int size = markers.size();
 				for(int i = 0; i < size; i++) {
 					markerController.create((JSONObject) markers.get(i));
+				}
+			}
+			if(request.getParameter("georefs") != null) {
+				JSONArray georefs = (JSONArray) JSONSerializer.toJSON(request.getParameter("georefs"));
+				int size = georefs.size();
+				for(int i = 0; i < size; i++) {
+					imageryController.create((JSONObject) georefs.get(i));
 				}
 			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();

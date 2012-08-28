@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.model.MapSource;
@@ -269,17 +270,22 @@ public class ImageryController extends JSONBaseController {
 		return json(model, dao.loadAll(GeoRef.class));
 	}
 	
-	@RequestMapping(value="/rest/georef", method = RequestMethod.POST)
-	public String createGeoRef(JSONForm params, Model model, HttpServletRequest request) {
-		GeoRef georef = GeoRef.createFromJSON(parseObject(params));
+	public GeoRef create(JSONObject json) {
+		GeoRef georef = GeoRef.createFromJSON(json);
 		List<GeoRef> georefs = dao.loadAll(GeoRef.class);
 		long maxId = 0L;
 		for(GeoRef obj : georefs) {
 			maxId = Math.max(maxId, obj.getId());
 		}
-		georef.setId(maxId+1);
+		georef.setId(georefs.size() == 0 ? 0 : maxId+1);
 		dao.save(georef);
-		return json(model, georef);
+		return georef;
+	}
+
+	
+	@RequestMapping(value="/rest/georef", method = RequestMethod.POST)
+	public String createGeoRef(JSONForm params, Model model, HttpServletRequest request) {
+		return json(model, create(parseObject(params)));
 	}
 	
 	@RequestMapping(value="/rest/georef/{id}", method=RequestMethod.GET)
