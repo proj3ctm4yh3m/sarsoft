@@ -525,6 +525,7 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 		var mapcfg = jQuery('<input type="hidden" name="mapcfg"/>').appendTo(newform);
 		var shapes = jQuery('<input type="hidden" name="shapes"/>').appendTo(newform);
 		var markers = jQuery('<input type="hidden" name="markers"/>').appendTo(newform);
+		var georefs = jQuery('<input type="hidden" name="georefs"/>').appendTo(newform);
 
 		jQuery('<button>Save</button>').appendTo(this.tree.body).click(function(evt) {
 			var name = saveAsName.val();
@@ -534,6 +535,7 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 			}
 			shapes.val(YAHOO.lang.JSON.stringify(markupController.shapeDAO.objs));
 			markers.val(YAHOO.lang.JSON.stringify(markupController.markerDAO.objs));
+			if(imap.registered["org.sarsoft.controller.CustomLayerController"] != null) georefs.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao.objs));
 			var center = imap.map.getCenter();
 			newlat.val(center.lat());
 			newlng.val(center.lng());

@@ -210,10 +210,11 @@ OverlayDropdownMapControl = function(map) {
 	dd.onShow = function() {
 		if(that.opacity == 0) {
 			that.o1a.css('display', 'block');
-			that.o1.css('display', 'none')
+			that.o1.css('display', 'none');
 		} else {
 			that.o1a.css('display', 'none');
-			that.o1.css('display', 'block')			
+			that.o1.css('display', 'block');
+			that.overlayDM.container.css('width', that.overlayDM.ul.width() + "px");
 		}
 	}
 	
@@ -222,6 +223,7 @@ OverlayDropdownMapControl = function(map) {
 	map._overlaydropdownmapcontrol = this;
 	this.map = map;
 	
+	this.dd = dd;
 	this.div.appendTo(map.getDiv());	
 	this.resetMapTypes();
 }
@@ -545,6 +547,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 	}
 	
 	// 7. Update visual controls
+	if(!this._inSliderHandler) this.dd.onShow();
 	this.opacityInput.val(Math.round(opacity*100));
 	this._inSliderSet = true;
 	if(!this._inSliderHandler) this.opacitySlider.setValue(opacity*100);
@@ -3080,6 +3083,10 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	}
 }
 
+org.sarsoft.MapURLHashWidget.encodeGeoref = function(imap, alias) {
+	var gr = imap
+}
+
 org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 	var center = imap.map.getCenter();
 	var hash = "ll=" + Math.round(center.lat()*100000)/100000 + "," + Math.round(center.lng()*100000)/100000 + "&z=" + map.getZoom();
@@ -3090,6 +3097,8 @@ org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 		if(config.overlay != null) hash = hash + "&o=" + encodeURIComponent(config.overlay);
 	}
 	if(config.alphaOverlays != null) hash = hash + "&a=" + encodeURIComponent(config.alphaOverlays);
+	var clc = imap.registered["org.sarsoft.controller.CustomLayerController"];
+	if(clc.dao.objs.length > 0) hash = hash + "&cl=" + encodeURIComponent(YAHOO.lang.JSON.stringify(clc.dehydrate()));
 	return hash;
 }
 
@@ -3097,7 +3106,7 @@ org.sarsoft.MapURLHashWidget.prototype.saveMap = function() {
 	var hash = org.sarsoft.MapURLHashWidget.createConfigStr(this.imap);
 	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
 		var url = "http://" + window.location.host + '/map.html#' + hash;
-		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a href="' + url + '">' + url + '</a><br/><br/>' +
+		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
 		'Embed it in a webpage or forum:<textarea rows="4" cols="60" style="vertical-align: text-top">&lt;iframe width="500px" height="500px" src="' + url + '"&gt;&lt;/iframe&gt;</textarea>');
 	}
 	if(this.track) {
@@ -3122,6 +3131,7 @@ org.sarsoft.MapURLHashWidget.parseConfigStr = function(hash, imap) {
 		if(prop[0] == "overlay" || prop[0] == "o") config.overlay = decodeURIComponent(prop[1]);
 		if(prop[0] == "opacity" || prop[0] == "n") config.opacity = prop[1];
 		if(prop[0] == "alphaOverlays" || prop[0] == "a") config.alphaOverlays = decodeURIComponent(prop[1]);
+		if(prop[0] == "cl") config.georef = YAHOO.lang.JSON.parse(decodeURIComponent(prop[1]));
 	}
 	if(config.overlay == null) config.overlay = config.base;
 	if(config.opacity == null) config.opacity = 0;
@@ -3133,13 +3143,21 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 	this.lasthash = window.location.hash;
 	var hash = this.lasthash.slice(1);
 	var config = org.sarsoft.MapURLHashWidget.parseConfigStr(hash, this.imap);
+	if(config.georef != null) {
+		for(var i = 0; i < config.georef.length; i++) {
+			org.sarsoft.controller.CustomLayerController.refreshLayers(this.imap, config.georef[i]);
+		}
+	}
 	if(config.base != null) this.imap.setConfig(config);
 	this.config = config;
 	this.ignorehash=false;
 	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
 		var url = "http://" + window.location.host + '/map.html#' + hash;
-		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a href="' + url + '">' + url + '</a><br/><br/>' +
+		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
 		'Embed it in a webpage or forum:<textarea rows="4" cols="60" style="vertical-align: text-top">&lt;iframe width="500px" height="500px" src="' + url + '"&gt;&lt;/iframe&gt;</textarea>');
+	}
+	if(config.georef != null && imap.registered["org.sarsoft.controller.CustomLayerController"] != null) {
+		imap.registered["org.sarsoft.controller.CustomLayerController"].rehydrate(config.georef);
 	}
 }
 
@@ -4512,7 +4530,7 @@ org.sarsoft.GeoRefImageOverlay.prototype._calc = function() {
 	this.angle = mapAngle - imageAngle;
 	angle = GeoUtil.DegToRad(this.angle);
 	
-	this.div.css({"-webkit-transform": "rotate(" + this.angle + "deg)"});
+	this.div.css({"-webkit-transform": "rotate(" + this.angle + "deg)", "-moz-transform": "rotate(" + this.angle + "deg)", "-ms-transform": "rotate(" + this.angle + "deg)"});
 	
 	var s = Math.cos(this.ll1.lat());
 	var r = Math.sqrt(Math.pow(this.size.w/2 - this.p1.x, 2) + Math.pow(this.size.h/2 - this.p1.y, 2)) / Math.sqrt(Math.pow(this.p2.x - this.p1.x, 2) + Math.pow(this.p2.y - this.p1.y, 2));
@@ -4623,10 +4641,15 @@ org.sarsoft.GeoRefImageOverlay.prototype.draw = function() {
 org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 	var that = this;
 	this.imap = imap;
-	var container = jQuery('<div></div>');
+	var table = jQuery('<table></table>');
+	var container = jQuery('<tbody></tbody>').appendTo(table);
 	this.form = new Object();
+	
+	var round = function(n) {
+		return Math.round(n*100000)/100000;
+	}
 
-	var line = jQuery('<div></div>').appendTo(container);
+	var line = jQuery('<td></td>').appendTo(jQuery('<tr><td>Image URL:</td></tr>').appendTo(container));
 	this.form.url = jQuery('<input type="text" size="20"/>').appendTo(line);
 	jQuery('<button>Set</button>').appendTo(line).click(function() {
 		var url = that.form.url.val();
@@ -4637,27 +4660,31 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 		}
 	});
 	
-	var line = jQuery('<div></div>').appendTo(container);
-	this.form.name = jQuery('<input type="text" size="20"/>').appendTo(line);
+	line.parent().append('<td rowspan="6" valign="top" style="padding-left: 20px"><b>Add Custom Layer</b><br/>You can turn any image into a custom map layer by matching two points on the image with two points on the map.<br/><br/>1. Enetr the image URL and click "Set".<br/>2. Right-click on the map and select "Georeference | Mark Point" to mark image points.<br/>3. Right-click on the map and select "Georeference | Mark LatLng" to mark coordinates.</td>');
+	
+	var line = jQuery('<tr><td style="margin-bottom: 15px">Name:</td></tr>').appendTo(container);
+	this.form.name = jQuery('<input type="text" size="20"/>').appendTo(jQuery('<td></td>').appendTo(line));
+	
+	jQuery('<tr><td colspan="2" height="20px"></td></tr>').appendTo(container);
 
-	var line = jQuery('<div><span style="float: left">Opacity: </span></div>').appendTo(container);
+	var line = jQuery('<div></div>').appendTo(jQuery('<td></td>').appendTo(jQuery('<tr><td>Opacity:</td></tr>').appendTo(container)));
 	this.form.opacitySlider = org.sarsoft.view.CreateSlider(line);
 	this.form.opacitySlider.subscribe('change', function() {
 		if(that.reference != null) that.reference.set('opacity', that.form.opacitySlider.getValue()/100);
 	});
 
-	var line = jQuery('<div style="clear: both">=</div>').appendTo(container);
+	var line = jQuery('<td style="white-space: nowrap">=</td>').appendTo(jQuery('<tr><td style="white-space: nowrap">Reference 1:</td></tr>').appendTo(container));
 	this.form.p1 = jQuery('<input type="text" size="10"/>').prependTo(line);
-	this.form.l1 = jQuery('<input type="text" size="10"/>').appendTo(line);
+	this.form.l1 = jQuery('<input type="text" size="20"/>').appendTo(line);
 	this.form.u1 = jQuery('<button>Update</button>').appendTo(line).click(function() {
 		var str = that.form.p1.val().split(",");
 		that.reference.set("p1", new google.maps.Point(1*str[0], 1*str[1]));
 		var str = that.form.l1.val().split(",");
 		that.reference.set("ll1", new google.maps.LatLng(1*str[0], 1*str[1]));		
 	});
-	var line = jQuery('<div>=</div>').appendTo(container);
+	var line = jQuery('<td style="white-space: nowrap">=</td>').appendTo(jQuery('<tr><td style="white-space: nowrap">Reference 2:</td></tr>').appendTo(container));
 	this.form.p2 = jQuery('<input type="text" size="10"/>').prependTo(line);
-	this.form.l2 = jQuery('<input type="text" size="10"/>').appendTo(line);
+	this.form.l2 = jQuery('<input type="text" size="20"/>').appendTo(line);
 	this.form.u2 = jQuery('<button>Update</button>').appendTo(line).click(function() {
 		var str = that.form.p2.val().split(",");
 		that.reference.set("p2", new google.maps.Point(1*str[0], 1*str[1]));
@@ -4679,17 +4706,17 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 
 	function setLatLng(idx, p) {
 		var ll = imap.projection.fromContainerPixelToLatLng(p);
-		that.form["l" + idx].val(ll.lat() + "," + ll.lng());
+		that.form["l" + idx].val(round(ll.lat()) + "," + round(ll.lng()));
 		that.form["u" + idx].click();
 	}
 
-	this.dlg = new org.sarsoft.view.MapDialog(imap, "Layer Georeferencing", container, "Save", "Cancel", function() {
+	this.dlg = new org.sarsoft.view.MapDialog(imap, "Layer Georeferencing", table, "Save", "Cancel", function() {
 		var name = that.form.name.val();
 		if(name == null || name.length == 0) {
 			var url = that.reference.url.split("/");
 			name = url[url.length-1];
 		}
-		handler({name: name, url: that.reference.url, x1: that.reference.p1.x, y1: that.reference.p1.y, x2: that.reference.p2.x, y2: that.reference.p2.y, lat1: that.reference.ll1.lat(), lng1: that.reference.ll1.lng(), lat2: that.reference.ll2.lat(), lng2: that.reference.ll2.lng()});
+		handler({name: name, url: that.reference.url, x1: that.reference.p1.x, y1: that.reference.p1.y, x2: that.reference.p2.x, y2: that.reference.p2.y, lat1: round(that.reference.ll1.lat()), lng1: round(that.reference.ll1.lng()), lat2: round(that.reference.ll2.lat()), lng2: round(that.reference.ll2.lng())});
 	});
 
 	this.dlg.dialog.hideEvent.subscribe(function() { 
@@ -4731,12 +4758,12 @@ org.sarsoft.GeoRefImageDlg.prototype.write = function(gr) {
 		gr.y2 = -1;
 	}
 	if(gr.lat1 == null) {
-		gr.lat1 = bounds.getSouthWest().lat();
-		gr.lng1 = bounds.getSouthWest().lng();
+		gr.lat1 = Math.round(bounds.getSouthWest().lat()*100000)/100000;
+		gr.lng1 = Math.round(bounds.getSouthWest().lng()*100000)/100000;
 	}
 	if(gr.lat2 == null) {
-		gr.lat2 = bounds.getNorthEast().lat();
-		gr.lng2 = bounds.getNorthEast().lng();
+		gr.lat2 = Math.round(bounds.getNorthEast().lat()*100000)/100000;
+		gr.lng2 = Math.round(bounds.getNorthEast().lng()*100000)/100000;
 	}
 
 	this.form.p1.val(gr.x1 + "," + gr.y1);
@@ -4791,6 +4818,7 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 		this.dn = new Object();
 		
 		var ltree = dn.addDataType("Custom Layers");
+		ltree.block.css('clear', 'both');
 		this.dn.layerdiv = jQuery('<div></div>').appendTo(ltree.body);
 		this.dn.layers = new Object();
 
@@ -4809,12 +4837,12 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 		that.georefDlg.id = null;
 		if(gr.id == null) {
 			that.dao.create(function(obj) {
-				that.refreshLayers(obj);
+				org.sarsoft.controller.CustomLayerController.refreshLayers(that.imap, obj);
 				that.addGR(obj);
 			}, gr);
 		} else {
 			that.dao.save(gr.id, gr, function(obj) {
-				that.refreshLayers(obj);
+				org.sarsoft.controller.CustomLayerController.refreshLayers(that.imap, obj);
 				that.addGR(obj);
 			});
 		}		
@@ -4829,7 +4857,24 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 	
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.refreshLayers = function(gr) {
+org.sarsoft.controller.CustomLayerController.prototype.dehydrate = function() {
+	return this.dao.dehydrate();
+}
+
+org.sarsoft.controller.CustomLayerController.prototype.rehydrate = function(state) {
+	var that = this;
+	this.dao.rehydrate(state);
+	this.dao.loadAll(function(objs) {
+		for(var i = 0; i < objs.length; i++) {
+			if(objs[i] != null) {
+				org.sarsoft.controller.CustomLayerController.refreshLayers(that.imap, objs[i]);
+				that.addGR(objs[i]);
+			}
+		}
+	});
+}
+
+org.sarsoft.controller.CustomLayerController.refreshLayers = function(imap, gr) {
 	var updated = false;
 	var grlist = org.sarsoft.EnhancedGMap.geoRefImages;
 	for(var i = 0; i < grlist.length; i++) {
@@ -4839,9 +4884,9 @@ org.sarsoft.controller.CustomLayerController.prototype.refreshLayers = function(
 		}
 	}
 	if(!updated) grlist.push(gr);
-	var config = this.imap.getConfig();
-	this.imap.map._overlaydropdownmapcontrol.resetMapTypes();
-	this.imap.setConfig(config);
+	var config = imap.getConfig();
+	imap.map._overlaydropdownmapcontrol.resetMapTypes();
+	imap.setConfig(config);
 }
 
 org.sarsoft.controller.CustomLayerController.prototype.addGR = function(gr) {
