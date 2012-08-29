@@ -457,10 +457,10 @@ org.sarsoft.controller.CallsignMapController.prototype.timer = function() {
 }
 
 org.sarsoft.controller.CallsignMapController.prototype.removeCallsign = function(callsign) {
-	this.dn.callsigns[callsign.name].remove();
+	if(this.dn.callsigns[callsign.name] != null) this.dn.callsigns[callsign.name].remove();
 	this.dn.callsigns[callsign.name] = null;
 	this.imap.removeWaypoint(callsign.position);
-	delete this.callsigns[key];
+	delete this.callsigns[callsign.name];
 }
 
 org.sarsoft.controller.CallsignMapController.prototype.expireCallsigns = function() {

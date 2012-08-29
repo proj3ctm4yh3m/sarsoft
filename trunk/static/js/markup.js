@@ -103,7 +103,7 @@ org.sarsoft.MarkerDAO.prototype.updatePosition = function(id, position, handler)
 		m.position.lng = position.lng;
 		org.sarsoft.async(function() { handler(m) });
 	} else {
-		this._doPost("/" + id + "/position", function(r) { that.getObj(id)=r; handler(r) }, {position: position});
+		this._doPost("/" + id + "/position", function(r) { that.setObj(id, r); handler(r) }, {position: position});
 	}
 }
 

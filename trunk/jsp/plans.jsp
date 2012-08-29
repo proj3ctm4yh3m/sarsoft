@@ -16,6 +16,8 @@ org.sarsoft.Loader.queue(function() {
   callsignController = new org.sarsoft.controller.CallsignMapController(imap);
   clueController = new org.sarsoft.controller.ClueLocationMapController(imap);
   markupController = new org.sarsoft.controller.MarkupMapController(imap, true, false, true);
+  georefController = new org.sarsoft.controller.CustomLayerController(imap);
+  georefController.tree.body.css('display', 'none')
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
   searchIO = new org.sarsoft.view.SearchIO(imap, plansController, markupController);

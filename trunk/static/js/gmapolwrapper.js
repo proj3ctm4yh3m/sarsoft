@@ -407,14 +407,21 @@ google.maps.OverlayView.prototype.get = function(key) {
 	return this[key];
 }
 
+google.maps.OverlayView.prototype.set = function(key, value) {
+	this[key] = value;
+	google.maps.event.trigger(this, key + "_changed");
+}
+
 google.maps.OverlayView.prototype.draw = function() {}
 google.maps.OverlayView.prototype.onAdd = function() {}
 google.maps.OverlayView.prototype.onRemove = function() {}
 
 google.maps.OverlayView.prototype.setMap = function(map) {
 	if(map == null) {
-		if(this.map != null) this.map.removeOverlay(this);
-		this.onRemove();
+		if(this.map != null) {
+			this.map.removeOverlay(this);
+			this.onRemove();
+		}
 		this.map = null;
 		return;
 	}
@@ -429,7 +436,7 @@ google.maps.OverlayView.prototype.getMap = function() {
 }
 
 google.maps.OverlayView.prototype.getPanes = function() {
-	return {mapPane : this.map.ol.markerLayer.div, overlayLayer: this.map.ol.markerLayer.div}
+	return {mapPane : this.map.ol.map.getLayersByClass("OpenLayers.Layer.XYZ")[0].div, overlayLayer: this.map.ol.markerLayer.div}
 }
 
 google.maps.OverlayView.prototype.getProjection = function() { return this.projection }

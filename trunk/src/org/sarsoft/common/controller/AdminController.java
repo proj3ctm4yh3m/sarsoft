@@ -23,6 +23,7 @@ import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.markup.model.Marker;
 import org.sarsoft.markup.model.Shape;
 import org.sarsoft.plans.model.OperationalPeriod;
+import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
@@ -351,7 +352,7 @@ public class AdminController extends JSONBaseController {
 		if("map".equals(request.getParameter("type"))) {
 			tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 		} else {
-			tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+			tenant = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
 		}
 
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {

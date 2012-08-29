@@ -93,7 +93,7 @@ public class SearchAssignmentController extends JSONBaseController {
 					String alphaOverlays = "";
 					for(MapSource source : getMapSources()) {
 						if(source.isAlphaOverlay()) {
-							if("on".equalsIgnoreCase(request.getParameter("map" + i + "alpha_" + source.getName()))) alphaOverlays = alphaOverlays + source.getName() + ",";
+							if("on".equalsIgnoreCase(request.getParameter("map" + i + "alpha_" + source.getAlias()))) alphaOverlays = alphaOverlays + source.getAlias() + ",";
 						}
 					}
 					if(alphaOverlays.length() > 0) config.setAlphaOverlays(alphaOverlays.substring(0, alphaOverlays.length()-1));

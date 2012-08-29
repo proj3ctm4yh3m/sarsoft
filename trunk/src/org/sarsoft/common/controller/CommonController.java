@@ -103,7 +103,7 @@ public class CommonController extends JSONBaseController {
 		int[] maxt = WebMercator.PixelsToTile(maxpx[0], maxpx[1]);
 		
 		String kml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<kml xmlns=\"http://earth.google.com/kml/2.1\">";
-		kml = kml + "<Document><name>CalTopo " + name + " Export (" + z + "/" + max + ")</name>";
+		kml = kml + "<Document><name>" + getProperty("sarsoft.version") + " " + name + " Export (" + z + "/" + max + ")</name>";
 		kml = kml + "<LookAt><longitude>" + ((minb[1] + maxb[1]) / 2) + "</longitude><latitude>" + ((minb[0] + maxb[0]) / 2) + "</latitude><altitude>0</altitude><range>10000</range><tilt>0</tilt><heading>0</heading></LookAt>\n";
 
 		String template = sources[0].getTemplate();
