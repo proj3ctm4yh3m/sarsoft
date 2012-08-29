@@ -113,9 +113,4 @@
 		<put-attribute name="app" value="admin"/>
 	</definition>
 	
-	<definition name="GeoRefImageList" extends="Search.Base">
-		<put-attribute name="content" value="/imagery/georefimagelist.jsp"/>
-		<put-attribute name="app" value="setup-imagery"/>
-	</definition>
-
 </tiles-definitions>

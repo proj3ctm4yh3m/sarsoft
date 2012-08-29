@@ -29,7 +29,7 @@ org.sarsoft.Loader.queue(function() {
   </c:otherwise>
   </c:choose>
   var embed = !(window==top);
-  var opts = {UTM: true, switchableDatum: true}
+  var opts = {UTM: true, switchableDatum: true, label: true}
   if(!embed) {
 	  opts.standardControls = true;
 	  opts.container = $('#page_container')[0];

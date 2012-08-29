@@ -189,7 +189,7 @@ OverlayDropdownMapControl = function(map) {
 
 	this.opacityInput.change(function() { that.handleLayerChange() });
 	this.typeDM.change(function() { that.handleLayerChange() });
-	this.overlayDM.change(function() { that.handleLayerChange() });
+	this.overlayDM.change(function() { that._inSliderHandler = true; that.handleLayerChange(); that._inSliderHandler = false; });
 
 	this.o1 = jQuery('<div></div>').append(
 			jQuery('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(this.overlayDM.container, "@", this.opacityInput, "%")).append(
@@ -860,7 +860,7 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 			if(mdw != null) this.footer[0] = jQuery('<span style="padding-right: 5px">Datum:</span>').insertBefore(mdw.datumDisplay);
 			this.scaleControl.show();
 			if(mic != null) {
-				this.footer[1] = jQuery('<span style="padding-right: 5px">Printed from CalTopo.com.</span>').insertBefore(mic.premsg);
+				this.footer[1] = jQuery('<span style="padding-right: 5px">Printed from ' + org.sarsoft.version + '.</span>').insertBefore(mic.premsg);
 				mic.ctrl.css('visibility', 'hidden');
 			}
 		}
@@ -1447,7 +1447,7 @@ org.sarsoft.MapBorderControl = function(map, edge) {
 	this.edge = edge;
 	var size = '26px';
 
-	this.div = jQuery('<div style="background-color: white; position: absolute; z-index: 10"></div>').appendTo(map.getDiv());
+	this.div = jQuery('<div style="background-color: white; position: absolute; z-index: 999"></div>').appendTo(map.getDiv());
 	if(this.edge == 0) this.div.css({left: 0, top: 0, width: size, height: '100%'});
 	if(this.edge == 1) this.div.css({left: 0, top: 0, width: '100%', height: size});
 	if(this.edge == 2) this.div.css({right: 0, top: 0, width: size, height: '100%'});
@@ -1520,6 +1520,7 @@ org.sarsoft.DataNavigator = function(imap) {
 	}
 
 	this.defaults.sharing = new org.sarsoft.widget.Sharing(imap, this.defaults.tenant.body);
+	if(!org.sarsoft.hosted) this.defaults.sharing.sharing.css('display', 'none');
 	this.defaults.layers = new org.sarsoft.widget.MapLayers(imap, this.defaults.tenant.body);
 
 	if(org.sarsoft.userPermissionLevel=="READ" && org.sarsoft.tenantid != null) {
@@ -1533,6 +1534,7 @@ org.sarsoft.DataNavigator = function(imap) {
 	
 	if(!org.sarsoft.touch) {
 		this.defaults.io = new org.sarsoft.widget.ImportExport(imap, this.defaults.tenant.body);
+		if(!org.sarsoft.hosted) this.defaults.io.tree.body.css('display', 'none')
 	}
 	
 	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(this.defaults.tenant.header).click(function() {
@@ -1549,12 +1551,13 @@ org.sarsoft.DataNavigator = function(imap) {
 	this.container = jQuery('<div style="padding-left: 2px"></div>').appendTo(imap.container.left);
 	this.titleblocks = new Object();
 
-	
 	var urlcomp = encodeURIComponent(window.location);
-	if(org.sarsoft.username != null) {
-		this.defaults.account = new org.sarsoft.widget.Account(imap, this.account.body);
-	} else {
-		this.defaults.account = new org.sarsoft.widget.NoAccount(imap, this.account.body);
+	if(org.sarsoft.hosted) {
+		if(org.sarsoft.username != null) {
+			this.defaults.account = new org.sarsoft.widget.Account(imap, this.account.body);
+		} else {
+			this.defaults.account = new org.sarsoft.widget.NoAccount(imap, this.account.body);
+		}
 	}
 
 	new org.sarsoft.widget.BrowserSettings(imap, this.account.body);
@@ -1698,7 +1701,7 @@ org.sarsoft.PositionInfoControl = function(imap) {
 		this.map = imap.map;
 		this._show = true;
 		
-		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 10; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
+		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 999; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
 		var div = jQuery('<div style="text-align: right; position: absolute; right: 0; top: ' + imap.map._overlaydropdownmapcontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').appendTo(this.map.getDiv());
 		this.display = jQuery('<div style="background-color: white; padding-top: 3px; font-weight: bold"></div>').appendTo(div);
 		
@@ -2222,7 +2225,7 @@ org.sarsoft.view.MapDialog.prototype.swap = function() {
 
 org.sarsoft.view.ProfileGraph = function() {
 	this.height=120;
-	this.div = jQuery('<div style="height: ' + (this.height+20) + 'px; position: relative"></div>').append(this.svg);
+	this.div = jQuery('<div style="height: ' + (this.height+20) + 'px; position: relative"></div>');
 }
 
 org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
@@ -2232,7 +2235,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	if(color == null) color = "#FF0000";
 	var width = this.div.width();
 	
-	var svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 100%">' +
+	var svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="height: 120px; width: 100%">' +
 		'<line x1="' + 0 + '" y1="' + 0 + '" x2="' + width + '" y2="' + 0 + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
 		'<line x1="' + 0 + '" y1="' + this.height + '" x2="' + width + '" y2="' + this.height + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
 		'<line x1="' + 0 + '" y1="' + 0 + '" x2="' + 0 + '" y2="' + this.height + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
@@ -4496,7 +4499,7 @@ org.sarsoft.GeoRefImageOverlay = function(map, name, url, p1, p2, ll1, ll2, opac
 	this.set("name", name);
 	
 	this.div = jQuery('<img src="' + url + '"/>');
-	this.div.css({position: 'absolute', 'z-index': (top ? '2' : '0'), opacity: opacity});
+	this.div.css({position: 'absolute', 'z-index': 2, opacity: opacity});
 
 	this._olcapable = true;
 	this.opacity = opacity;
@@ -4512,9 +4515,6 @@ org.sarsoft.GeoRefImageOverlay.prototype._calc = function() {
 	var dx = this.p2.x - this.p1.x;
 	var dy = this.p2.y - this.p1.y;
 	
-	var mapAngle = google.maps.geometry.spherical.computeHeading(this.ll1, this.ll2);
-	if(mapAngle < 0) mapAngle = 360 + mapAngle;
-
 	var lat1 = GeoUtil.DegToRad(this.ll2.lat());
 	var lat2 = GeoUtil.DegToRad(this.ll1.lat());
 	var dLon = GeoUtil.DegToRad(this.ll2.lng()-this.ll1.lng());
@@ -4828,8 +4828,10 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 		jQuery('<span style="color: green; cursor: pointer">+ New Layer</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(ltree.body)).click(function() {
 			var center = that.imap.map.getCenter();
 			that.georefDlg.show();
+			that.georefDlg.id = null;
 			this.reference = new Object();
 		});
+		this.tree = ltree;
 	}
 	
 	this.georefDlg = new org.sarsoft.GeoRefImageDlg(imap, function(gr) {

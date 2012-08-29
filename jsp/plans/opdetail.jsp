@@ -128,16 +128,16 @@ you can not clear fields through bulk update.</p>
 <input type="checkbox" name="printmap${num}" id="printmap${num}">Print this map:</input>
 Base&nbsp;<select name="map${num}f" id="map${num}f">
   <c:forEach var="source" items="${mapSources}">
-<c:if test="${!source.alphaOverlay}">  <option value="${source.name}">${source.name}</option></c:if>
+<c:if test="${!source.alphaOverlay}">  <option value="${source.alias}">${source.name}</option></c:if>
   </c:forEach>
 </select>
 ,&nbsp;&nbsp;Overlay&nbsp;
 <select name="map${num}b" id="map${num}b">
   <c:forEach var="source" items="${mapSources}">
-  <c:if test="${not(source.alphaOverlay)}"><option value="${source.name}">${source.name}</option></c:if>
+  <c:if test="${not(source.alphaOverlay)}"><option value="${source.alias}">${source.name}</option></c:if>
   </c:forEach>
   <c:forEach var="image" items="${geoRefImages}">
-  <option value="${image.name}">${image.name}</option>
+  <option value="_gr${image.id}">${image.name}</option>
   </c:forEach>
 </select>@
 <input type="text" id="map${num}o" name="map${num}o" value="0" size="2"> % opacity
@@ -149,7 +149,7 @@ Base&nbsp;<select name="map${num}f" id="map${num}f">
 <div style="display: none; padding-left: 50px" id="map${num}alpha">
 Additional Overlays:&nbsp;
 <c:forEach var="source" items="${mapSources}">
-<c:if test="${source.alphaOverlay}"><input type="checkbox" name="map${num}alpha_${source.name}" id="map${num}alpha_${source.name}">${source.name}</input>&nbsp;</c:if>
+<c:if test="${source.alphaOverlay}"><input type="checkbox" name="map${num}alpha_${source.alias}" id="map${num}alpha_${source.alias}">${source.name}</input>&nbsp;</c:if>
 </c:forEach>
 </div>
 </c:if>
@@ -250,7 +250,7 @@ function setAO(id, state) {
 	} else {
 		document.getElementById(id).style.display="none";
 <c:forEach var="overlay" items="${alphaOverlays}">
-		document.getElementById(id + '_' + ${overlay.name}).checked=false;
+		document.getElementById(id + '_' + ${overlay.alias}).checked=false;
 </c:forEach>
 	}
 }

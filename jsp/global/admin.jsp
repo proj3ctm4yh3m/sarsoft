@@ -18,11 +18,6 @@
 
 <form action="/admin.html" method="POST">
 
-<table border="0">
-<tbody>
-
-<tr><td valign="top">
-
 <div style="font-size: larger; font-weight: bold">General</div>
 
 <table border="0"><tbody>
@@ -62,28 +57,6 @@ Password:
 </span>
 </p>
 </c:if>
-
-</td>
-<td style="padding-left: 20px" valign="top">
-<div>
-<c:set var="myLayers" value=",${tenant.layers},"/>
-<div style="font-size: larger; font-weight: bold">Layers</div>
-<div style="padding-bottom: 1em">
-Control which layers are visible on this ${tenanttype}.  Uncheck all boxes to return to the ${friendlyName} defaults.
-</div>
-<c:forEach var="source" items="${mapSources}">
-<div style="padding-top: 1ex">
-<c:set var="thisLayer" value=",${source.alias},"/>
-<input type="checkbox" name="ml_${source.alias}" value="true" <c:if test="${fn:contains(myLayers, thisLayer)}">checked="checked"</c:if>/><b>${source.name}</b>
-<c:if test="${fn:length(source.description) gt 0}">
-<br/>${source.description}
-</c:if>
-</div>
-</c:forEach>
-</div>
-
-</td></tr>
-</tbody></table>
 
 <div>
 <input type="submit" value="Save Changes"/> &mdash; or, <a href="<c:choose><c:when test="${tenant.class.name eq 'org.sarsoft.plans.model.Search'}">/setup</c:when><c:otherwise>/maps</c:otherwise></c:choose>">return without saving.</a>

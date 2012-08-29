@@ -219,7 +219,7 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	var otherTrackConfig = {clickable: false, fill: false, color: "#000000", opacity: 80};
 	this.otherTrackConfig = otherTrackConfig;
 
-	jQuery('<div class="printonly" style="z-index: 2000; position: absolute; top: 0px; left: 0px; background: white">Assignment ' + assignment.id + ((assignment.status == "COMPLETED") ? ' Debrief' : '') + '</div>').appendTo(this.fmap.map.getContainer());
+	jQuery('<div class="printonly" style="z-index: 2000; position: absolute; top: 0px; left: 0px; background: white">Assignment ' + assignment.id + ((assignment.status == "COMPLETED") ? ' Debrief' : '') + '</div>').appendTo(this.fmap.map.getDiv());
 	
 	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED") ? false : true;
 	
@@ -474,8 +474,7 @@ org.sarsoft.controller.SearchWaypointMapController.prototype.place = function(ty
 		}
 	}
 	
-	// fubar
-	if(this.dn.sdiv == null) return;
+	if(this.dn == null) return;
 
 	if(this.dn.waypoints[type] == null) {
 		this.dn.waypoints[type] = jQuery('<div></div>').appendTo(this.dn.sdiv);
@@ -839,10 +838,12 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.handleSetupChang
 		this._mapsetup[this.period].colorby = "Disabled";
 		this._mapsetup[this.period].fill = 0;
 		this._mapsetup[this.period].opacity = 50;
+		this.dn[this.period].coloringSelect.val("Disabled");
 		this.period = p;
 		this._mapsetup[this.period].colorby = "Assignment Number";
 		this._mapsetup[this.period].fill = 10;
 		this._mapsetup[this.period].opacity = 100;
+		this.dn[this.period].coloringSelect.val("Assignment Number");
 		if(p > 0) {
 			this.dn.newAssignment.appendTo(this.dn[this.period].optree.body);
 		} else {
