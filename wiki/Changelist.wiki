@@ -1,5 +1,18 @@
 #summary Changelist and migration instructions
 
+= Version 0.9 =
+==Major changes for 0.9==
+ * Added left nav bar to map pages
+ 
+== Minor changes for 0.9==
+ * New map layer control
+ * Client (browser)-side image georeferencing
+ * Elevation profiles
+ * Performance improvements when loading large numbers of track waypoints
+
+==Migration Instructions for 0.9==
+No data migration is required when moving from 0.8 to 0.9, however, you should back any searches up to .gpx just in case.
+
 = Version 0.8 =
 ==Major changes for 0.8==
  * Overhauled the non-map UI
