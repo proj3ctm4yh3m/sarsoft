@@ -16,10 +16,30 @@ ${welcomeHTML}
 <c:when test="${hosted eq false}">
 <p>
 Normally, this welcome page would be replaced by information about your SAR team's specific installation.  Here are some basic pointers to help you get started.
-<br/><br/>
-Questions?  Contact Matt Jacobs, Bay Area Mountain Rescue at <a href="mailto:info@caltopo.com">info@caltopo.com</a><br/>
-Get the latest code and report bugs on the <a href="http://code.google.com/p/sarsoft/">Google Code site</a>.<br/>
-Site updates and mapping/GIS advice on the <a href="http://caltopo.blogspot.com">CalTopo Blog</a>.
+</p>
+
+<h2>Contact</h2>
+<p>
+<ul>
+<li><b>Email</b> Matt Jacobs, Bay Area Mountain Rescue at <a href="mailto:info@caltopo.com">info@caltopo.com</a></li>
+<li><b>Updates</b> Get the latest code and report bugs on the <a href="http://code.google.com/p/sarsoft/">Google Code site</a></li>
+<li><b>Advice</b> GIS tips for custom maps on the <a href="http://caltopo.blogspot.com">CalTopo Blog</a>.
+</ul>
+</p>
+
+<h2>License</h2>
+<p style="white-space: pre">This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <a href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</a>.
 </p>
 
 </c:when>
