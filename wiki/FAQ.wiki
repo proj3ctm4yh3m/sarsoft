@@ -1,0 +1,40 @@
+#summary Sarsoft Frequently Asked Questions
+
+==== How do I try Sarsoft? ====
+
+Two ways:
+ * Play around with the [http://sarsoft.org/ demo server].
+ * [Installation Download] the JAR file and run it.
+
+==== What if I like it? ====
+
+If you're located in the US contact Matt Jacobs, Bay Area Mountain Rescue at info@caltopo.com to get topos and aerial imagery for your state (SAR use only).  As reference points, the California and Oregon datasets require approximately 200GB each.
+
+If you're not in the US, the best option is probably a local copy of the OpenCycleMap, which combines user-contributed trails with SRTM elevation data.  Contact Andy Allan at thunderforest.com.
+
+==== What if I have problems? ====
+
+Please feel free to contact the project developer (info@caltopo.com) with any issues great and small.  Obvious bugs that don't sound like user configuration issues can get logged on the Google Code site.
+
+==== So this works without the internet? ====
+
+Yes, as long as you get map data.  Sarsoft uses OpenLayers, an open-source alternative to Google Maps, to display offline maps; other dependencies like YUI and jQuery are packaged with the application.  In order to run it as a server on a private CP network, you need mDNS '.local' hostnames to work right, or you need to configure the router to give Sarsoft a fixed IP.  If you don't understand this, find someone who does and ply them with beer until they set things up right.
+
+==== How do I print nice-looking maps? ====
+
+
+==== Is Sarsoft 'production-ready'? ====
+
+The same code that powers Sarsoft also runs the CalTopo.com topo site; however, the SAR-specific code is hidden from public view and has not been vetted as thoroughly.  Additionally some incompatibilities may exist for untested GPS models.  As with any important data, you are encouraged to make frequent backups, both to paper (i.e. printing maps) and by backing the entire search up to GPX.
+
+Most importantly, this software is provided for free.  The author has only limited testing resources and welcomes bug reports from the field.  *No guarantee is provided against crashes, data loss or inaccurate results.*
+
+==== Someone gave me a copy and it doesn't work.  Help? ====
+
+If you're seeing a bunch of stuff like
+
+{{{
+org.springframework.jdbc.UncategorizedSQLException: Hibernate operation: Cannot open connection; uncategorized SQLException for SQL [???]; SQL state [null]; error code [0]; Connections could not be acquired from the underlying database!; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!
+}}}
+
+Then windows file permissions are the most likely culprit.  Sarsoft creates several files in `.sarsoft/hsqldb/` that hold all your search data; unfortunately, these files belong to the Windows user that created them and are read-only for everyone else.  If you log in as a different user - or plug an external drive into a different machine - Windows won't let you touch those files and Sarsoft won't work right.  You need to either change the permission settings or delete them (be careful not to lose important data).
