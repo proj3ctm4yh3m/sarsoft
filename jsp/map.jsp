@@ -38,6 +38,7 @@ org.sarsoft.Loader.queue(function() {
 		toolsController = new org.sarsoft.controller.MapToolsController(imap);
 		georefController = new org.sarsoft.controller.CustomLayerController(imap);
 		if(urlwidget.config != null && urlwidget.config.georef != null) georefController.rehydrate(urlwidget.config.georef);
+		org.sarsoft.BrowserCheck();
 	}
 
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});

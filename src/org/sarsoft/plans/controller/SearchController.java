@@ -76,7 +76,6 @@ public class SearchController extends JSONBaseController {
 	
 	@RequestMapping(value="/setup", method = RequestMethod.GET)
 	public String setup(Model model) {
-		model.addAttribute("imageUploadEnabled", Boolean.parseBoolean(getProperty("sarsoft.map.imageUploadEnabled")));
 		model.addAttribute("server", RuntimeProperties.getServerUrl());
 		return app(model, "Search.Setup");
 	}

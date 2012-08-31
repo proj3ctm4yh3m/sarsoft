@@ -21,6 +21,7 @@ org.sarsoft.Loader.queue(function() {
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (org.sarsoft.userPermissionLevel != "READ"));
   configWidget.loadConfig();
   searchIO = new org.sarsoft.view.SearchIO(imap, plansController, markupController);
+  org.sarsoft.BrowserCheck();
   setInterval("imap.timer()", org.sarsoft.map.refreshInterval);
 });
 }
