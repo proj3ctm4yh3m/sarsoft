@@ -3797,7 +3797,7 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 			UTM : jQuery('<span' + (geocode ? ' style="display: none"' : '') + '></span>').appendTo(container),
 			DD : jQuery('<span style="display: none"></span>').appendTo(container),
 			DMH : jQuery('<span style="display: none"></span>').appendTo(container),
-			DMS : jQuery('<span style="display: none"></span>').appendTo(container),
+			DMS : jQuery('<span style="display: none"></span>').appendTo(container)
 	}
 	
 	var hints = {

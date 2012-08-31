@@ -211,6 +211,17 @@ org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.SearchDAO.prototype = new org.sarsoft.BaseDAO();
 
+org.sarsoft.BrowserCheck = function() {
+	if(YAHOO.util.Cookie.get("sarsoftBrowserCheck") == "checked") return;
+	if($.browser.msie && 1*$.browser.version < 9) {
+		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked");
+		alert("Please be aware that " + org.sarsoft.version + " has some features that are incompatible with versions of Internet Explorer prior to IE 9.")
+	} else if($.browser.mozilla && 1*$.browser.version < 3.6) {
+		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked");
+		alert("Please be aware that " + org.sarsoft.version + " has some features that may be incompatible with older versions of Firefox");
+	}
+}
+
 org.sarsoft.Loader = new Object();
 org.sarsoft.Loader._tasks = new Array();
 org.sarsoft.Loader.queue = function(task) {
@@ -980,7 +991,7 @@ org.sarsoft.GPSDlg.prototype.show = function(write, url, name, handler, poststr)
 }
 
 function sarsoftInit() {
-	if(typeof YAHOO != "undefined") {
+	if(typeof YAHOO != "undefined" && typeof($) != "undefined") {
 		org.sarsoft.Loader.execute();
 	} else {
 		window.setTimeout(250, sarsoftInit);
