@@ -310,7 +310,6 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/rest/assignment/{assignmentId}", method = RequestMethod.POST)
 	public String updateAssignment(Model model, @PathVariable("assignmentId") long assignmentId, HttpServletRequest request, JSONForm params) {
-		SearchAssignment updated = SearchAssignment.createFromJSON(parseObject(params));
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.CREATE;
 		switch(action) {
@@ -345,6 +344,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			dao.delete(assignment);
 			return json(model, assignment);
 		case CREATE:
+			SearchAssignment updated = SearchAssignment.createFromJSON(parseObject(params));
 			if(updated.getDetails() != null) assignment.setDetails(updated.getDetails());
 			if(updated.getResourceType() != null) assignment.setResourceType(updated.getResourceType());
 			if(updated.getUnresponsivePOD() != null) assignment.setUnresponsivePOD(updated.getUnresponsivePOD());
