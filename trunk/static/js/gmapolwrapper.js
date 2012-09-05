@@ -190,6 +190,10 @@ google.maps.Map = function(node, opts) {
 	this.ol.drawPolygonControl.handler.dblclickTolerance=5
 	this.ol.map.addControl(this.ol.drawPolygonControl);
 	
+	this.ol.scaleControl = new OpenLayers.Control.ScaleLine({geodesic: true});
+	this.ol.map.addControl(this.ol.scaleControl);
+	if(!opts.scaleControl) $(this.ol.scaleControl.div).css('display', 'none');
+	
 	var getFeatureFromEvent = function(evt) {
 		var feature = that.ol.vectorLayer.getFeatureFromEvent(evt);
 		if(feature != null) return feature.goverlay;
@@ -300,8 +304,14 @@ google.maps.Map.ol = new Object();
 google.maps.Map.ol.geographic = new OpenLayers.Projection("EPSG:4326");
 google.maps.Map.ol.mercator = new OpenLayers.Projection("EPSG:900913");
 
-google.maps.Map.prototype.setOptions = function() {
-	// TODO
+google.maps.Map.prototype.setOptions = function(opts) {
+	if(opts.scaleControl != null) {
+		if(opts.scaleControl) {
+			$(this.ol.scaleControl.div).css('display', 'block');
+		} else {
+			$(this.ol.scaleControl.div).css('display', 'none');
+		}
+	}
 }
 
 google.maps.Map.prototype.getBounds = function() {
