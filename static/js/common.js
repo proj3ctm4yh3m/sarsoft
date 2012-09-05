@@ -23,7 +23,7 @@ org.sarsoft.setCookieProperty = function(cookie, prop, value) {
 		obj = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get(cookie));
 	}
 	obj[prop] = value;
-	YAHOO.util.Cookie.set(cookie, YAHOO.lang.JSON.stringify(obj));
+	YAHOO.util.Cookie.set(cookie, YAHOO.lang.JSON.stringify(obj), { path: "/"});
 }
 
 org.sarsoft.getCookieProperty = function(cookie, prop) {
@@ -214,10 +214,10 @@ org.sarsoft.SearchDAO.prototype = new org.sarsoft.BaseDAO();
 org.sarsoft.BrowserCheck = function() {
 	if(YAHOO.util.Cookie.get("sarsoftBrowserCheck") == "checked") return;
 	if($.browser.msie && 1*$.browser.version < 9) {
-		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked");
+		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked", {path: "/"});
 		alert("Please be aware that " + org.sarsoft.version + " has some features that are incompatible with versions of Internet Explorer prior to IE 9.")
 	} else if($.browser.mozilla && 1*$.browser.version < 3.6) {
-		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked");
+		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked", {path: "/"});
 		alert("Please be aware that " + org.sarsoft.version + " has some features that may be incompatible with older versions of Firefox");
 	}
 }

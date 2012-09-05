@@ -109,6 +109,26 @@ textarea.entityform {
 	width: 100%;
 }
 
+div.olControlScaleLine {
+	position: absolute;
+	bottom: 5px;
+	left: 5px;
+}
+
+div.olControlScaleLineTop {
+	border-bottom: 1px solid black;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+}
+
+div.olControlScaleLineBottom {
+	border-top: 1px solid black;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+	position: relative;
+	top: -1px;
+}
+
 @media print {
 	.noprint {
 		display: none !important;
