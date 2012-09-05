@@ -127,7 +127,7 @@ google.maps.MVCArray.prototype.getAt = function(i) { return this.array[i]; }
 google.maps.MVCArray.prototype.getLength = function() { return this.array.length; }
 
 google.maps.MVCArray.prototype.insertAt = function(i, element) {
-	this.array[i] = element;
+	Array.prototype.splice.apply(this.array, [i, 0].concat([element]));
 	google.maps.event.trigger(this, "insert_at", i);
 }
 
@@ -141,7 +141,10 @@ google.maps.MVCArray.prototype.removeAt = function(i) {
 	this.array.splice(i, 1);
 }
 
-google.maps.MVCArray.prototype.setAt = function(i, element) { this.insertAt(i, element) }
+google.maps.MVCArray.prototype.setAt = function(i, element) {
+	this.array[i] = element;
+	google.maps.event.trigger(this, "insert_at", i);
+}
 
 google.maps.Map = function(node, opts) {
 	var that = this;
