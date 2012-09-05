@@ -728,10 +728,12 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 
 	this.newAssignmentDlg = new org.sarsoft.view.MapEntityDialog(this.imap, "Create Assignment", new org.sarsoft.view.SearchAssignmentForm(), function(assignment) {
 		var way = { name: assignment.name, polygon: assignment.polygon };
+		var isClone = false;
 		assignment.ways = [way];
 		if(that.newAssignmentDlg.point != null) {
 			way.waypoints = that.imap.getNewWaypoints(that.newAssignmentDlg.point, way.polygon);
 		} else {
+			isClone = true;
 			for(var i = 0; i < that.newAssignmentDlg.original.ways.length; i++) {
 				var origWay = that.newAssignmentDlg.original.ways[i];
 				if(origWay.type == "ROUTE") {
@@ -745,9 +747,11 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 		}
 		that.assignmentDAO.create(function(obj) {
 			that.addAssignment(obj, function() {
-				that.redraw(obj, function() {
-				that.save(obj);
-			})});
+				if(!isClone) {
+					that.redraw(obj, function() {
+						that.save(obj);
+					});
+				}});
 		}, assignment);
 	});
 	
