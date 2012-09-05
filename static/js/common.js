@@ -175,11 +175,17 @@ org.sarsoft.BaseDAO.prototype.mark = function() {
 }
 
 org.sarsoft.BaseDAO.prototype.loadSince = function(handler) {
+	var that = this;
 	if(this.offline) {
 		handler([]);
 	} else {
 		// TODO update objects
-		this._doGet("/since/" + this._timestamp, handler);
+		this._doGet("/since/" + this._timestamp, function(r) {
+			for(var i = 0; i < r.length; i++) {
+				that.setObj(r[i].id, r[i]);
+			}
+			if(handler != null) handler(r);
+		});
 	}
 }
 
