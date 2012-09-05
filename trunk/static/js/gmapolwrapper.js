@@ -148,6 +148,7 @@ google.maps.Map = function(node, opts) {
 	this.ol = new Object();
 	this._overlays = new Array();
 
+	this.ol.navigation = new OpenLayers.Control.Navigation();
 	var options = {
             maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
             maxResolution: 156543.0339,
@@ -155,7 +156,7 @@ google.maps.Map = function(node, opts) {
             units: 'm',
             projection: new OpenLayers.Projection("EPSG:900913"),
             displayProjection: new OpenLayers.Projection("EPSG:4326"),
-            controls: [new OpenLayers.Control.PanZoomBar({displayClass: "noprint"}), new OpenLayers.Control.Navigation()]
+            controls: [new OpenLayers.Control.PanZoomBar({displayClass: "noprint"}), this.ol.navigation]
 		};
 	
 	this.ol.map = new OpenLayers.Map(node, options);
@@ -310,6 +311,13 @@ google.maps.Map.prototype.setOptions = function(opts) {
 			$(this.ol.scaleControl.div).css('display', 'block');
 		} else {
 			$(this.ol.scaleControl.div).css('display', 'none');
+		}
+	}
+	if(opts.scrollwheel != null) {
+		if(opts.scrollwheel) {
+			this.ol.navigation.enableZoomWheel();
+		} else {
+			this.ol.navigation.disableZoomWheel();
 		}
 	}
 }
