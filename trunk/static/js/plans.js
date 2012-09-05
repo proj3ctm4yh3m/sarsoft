@@ -956,6 +956,11 @@ org.sarsoft.controller.OperationalPeriodMapController.prototype.removeAssignment
 		this.imap.removeWay(assignment.ways[i]);
 	}
 	delete this.assignments[assignment.id];
+	var op = 1*assignment.operationalPeriodId;
+	if(this.dn[op].assignments[assignment.id] != null) {
+		this.dn[op].assignments[assignment.id].remove();
+		delete this.dn[op].assignments[assignment.id];		
+	}
 }
 
 org.sarsoft.controller.OperationalPeriodMapController.prototype.getColorForAssignmentId = function(id) {
