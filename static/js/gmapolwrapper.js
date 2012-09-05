@@ -606,7 +606,7 @@ google.maps.Polygon.prototype.setPaths = function(paths) {
 		if(latlngs.array != null) latlngs = latlngs.array; // First path is an MVCArray
 	}
 
-	for(var i = 0; i < latlngs.length - 1; i++) {
+	for(var i = 0; i < latlngs.length; i++) {
 		var ll = google.maps.LatLng.toLonLat(latlngs[i]);
 		vertices.push(new OpenLayers.Geometry.Point(ll.lon, ll.lat));
 	}
@@ -627,7 +627,6 @@ google.maps.Polygon.prototype.getPaths = function() {
 	for(var i = 0; i < this.ol.vector.geometry.getVertices().length; i++) {
 		path[i] = google.maps.LatLng.fromPoint(this.ol.vector.geometry.getVertices()[i]);
 	}
-	path.push(google.maps.LatLng.fromPoint(this.ol.vector.geometry.getVertices()[0]));
 	return new google.maps.MVCArray([new google.maps.MVCArray(path)]);
 }
 
