@@ -20,7 +20,7 @@ function finalize() {
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
 			window.location='/assignment/${assignment.id}'
 		}, failure : function(response) {
-			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
+			throw("AJAX ERROR posting to /rest/assignment/${assignment.id}: " + response.responseText);
 		}}, postdata);
 }
 
@@ -32,7 +32,7 @@ function transition(state) {
 	YAHOO.util.Connect.asyncRequest('POST', '/rest/assignment/${assignment.id}', { success : function(response) {
 			window.location.href = '/assignment/${assignment.id}';
 		}, failure : function(response) {
-			throw("AJAX ERROR posting to " + that.baseURL + url + ": " + response.responseText);
+			throw("AJAX ERROR posting to /rest/assignment/${assignment.id}: " + response.responseText);
 		}}, postdata);
 }
 
