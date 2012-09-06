@@ -1532,10 +1532,8 @@ org.sarsoft.DataNavigator = function(imap) {
 	}
 	
 	
-	if(!org.sarsoft.touch) {
-		this.defaults.io = new org.sarsoft.widget.ImportExport(imap, this.defaults.tenant.body);
-		if(!org.sarsoft.hosted) this.defaults.io.tree.body.css('display', 'none')
-	}
+	this.defaults.io = new org.sarsoft.widget.ImportExport(imap, this.defaults.tenant.body);
+	if(!org.sarsoft.hosted) this.defaults.io.tree.body.css('display', 'none')
 	
 	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(this.defaults.tenant.header).click(function() {
 		if(window.location.pathname == "/map.html") {

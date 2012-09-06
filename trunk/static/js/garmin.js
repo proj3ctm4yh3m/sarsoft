@@ -22,14 +22,6 @@ if (Garmin == undefined) Garmin = {};
 var detectableWithVB = false;
 var PluginDetect = {
 
-	canDetectPlugins: function() {
-	    if( detectableWithVB || (navigator.plugins && navigator.plugins.length > 0) ) {
-			return true;
-	    } else {
-			return false;
-	    }			
-	},
-	
 	detectFlash: function() {
 	    var pluginFound = PluginDetect.detectPlugin('Shockwave','Flash'); 
 	    // if not found, try to detect with VisualBasic
@@ -77,6 +69,12 @@ var PluginDetect = {
 					break;
 			    }
 			}
+	    } else if($.browser.msie) {
+	    	try {
+	    		control = new ActiveXObject('GARMINAXCONTROL.GarminAxControl_t.1');
+	    		if(control) pluginFound = true;
+	    	} catch(e) {
+	    	}
 	    }
 	    return pluginFound;		
 	}

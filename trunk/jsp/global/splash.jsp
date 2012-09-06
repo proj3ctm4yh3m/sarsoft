@@ -14,6 +14,10 @@ ${welcomeMessage}
 ${welcomeHTML}
 </c:when>
 <c:when test="${hosted eq false}">
+<p></p>
+<div>
+<a class="underlineOnHover" style="font-weight: bold; font-size: 150%; color: #5A8ED7" href="/map.html">Click to View and Print Topo Maps</a>
+</div>
 <p>
 Normally, this welcome page would be replaced by information about your SAR team's specific installation.  Here are some basic pointers to help you get started.
 </p>
