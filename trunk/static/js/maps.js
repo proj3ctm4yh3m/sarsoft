@@ -2688,6 +2688,7 @@ org.sarsoft.InteractiveMap.prototype.unselect = function(obj) {
 }
 
 org.sarsoft.InteractiveMap.prototype.removeWay = function(way) {
+	this.unselect(way);
 	var id = way.id;
 	if(typeof this.polys[id] != "undefined") {
 		this._removeOverlay(way);
@@ -2774,6 +2775,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 }
 
 org.sarsoft.InteractiveMap.prototype.removeWaypoint = function(waypoint) {
+	this.unselect(waypoint);
 	var id = waypoint.id;
 	if(typeof this.markers[id] != "undefined") {
 		this._removeMarker(waypoint);

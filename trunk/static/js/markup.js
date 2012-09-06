@@ -947,6 +947,7 @@ org.sarsoft.controller.MarkupMapController.prototype.dragMarker = function(marke
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id) {
+	this.setMarkerAttr(marker, "inedit", false);
 	if(this.markers[id] != null) this.imap.removeWaypoint(this.markers[id].position);
 	if(this.dn.markerdiv != null && this.dn.markers[id] != null) {
 		this.dn.markers[id].empty();
@@ -1028,6 +1029,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showMarker = function(marke
 	if(this.markers[marker.id] != null) this.imap.removeWaypoint(this.markers[marker.id].position);
 	if(marker.position == null) return;
 	this.markers[marker.id] = marker;
+	this.setMarkerAttr(marker, "inedit", false);
 	if(!this.showMarkers) return; // need lines above this in case the user re-enables clues
 
 	var config = new Object();	
@@ -1120,6 +1122,7 @@ org.sarsoft.controller.MarkupMapController.prototype.showShape = function(shape)
 	this.shapes[shape.id] = shape;
 	shape.way.waypoints = shape.way.zoomAdjustedWaypoints;
 	shape.way.displayMessage = org.sarsoft.htmlescape(shape.label) + " (" + shape.formattedSize + ")";
+	this.setShapeAttr(shape, "inedit", false);
 	if(!this.showShapes) return; // need lines above this in case the user re-enables clues
 
 	this.imap.addWay(shape.way, {clickable : (!this.embedded && (org.sarsoft.writeable || (shape.comments != null && shape.comments.length > 0))), fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
