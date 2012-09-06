@@ -918,10 +918,11 @@ org.sarsoft.GPSComms.prototype.retry = function() {
 			installGarminPlugin();
 		}
 		try {
-			this.control = new Garmin.DeviceControl(this);
+			this.control = new Garmin.DeviceControfl(this);
 		} catch (e) {
 			this.console('<span class="warning">Error initializing Garmin Communicator plugin.</span>');
 			this.console('Please visit <a href="http://www8.garmin.com/products/communicator/" target="_new">http://www8.garmin.com/products/communicator/</a> to install the plugin.');
+			return;
 		}
 	}
 
