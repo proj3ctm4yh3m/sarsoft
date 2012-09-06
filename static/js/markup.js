@@ -324,7 +324,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		var imp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>');
 		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, null, "Cancel", function() {
 		});
-		if(dn.defaults.io.imp != null) dn.defaults.io.imp.click(function() { that.impcomms.clear(); that.refreshImportables(); that.impDlg.swap(); });
+		if(dn != null && dn.defaults.io.imp != null) dn.defaults.io.imp.click(function() { that.impcomms.clear(); that.refreshImportables(); that.impDlg.swap(); });
 		
 		var hastyHandler = function(data) {
 			for(var i = 0; i < data.shapes.length; i++) {
@@ -828,21 +828,24 @@ org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function()
 			}
 		}
 	}
-	if(mkeys > 0 || skeys > 0) {
-		this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'block');
-	} else {
-		this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'none');
-	}
 	
-	if(mkeys > 0) {
-		this.dn.markercb.css('display', 'inline');
-	} else {
-		this.dn.markercb.css('display', 'none');
-	}
-	if(skeys > 0) {
-		this.dn.shapecb.css('display', 'inline');
-	} else {
-		this.dn.shapecb.css('display', 'none');
+	if(this.dn != null) {
+		if(mkeys > 0 || skeys > 0) {
+			if(this.imap.registered["org.sarsoft.DataNavigator"] != null) this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'block');
+		} else {
+			if(this.imap.registered["org.sarsoft.DataNavigator"] != null) this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'none');
+		}
+		
+		if(mkeys > 0) {
+			this.dn.markercb.css('display', 'inline');
+		} else {
+			this.dn.markercb.css('display', 'none');
+		}
+		if(skeys > 0) {
+			this.dn.shapecb.css('display', 'inline');
+		} else {
+			this.dn.shapecb.css('display', 'none');
+		}
 	}
 }
 
@@ -989,7 +992,7 @@ org.sarsoft.controller.MarkupMapController.prototype.timer = function() {
 
 org.sarsoft.controller.MarkupMapController.prototype.DNAddMarker = function(marker) {
 	var that = this;
-	if(this.dn.markerdiv == null) return;
+	if(this.dn == null) return;
 
 	if(this.dn.markers[marker.id] == null) {
 		this.dn.markers[marker.id] = jQuery('<div></div>').appendTo(this.dn.markerdiv);
@@ -1073,7 +1076,7 @@ org.sarsoft.controller.MarkupMapController.getIconForShape = function(shape) {
 
 org.sarsoft.controller.MarkupMapController.prototype.DNAddShape = function(shape) {
 	var that = this;
-	if(this.dn.shapediv == null) return;
+	if(this.dn == null) return;
 
 	if(this.dn.shapes[shape.id] == null) {
 		this.dn.shapes[shape.id] = jQuery('<div></div>').appendTo(this.dn.shapediv);
