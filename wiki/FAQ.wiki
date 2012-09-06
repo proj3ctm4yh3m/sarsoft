@@ -22,6 +22,11 @@ Yes, as long as you get map data.  Sarsoft uses OpenLayers, an open-source alter
 
 ==== How do I print nice-looking maps? ====
 
+All the major browsers (IE, Firefox, Chrome) have imperfect support for the CSS print standard.  For simple maps, most sites handle this by producing a PDF or image on the server.  Sarsoft uses direct browser printing, but it's limited by the feature set of each browser.
+
+ * Chrome works great, but borderless prints may require using the system print dialog rather than Chrome's quick-print page.
+ * Firefox forces the page to have large margins, but will print fine as long as you check the 'scale to fit page width' option.
+ * IE makes marginal prints when using Google Maps, but doesn't print well with OpenLayers.
 
 ==== Is Sarsoft 'production-ready'? ====
 
