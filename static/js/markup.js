@@ -829,7 +829,7 @@ org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function()
 		}
 	}
 	
-	if(this.dn != null && !org.sarsoft.touch) {
+	if(this.dn != null) {
 		if(mkeys > 0 || skeys > 0) {
 			if(this.imap.registered["org.sarsoft.DataNavigator"] != null) this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'block');
 		} else {
@@ -947,7 +947,7 @@ org.sarsoft.controller.MarkupMapController.prototype.dragMarker = function(marke
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id) {
-	this.setMarkerAttr(marker, "inedit", false);
+	this.setMarkerAttr(this.markers[id], "inedit", false);
 	if(this.markers[id] != null) this.imap.removeWaypoint(this.markers[id].position);
 	if(this.dn.markerdiv != null && this.dn.markers[id] != null) {
 		this.dn.markers[id].empty();
