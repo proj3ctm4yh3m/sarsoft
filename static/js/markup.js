@@ -829,7 +829,7 @@ org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function()
 		}
 	}
 	
-	if(this.dn != null) {
+	if(this.dn != null && !org.sarsoft.touch) {
 		if(mkeys > 0 || skeys > 0) {
 			if(this.imap.registered["org.sarsoft.DataNavigator"] != null) this.imap.registered["org.sarsoft.DataNavigator"].defaults.io.exp.css('display', 'block');
 		} else {

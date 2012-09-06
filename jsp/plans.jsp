@@ -4,6 +4,9 @@
 <% pageContext.setAttribute("refreshInterval", RuntimeProperties.getProperty("sarsoft.refreshInterval")); %>
 <html>
 <head>
+<meta content='True' name='HandheldFriendly' />
+<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+<meta name="format-detection" content="telephone=no" />
 ${head}
 <script type="text/javascript">
 function doload() {

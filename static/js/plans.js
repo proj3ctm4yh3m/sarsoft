@@ -1483,13 +1483,13 @@ org.sarsoft.view.SearchIO = function(imap, controller, mcontroller) {
 		this.impcomms = new org.sarsoft.GPSComms(this.impHeader);
 
 	} else {
-		if(dn != null && dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
+		if(!org.sarsoft.touch && dn != null && dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
 	}
 	
 	var exp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To export data, click on the file type you wish to export to:</div></div>');
 	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, null, "Export Complete", function() {
 	});
-	if(dn != null && dn.defaults.io.exp != null) dn.defaults.io.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
+	if(!org.sarsoft.touch && dn != null && dn.defaults.io.exp != null) dn.defaults.io.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
 
 	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	gpsout.click(function() {
