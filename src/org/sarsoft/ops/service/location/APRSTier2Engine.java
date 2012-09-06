@@ -90,6 +90,10 @@ public class APRSTier2Engine extends APRSEngine {
 			statusMessage = "IOException setting filter.  Parameters " + t2server + ":" + t2port + " " + filter;
 			logger.error(statusMessage, e);
 			return;
+		} catch (NullPointerException e) {
+			statusMessage = "NullPointerException setting filter for " + t2server + ":" + t2port + ".  Possible connection error?";
+			logger.error(statusMessage, e);
+			return;
 		}
 		statusMessage = "Listening on " + t2server + ":" + t2port + " for " + filter;
 	}
