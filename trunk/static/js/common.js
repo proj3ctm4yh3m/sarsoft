@@ -10,7 +10,7 @@ if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 
-org.sarsoft.touch = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/);
+org.sarsoft.touch = (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/) != null);
 org.sarsoft.mobile = org.sarsoft.touch && $(window).width() < 600;
 org.sarsoft.writeable = (org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.tenantid == null)
 org.sarsoft.async = function(fn) {
