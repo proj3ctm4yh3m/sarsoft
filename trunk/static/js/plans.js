@@ -1470,7 +1470,7 @@ org.sarsoft.view.SearchIO = function(imap, controller, mcontroller) {
 		var imp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>');
 		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, null, "Cancel", function() {
 		});
-		if(dn.defaults.io.imp != null) dn.defaults.io.imp.click(function() { that.impcomms.clear(); that.impDlg.swap(); });
+		if(dn != null && dn.defaults.io.imp != null) dn.defaults.io.imp.click(function() { that.impcomms.clear(); that.impDlg.swap(); });
 	
 		var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
 		gpsin.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(imp));
@@ -1483,13 +1483,13 @@ org.sarsoft.view.SearchIO = function(imap, controller, mcontroller) {
 		this.impcomms = new org.sarsoft.GPSComms(this.impHeader);
 
 	} else {
-		if(dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
+		if(dn != null && dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
 	}
 	
 	var exp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To export data, click on the file type you wish to export to:</div></div>');
 	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, null, "Export Complete", function() {
 	});
-	if(dn.defaults.io.exp != null) dn.defaults.io.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
+	if(dn != null && dn.defaults.io.exp != null) dn.defaults.io.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
 
 	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	gpsout.click(function() {
