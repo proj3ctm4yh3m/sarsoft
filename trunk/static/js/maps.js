@@ -206,6 +206,7 @@ OverlayDropdownMapControl = function(map) {
 		that.o1a.css('display', 'none');
 		that.o1.css('display', 'block')
 		that.opacitySlider.setValue(0);
+		that.overlayDM.container.css('width', that.overlayDM.ul.width() + "px");
 	});
 	dd.onShow = function() {
 		if(that.opacity == 0) {
