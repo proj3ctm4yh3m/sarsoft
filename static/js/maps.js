@@ -481,6 +481,7 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 		if(overlay == "terrain") {
 			overlay = base;
 			base = "ter";
+			if(overlay == "terrain") overlay="ter";
 		}
 		if(overlay == "satellite" || overlay == "hybrid") overlay = "usi";
 		if(overlay == "roadmap") overlay = "om";
