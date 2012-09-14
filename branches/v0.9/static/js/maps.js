@@ -4500,7 +4500,7 @@ org.sarsoft.GeoRefImageOverlay = function(map, name, url, p1, p2, ll1, ll2, opac
 	this.set("name", name);
 	
 	this.div = jQuery('<img src="' + url + '"/>');
-	this.div.css({position: 'absolute', 'z-index': 2, opacity: opacity});
+	this.div.css({position: 'absolute', 'z-index': (google.maps._openlayers ? 2 : 0), opacity: opacity});
 
 	this._olcapable = true;
 	this.opacity = opacity;
@@ -4654,6 +4654,7 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 	this.form.url = jQuery('<input type="text" size="20"/>').appendTo(line);
 	jQuery('<button>Set</button>').appendTo(line).click(function() {
 		var url = that.form.url.val();
+		if(url == null || url.length == 0) return;
 		if(that.reference != null) {
 			that.reference.set("url", url);
 		} else {
@@ -4661,7 +4662,7 @@ org.sarsoft.GeoRefImageDlg = function(imap, handler) {
 		}
 	});
 	
-	line.parent().append('<td rowspan="6" valign="top" style="padding-left: 20px"><b>Add Custom Layer</b><br/>You can turn any image into a custom map layer by matching two points on the image with two points on the map.<br/><br/>1. Enetr the image URL and click "Set".<br/>2. Right-click on the map and select "Georeference | Mark Point" to mark image points.<br/>3. Right-click on the map and select "Georeference | Mark LatLng" to mark coordinates.</td>');
+	line.parent().append('<td rowspan="6" valign="top" style="padding-left: 20px"><b>Add Custom Layer</b><br/>You can turn any image into a custom map layer by matching two points on the image with two points on the map.<br/><br/>1. Enter the image URL and click "Set".<br/>2. Right-click on the map and select "Georeference | Mark Point" to mark image points.<br/>3. Right-click on the map and select "Georeference | Mark LatLng" to mark coordinates.</td>');
 	
 	var line = jQuery('<tr><td style="margin-bottom: 15px">Name:</td></tr>').appendTo(container);
 	this.form.name = jQuery('<input type="text" size="20"/>').appendTo(jQuery('<td></td>').appendTo(line));
