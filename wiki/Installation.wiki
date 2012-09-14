@@ -14,7 +14,7 @@ Sarsoft is packaged as a JAR file; all you need to run it is Java 5.
 
 = Configuration =
 
-Sarsoft is ready to use out of the box, with no external dependencies or configuration required.  Sarsoft supports a number of deployment configurations based on factors like internet availability and the potential for public access; you can customize it by passing settings on the command line or through a `sarsoft.properties` file.
+Sarsoft is ready to use out of the box, with no external dependencies or configuration required.  Sarsoft supports a number of deployment configurations based on factors like internet availability and the potential for public access; you can customize it by passing settings on the command line or through a `sarsoft.properties` file.  As an example, see [SamplePropertiesFile the sample properties file].
 
 === Map Center and Datum ===
 
