@@ -1,6 +1,8 @@
 google = new Object();
 google.maps = new Object();
 
+google.maps._openlayers = true;
+
 google.maps.event = new Object();
 google.maps.event._handlers = [[], [], []];
 
