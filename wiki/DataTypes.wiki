@@ -1,0 +1,15 @@
+= Data Types =
+
+Anecdotal evidence suggests that the longer documentation is, the less likely users are to read it.  Rather than write an extensive user guide, I've focused on making Sarsoft relatively intuitive to use, provided you understand the basic data types and how they interact with each other.  This page should help with that understanding.
+
+Sarsoft has two "document types" that you can work on - Maps and Searches.  The selected type controls which pages, features and additional object types are visible.  Maps contain Markers and Shapes (collectively referred to as markup) and expose just one page - the map editor.  Searches contain a number of additional objects, and expose pages that can be use to create, edit and print them.
+
+<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/DataTypes.png"/>
+
+Searches are divided into Operational Periods; each Operational Period contains a group of assignments.  Assignments have one Segment representing the area meant to be searched, and a number of Tracks and Waypoints downloaded from searcher GPSs during debrief.  They also have a list of clues and resources (aka people and equipment).
+
+Resources exist in their own right but can be temporarily linked with assignments during planning and execution.  This allows APRS tracking on a per-assignment, rather than per-callsign basis, and allows resource information to be printed on assignment forms.  When an assignment is completed, resources are automatically released back into the pool.
+
+As one of the backbone objects in Sarsoft, assignments go through a lifecycle that restricts what can be done at different sages.  The goal is not to be onerous, but to prevent inconsistent data.  For example, if it were easy to change an assignment's segment after maps have already been printed, an accidental modification would leave field teams and the CP looking at different segments for the same assignment.  Assignment lifecycle and associated actions are shown below; note that although not shown, resources will be released when an assignment changes into the Completed state.
+
+<img src="http://sarsoft.googlecode.com/svn/wiki/screenshots/AssignmentLifecycle.png"/>
