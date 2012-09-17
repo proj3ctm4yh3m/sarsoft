@@ -271,8 +271,9 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 		var div = jQuery('<div></div>').appendTo(this.aDiv)
 		div.append('<span style="margin-right: 2px; float: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></span>');
 		var dataset = jQuery('<select><option value="s">Slope</option><option value="a">Aspect</option></select>').appendTo(
-				jQuery('<div>Color By: </div>').appendTo(div));
+				jQuery('<div style="margin-left: 2px">Color By: </div>').appendTo(div));
 
+		var cfg2 = jQuery('<div style="margin-top: 5px"><span style="color: green; margin-left: 2px">20&deg;-27&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">28&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span></div>').appendTo(div);
 		var cfg = jQuery('<table style="color: black; display: none" border="0"></table>').appendTo(div);
 		var tb = jQuery('<tbody></tbody').appendTo(cfg);
 		var tr = jQuery('<tr></tr>').appendTo(tb);
@@ -295,7 +296,9 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 			var hazard = hazards[aspect];
 			if(dataset.val() == "s") {
 				cfg.css('display', 'none');
+				cfg2.css('display', 'block');
 			} else {
+				cfg2.css('display', 'none');
 				cfg.css('display', 'block');
 				elements[aspect].css('background-color', colors[hazard]);
 			}
@@ -544,7 +547,17 @@ OverlayDropdownMapControl.prototype.updateMap = function(base, overlay, opacity,
 	if(overlayType != null && overlayType._info != null && overlayType._info.length > 0) infoString += overlayType._info + ". ";
 	if(alphaOverlays != null) {
 		for(var i = 0; i < alphaOverlays.length; i++) {
-			infoString += this.map.mapTypes.get(alphaOverlays[i])._info + ". ";
+			var t = this.map.mapTypes.get(alphaOverlays[i]);
+			if(t._info != null && t._info.length > 0) {
+				infoString += t._info + ". ";
+			}
+			if(alphaOverlays[i] == "slp") {
+				if(t._cfgvalue != null && t._cfgvalue.indexOf("s") == 0) {
+					infoString += '<span style="color: green; margin-left: 5px">20&deg;-27&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">28&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span>';
+				} else {
+					infoString += "Shading 28&deg;-59&deg;.  Dots 35&deg;-45&deg;";
+				}
+			}
 		}
 	}
 	
