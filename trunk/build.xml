@@ -8,7 +8,10 @@
 			<fileset dir="ext-lib" includes="*.jar"/>
 		</path>
 		<path id="local.source.path">
-				<pathelement location="src"/>
+			<pathelement location="core/src"/>
+			<pathelement location="markup/src"/>
+			<pathelement location="search/src"/>
+			<pathelement location="server/src"/>
 		</path>
 	</target>
 
@@ -26,7 +29,10 @@
 	<target name="classes" depends="prepare,classpath">
 			<javac debug="on" source="1.5" target="1.5" deprecation="on" destdir="build/classes">
 				<classpath><path refid="local.class.path"/></classpath>
-				<src path="src"/>
+				<src path="core/src"/>
+				<src path="markup/src"/>
+				<src path="sar/src"/>
+				<src path="server/src"/>
 			</javac>
 	</target>
 
@@ -37,17 +43,28 @@
 
 	<target name="build" depends="jar">
 		<delete file="build/jar/embedded.war"/>
-		<war destfile="build/jar/embedded.war" webxml="config/web.xml">
+		<war destfile="build/jar/embedded.war" webxml="server/config/web.xml">
 			<classes dir="build/classes"/>
-			<classes dir="config" includes="commons-logging.properties simplelog.properties log4j.properties ehcache.xml">
+			<classes dir="core/config" includes="commons-logging.properties simplelog.properties log4j.properties ehcache.xml">
 			</classes>
 			<lib dir="lib"/>
-			<fileset dir="jsp"/>
-			<zipfileset dir="config" prefix="WEB-INF">
+			<fileset dir="core/jsp"/>
+			<fileset dir="markup/jsp"/>
+			<fileset dir="sar/jsp"/>
+			<fileset dir="server/jsp"/>
+			<zipfileset dir="core/config" prefix="WEB-INF">
+			</zipfileset>
+			<zipfileset dir="markup/config" prefix="WEB-INF">
+			</zipfileset>
+			<zipfileset dir="sar/config" prefix="WEB-INF">
+			</zipfileset>
+			<zipfileset dir="server/config" prefix="WEB-INF">
 				<exclude name="web.xml"/>
 			</zipfileset>
-			<zipfileset dir="static" prefix="static">
-			</zipfileset>
+			<zipfileset dir="static" prefix="static"></zipfileset>
+			<zipfileset dir="core/js" prefix="static/js"></zipfileset>
+			<zipfileset dir="markup/js" prefix="static/js"></zipfileset>
+			<zipfileset dir="sar/js" prefix="static/js"></zipfileset>
 		</war>
 		<delete file="runtime/sar.jar"/>
 		<copy file="winstone-jsp.jar" tofile="runtime/sar.jar"/>
