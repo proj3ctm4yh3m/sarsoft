@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "tiles-config_2_1.dtd">
+<tiles-definitions>
+
+	<definition name="Pages.Splash" extends="App.Base">
+		<put-attribute name="subHeader" value="splash"/>
+		<put-attribute name="content" value="/splash.jsp"/>
+	</definition>
+	
+	<definition name="Pages.Admin" extends="App.Base">
+		<put-attribute name="content" value="/admin.jsp"/>
+		<put-attribute name="subHeader" value=""/>
+		<put-attribute name="app" value="setup-admin"/>
+	</definition>
+
+	<definition name="Pages.Account" extends="App.Base">
+		<put-attribute name="content" value="/account.jsp"/>
+		<put-attribute name="app" value="admin"/>
+	</definition>
+	
+</tiles-definitions>

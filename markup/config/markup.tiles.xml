@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition name="Map.Base" extends="App.Base">
+		<put-attribute name="subHeader" value="maps"/>
+	</definition>
+	
+	<definition name="Map.Guide" extends="Map.Base">
+		<put-attribute name="content" value="/guide.jsp"/>
+		<put-attribute name="app" value="guide"/>
+	</definition>
+
+	<definition name="Pages.Maps" extends="Map.Base">
+		<put-attribute name="content" value="/welcome-maps.jsp"/>
+	</definition>
+	<definition name="Pages.Find" extends="App.Base">
+		<put-attribute name="subHeader" value="find"/>
+		<put-attribute name="content" value="/welcome-find.jsp"/>
+	</definition>
+	
+</tiles-definitions>

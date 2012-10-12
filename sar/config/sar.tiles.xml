@@ -1,20 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "tiles-config_2_1.dtd">
 <tiles-definitions>
-	<definition name="error" template="/global/error.jsp"/>
-
-	<definition name="App.Base" template="/global/AppTemplate.jsp">
-		<put-attribute name="subHeader" value="splash"/>
-		<put-attribute name="app" value=""/>
-	</definition>
 	<definition name="Search.Base" extends="App.Base">
 		<put-attribute name="subHeader" value="searches"/>
 	</definition>
-	<definition name="Map.Base" extends="App.Base">
-		<put-attribute name="subHeader" value="maps"/>
-	</definition>
-	<definition name="Search.Setup.Sub" template="/global/home.jsp">
-		<put-attribute name="subcontent" value="/global/setup.jsp"/>
+	<definition name="Search.Setup.Sub" template="/home.jsp">
+		<put-attribute name="subcontent" value="/setup.jsp"/>
 		<put-attribute name="pane" value="setup"/>
 	</definition>
 	<definition name="Search.Setup" extends="Search.Base">
@@ -29,7 +20,7 @@
 	<definition name="Assignment.PrintMaps" template="/plans/assignment-printmaps.jsp"/>
 	<definition name="Assignment.PrintBulk" template="/plans/assignment-printbulk.jsp"/>
 
-	<definition name="OperationalPeriod.Detail.Sub" template="/global/home.jsp">
+	<definition name="OperationalPeriod.Detail.Sub" template="/home.jsp">
 		<put-attribute name="subcontent" value="/plans/opdetail.jsp"/>
 		<put-attribute name="pane" value="plans"/>
 	</definition>
@@ -38,7 +29,7 @@
 		<put-attribute name="app" value="home"/>
 	</definition>
 
-	<definition name="Clue.List.Sub" template="/global/home.jsp">
+	<definition name="Clue.List.Sub" template="/home.jsp">
 		<put-attribute name="subcontent" value="/plans/cluelist.jsp"/>
 		<put-attribute name="pane" value="clues"/>
 	</definition>
@@ -55,7 +46,7 @@
 		<put-attribute name="app" value="plans"/>
 	</definition>
 
-	<definition name="Resource.List.Sub" template="/global/home.jsp">
+	<definition name="Resource.List.Sub" template="/home.jsp">
 		<put-attribute name="subcontent" value="/ops/resourcelist.jsp"/>
 		<put-attribute name="pane" value="resources"/>
 	</definition>
@@ -75,42 +66,7 @@
 		<put-attribute name="app" value="setup-status"/>
 	</definition>
 	
-	<definition name="Map.Guide" extends="Map.Base">
-		<put-attribute name="content" value="/global/guide.jsp"/>
-		<put-attribute name="app" value="guide"/>
-	</definition>
-
-	<definition name="Pages.Maps" extends="Map.Base">
-		<put-attribute name="content" value="/global/welcome-maps.jsp"/>
-	</definition>
-	<definition name="Pages.Find" extends="App.Base">
-		<put-attribute name="subHeader" value="find"/>
-		<put-attribute name="content" value="/global/welcome-find.jsp"/>
-	</definition>
 	<definition name="Pages.Searches" extends="Search.Base">
-		<put-attribute name="content" value="/global/welcome-searches.jsp"/>
+		<put-attribute name="content" value="/welcome-searches.jsp"/>
 	</definition>
-	<definition name="Pages.Splash" extends="App.Base">
-		<put-attribute name="subHeader" value="splash"/>
-		<put-attribute name="content" value="/global/splash.jsp"/>
-	</definition>
-	<definition name="Pages.Tools" extends="App.Base">
-		<put-attribute name="subHeader" value="tools"/>
-		<put-attribute name="content" value="/global/tools.jsp"/>
-	</definition>
-	<definition name="Pages.Password" extends="App.Base">
-		<put-attribute name="content" value="/global/password.jsp"/>
-	</definition>
-	
-	<definition name="Pages.Admin" extends="App.Base">
-		<put-attribute name="content" value="/global/admin.jsp"/>
-		<put-attribute name="subHeader" value=""/>
-		<put-attribute name="app" value="setup-admin"/>
-	</definition>
-
-	<definition name="Pages.Account" extends="App.Base">
-		<put-attribute name="content" value="/global/account.jsp"/>
-		<put-attribute name="app" value="admin"/>
-	</definition>
-	
 </tiles-definitions>

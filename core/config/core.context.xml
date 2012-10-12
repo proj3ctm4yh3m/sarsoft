@@ -13,9 +13,6 @@
    	       http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd"
         default-autowire="byName">
 
-	<mvc:resources mapping="/static/**" location="/static/"/>
-	<mvc:resources mapping="/favicon.ico" location="/static/images/"/>
-
 	<bean id="propertyConfigurer" class="org.sarsoft.common.util.PropertyConfigurer">
 		<property name="location">
 			<value>/WEB-INF/local.spring-config.properties</value>
@@ -78,27 +75,6 @@
 		<property name="user" value="${hibernate.username}"/>
 		<property name="password" value="${hibernate.password}"/>
 		<property name="maxConnectionAge" value="${hibernate.c3p0.maxConnectionAge}"/>
-	</bean>
-
-	<bean id="searchSessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
-		<property name="packagesToScan">
-			<list>
-				<value>org.sarsoft.common.model</value>
-				<value>org.sarsoft.plans.model</value>
-				<value>org.sarsoft.ops.model</value>
-				<value>org.sarsoft.markup.model</value>
-			</list>
-		</property>
-
-		<property name="hibernateProperties">
-			<props>
-				<prop key="hibernate.hbm2ddl.auto">update</prop>
-				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
-			</props>
-		</property>
-
-		<property name="dataSource" ref="searchDataSource"/>
-		<property name="configLocation" value="/WEB-INF/hibernate.cfg.xml"/>
 	</bean>
 
 	<context:annotation-config/>

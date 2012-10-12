@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition name="error" template="/error.jsp"/>
+
+	<definition name="App.Base" template="/AppTemplate.jsp">
+		<put-attribute name="subHeader" value="splash"/>
+		<put-attribute name="app" value=""/>
+	</definition>
+
+	<definition name="Pages.Tools" extends="App.Base">
+		<put-attribute name="subHeader" value="tools"/>
+		<put-attribute name="content" value="/tools.jsp"/>
+	</definition>
+	<definition name="Pages.Password" extends="App.Base">
+		<put-attribute name="content" value="/password.jsp"/>
+	</definition>
+	
+</tiles-definitions>
