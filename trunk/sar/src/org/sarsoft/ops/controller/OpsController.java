@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.sarsoft.common.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
@@ -40,8 +39,6 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 @Controller
 public class OpsController extends JSONBaseController {
 
-	@Autowired
-	AdminController adminController;
 	public class EngineList {
 		public APRSTier2Engine aprst2;
 		public APRSLocalEngine aprsLocal;

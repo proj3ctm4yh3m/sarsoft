@@ -4,12 +4,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.sarsoft.common.controller.JSONBaseController;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 
 public class RuntimeProperties {
@@ -20,6 +27,77 @@ public class RuntimeProperties {
 	private static ThreadLocal<String> tServerName = new ThreadLocal<String>();
 	private static ThreadLocal<Integer> tServerPort = new ThreadLocal<Integer>();
 	private static Properties properties;
+
+	private static List<MapSource> mapSources;
+	private static List<String> visibleMapSources;
+	private static Map<String, MapSource> mapSourcesByName;
+	private static Map<String, MapSource> mapSourcesByAlias;
+
+	private static Logger logger = Logger.getLogger(RuntimeProperties.class);
+
+	public static List<String> getVisibleMapSources() {
+		if(visibleMapSources != null) return visibleMapSources;
+		synchronized(RuntimeProperties.class) {
+			visibleMapSources = new ArrayList<String>();
+			String defaults = getProperty("sarsoft.map.backgrounds.default");
+			if(defaults == null || defaults.length() == 0) defaults = getProperty("sarsoft.map.backgrounds");
+			for(String source : defaults.split(",")) {
+				visibleMapSources.add(getProperty("sarsoft.map.background." + source + ".name"));
+			}
+		}
+		return visibleMapSources;
+	}
+	
+	public static MapSource getMapSourceByName(String name) {
+		if(mapSourcesByName == null) getMapSources();
+		return mapSourcesByName.get(name);
+	}
+	
+	public static MapSource getMapSourceByAlias(String alias) {
+		if(mapSourcesByAlias == null) getMapSources();
+		return mapSourcesByAlias.get(alias);
+	}
+	
+	public static List<MapSource> getMapSources() {
+		if(mapSources != null) return mapSources;
+		synchronized(RuntimeProperties.class) {
+			if(mapSources != null) return mapSources;
+			mapSources = new ArrayList<MapSource>();
+			String[] names = getProperty("sarsoft.map.backgrounds").split(",");
+			for(String name : names) {
+				try {
+					MapSource source = new MapSource();
+					source.setName(getProperty("sarsoft.map.background." + name + ".name"));
+					source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
+					source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
+					String alias = getProperty("sarsoft.map.background." + name + ".alias");
+					if(alias == null) alias = name;
+					source.setAlias(alias);
+					source.setDescription(getProperty("sarsoft.map.background." + name + ".description"));
+					if(source.getType() != MapSource.Type.NATIVE) {
+						source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
+						source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
+						source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
+						source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
+						source.setAlphaOverlay(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".alphaOverlay")));
+						source.setInfo(getProperty("sarsoft.map.background." + name + ".info"));
+					}
+					mapSources.add(source);
+				} catch (Exception e) {
+					logger.error("Error with map layer " + name, e);
+				}
+			}
+			mapSources = Collections.unmodifiableList(mapSources);
+			mapSourcesByName = new HashMap<String, MapSource>();
+			mapSourcesByAlias = new HashMap<String, MapSource>();
+			for(MapSource source : mapSources) {
+				mapSourcesByName.put(source.getName(), source);
+				mapSourcesByAlias.put(source.getAlias(), source);
+			}
+		}
+		return mapSources;
+	}
+
 	
 	public static boolean isInitialized() {
 		return (properties != null);

@@ -61,7 +61,7 @@
 			<zipfileset dir="server/config" prefix="WEB-INF">
 				<exclude name="web.xml"/>
 			</zipfileset>
-			<zipfileset dir="static" prefix="static"></zipfileset>
+			<zipfileset dir="server/static" prefix="static"></zipfileset>
 			<zipfileset dir="core/js" prefix="static/js"></zipfileset>
 			<zipfileset dir="markup/js" prefix="static/js"></zipfileset>
 			<zipfileset dir="sar/js" prefix="static/js"></zipfileset>

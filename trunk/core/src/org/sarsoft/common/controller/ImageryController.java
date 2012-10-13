@@ -34,6 +34,7 @@ import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.GeoRef;
+import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.Marker;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -210,7 +211,7 @@ public class ImageryController extends JSONBaseController {
 
 	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		MapSource source = getMapSourceByName(layer);
+		MapSource source = RuntimeProperties.getMapSourceByName(layer);
 		InputStream in = null;
 		if(source != null && (Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled")) || Boolean.valueOf(getProperty("sarsoft.map.overzoom.enabled")) && z > source.getMaxresolution())) {
 			if(z <= source.getMaxresolution()) {
@@ -232,7 +233,7 @@ public class ImageryController extends JSONBaseController {
 		String[] layers = layer.split(",");
 		InputStream[] images = new InputStream[layers.length];
 		for(int i = 0; i < layers.length; i++) {
-			MapSource source = getMapSourceByAlias(layers[i]);
+			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
 			images[i] = getRemoteTileInputStream(source, z, x, y);
 		}
 		respond(composite(images), response, layer + "/" + z + "/" + x + "/" + y);
