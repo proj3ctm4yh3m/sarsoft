@@ -72,7 +72,7 @@ public class CommonController extends JSONBaseController {
 		int min = 0;
 		String name = "";
 		for(int i = 0; i < layers.length; i++) {
-			sources[i] = this.getMapSourceByAlias(layers[i]);
+			sources[i] = RuntimeProperties.getMapSourceByAlias(layers[i]);
 			max = Math.min(max, sources[i].getMaxresolution());
 			min = Math.max(min, sources[i].getMinresolution());
 			name = name + sources[i].getName() + (i < layers.length - 1 ? ", " : "");

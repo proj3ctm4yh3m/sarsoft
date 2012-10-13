@@ -36,7 +36,6 @@ import org.springframework.web.util.HtmlUtils;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
-@Controller
 public class AdminController extends JSONBaseController {
 
 	@Autowired

@@ -1,16 +1,11 @@
 package org.sarsoft.common.controller;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -44,13 +39,8 @@ public abstract class JSONBaseController {
 	protected static String REST = "rest";
 	protected static String APP = "app";
 	
-	private List<MapSource> mapSources;
-	private List<String> visibleMapSources;
-	private Map<String, MapSource> mapSourcesByName;
-	private Map<String, MapSource> mapSourcesByAlias;
 	private String header = null;
 	private String preheader = null;
-	private String welcomeHTML;
 	
 	@Autowired
 	protected ServletContext context;
@@ -65,6 +55,9 @@ public abstract class JSONBaseController {
 	
 	@Value("${sarsoft.map.viewer}")
 	String mapViewer = "google";
+	
+	@Autowired
+	protected IServerController serverController;
 	
 	private Logger logger = Logger.getLogger(JSONBaseController.class);
 
@@ -96,68 +89,9 @@ public abstract class JSONBaseController {
 				return sources;
 			}
 		}
-		if(visibleMapSources != null) return visibleMapSources;
-		synchronized(this) {
-			visibleMapSources = new ArrayList<String>();
-			String defaults = getProperty("sarsoft.map.backgrounds.default");
-			if(defaults == null || defaults.length() == 0) defaults = getProperty("sarsoft.map.backgrounds");
-			for(String source : defaults.split(",")) {
-				visibleMapSources.add(getProperty("sarsoft.map.background." + source + ".name"));
-			}
-		}
-		return visibleMapSources;
+		return RuntimeProperties.getVisibleMapSources();
 	}
 
-	protected MapSource getMapSourceByName(String name) {
-		if(mapSourcesByName == null) getMapSources();
-		return mapSourcesByName.get(name);
-	}
-	
-	protected MapSource getMapSourceByAlias(String alias) {
-		if(mapSourcesByAlias == null) getMapSources();
-		return mapSourcesByAlias.get(alias);
-	}
-	
-	protected List<MapSource> getMapSources() {
-		if(mapSources != null) return mapSources;
-		synchronized(this) {
-			if(mapSources != null) return mapSources;
-			mapSources = new ArrayList<MapSource>();
-			String[] names = getProperty("sarsoft.map.backgrounds").split(",");
-			for(String name : names) {
-				try {
-					MapSource source = new MapSource();
-					source.setName(getProperty("sarsoft.map.background." + name + ".name"));
-					source.setTemplate(getProperty("sarsoft.map.background." + name + ".template"));
-					source.setType(MapSource.Type.valueOf(getProperty("sarsoft.map.background." + name + ".type")));
-					String alias = getProperty("sarsoft.map.background." + name + ".alias");
-					if(alias == null) alias = name;
-					source.setAlias(alias);
-					source.setDescription(getProperty("sarsoft.map.background." + name + ".description"));
-					if(source.getType() != MapSource.Type.NATIVE) {
-						source.setCopyright(getProperty("sarsoft.map.background." + name + ".copyright"));
-						source.setMaxresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".maxresolution")));
-						source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
-						source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
-						source.setAlphaOverlay(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".alphaOverlay")));
-						source.setInfo(getProperty("sarsoft.map.background." + name + ".info"));
-					}
-					mapSources.add(source);
-				} catch (Exception e) {
-					logger.error("Error with map layer " + name, e);
-				}
-			}
-			mapSources = Collections.unmodifiableList(mapSources);
-			mapSourcesByName = new HashMap<String, MapSource>();
-			mapSourcesByAlias = new HashMap<String, MapSource>();
-			for(MapSource source : mapSources) {
-				mapSourcesByName.put(source.getName(), source);
-				mapSourcesByAlias.put(source.getAlias(), source);
-			}
-		}
-		return mapSources;
-	}
-	
 	private byte[] sha1(String str) {
 		try {
 			MessageDigest d = MessageDigest.getInstance("SHA-1");
@@ -271,7 +205,7 @@ public abstract class JSONBaseController {
 			"org.sarsoft.EnhancedGMap.defaultMapTypes = [\n";
 			boolean first = true;
 			boolean tileCacheEnabled = Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled"));
-			for(MapSource source : getMapSources()) {
+			for(MapSource source : RuntimeProperties.getMapSources()) {
 				if(!source.isAlphaOverlay()) {
 					preheader = preheader + ((first) ? "" : ",") + "{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
 						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
@@ -286,7 +220,7 @@ public abstract class JSONBaseController {
 					first = false;
 				}
 			}
-			for(MapSource source : getMapSources()) {
+			for(MapSource source : RuntimeProperties.getMapSources()) {
 				if(source.isAlphaOverlay()) {
 					preheader = preheader + ",{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
 						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
@@ -313,20 +247,15 @@ public abstract class JSONBaseController {
 				"<script src=\"http://code.jquery.com/jquery-1.6.4.js\"></script>\n";
 				header = header + "<script src=\"http://threedubmedia.googlecode.com/files/jquery.event.drag-1.5.min.js\"></script>\n";
 			}
-			header = header + "<script src=\"/static/js/common.js\"></script>\n" +
-			"<script src=\"/static/js/maps.js\"></script>\n" +
-			"<script src=\"/static/js/plans.js\"></script>\n" +
-			"<script src=\"/static/js/ops.js\"></script>\n" +
-			"<script src=\"/static/js/markup.js\"></script>\n" +
-			"<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/yui.css\"/>\n" +
-			"<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/AppBase.css\"/>\n" +
-			"<!--[if gte IE 9]>\n" +
-			"<style type=\"text/css\">\n" +
-			"@media print { img.olTileImage {position: absolute !important;}\n" +
-				"img.olAlphaImage {position: absolute !important;}\n" +
-				"div.olAlphaImage {position: absolute !important;}}\n" +
-			"</style>\n"+
-			"<![endif]-->\n";
+			header = header + serverController.getHeader();
+			header = header +
+				"<!--[if gte IE 9]>\n" +
+				"<style type=\"text/css\">\n" +
+				"@media print { img.olTileImage {position: absolute !important;}\n" +
+					"img.olAlphaImage {position: absolute !important;}\n" +
+					"div.olAlphaImage {position: absolute !important;}}\n" +
+				"</style>\n"+
+				"<![endif]-->\n";
 			this.header = header;
 		}
 		return getCommonHeader(checkTenant);
@@ -358,63 +287,23 @@ public abstract class JSONBaseController {
 
 	protected String bounce(Model model) {
 		model.addAttribute("hosted", isHosted());
-		String user = RuntimeProperties.getUsername();
-		UserAccount account = null;
 		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Tenant.class, RuntimeProperties.getTenant()));
-		if(user != null) account = dao.getByPk(UserAccount.class, user);
-		List<Tenant> tenants = new ArrayList<Tenant>();
-		if(isHosted()) {
-			if(account != null) {
-				model.addAttribute("account", account);
-				if(account.getTenants() != null) tenants.addAll(account.getTenants());
-			}
-		} else {
-			tenants = dao.getAllTenants();
-		}
-		model.addAttribute("tenants", tenants);
-		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
+
 		model.addAttribute("head", getCommonHeader(false));
 		model.addAttribute("version", getProperty("sarsoft.version"));
 		model.addAttribute("friendlyName", getProperty("sarsoft.name"));
 		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
-		String objects = getProperty("sarsoft.objects");
-		if(objects == null) objects = "map,search";
-		model.addAttribute("objects", objects);
 		
-		if(model.asMap().containsKey("targetDest")) return "Pages.Password";
-		if(isHosted() && account == null) return splash(model);
-		return "Pages.Maps";
-	}
-	
-	protected String splash(Model model) {
-		if(RuntimeProperties.getProperty("sarsoft.ui.welcome.html") != null) {
-			if(welcomeHTML == null) synchronized(this) {
-				try {
-					StringBuffer fileData = new StringBuffer(1000);
-					BufferedReader reader = new BufferedReader(new FileReader(RuntimeProperties.getProperty("sarsoft.ui.welcome.html")));
-					char[] buf = new char[1024];
-					int numRead=0;
-					while((numRead=reader.read(buf)) != -1){
-						String readData = String.valueOf(buf, 0, numRead);
-						fileData.append(readData);
-						buf = new char[1024];
-					}
-					reader.close();
-					welcomeHTML = fileData.toString();
-		        	} catch (Exception e) {}
-			}
-			model.addAttribute("welcomeHTML", welcomeHTML);
-		}
-		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
-		return app(model, "Pages.Splash");
-	}
-	
-	protected boolean isTenantRestrictedPage(String view) {
-		return !("/map".equals(view) || "Pages.Maps".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Account".equals(view) || "Pages.Find".equals(view));
+		return serverController.bounce(model);
 	}
 
+	protected String splash(Model model) {
+		String view = serverController.splash(model);
+		return app(model, view);
+	}
+	
 	protected String app(Model model, String view) {
-		model.addAttribute("mapSources", getMapSources());
+		model.addAttribute("mapSources", RuntimeProperties.getMapSources());
 		model.addAttribute("geoRefImages", dao.loadAll(GeoRef.class));
 		model.addAttribute("hosted", isHosted());
 		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
@@ -428,13 +317,13 @@ public abstract class JSONBaseController {
 		model.addAttribute("username", username);
 		if(username != null)
 			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
-		model.addAttribute("head", getCommonHeader(isTenantRestrictedPage(view)));
+		model.addAttribute("head", getCommonHeader(serverController.isTenantRestrictedPage(view)));
 		// bounce users from pages that only make sense with tenants
-		if(RuntimeProperties.getTenant() == null && isTenantRestrictedPage(view)) {
+		if(RuntimeProperties.getTenant() == null && serverController.isTenantRestrictedPage(view)) {
 			return bounce(model);
 		}
 		// bounce users from listing pages unless they're logged in
-		if(isHosted() && username == null && ("Pages.Maps".equals(view) || "Pages.Searches".equals(view))) return bounce(model);
+		if(isHosted() && username == null && serverController.isLoginRestrictedPage(view)) return bounce(model);
 		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
 		return view;
 	}
