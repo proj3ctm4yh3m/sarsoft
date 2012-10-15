@@ -13,9 +13,5 @@
 	<definition name="Pages.Maps" extends="Map.Base">
 		<put-attribute name="content" value="/welcome-maps.jsp"/>
 	</definition>
-	<definition name="Pages.Find" extends="App.Base">
-		<put-attribute name="subHeader" value="find"/>
-		<put-attribute name="content" value="/welcome-find.jsp"/>
-	</definition>
 	
 </tiles-definitions>
