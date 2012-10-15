@@ -592,7 +592,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		var dn = imap.registered["org.sarsoft.DataNavigator"];
 		this.dn = new Object();
 		if(org.sarsoft.tenantid == null) {
-			this.dn.saveAs = new org.sarsoft.widget.MarkupSaveAs(imap, dn.defaults.tenant.body);
+			this.dn.saveAs = new org.sarsoft.widget.MarkupSaveAs(imap, dn.defaults.body);
 			this.dn.saveAs.tree.block.insertBefore(dn.defaults.layers.tree.block)
 			this.dn.saveAs.tree.block.css('display', 'none');
 		}

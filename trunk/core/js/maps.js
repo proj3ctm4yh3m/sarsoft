@@ -1500,24 +1500,11 @@ org.sarsoft.DataNavigator = function(imap) {
 	var that = this;
 	this.imap = imap;
 	imap.register("org.sarsoft.DataNavigator", this);
-
+	
 	this.defaults = new Object();
 
-	var username = (org.sarsoft.username == null) ? "Not Signed In" : org.sarsoft.username;
-	this.account = new org.sarsoft.DNTree(imap.container.left, username);
-	this.account._lock = true;
-	this.account.header.css({"padding-top": "3px", "margin": "0px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
-	this.account.header.prepend(jQuery('<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>'));
-	this.account.body.css('padding-left', '2px');
-	
-	this.defaults.tenant = new org.sarsoft.DNTree(imap.container.left, (org.sarsoft.tenantid == null) ? "Unsaved Map" : org.sarsoft.tenantname)
-	this.defaults.tenant._lock = true;
-	this.defaults.tenant.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
-	this.defaults.tenant.header.css({"text-transform": "capitalize", "margin": "0px", "padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
-	this.defaults.tenant.body.css('padding-left', '2px');
-
 	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
-		this.savedAt = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>').appendTo(this.defaults.tenant.body);
+		this.defaults.savedAt = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>');
 		org.sarsoft.BaseDAO.addListener(function(success) {
 			if(success) {
 				var d = new Date();
@@ -1527,16 +1514,12 @@ org.sarsoft.DataNavigator = function(imap) {
 					hours = hours - 12;
 					pm = true;
 				}
-				that.savedAt.css('display', 'block').html('Last saved at ' + hours + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes() + ':' + (d.getSeconds() < 10 ? '0' : '') + d.getSeconds() + (pm ? ' PM' : ' AM'));
+				that.defaults.savedAt.css('display', 'block').html('Last saved at ' + hours + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes() + ':' + (d.getSeconds() < 10 ? '0' : '') + d.getSeconds() + (pm ? ' PM' : ' AM'));
 			} else {
-				that.savedAt.css({'display': 'block', 'font-style': 'normal', 'font-weight': 'bold', 'color': 'red'}).html('CHANGES NOT SAVED');
+				that.defaults.savedAt.css({'display': 'block', 'font-style': 'normal', 'font-weight': 'bold', 'color': 'red'}).html('CHANGES NOT SAVED');
 			}
 		});
 	}
-
-	this.defaults.sharing = new org.sarsoft.widget.Sharing(imap, this.defaults.tenant.body);
-	if(!org.sarsoft.hosted) this.defaults.sharing.sharing.css('display', 'none');
-	this.defaults.layers = new org.sarsoft.widget.MapLayers(imap, this.defaults.tenant.body);
 
 	if(org.sarsoft.userPermissionLevel=="READ" && org.sarsoft.tenantid != null) {
 		var pwd = jQuery('<div style="padding-top: 1em"></div>').appendTo(this.defaults.sharing.collaborate);
@@ -1544,40 +1527,11 @@ org.sarsoft.DataNavigator = function(imap) {
 		pwdform.append('If this map\'s owner has set a password, you can enter it for write acess:');
 		pwdform.append('<input type="password" name="password"/>');
 		jQuery('<button>Enter Password</button>').appendTo(pwdform).click(function() { pwdform.submit(); });
-	}
-	
-	
-	this.defaults.io = new org.sarsoft.widget.ImportExport(imap, this.defaults.tenant.body);
-	if(!org.sarsoft.hosted) this.defaults.io.tree.body.css('display', 'none')
-	
-	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(this.defaults.tenant.header).click(function() {
-		if(window.location.pathname == "/map.html") {
-			window.location.hash = "";
-			window.location.reload();
-		} else {
-			window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
-		}
-	}).attr("title", org.sarsoft.tenantid == null ? "Close Unsaved Map" : "Close " + org.sarsoft.tenantname);
-	
-	if(org.sarsoft.tenant)
-	
-	this.container = jQuery('<div style="padding-left: 2px"></div>').appendTo(imap.container.left);
-	this.titleblocks = new Object();
-
-	var urlcomp = encodeURIComponent(window.location);
-	if(org.sarsoft.hosted) {
-		if(org.sarsoft.username != null) {
-			this.defaults.account = new org.sarsoft.widget.Account(imap, this.account.body);
-		} else {
-			this.defaults.account = new org.sarsoft.widget.NoAccount(imap, this.account.body);
-		}
-	}
-
-	new org.sarsoft.widget.BrowserSettings(imap, this.account.body);
+	}	
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
-	var tree = new org.sarsoft.DNTree(this.defaults.tenant.body, title);
+	var tree = new org.sarsoft.DNTree(this.defaults.body, title);
 	tree.header.css({"font-size": "120%", "font-weight": "bold", "color": "black", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
 	return tree;
 }
@@ -3116,7 +3070,7 @@ org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 	}
 	if(config.alphaOverlays != null) hash = hash + "&a=" + encodeURIComponent(config.alphaOverlays);
 	var clc = imap.registered["org.sarsoft.controller.CustomLayerController"];
-	if(clc.dao.objs.length > 0) hash = hash + "&cl=" + encodeURIComponent(YAHOO.lang.JSON.stringify(clc.dehydrate()));
+	if(clc != null && clc.dao.objs.length > 0) hash = hash + "&cl=" + encodeURIComponent(YAHOO.lang.JSON.stringify(clc.dehydrate()));
 	return hash;
 }
 

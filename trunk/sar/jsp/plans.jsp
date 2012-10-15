@@ -13,6 +13,19 @@ function doload() {
 org.sarsoft.Loader.queue(function() {
   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
   imap = new org.sarsoft.InteractiveMap(map, {standardControls : true, switchableDatum : true, container: $('#page_container')[0]});
+  
+  var dn = imap.registered["org.sarsoft.DataNavigator"];
+
+  var tc = new org.sarsoft.DNTree(imap.container.left, org.sarsoft.tenantname);
+  tc._lock = true;
+  tc.header.css({"text-transform": "capitalize", "margin": "0px", "padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
+  tc.body.css('padding-left', '2px');
+  dn.defaults.body = tc.body;
+  
+  dn.defaults.savedAt.appendTo(tc.body);
+  new org.sarsoft.widget.BrowserSettings(imap, tc.body);
+  dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
+  
   waypointController = new org.sarsoft.controller.SearchWaypointMapController(imap);
   plansController = new org.sarsoft.controller.OperationalPeriodMapController(imap, ${period.id}, ${maxId});
   resourceController = new org.sarsoft.controller.ResourceLocationMapController(imap);
