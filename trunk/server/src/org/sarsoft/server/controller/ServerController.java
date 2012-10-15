@@ -8,6 +8,7 @@ import java.util.List;
 import javax.servlet.ServletContext;
 
 import org.sarsoft.common.controller.IServerController;
+import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
