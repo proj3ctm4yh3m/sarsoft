@@ -291,8 +291,6 @@ public abstract class JSONBaseController {
 
 		model.addAttribute("head", getCommonHeader(false));
 		model.addAttribute("version", getProperty("sarsoft.version"));
-		model.addAttribute("friendlyName", getProperty("sarsoft.name"));
-		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
 		
 		return serverController.bounce(model);
 	}
@@ -308,11 +306,6 @@ public abstract class JSONBaseController {
 		model.addAttribute("hosted", isHosted());
 		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
 		model.addAttribute("version", getProperty("sarsoft.version"));
-		model.addAttribute("friendlyName", getProperty("sarsoft.name"));
-		model.addAttribute("headerStyle", getProperty("sarsoft.header.style"));
-		String objects = getProperty("sarsoft.objects");
-		if(objects == null) objects = "map,search";
-		model.addAttribute("objects", objects);
 		String username = RuntimeProperties.getUsername();
 		model.addAttribute("username", username);
 		if(username != null)
