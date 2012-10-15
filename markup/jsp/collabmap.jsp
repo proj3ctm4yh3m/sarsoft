@@ -20,32 +20,61 @@ ${head}
 <script type="text/javascript">
 function doload() {
 org.sarsoft.Loader.queue(function() {
-  <c:choose>
-  <c:when test="${tenant.class.name ne 'org.sarsoft.markup.model.CollaborativeMap' or empty tenant.defaultCenter}">
-    map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
-  </c:when>
-  <c:otherwise>
-   map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), new google.maps.LatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14);
-  </c:otherwise>
-  </c:choose>
+  map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas')<c:if test="${not empty tenant.defaultCenter}">, new google.maps.LatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14</c:if>);
   var embed = !(window==top);
-  var opts = {UTM: true, switchableDatum: true, label: true}
-  if(!embed) {
-	  opts.standardControls = true;
-	  opts.container = $('#page_container')[0];
-  }
+  var opts = {UTM: true, switchableDatum: true, label: true, standardControls: !embed, container: (embed ? null : $('#page_container')[0])}
   imap = new org.sarsoft.InteractiveMap(map, opts);
+  var dn = imap.registered["org.sarsoft.DataNavigator"];
+
+  var account = new org.sarsoft.DNTree(imap.container.left, org.sarsoft.username == null ? "Not Signed In" : org.sarsoft.username);
+  account._lock = true;
+  account.header.css({"padding-top": "3px", "margin": "0px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
+  account.header.prepend(jQuery('<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>'));
+  account.body.css('padding-left', '2px');
+
+  if(org.sarsoft.username != null) {
+    dn.defaults.account = new org.sarsoft.widget.Account(imap, account.body);
+  } else {
+    dn.defaults.account = new org.sarsoft.widget.NoAccount(imap, account.body);
+  }
+
+  new org.sarsoft.widget.BrowserSettings(imap, account.body);
+  
+  var tc = new org.sarsoft.DNTree(imap.container.left, org.sarsoft.tenantname);
+  tc._lock = true;
+  tc.header.css({"text-transform": "capitalize", "margin": "0px", "padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
+  tc.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
+  tc.body.css('padding-left', '2px');
+  dn.defaults.body = tc.body;
+  
+  dn.defaults.savedAt.appendTo(tc.body);
+  dn.defaults.sharing = new org.sarsoft.widget.Sharing(imap, tc.body);
+  $('#sharingpermissions').appendTo(dn.defaults.sharing.settings).css('display', 'block');
+  if(org.sarsoft.userPermissionLevel == "READ") {
+		var pwd = jQuery('<div style="padding-top: 1em"></div>').appendTo(dn.defaults.sharing.collaborate);
+		var pwdform = jQuery('<form action="/password" method="post"><input type="hidden" name="dest" value="' + window.location + '"/></form>').appendTo(pwd);
+		pwdform.append('If this map\'s owner has set a password, you can enter it for write acess:');
+		pwdform.append('<input type="password" name="password"/>');
+		jQuery('<button>Enter Password</button>').appendTo(pwdform).click(function() { pwdform.submit(); });
+  }
+  
+  dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
+  dn.defaults.io = new org.sarsoft.widget.ImportExport(imap, tc.body);
+  
+	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(tc.header).click(function() {
+		window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
+	}).attr("title", "Close " + org.sarsoft.tenantname);
+  
+
   markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
   if(!embed) {
 	toolsController = new org.sarsoft.controller.MapToolsController(imap);
 	georefController = new org.sarsoft.controller.CustomLayerController(imap);
-	  org.sarsoft.BrowserCheck();
+	org.sarsoft.BrowserCheck();
   }
   configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
   configWidget.loadConfig();
 
-  var dn = imap.registered["org.sarsoft.DataNavigator"];
-  $('#sharingpermissions').appendTo(dn.defaults.sharing.settings).css('display', 'block');
   <c:if test="${userPermission eq admin}">
 	dn.defaults.sharing.handler = function() { $('#sharingform').submit(); }
 	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/details.png"/>Details</div>').insertBefore(dn.defaults.layers.tree.block);
@@ -59,15 +88,8 @@ org.sarsoft.Loader.queue(function() {
 		window.location="/admin/delete?id=${tenant.name}&dest=/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
 	});
 	</c:if>
-  <c:if test="${userPermission eq write}">
-//    dn.defaults.settings.block.css('display', 'none')
-//    dn.defaults.sharing.prependTo(dn.defaults.tenant.body);
-    </c:if>
   if(!embed) {
-	imap.message("Right click on map background to create shapes", 30000);
-
-	google.maps.event.trigger(map, "resize");
-	
+	google.maps.event.trigger(map, "resize");	
   }
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 });
