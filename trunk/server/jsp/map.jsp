@@ -28,19 +28,6 @@ org.sarsoft.Loader.queue(function() {
 	imap = new org.sarsoft.InteractiveMap(map, opts);
 	var dn = imap.registered["org.sarsoft.DataNavigator"];
 
-	var account = new org.sarsoft.DNTree(imap.container.left, org.sarsoft.username == null ? "Not Signed In" : org.sarsoft.username);
-	account._lock = true;
-	account.header.css({"padding-top": "3px", "margin": "0px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
-	account.header.prepend(jQuery('<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>'));
-	account.body.css('padding-left', '2px');
-
-	if(org.sarsoft.username != null) {
-	  dn.defaults.account = new org.sarsoft.widget.Account(imap, account.body);
-	} else {
-	  dn.defaults.account = new org.sarsoft.widget.NoAccount(imap, account.body);
-	}
-
-	new org.sarsoft.widget.BrowserSettings(imap, account.body);
 	  
 	var tc = new org.sarsoft.DNTree(imap.container.left, "Unsaved Map");
 	tc._lock = true;
@@ -48,12 +35,15 @@ org.sarsoft.Loader.queue(function() {
 	tc.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
 	tc.body.css('padding-left', '2px');
 	dn.defaults.body = tc.body;
+	new org.sarsoft.widget.BrowserSettings(imap, tc.body);
 
 	dn.defaults.sharing = new org.sarsoft.widget.Sharing(imap, tc.body);
 	  
 	dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
 	dn.defaults.io = new org.sarsoft.widget.ImportExport(imap, tc.body);
-	  
+	dn.defaults.io.tree.block.css('display', 'none');
+	dn.defaults.io.kml.appendTo(tc.body);
+	
 	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(tc.header).click(function() {
 		window.location.hash = "";
 		window.location.reload();
@@ -62,11 +52,6 @@ org.sarsoft.Loader.queue(function() {
 		
 	urlwidget = new org.sarsoft.MapURLHashWidget(imap, embed);
 	if(!embed) {
-		markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
-		<c:if test="${fn:length(clientState)>0}">
-			var clientState = YAHOO.lang.JSON.parse('${clientState}');
-			markupController.rehydrate(clientState["org.sarsoft.controller.MarkupMapController"]);
-		</c:if>
 		configWidget = new org.sarsoft.view.CookieConfigWidget(imap, true);
 		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity, alphaOverlays : urlwidget.config.alphaOverlays, center: {lat: map.getCenter().lat(), lng: map.getCenter().lng()}, zoom: map.getZoom()});
 		toolsController = new org.sarsoft.controller.MapToolsController(imap);
