@@ -35,7 +35,7 @@ function toggleAcctDropdown() {
 <c:otherwise><c:set var="loggedin" value="${false}"/></c:otherwise>
 </c:choose>
 <c:if test="${(subHeader eq 'maps' or subHeader eq 'Search') and loggedin eq false}"><c:set var="subHeader" value="splash"/></c:if>
-<div class="header noprint" style="${headerStyle}">
+<div class="header noprint" style="background-image: url(/static/images/header.jpg); background-repeat: repeat-x; border-bottom: 1px solid black;">
 <div style="font-weight: bold; position: absolute; top: 0px; right: 20px"><span style="font-size: 200%">${version}</span></div>
 <div style="padding-left: 1.5em"><div style="font-weight: bold; font-size: 200%"><c:if test="${fn:length(app) gt 0}"></c:if>&nbsp;</div></div>
 </div>
@@ -66,7 +66,7 @@ function toggleAcctDropdown() {
 		</c:when>
 	</c:choose>
 	<c:if test="${loggedin}">
-	<c:if test="${fn:contains(objects, 'map')}"><c:choose>
+	<c:choose>
 		<c:when test="${subHeader eq 'maps'}">
 			<div class="subheader active"><span><a href="/maps"><c:choose><c:when test="${fn:length(app) eq 0}">&#x25BE;</c:when><c:otherwise>&#x25B8;</c:otherwise></c:choose> Maps</a></span></div>
 		</c:when>
@@ -74,8 +74,7 @@ function toggleAcctDropdown() {
 			<div class="subheader"><span><a href="/maps">Maps</a></span></div>
 		</c:when>
 	</c:choose>
-	</c:if>
-	<c:if test="${fn:contains(objects, 'search')}"><c:choose>
+	<c:choose>
 		<c:when test="${subHeader eq 'searches' and fn:length(app) eq 0}">
 			<div class="subheader active"><span><a href="/searches">&#x25BE; Searches</a></span></div>
 		</c:when>
@@ -88,7 +87,7 @@ function toggleAcctDropdown() {
 		<c:when test="${fn:length(app) eq 0}">
 			<div class="subheader"><span><a href="/searches">Searches</a></span></div>
 		</c:when>
-	</c:choose></c:if>
+	</c:choose>
 	</c:if>
 	<c:if test="${fn:length(app) eq 0}">
 		<c:choose>

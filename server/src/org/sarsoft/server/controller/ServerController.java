@@ -69,10 +69,6 @@ public class ServerController implements IServerController {
 		model.addAttribute("tenants", tenants);
 		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
 
-		String objects = getProperty("sarsoft.objects");
-		if(objects == null) objects = "map,search";
-		model.addAttribute("objects", objects);
-		
 		if(model.asMap().containsKey("targetDest")) return "Pages.Password";
 		if(isHosted && account == null) return splash(model);
 		
