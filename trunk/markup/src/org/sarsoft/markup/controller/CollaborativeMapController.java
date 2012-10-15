@@ -199,28 +199,6 @@ public class CollaborativeMapController extends JSONBaseController {
 			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
 			return kml(model, gpxifyMap(), "Map");
 		default :
-			if(id != null) {
-				Cookie[] cookies = request.getCookies();
-				Cookie myCookie = null;
-				if(cookies != null) for(Cookie cookie : cookies) {
-					if("org.sarsoft.recentlyLoadedMaps".equals(cookie.getName())) {
-						myCookie = cookie;
-					}
-				}
-				if(myCookie != null && myCookie.getValue() != null) {
-					String value = myCookie.getValue();
-					value = value.replaceAll("(^|,)" + id + "(,|$)", ",");
-					value = value.replaceAll(",,", ",");
-					if(value.length() > 0 && !value.endsWith(",")) value = value + ",";
-					if(value.startsWith(",")) value = value.substring(1);
-					myCookie.setValue(value);
-				} else {
-					myCookie = new Cookie("org.sarsoft.recentlyLoadedMaps","");
-				}
-				myCookie.setValue(myCookie.getValue() + id);
-				myCookie.setMaxAge(7776000);
-				response.addCookie(myCookie);
-			}
 			return app(model, "/collabmap");
 		}
 	}

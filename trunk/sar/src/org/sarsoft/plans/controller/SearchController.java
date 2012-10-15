@@ -86,29 +86,6 @@ public class SearchController extends JSONBaseController {
 		String val = adminController.setTenant(model, name, Search.class, request);
 		opsController.checkLocators();
 		if(val != null) return val;
-		if(name != null) {
-			Cookie[] cookies = request.getCookies();
-			Cookie myCookie = null;
-			if(cookies != null) for(Cookie cookie : cookies) {
-				if("org.sarsoft.recentlyLoadedSearches".equals(cookie.getName())) {
-					myCookie = cookie;
-				}
-			}
-			if(myCookie != null && myCookie.getValue() != null) {
-				String value = myCookie.getValue();
-				value = value.replaceAll("(^|,)" + name + "(,|$)", ",");
-				value = value.replaceAll(",,", ",");
-				if(value.length() > 0 && !value.endsWith(",")) value = value + ",";
-				if(value.startsWith(",")) value = value.substring(1);
-				myCookie.setValue(value);
-			} else {
-				myCookie = new Cookie("org.sarsoft.recentlyLoadedSearches","");
-			}
-			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
-			myCookie.setValue(myCookie.getValue() + name);
-			myCookie.setMaxAge(7776000);
-			response.addCookie(myCookie);
-		}
 		return homePage(model);
 	}
 	

@@ -11,7 +11,6 @@
 <div style="position: relative; float: left; width: 10em; margin-left: -11em; border-right: 1px solid #5a8ed7; height: 15em">
 <div id="newLink" class="lmenu"><span style="padding-right: 5px" id="newArrow">&#x25B8;</span><a href="javascript:setPane('new')">New</a></div>
 <div id="yourLink" class="lmenu"><span style="padding-right: 5px" id="yourArrow">&#x25B8;</span><a href="javascript:setPane('your')">Your Maps</a></div>
-<div id="recentLink" class="lmenu"><span style="padding-right: 5px" id="recentArrow">&#x25B8;</span><a href="javascript:setPane('recent')">Recent</a></div>
 </div>
 
 <div style="position: relative; float: left; width: 100%">
@@ -48,21 +47,11 @@ Creating a map allows you to draw routes, mark waypoints, send data to a GPS and
 </div>
 </div>
 
-<div id="recentContent" style="display: none;">
-<div id="recentList" class="growYUITable">
-</div>
-<span id="clearRecent" style="visibility: hidden">
-<br/>
-Maps recently viewed with this browser.  <a href="javascript:clearRecentCookie()">Clear this list</a>.
-</span>
-</div>
-</div>
-
 </div>
 
 <script>
 
-panes = ["new","your","recent"];
+panes = ["new","your"];
 
 function setPane(pane) {
 	for(var i = 0; i < panes.length; i++) {
@@ -74,11 +63,6 @@ function setPane(pane) {
 	$('#' + pane + 'Arrow').css("visibility", "visible");
 	$('#' + pane + 'Content').css("display", "block");
 	$('#' + pane + 'Link').css("color", "#945e3b");
-}
-
-function clearRecentCookie() {
-	YAHOO.util.Cookie.remove("org.sarsoft.recentlyLoadedMaps");
-	recentTable.clear();
 }
 
 function createMap() {
@@ -101,13 +85,7 @@ org.sarsoft.Loader.queue(function() {
 	tenantDAO = new org.sarsoft.TenantDAO();
 	yourTable = new org.sarsoft.view.TenantTable();
 	yourTable.create(document.getElementById("yourList"));
-	recentTable = new org.sarsoft.view.TenantTable();
-	recentTable.create(document.getElementById("recentList"));
 	
-	tenantDAO.loadRecent("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
-		recentTable.update(rows);
-		if(rows != null && rows.length > 0) $('#clearRecent').css("visibility", "visible");
-	});
 	tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
 		yourTable.update(rows);
 		if(rows == null || rows.length == 0) setPane('new');
