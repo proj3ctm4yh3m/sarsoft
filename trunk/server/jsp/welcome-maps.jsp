@@ -83,7 +83,7 @@ function createMap() {
 org.sarsoft.Loader.queue(function() {
 	
 	tenantDAO = new org.sarsoft.TenantDAO();
-	yourTable = new org.sarsoft.view.TenantTable();
+	yourTable = new org.sarsoft.view.TenantTable({owner : true, comments : true, sharing : true});
 	yourTable.create(document.getElementById("yourList"));
 	
 	tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {

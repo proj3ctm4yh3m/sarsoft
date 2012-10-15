@@ -1,11 +1,9 @@
 package org.sarsoft.server.controller;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.model.Tenant;
@@ -160,5 +158,31 @@ public class AppController extends JSONBaseController {
 		return "redirect:/" + ((tenant.getClass().getName() == "org.sarsoft.plans.model.Search") ? "setup" : "map?id=" + tenant.getName());
 	}
 	
-	
+	@RequestMapping(value="/map.html", method = RequestMethod.GET)
+	public String showMap(Model model, HttpServletRequest request) {
+		RuntimeProperties.setTenant(null);		
+		HttpSession session = request.getSession(true);
+		session.removeAttribute("tenantid");
+		if(RuntimeProperties.getProperty("sarsoft.ui.quickmap.message") != null) {
+			model.addAttribute("uimessage", RuntimeProperties.getProperty("sarsoft.ui.quickmap.message"));
+		}
+		String clientState = (String) session.getAttribute("client_state");
+		if(clientState != null) {
+			request.getSession().removeAttribute("client_state");
+			model.addAttribute("clientState", clientState);
+		}
+		return app(model, "/map");
+	}
+
+	@SuppressWarnings("unused")
+	@RequestMapping(value="/maps", method = RequestMethod.GET)
+	public String homePage(Model model, HttpServletRequest request) {
+		String tenant = RuntimeProperties.getTenant();
+		if(tenant != null) {
+			// Pre-load map object so that it gets instantiated as a CollaborativeMap and not as a Tenant
+			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", tenant);
+		}
+		return app(model, "Pages.Maps");
+	}
+
 }
