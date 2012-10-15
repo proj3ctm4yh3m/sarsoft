@@ -66,24 +66,6 @@ public class AppController extends JSONBaseController {
 		return app(model, "Pages.Account");
 	}
 	
-	@RequestMapping(value="/find", method = RequestMethod.GET)
-	public String find(Model model, @RequestParam(value="key", required=false) String keyword, @RequestParam(value="user", required=false) String user) {
-		String pane = "all";
-		if(keyword != null) {
-			model.addAttribute("tenants", dao.getSharedTenants(keyword, null));
-			model.addAttribute("keyword", keyword);
-			pane = "key";
-		} else if(user != null) {
-			model.addAttribute("tenants", dao.getSharedTenants(null, user));
-			model.addAttribute("user", user);
-			pane = "user";
-		} else {
-			model.addAttribute("tenants", dao.getSharedTenants(null, null));
-		}
-		model.addAttribute("pane", pane);
-		return app(model, "Pages.Find");
-	}
-	
 	@RequestMapping(value="/admin/delete", method = RequestMethod.GET)
 	public String delete(Model model, @RequestParam("id") String id, HttpServletRequest request) {
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {

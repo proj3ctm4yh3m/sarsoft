@@ -90,16 +90,6 @@ function toggleAcctDropdown() {
 		</c:when>
 	</c:choose></c:if>
 	</c:if>
-	<c:if test="${hosted eq true and fn:length(app) eq 0}">
-		<c:choose>
-		<c:when test="${subHeader eq 'find'}">
-			<div class="subheader active"><span><a href="/find">&#x25BE; Find</a></span></div>
-		</c:when>
-		<c:otherwise>
-			<div class="subheader"><span><a href="/find">Find</a></span></div>
-		</c:otherwise>
-		</c:choose>
-	</c:if>
 	<c:if test="${fn:length(app) eq 0}">
 		<c:choose>
 		<c:when test="${subHeader eq 'tools'}">
