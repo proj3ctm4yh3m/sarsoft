@@ -19,22 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class CommonController extends JSONBaseController {
-
-	@RequestMapping(value="/map.html", method = RequestMethod.GET)
-	public String showMap(Model model, HttpServletRequest request) {
-		RuntimeProperties.setTenant(null);		
-		HttpSession session = request.getSession(true);
-		session.removeAttribute("tenantid");
-		if(RuntimeProperties.getProperty("sarsoft.ui.quickmap.message") != null) {
-			model.addAttribute("uimessage", RuntimeProperties.getProperty("sarsoft.ui.quickmap.message"));
-		}
-		String clientState = (String) session.getAttribute("client_state");
-		if(clientState != null) {
-			request.getSession().removeAttribute("client_state");
-			model.addAttribute("clientState", clientState);
-		}
-		return app(model, "/map");
-	}
 	
 	@RequestMapping(value="/tools.html", method = RequestMethod.GET)
 	public String showTools(Model model) {

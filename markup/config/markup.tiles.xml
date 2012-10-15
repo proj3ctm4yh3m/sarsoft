@@ -4,14 +4,5 @@
 	<definition name="Map.Base" extends="App.Base">
 		<put-attribute name="subHeader" value="maps"/>
 	</definition>
-	
-	<definition name="Map.Guide" extends="Map.Base">
-		<put-attribute name="content" value="/guide.jsp"/>
-		<put-attribute name="app" value="guide"/>
-	</definition>
-
-	<definition name="Pages.Maps" extends="Map.Base">
-		<put-attribute name="content" value="/welcome-maps.jsp"/>
-	</definition>
-	
+		
 </tiles-definitions>

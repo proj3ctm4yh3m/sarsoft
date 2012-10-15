@@ -79,17 +79,6 @@ public class CollaborativeMapController extends JSONBaseController {
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 	}
-
-	@SuppressWarnings("unused")
-	@RequestMapping(value="/maps", method = RequestMethod.GET)
-	public String homePage(Model model, HttpServletRequest request) {
-		String tenant = RuntimeProperties.getTenant();
-		if(tenant != null) {
-			// Pre-load map object so that it gets instantiated as a CollaborativeMap and not as a Tenant
-			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", tenant);
-		}
-		return app(model, "Pages.Maps");
-	}
 	
 	private Map<String, Object> gpxify(List<Shape> shapes, List<Marker> markers) {
 		Map<String, Object> map = new HashMap<String, Object>();
@@ -270,27 +259,6 @@ public class CollaborativeMapController extends JSONBaseController {
 		map.setDefaultCenter(center);
 		dao.save(map);
 		return json(model, map.getDefaultCenter());
-	}
-
-	@SuppressWarnings("unchecked")
-	@RequestMapping(value="/guide", method = RequestMethod.GET)
-	public String guide(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request) {
-		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
-			String val = adminController.setTenant(model, id, CollaborativeMap.class, request);
-			if(val != null) return val;
-		}
-		
-		Tenant tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
-		if(tenant == null) tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-		
-		List<Shape> shapes = dao.loadAll(Shape.class);
-		Collections.sort(shapes, new MarkupLatitudeComparator());
-		model.addAttribute("shapes", shapes);
-		List<Marker> markers = dao.loadAll(Marker.class);
-		Collections.sort(markers, new MarkupLatitudeComparator());
-		model.addAttribute("markers", markers);
-
-		return app(model, "Map.Guide");
 	}
 	
 	@RequestMapping(value="/map/restgpxupload", method = RequestMethod.POST)
