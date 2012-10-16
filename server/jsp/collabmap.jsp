@@ -32,16 +32,15 @@ org.sarsoft.Loader.queue(function() {
   tc.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
   tc.body.css('padding-left', '2px');
   dn.defaults.body = tc.body;
-  new org.sarsoft.widget.BrowserSettings(imap, tc.body);
-  
-  dn.defaults.savedAt.appendTo(tc.body);
+  if(dn.defaults.savedAt != null) dn.defaults.savedAt.appendTo(tc.body);
+  new org.sarsoft.widget.BrowserSettings(imap, tc.body);  
   
   dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
   dn.defaults.io = new org.sarsoft.widget.ImportExport(imap, tc.body);
   
-	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(tc.header).click(function() {
-		window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
-	}).attr("title", "Close " + org.sarsoft.tenantname);
+  jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(tc.header).click(function() {
+    window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
+  }).attr("title", "Close " + org.sarsoft.tenantname);
   
 
   markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);

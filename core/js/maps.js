@@ -1520,14 +1520,6 @@ org.sarsoft.DataNavigator = function(imap) {
 			}
 		});
 	}
-
-	if(org.sarsoft.userPermissionLevel=="READ" && org.sarsoft.tenantid != null) {
-		var pwd = jQuery('<div style="padding-top: 1em"></div>').appendTo(this.defaults.sharing.collaborate);
-		var pwdform = jQuery('<form action="/password" method="post"><input type="hidden" name="dest" value="' + window.location + '"/></form>').appendTo(pwd);
-		pwdform.append('If this map\'s owner has set a password, you can enter it for write acess:');
-		pwdform.append('<input type="password" name="password"/>');
-		jQuery('<button>Enter Password</button>').appendTo(pwdform).click(function() { pwdform.submit(); });
-	}	
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
@@ -2165,7 +2157,6 @@ org.sarsoft.view.MapDialog.prototype.show = function() {
 	if(!org.sarsoft.mobile) {
 		if(this.imap.container != null) {
 			container.css('height', height+"px");
-			google.maps.event.trigger(this.imap.map, 'resize');
 		}
 		this.dlg.css({left: (container.offset().left+1) + "px", top: height + "px"});
 	} else {
