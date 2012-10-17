@@ -79,7 +79,7 @@ public class AdminController extends JSONBaseController {
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(tenant == null) {
 			model.addAttribute("message", cls.getName() + " not found.");
-			return bounce(model);
+			return "error";
 		}
 
 		Permission permission = Permission.NONE;
@@ -92,7 +92,7 @@ public class AdminController extends JSONBaseController {
 			request.getSession(true).removeAttribute("cachedPassword");
 			if(!tenant.getPassword().equals(password)) {
 				model.addAttribute("message", "Wrong Password.");
-				return bounce(model);
+				return "error";
 			}
 			permission = tenant.getPasswordProtectedUserPermission();			
 		}
@@ -107,7 +107,7 @@ public class AdminController extends JSONBaseController {
 				} catch (Exception e) {}
 				model.addAttribute("targetDest", target);
 			}
-			return bounce(model);
+			return "error";
 		}
 		
 		HttpSession session = request.getSession(true);
@@ -147,7 +147,7 @@ public class AdminController extends JSONBaseController {
 		password = hash(password);
 		if(tenant.getPassword() == null || !tenant.getPassword().equals(password)) {
 			model.addAttribute("message", "Wrong Password.");
-			return bounce(model);
+			return "error";
 		}
 		Permission permission = tenant.getPasswordProtectedUserPermission();			
 		request.getSession().setAttribute("userPermission", permission);
