@@ -42,7 +42,7 @@ public class AppController extends JSONBaseController {
 	}
 	
 	@RequestMapping(value="/account.html", method = RequestMethod.POST)
-	public String updateAccount(Model model, @RequestParam(value="alias", required=false) String alias) {
+	public String updateAccount(Model model, @RequestParam(value="alias", required=false) String alias, @RequestParam(value="dest", required=false) String dest) {
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(account == null) {
 			model.addAttribute("message", "Account not found");
@@ -61,6 +61,7 @@ public class AppController extends JSONBaseController {
 		account.setAlias(alias);
 		dao.superSave(account);
 		model.addAttribute("account", account);
+		if(dest != null) return "redirect:" + dest;
 		return app(model, "Pages.Account");
 	}
 	
@@ -163,9 +164,6 @@ public class AppController extends JSONBaseController {
 		RuntimeProperties.setTenant(null);		
 		HttpSession session = request.getSession(true);
 		session.removeAttribute("tenantid");
-		if(RuntimeProperties.getProperty("sarsoft.ui.quickmap.message") != null) {
-			model.addAttribute("uimessage", RuntimeProperties.getProperty("sarsoft.ui.quickmap.message"));
-		}
 		String clientState = (String) session.getAttribute("client_state");
 		if(clientState != null) {
 			request.getSession().removeAttribute("client_state");

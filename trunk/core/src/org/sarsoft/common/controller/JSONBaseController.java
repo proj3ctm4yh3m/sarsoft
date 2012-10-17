@@ -167,7 +167,7 @@ public abstract class JSONBaseController {
 				header = header + "org.sarsoft.tenantid=\"" + RuntimeProperties.getTenant() + "\"\n" +
 					"org.sarsoft.tenantname=\"" + dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()).getPublicName() + "\"\n";
 			}
-			header = header + ((account != null) ? "org.sarsoft.username=\"" + account.getEmail() + "\"\n" : "") +
+			header = header + ((account != null) ? ("org.sarsoft.username=\"" + account.getEmail() + "\"\n"  + "org.sarsoft.alias=\"" + account.getHandle() + "\"\n") : "") +
 				"org.sarsoft.userPermissionLevel=\"" + RuntimeProperties.getUserPermission() + "\"";
 
 			header = header + "</script>\n";
@@ -297,6 +297,7 @@ public abstract class JSONBaseController {
 
 	protected String splash(Model model) {
 		String view = serverController.splash(model);
+		if(view.startsWith("redirect")) return view;
 		return app(model, view);
 	}
 	

@@ -753,7 +753,7 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 
 	var div = jQuery('<div></div>').appendTo(container);
 	var header = jQuery('<div style="font-size: 150%">Print Preview</div>').appendTo(div);
-	jQuery('<button style="margin-left: 40px; cursor; pointer">Print</button>').appendTo(header).click(function() {
+	this.printButton = jQuery('<button style="margin-left: 40px; cursor; pointer">Print Map</button>').appendTo(header).click(function() {
 		window.print();
 	});
 	jQuery('<button style="margin-left: 20px; cursor: pointer">Cancel</button>').appendTo(header).click(function() {
@@ -1760,6 +1760,7 @@ org.sarsoft.MapLabelWidget.prototype.getConfig = function(config) {
 }
 
 org.sarsoft.MapSizeWidget = function(imap) {
+	imap.register("org.sarsoft.MapSizeWidget", this);
 	var that = this;
 	var img = jQuery('<img style="cursor: pointer; vertical-align: middle" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>');
 	var div = jQuery('<div style="display: none; padding-left: 20px" class="noprint"></div>').prependTo($(imap.map.getDiv()).parent());
@@ -3436,16 +3437,42 @@ org.sarsoft.widget.ImportExport = function(imap, container) {
 	this.kml.click(function() { kmlSelect.val(map.getMapTypeId()); kmlDlg.swap(); });
 }
 
-org.sarsoft.widget.Account = function(imap, container) {
-	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/account.png"/>' + 'Account');
-	this.tree.body.css({'padding-left': '28px'}).append('<div><a style="font-weight: bold; color: #5a8ed7" href="javascript:window.location=\'/app/logout?dest=/map.html#\' + org.sarsoft.MapURLHashWidget.createConfigStr(imap)">Logout</a></div>');
-
-	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer">Your Maps</div>').appendTo(this.tree.body);
+org.sarsoft.widget.Account = function(imap, container, acctlink) {
 	
+	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/> Your Maps</div>').appendTo(container);
+	
+	var bn = jQuery('<div></div>');
+	var accountpane = new org.sarsoft.view.MapRightPane(imap, bn);
+	var header = jQuery('<div style="float: left; width: 90%; padding-bottom: 1em"></div>').appendTo(bn);
+	jQuery('<div style="font-size: 150%; font-weight: bold">Your Account</div>').appendTo(header);
+	
+	acctlink.click(function() {
+		if(accountpane.visible()) {
+			accountpane.hide();
+		} else {
+			accountpane.show();
+		}
+	});
+	
+	jQuery('<div style="clear: both"><a style="font-weight: bold; color: #5a8ed7" href="javascript:window.location=\'/app/logout?dest=/map.html#\' + org.sarsoft.MapURLHashWidget.createConfigStr(imap)">Logout of ' + org.sarsoft.version + '</a></div>').appendTo(bn);
+
+	jQuery('<div style="max-width: 500px; padding-top: 1em">Your email is <b>' + org.sarsoft.username + '</b>.  By default, your account name will show up ' +
+			'as a shortened version of your email.  You can choose a different username by entering it below or leave the box blank to ' +
+			'use the default name.<br/><br/>Your current username is <b>' + org.sarsoft.alias + '<b/></div>').appendTo(bn);
+	
+	var f = jQuery('<form action="/account.html" method="post" style="padding-top: 2em; display: inline-block">Username: <input type="text" size="15" name="alias" value="' + org.sarsoft.alias + '"/></form>').appendTo(bn);
+	var h = jQuery('<input type="hidden" name="dest" value=""/>').appendTo(f);
+	jQuery('<button>GO</button>').appendTo(bn).click(function() {
+		h.val(window.location.href);
+		f.submit();
+	});
+
 	var bn = jQuery('<div></div>');
 	var tenantpane = new org.sarsoft.view.MapRightPane(imap, bn);
 	var header = jQuery('<div style="float: left; width: 90%; padding-bottom: 1em"></div>').appendTo(bn);
 	jQuery('<div style="font-size: 150%; font-weight: bold">Your Maps</div>').appendTo(header);
+	var newmap = jQuery('<div style="clear: both; padding-top: 5px"></div>').appendTo(header);
+	
 
 	this.maps.click(function() {
 		if(tenantpane.visible()) {
@@ -3463,18 +3490,15 @@ org.sarsoft.widget.Account = function(imap, container) {
 		yourTable.update(rows);
 	});
 
-	var newmap = new org.sarsoft.DNTree(this.tree.body, 'New Map');
-	newmap.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
-	newmap.body.css({'display': 'none', 'left': '-28px', 'position': 'relative'});
-
-	var newform = jQuery('<form action="/map" method="post" id="createmapform">').appendTo(newmap.body);
+	var d = jQuery('<div></div>').appendTo(newmap);
+	var newform = jQuery('<form action="/map" method="post" id="createmapform" style="display: inline-block">Create a new map named: </form>').appendTo(d);
 	var newName = jQuery('<input type="text" name="name"/>').appendTo(newform);
 	
 	var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
 	var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
 	var mapcfg = jQuery('<input type="hidden" name="mapcfg"/>').appendTo(newform);
 
-	jQuery('<button>Create</button>').appendTo(newmap.body).click(function(evt) {
+	jQuery('<button>Create</button>').appendTo(d).click(function(evt) {
 		var name = newName.val();
 		if(name == null || name == "") {
 			alert('Please enter a name for this map.');
@@ -3494,13 +3518,10 @@ org.sarsoft.widget.Account = function(imap, container) {
 		newform.submit();
 	});
 	
-	
 }
 
 org.sarsoft.widget.NoAccount = function(imap, container) {
 	var that = this;
-	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/account.png"/>' + 'Account');
-	this.tree.body.css('padding-left', '0px');
 	
 	this.login = function(provider) {
 		var clientState = new Object();
@@ -3518,16 +3539,16 @@ org.sarsoft.widget.NoAccount = function(imap, container) {
 	}
 
 	var form_yahoo = jQuery('<form action="/app/openidrequest" method="POST"></form>');
-	var login_yahoo = jQuery('<a style="margin-left: 10px" href="#"><img style="border: none; vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').appendTo(form_yahoo);
+	var login_yahoo = jQuery('<a href="#"><img style="border: none; vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').appendTo(form_yahoo);
 	login_yahoo.click(function() {
 		that.login('yahoo');
 	});
 	var form_google = jQuery('<form action="/app/openidrequest" method="POST"></form>');
-	var login_google = jQuery('<a style="margin-left: 10px" href="#"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>').appendTo(form_google);
+	var login_google = jQuery('<a href="#"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>').appendTo(form_google);
 	login_google.click(function() {
 		that.login('google');
 	});
-	this.tree.body.css('display', 'none').append(jQuery('<div></div>').append(form_yahoo)).append(
+	container.append(jQuery('<div style="padding-top: 5px"></div>').append(form_yahoo)).append(
 			jQuery('<div style="white-space: nowrap; padding-top: 5px"></div>').append(form_google));
 
 	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; display: none">Shared Maps</div>').appendTo(container);
