@@ -2,6 +2,7 @@ package org.sarsoft.markup.controller;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
+import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
@@ -163,7 +165,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		}
 		return "";
 	}
-		
+
 	@RequestMapping(value="/map", method = RequestMethod.GET)
 	public String setMap(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
 		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
@@ -188,6 +190,13 @@ public class CollaborativeMapController extends JSONBaseController {
 			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
 			return kml(model, gpxifyMap(), "Map");
 		default :
+			model.addAttribute("timestamp", Long.toString(new Date().getTime()));
+			model.addAttribute("markers", this.toJSON(dao.loadAll(Marker.class)));
+			model.addAttribute("shapes", this.toJSON(dao.loadAll(Shape.class)));
+			model.addAttribute("georefs", this.toJSON(dao.loadAll(GeoRef.class)));
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("value", tenant.getMapConfig());
+			model.addAttribute("mapConfig", this.toJSON(map));
 			return app(model, "/collabmap");
 		}
 	}

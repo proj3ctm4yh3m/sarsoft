@@ -9,6 +9,7 @@ return ret;
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
+if(typeof org.sarsoft.preload == "undefined") org.sarsoft.preload = new Object();
 
 org.sarsoft.touch = (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/) != null);
 org.sarsoft.mobile = org.sarsoft.touch && $(window).width() < 600;
@@ -77,6 +78,7 @@ org.sarsoft.BaseDAO.prototype.dehydrate = function() {
 }
 
 org.sarsoft.BaseDAO.prototype.rehydrate = function(state) {
+	this.preload = true;
 	for(var i = 0; i < state.length; i++) {
 		this.objs[i] = this.sanitize(state[i]);
 	}
@@ -167,11 +169,18 @@ org.sarsoft.BaseDAO.prototype.mark = function() {
 	if(this.offline) return;
 	var url = "/rest/timestamp";
 	if(org.sarsoft.tenantid != null) url = url + "?tid=" + encodeURIComponent(org.sarsoft.tenantid);
-	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
-			that._timestamp = YAHOO.lang.JSON.parse(response.responseText).timestamp;
-		}, failure : function(response) {
-			that.errorHandler();
-		}});
+	if(this.preload) {
+		this.preload = false;
+		org.sarsoft.async(function() {
+			this._timestamp = org.sarsoft.preload.timestamp;
+		});
+	} else {
+		YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
+				that._timestamp = YAHOO.lang.JSON.parse(response.responseText).timestamp;
+			}, failure : function(response) {
+				that.errorHandler();
+			}});
+	}
 }
 
 org.sarsoft.BaseDAO.prototype.loadSince = function(handler) {
@@ -191,7 +200,7 @@ org.sarsoft.BaseDAO.prototype.loadSince = function(handler) {
 
 org.sarsoft.BaseDAO.prototype.loadAll = function(handler) {
 	var that = this;
-	if(this.offline) {
+	if(this.offline || this.preload) {
 		org.sarsoft.async(function() {
 			var r = []
 			for(var i = 0; i < that.objs.length; i++) {

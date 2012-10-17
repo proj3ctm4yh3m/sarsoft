@@ -260,19 +260,23 @@ public abstract class JSONBaseController {
 		}
 		return getCommonHeader(checkTenant);
 	}
-
+	
 	@SuppressWarnings("rawtypes")
+	protected JSON toJSON(Object obj) {
+		if(obj instanceof List) {
+			return JSONAnnotatedPropertyFilter.fromArray((List) obj);
+		} else if(obj instanceof Set) {
+			return JSONAnnotatedPropertyFilter.fromArray(obj);
+		} else if(obj.getClass().isArray()) {
+			return JSONAnnotatedPropertyFilter.fromArray(obj);
+		} else {
+			return JSONAnnotatedPropertyFilter.fromObject(obj);
+		}		
+	}
+
 	private void addJsonToModel(Model model, Object obj) {
 		if(obj == null) return;
-		if(obj instanceof List) {
-			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray((List) obj));
-		} else if(obj instanceof Set) {
-			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray(obj));
-		} else if(obj.getClass().isArray()) {
-			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromArray(obj));
-		} else {
-			model.addAttribute("json", JSONAnnotatedPropertyFilter.fromObject(obj));
-		}		
+		model.addAttribute("json", toJSON(obj));
 	}
 	
 	protected String jsonframe(Model model, Object obj) {
