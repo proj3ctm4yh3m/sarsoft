@@ -266,7 +266,7 @@ public class AdminController extends JSONBaseController {
 		session.removeAttribute("authedTenants");
 
 		String dest = request.getParameter("dest");
-		if(dest != null) return "redirect:" + dest;
+		if(dest != null && dest.length() > 0) return "redirect:" + dest;
 		return bounce(model);
 	}
 	

@@ -290,13 +290,15 @@ public abstract class JSONBaseController {
 	}
 
 	protected String bounce(Model model) {
+		String dest = serverController.bounce(model);
+		if(dest != null && dest.startsWith("redirect:")) return dest;
+
 		model.addAttribute("hosted", isHosted());
 		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Tenant.class, RuntimeProperties.getTenant()));
-
 		model.addAttribute("head", getCommonHeader(false));
 		model.addAttribute("version", getProperty("sarsoft.version"));
-		
-		return serverController.bounce(model);
+
+		return dest;
 	}
 
 	protected String splash(Model model) {
