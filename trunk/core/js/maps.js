@@ -1964,7 +1964,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) 
 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
 	var that = this;
-	this.tenantDAO.load(function(cfg) {
+	var handler = function(cfg) {
 		var config = {};
 		if(cfg.value != null) {
 			config = YAHOO.lang.JSON.parse(cfg.value);
@@ -1974,7 +1974,12 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 			config[key] = overrides[key];
 		}
 		that._fromConfigObj(config);
-	}, "mapConfig");
+	}
+	if(org.sarsoft.preload.mapConfig != null) {
+		org.sarsoft.async(function() { handler(org.sarsoft.preload.mapConfig) });
+	} else {
+		this.tenantDAO.load(handler, "mapConfig");
+	}
 }
 
 
@@ -3272,83 +3277,85 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 	var checkboxes = new Object();
 	var divs = new Object();
 	
-	var grouping = {};
-	if(org.sarsoft.EnhancedGMap.mapTypeGrouping != null) {
-		var groups = org.sarsoft.EnhancedGMap.mapTypeGrouping.split(';');
-		for(i = 0; i < groups.length; i++) {
-			var name = groups[i].split('=')[0];
-			var types = groups[i].split('=')[1].split(',');
-			for(var j = 0; j < types.length; j++) {
-				grouping[types[j]] = name;
+	// prioritize page loading
+	window.setTimeout(function() {
+		var grouping = {};
+		if(org.sarsoft.EnhancedGMap.mapTypeGrouping != null) {
+			var groups = org.sarsoft.EnhancedGMap.mapTypeGrouping.split(';');
+			for(i = 0; i < groups.length; i++) {
+				var name = groups[i].split('=')[0];
+				var types = groups[i].split('=')[1].split(',');
+				for(var j = 0; j < types.length; j++) {
+					grouping[types[j]] = name;
+				}
 			}
 		}
-	}
-	var headers = {}
-	
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		var div = jQuery('<div style="position: relative; float: left; cursor: pointer; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : ungroupedbaselayers);
-		var bg = jQuery('<div style="position: absolute; z-index: -1; background-color: #5a8ed7; opacity: 0.2; width: 100%; height: 100%">&nbsp;</div>').appendTo(div);
-		if(grouping[type.alias] != null) {
-			var group = grouping[type.alias]
-			if(headers[group] == null) {
-				headers[group] = jQuery('<div style="clear: both"><div style="width: 100%; font-size: 150%; font-weight: bold; padding-top: 1em">' + group + '</div></div>').appendTo(groupedbaselayers);
-			}
-			headers[group].append(div);
-		}
-		var url = type.template;
-		if(type.type == "TILE") {
-			if(url.indexOf("http") == 0) {
-				url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";
-			} else {
-				url = url.replace(/\{Z\}/, 12).replace(/\{X\}/, 657).replace(/\{Y\}/, 1529).replace(/\{V\}/, 's-11111111');
-			}
-		} else if(type.type == "WMS") {
-			url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";
-		} else if(type.type == "NATIVE") {
-			url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + url + ".jpg";
-		}
-		var img = jQuery('<img style="width: 100px; height: 100px; cursor: pointer; float: left" src="' + url + '"/>').appendTo(div);
-		var d2 = jQuery('<div style="float: left; width: 215px; padding-left: 5px"></div>').appendTo(div);
-		var cb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>');
-		checkboxes[type.name] = cb;
-		var devnull = function(c, d) {
-			div.click(function() { c[0].checked = !c[0].checked; c.change(); });
-			$(c).change(function() {
-				d.children().first().css('opacity', c[0].checked ? '0.2' : '0');
-			});
-		}(cb, div);
-		cb.click(function(evt) { evt.stopPropagation(); });
-		d2.append(jQuery('<div style="font-size: 120%; font-weight: bold"></div>').append(checkboxes[type.name]).append(type.name));
-		d2.append('<div>' + type.description + '</div>');
-	}
-	var ok2 = jQuery('<button style="clear: both; font-size: 150%; margin-top: 1em">Save Changes</button>').appendTo(bn);
-	var okhandler = function() {
-		var config = imap.getConfig();
-		org.sarsoft.EnhancedGMap.visibleMapTypes = [];
+		var headers = {}
+		
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 			var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-			if(checkboxes[type.name][0].checked==true) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
-		}
-		imap.map._overlaydropdownmapcontrol.resetMapTypes();
-		imap.setConfig(config);
-		layerpane.hide();
-	}
-	ok1.click(okhandler);
-	ok2.click(okhandler);
-	this.availableLayers.click(function() {
-		if(layerpane.visible()) {
-			layerpane.hide();
-			if(this.layerHandler != null) this.layerHandler();
-		} else {
-			for(var key in checkboxes) {
-				checkboxes[key][0].checked = (org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(key) >= 0) ? true : false;
-				checkboxes[key].change();
+			var div = jQuery('<div style="position: relative; float: left; cursor: pointer; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : ungroupedbaselayers);
+			var bg = jQuery('<div style="position: absolute; z-index: -1; background-color: #5a8ed7; opacity: 0.2; width: 100%; height: 100%">&nbsp;</div>').appendTo(div);
+			if(grouping[type.alias] != null) {
+				var group = grouping[type.alias]
+				if(headers[group] == null) {
+					headers[group] = jQuery('<div style="clear: both"><div style="width: 100%; font-size: 150%; font-weight: bold; padding-top: 1em">' + group + '</div></div>').appendTo(groupedbaselayers);
+				}
+				headers[group].append(div);
 			}
-			layerpane.show();
+			var url = type.template;
+			if(type.type == "TILE") {
+				if(url.indexOf("http") == 0) {
+					url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";
+				} else {
+					url = url.replace(/\{Z\}/, 12).replace(/\{X\}/, 657).replace(/\{Y\}/, 1529).replace(/\{V\}/, 's-11111111');
+				}
+			} else if(type.type == "WMS") {
+				url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";
+			} else if(type.type == "NATIVE") {
+				url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + url + ".jpg";
+			}
+			var img = jQuery('<img style="width: 100px; height: 100px; cursor: pointer; float: left" src="' + url + '"/>').appendTo(div);
+			var d2 = jQuery('<div style="float: left; width: 215px; padding-left: 5px"></div>').appendTo(div);
+			var cb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>');
+			checkboxes[type.name] = cb;
+			var devnull = function(c, d) {
+				div.click(function() { c[0].checked = !c[0].checked; c.change(); });
+				$(c).change(function() {
+					d.children().first().css('opacity', c[0].checked ? '0.2' : '0');
+				});
+			}(cb, div);
+			cb.click(function(evt) { evt.stopPropagation(); });
+			d2.append(jQuery('<div style="font-size: 120%; font-weight: bold"></div>').append(checkboxes[type.name]).append(type.name));
+			d2.append('<div>' + type.description + '</div>');
 		}
-	});
-	
+		var ok2 = jQuery('<button style="clear: both; font-size: 150%; margin-top: 1em">Save Changes</button>').appendTo(bn);
+		var okhandler = function() {
+			var config = imap.getConfig();
+			org.sarsoft.EnhancedGMap.visibleMapTypes = [];
+			for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
+				var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+				if(checkboxes[type.name][0].checked==true) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
+			}
+			imap.map._overlaydropdownmapcontrol.resetMapTypes();
+			imap.setConfig(config);
+			layerpane.hide();
+		}
+		ok1.click(okhandler);
+		ok2.click(okhandler);
+		that.availableLayers.click(function() {
+			if(layerpane.visible()) {
+				layerpane.hide();
+				if(that.layerHandler != null) that.layerHandler();
+			} else {
+				for(var key in checkboxes) {
+					checkboxes[key][0].checked = (org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(key) >= 0) ? true : false;
+					checkboxes[key].change();
+				}
+				layerpane.show();
+			}
+		});
+	}, 1000);	
 }
 
 org.sarsoft.widget.Sharing = function(imap, container) {
@@ -3485,10 +3492,13 @@ org.sarsoft.widget.Account = function(imap, container, acctlink) {
 	var tenantDAO = new org.sarsoft.TenantDAO();
 	var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : true, sharing : true, actions : false});
 	yourTable.create(jQuery('<div class="growYUITable" style="clear: both"></div>').appendTo(bn)[0]);
-	
-	tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
-		yourTable.update(rows);
-	});
+
+	// prioritize page loading
+	window.setTimeout(function() {
+		tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
+			yourTable.update(rows);
+		});
+	}, 1000);
 
 	var d = jQuery('<div></div>').appendTo(newmap);
 	var newform = jQuery('<form action="/map" method="post" id="createmapform" style="display: inline-block">Create a new map named: </form>').appendTo(d);
@@ -3550,28 +3560,6 @@ org.sarsoft.widget.NoAccount = function(imap, container) {
 	});
 	container.append(jQuery('<div style="padding-top: 5px"></div>').append(form_yahoo)).append(
 			jQuery('<div style="white-space: nowrap; padding-top: 5px"></div>').append(form_google));
-
-	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; display: none">Shared Maps</div>').appendTo(container);
-	var bn = jQuery('<div></div>');
-	var mapspane = new org.sarsoft.view.MapRightPane(imap, bn);
-	var header = jQuery('<div style="float: left; padding-right: 50px"></div>').appendTo(bn);
-	header.append('<div style="font-size: 150%; font-weight: bold; margin-bottom: 1ex; margin-top: 20px">Shared Maps</div>');
-	bn.append('<div>The following maps have been shared by other users.</div>');
-
-	var tenantDAO = new org.sarsoft.TenantDAO();
-	var sharedTable = new org.sarsoft.view.TenantTable({owner : true, comments : true, sharing : false, actions : false});
-	sharedTable.create(jQuery('<div style="clear: both;" class="growYUITable"></div>').appendTo(bn)[0]);
-
-	tenantDAO.loadShared(function(rows) {
-		sharedTable.update(rows);
-	});
-	this.maps.click(function() {
-		if(mapspane.visible()) {
-			mapspane.hide();
-		} else {
-			mapspane.show();
-		}
-	});
 }
 
 org.sarsoft.UTMEditForm = function() {	
@@ -4832,6 +4820,9 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 		}		
 	});
 	
+	if(org.sarsoft.preload.georefs != null) {
+		this.dao.rehydrate(org.sarsoft.preload.georefs);
+	}	
 	this.dao.loadAll(function(georefs) {
 		for(var i = 0; i < georefs.length; i++) {
 			that.addGR(georefs[i]);
