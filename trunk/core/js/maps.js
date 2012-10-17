@@ -1890,7 +1890,7 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 		imap.register("org.sarsoft.view.BaseConfigWidget", this);
 		if(persist) {
 			var dn = imap.registered["org.sarsoft.DataNavigator"];
-			this.saveLink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer" title="Save current background, available data sources and UTM grid settings for future visits?"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save Configuration</div>').prependTo(dn.defaults.layers.tree.body);
+			this.saveLink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer" title="Save current background, available data sources and UTM grid settings for future visits?"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save Configuration</div>').prependTo(dn.defaults.layers.tree.body);
 			this.saveLink.click(function() {
 				that.saveConfig(function() { alert('The following configuration items have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current Layers\n - Available Data Sources\n - Datum\n - UTM Grid\n');});
 			});
@@ -3248,17 +3248,18 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers');
 	if(org.sarsoft.tenantid != null) this.tree.body.css('display', 'none');
 
-	this.availableLayers = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Available Data Sources</div>').appendTo(this.tree.body);
+	this.availableLayers = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Available Data Sources</div>').appendTo(this.tree.body);
 	
 	if(org.sarsoft.EnhancedGMap.sampleMapTypes != null) {
 		this.sampleMaps = new org.sarsoft.DNTree(this.tree.body, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/favorites.png"/>Popular Combinations');
+		this.sampleMaps.body.css('padding-left', '18px');
 		
 		var samples = org.sarsoft.EnhancedGMap.sampleMapTypes.split(';');
 		for(var i = 0; i < samples.length; i++) {
 			var name = samples[i].split(':')[0];
 			var cfg = samples[i].split(':')[1];
 			var devnull = function(c) {
-				jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer">' + name + '</div>').appendTo(that.sampleMaps.body).click(function() {
+				jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-style: italic; color: black; cursor: pointer">' + name + '</div>').appendTo(that.sampleMaps.body).click(function() {
 				imap.setConfig(org.sarsoft.MapURLHashWidget.parseConfigStr(c));});
 			}(cfg);
 		}
@@ -3361,7 +3362,7 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 org.sarsoft.widget.Sharing = function(imap, container) {
 	var that = this;
 	
-	this.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing</div>').appendTo(container);
+	this.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing</div>').appendTo(container);
 	this.settings = jQuery('<div></div>');
 	var body = jQuery('<div></div>').append(this.settings);
 	var sharingDlg = new org.sarsoft.view.MapDialog(imap, "Sharing", body, "OK", "Cancel", function() {
@@ -3402,9 +3403,9 @@ org.sarsoft.widget.Sharing = function(imap, container) {
 
 org.sarsoft.widget.ImportExport = function(imap, container) {
 	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Data Transfer');
-	this.imp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/right.png"/>Import Data</div>').appendTo(this.tree.body);
-	this.exp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px; display: none"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/left.png"/>Export Data</div>').appendTo(this.tree.body);
-	this.kml = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>Export to Google Earth</div>').appendTo(this.tree.body);
+	this.imp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/right.png"/>Import Data</div>').appendTo(this.tree.body);
+	this.exp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px; display: none"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/left.png"/>Export Data</div>').appendTo(this.tree.body);
+	this.kml = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>Export to Google Earth</div>').appendTo(this.tree.body);
 
 	var kmlBody = jQuery('<div>Export map layers to Google Earth.  Export will be limited to the current map bounds; zooming in can give you a higher resolution export.<br/><br/></div>');
 	var supersize = jQuery('<input type="checkbox"/>').appendTo(kmlBody);
@@ -3446,7 +3447,7 @@ org.sarsoft.widget.ImportExport = function(imap, container) {
 
 org.sarsoft.widget.Account = function(imap, container, acctlink) {
 	
-	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/> Your Maps</div>').appendTo(container);
+	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>Your Maps</div>').appendTo(container);
 	
 	var bn = jQuery('<div></div>');
 	var accountpane = new org.sarsoft.view.MapRightPane(imap, bn);
