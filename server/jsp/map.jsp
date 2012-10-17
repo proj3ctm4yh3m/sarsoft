@@ -62,10 +62,6 @@ org.sarsoft.Loader.queue(function() {
 
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 
-	<c:if test="${uimessage ne null}">
-	  imap.message('${uimessage}', 20000);
-	</c:if>
-
 	if(!org.sarsoft.mobile) {
 		imap.registered["org.sarsoft.MapFindWidget"].setState(true);
 	}
