@@ -4794,14 +4794,13 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 		this.dn.layers = new Object();
 
 		if(org.sarsoft.writeable) {
-			// TODO what happens if the user can't write?
+			jQuery('<span style="color: green; cursor: pointer">+ New Layer</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(ltree.body)).click(function() {
+				var center = that.imap.map.getCenter();
+				that.georefDlg.show();
+				that.georefDlg.id = null;
+				this.reference = new Object();
+			});
 		}
-		jQuery('<span style="color: green; cursor: pointer">+ New Layer</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(ltree.body)).click(function() {
-			var center = that.imap.map.getCenter();
-			that.georefDlg.show();
-			that.georefDlg.id = null;
-			this.reference = new Object();
-		});
 		this.tree = ltree;
 	}
 	
