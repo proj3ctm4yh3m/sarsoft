@@ -2493,7 +2493,7 @@ org.sarsoft.InteractiveMap.prototype._addBaseLayerIfNecessary = function(alias) 
 	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
 		if(config.type == "NATIVE" && config.alias == alias) {
-			this.addNativeType(config);
+			this.map._overlaydropdownmapcontrol.addNativeType(config);
 			return;
 		}
 	}
