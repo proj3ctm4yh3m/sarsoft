@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -19,11 +18,6 @@ import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.markup.model.CollaborativeMap;
-import org.sarsoft.markup.model.Marker;
-import org.sarsoft.markup.model.Shape;
-import org.sarsoft.plans.model.OperationalPeriod;
-import org.sarsoft.plans.model.Search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
@@ -36,6 +30,7 @@ import org.springframework.web.util.HtmlUtils;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
+@Controller
 public class AdminController extends JSONBaseController {
 
 	@Autowired
