@@ -2270,9 +2270,9 @@ org.sarsoft.view.ProfileGraph.prototype.hide = function() {
 org.sarsoft.view.MapRightPane = function(imap, bodynode) {
 	var that = this;
 	this.imap = imap;
-	var pane = jQuery('<div style="width: 100%; height: 100%; background-color: white; z-index: 2000; display: none; position: absolute; top: 0px; left: 0px; overflow-y: if-needed"></div>').appendTo(imap.container.right);
+	var pane = jQuery('<div style="width: 100%; height: 100%; background-color: white; z-index: 2000; display: none; position: absolute; top: 0px; left: 0px; overflow-y: auto"></div>').appendTo(imap.container.right);
 	var close = jQuery('<div style="cursor: pointer; float: right; font-size: 200%; font-weight: bold; color: red; padding-right: 5px">X</div>').appendTo(bodynode);
-	jQuery('<div style="height: 100%; padding-left: 10px; border-left: 2px solid #666666; overflow-y: auto"></div>').appendTo(pane).append(bodynode);
+	jQuery('<div style="height: 100%; padding-left: 10px; border-left: 2px solid #666666;"></div>').appendTo(pane).append(bodynode);
 	if(org.sarsoft.touch) {
 		pane.css({'height': 'auto', 'width': 'auto', 'min-width': '100%'});
 	}
