@@ -80,7 +80,7 @@ org.sarsoft.BaseDAO.prototype.dehydrate = function() {
 org.sarsoft.BaseDAO.prototype.rehydrate = function(state) {
 	this.preload = true;
 	for(var i = 0; i < state.length; i++) {
-		this.objs[i] = this.sanitize(state[i]);
+		if(state[i] != null) this.objs[i] = this.sanitize(state[i]);
 	}
 }
 

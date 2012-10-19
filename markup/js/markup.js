@@ -518,6 +518,7 @@ org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
 
 org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png"/>Save As');
+	this.tree.header.css({'color': '#dc1d00'});
 	this.tree.body.css({'display': 'none'});
 	
 	if(org.sarsoft.username != null) {
