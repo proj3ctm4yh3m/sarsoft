@@ -752,8 +752,8 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 	}
 
 	var div = jQuery('<div></div>').appendTo(container);
-	var header = jQuery('<div style="font-size: 150%">Print Preview</div>').appendTo(div);
-	this.printButton = jQuery('<button style="margin-left: 40px; cursor; pointer">Print Map</button>').appendTo(header).click(function() {
+	var header = jQuery('<div style="font-size: 150%"></div>').appendTo(div);
+	this.printButton = jQuery('<button style="cursor; pointer">Print Map</button>').appendTo(header).click(function() {
 		window.print();
 	});
 	jQuery('<button style="margin-left: 20px; cursor: pointer">Cancel</button>').appendTo(header).click(function() {
@@ -3259,7 +3259,7 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 			var name = samples[i].split(':')[0];
 			var cfg = samples[i].split(':')[1];
 			var devnull = function(c) {
-				jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-style: italic; color: black; cursor: pointer">' + name + '</div>').appendTo(that.sampleMaps.body).click(function() {
+				jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-style: normal; color: black; cursor: pointer">' + name + '</div>').appendTo(that.sampleMaps.body).click(function() {
 				imap.setConfig(org.sarsoft.MapURLHashWidget.parseConfigStr(c));});
 			}(cfg);
 		}
