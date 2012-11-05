@@ -1,5 +1,6 @@
 package org.sarsoft.common.controller;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -35,6 +36,7 @@ import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.common.util.WebMercator;
 import org.sarsoft.markup.model.Marker;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -168,21 +170,54 @@ public class ImageryController extends JSONBaseController {
 		return null;
 	}
 	
-	protected InputStream composite(InputStream[] in) {
+	protected InputStream compositeAlpha(BufferedImage[] images, float[] transparency, int width, int height) {
 		try {
-			BufferedImage composited = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+			BufferedImage composited = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
+			Graphics2D graphics = composited.createGraphics();
+			graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+			graphics.setBackground(new Color(255, 255, 255, 0));
+			graphics.clearRect(0, 0, width, height);
+			for(int i = 0; i < images.length; i++) {
+				graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, transparency[i])); 
+				graphics.drawImage(images[i], 0, 0, width, height, 0, 0, width, height, null);
+			}
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ImageIO.write(composited, "png", out);
+			return new ByteArrayInputStream(out.toByteArray());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	protected InputStream compositeXY(BufferedImage[] images, int width, int height) {
+		try {
+			BufferedImage composited = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
 			Graphics2D g = composited.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
 			g.setBackground(new Color(255, 255, 255, 0));
-			g.clearRect(0, 0, 256, 256);
-				for(int i = 0; i < in.length; i++) {
-					BufferedImage original = ImageIO.read(in[i]);
-					g.drawImage(original, 0, 0, 256, 256, 0, 0, 256, 256, null);
-				}
+			g.clearRect(0, 0, width, height);
+			for(int i = 0; i < images.length; i++) {
+				g.drawImage(images[i], 0, 0, width, height, 0, 0, width, height, null);
+			}
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(composited, "png", out);
 			return new ByteArrayInputStream(out.toByteArray());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	protected InputStream composite(InputStream[] in) {
+		try {
+			BufferedImage[] images = new BufferedImage[in.length];
+			for(int i = 0; i < in.length; i++) {
+					images[i] = ImageIO.read(in[i]);
+			}
+			return compositeXY(images, 256, 256);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -237,6 +272,155 @@ public class ImageryController extends JSONBaseController {
 			images[i] = getRemoteTileInputStream(source, z, x, y);
 		}
 		respond(composite(images), response, layer + "/" + z + "/" + x + "/" + y);
+	}
+	
+	@RequestMapping(value="/resource/imagery/supertile/{layer}/{z}/{x}/{y}", method = RequestMethod.GET)
+	public void getSuperTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layerNames, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		String[] layers = layerNames.split(",");
+		float[] opacity = new float[layers.length];
+		
+		BufferedImage[] joint = new BufferedImage[layers.length];
+		Graphics2D[] g = new Graphics2D[layers.length];
+		
+		for(int i = 0; i < layers.length; i++) {
+			int idx = layers[i].indexOf("@");
+			if(idx > 0) {
+				opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
+				layers[i] = layers[i].substring(0, idx);
+			} else {
+				opacity[i] = 1f;
+			}
+			String layer = layers[i];
+			joint[i] = new BufferedImage(1024, 1024, BufferedImage.TYPE_4BYTE_ABGR);
+			g[i] = joint[i].createGraphics();
+			g[i].setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g[i].setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+			g[i].setBackground(new Color(255, 255, 255, 0));
+			g[i].clearRect(0, 0, 1024, 1024);
+			MapSource source = RuntimeProperties.getMapSourceByAlias(layer);
+			
+			try {
+			for(int dx = 0; dx < 4; dx++) {
+				for(int dy = 0; dy < 4; dy++) {
+					BufferedImage tile = ImageIO.read(getRemoteTileInputStream(source, z+2, x*4+dx, y*4+dy));
+					g[i].drawImage(tile, 255*dx, 255*dy, 255*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
+					
+				}
+			}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		InputStream out = compositeAlpha(joint, opacity, 1024, 1024);
+		respond(out, response, layerNames + "/" + z + "/joint");
+	}
+	
+	@RequestMapping(value="/resource/imagery/joint/{layer}", method = RequestMethod.GET)
+	public void getJointImage(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layerNames, @RequestParam("bbox") String bbox, @RequestParam("size") String size) {
+		String[] layers = layerNames.split(",");
+		float[] opacity = new float[layers.length];
+
+		String[] bounds = bbox.split(",");
+		double west = Double.parseDouble(bounds[0]);
+		double south = Double.parseDouble(bounds[1]);
+		double east = Double.parseDouble(bounds[2]);
+		double north = Double.parseDouble(bounds[3]);
+		
+		String[] dimensions = size.split(",");
+		int width = Integer.parseInt(dimensions[0]);
+		int height = Integer.parseInt(dimensions[1]);
+		
+		double[] m_ne = WebMercator.LatLngToMeters(north, east);
+		double[] m_sw = WebMercator.LatLngToMeters(south, west);
+
+		int z = 1;
+		double r = WebMercator.Resolution(z);
+		double r_target = Math.sqrt(Math.pow(m_ne[0] - m_sw[0], 2) + Math.pow(m_ne[1] - m_sw[1], 2)) / Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+		while(z <= 16 && r > r_target) { // r is meters/px
+			z++;
+			r = WebMercator.Resolution(z);
+		}
+		
+		double[] px_ne = WebMercator.MetersToPixels(m_ne[0], m_ne[1], z);
+		double[] px_sw = WebMercator.MetersToPixels(m_sw[0], m_sw[1], z);
+		
+		double[] t_ne = WebMercator.PixelsToDecimalTile(px_ne[0], px_ne[1]);
+		double[] t_sw = WebMercator.PixelsToDecimalTile(px_sw[0], px_sw[1]);
+		
+    	t_ne[1] = Math.pow(2, z) - 1 - t_ne[1];
+    	t_sw[1] = Math.pow(2, z) - 1 - t_sw[1];
+
+		System.out.println(z + ", " + t_sw[0] + ", " + t_sw[1] + ", " + t_ne[0] + ", " + t_ne[1]);
+		
+		double p_dx = ((t_ne[0] - t_sw[0])*256);
+		double p_dy = ((t_sw[1] - t_ne[1])*256);
+
+		double scale = Math.min(width/p_dx, height/p_dy);
+		width = (int) Math.round(scale*p_dx);
+		height = (int) Math.round(scale*p_dy);
+		
+		BufferedImage[] joint = new BufferedImage[layers.length];
+		Graphics2D[] g = new Graphics2D[layers.length];
+		MapSource[] sources = new MapSource[layers.length];
+		
+		for(int i = 0; i < layers.length; i++) {
+			int idx = layers[i].indexOf("@");
+			if(idx > 0) {
+				opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
+				layers[i] = layers[i].substring(0, idx);
+			} else {
+				opacity[i] = 1f;
+			}
+			String layer = layers[i];
+			joint[i] = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+			g[i] = joint[i].createGraphics();
+			g[i].setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g[i].setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+			g[i].setBackground(new Color(255, 255, 255, 0));
+			g[i].clearRect(0, 0, width, height);
+			sources[i] = RuntimeProperties.getMapSourceByAlias(layer);
+		}
+
+		try {
+			for(int x = (int) Math.floor(t_sw[0]); x <= (int) Math.floor(t_ne[0]); x++) {
+				for(int y = (int) Math.floor(t_ne[1]); y <= (int) Math.floor(t_sw[1]); y++) {
+					int dx1 = (int) Math.floor((((double) x - t_sw[0])*scale)*256);
+					int dy1 = (int) Math.floor((((double) y - t_ne[1])*scale)*256);
+					int dx2 = (int) Math.ceil((((double) x+1 - t_sw[0])*scale)*256);
+					int dy2 = (int) Math.ceil((((double) y+1 - t_ne[1])*scale)*256);
+					
+					dx1 = Math.max(dx1, 0);
+					dy1 = Math.max(dy1, 0);
+					dx2 = Math.min(dx2, width);
+					dy2 = Math.min(dy2, height);
+
+					int sx1 = 0;
+					int sy1 = 0;
+					int sx2 = 256;
+					int sy2 = 256;
+
+					if(x == Math.floor(t_sw[0])) sx1 = (int) ((t_sw[0] - (double) x) * 256);
+					if(y == Math.floor(t_ne[1])) sy1 = (int) ((t_ne[1] - (double) y) * 256);
+
+					if(x == Math.floor(t_ne[0])) sx2 = (int) ((t_ne[0] - (double) x) * 256);
+					if(y == Math.floor(t_sw[1])) sy2 = (int) ((t_sw[1] - (double) y) * 256);
+
+//					System.out.println(z + ", " + x + ", " + y + " :: " + dx1 + ", " + dy1 + ", " + dx2 + ", " + dy2 + " :: " + sx1 + ", " + sy1 + ", " + sx2 + ", " + sy2);
+					for(int i = 0; i < layers.length; i++) {
+						InputStream image = getRemoteTileInputStream(sources[i], z, x, y);
+						BufferedImage tile = ImageIO.read(image);
+						g[i].drawImage(tile, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
+					}
+				}
+			}
+	
+			InputStream out = compositeAlpha(joint, opacity, width, height);
+			respond(out, response, layerNames + "/" + z + "/joint");
+		} catch (IOException e) {
+			e.printStackTrace();
+			// TODO
+		}
 	}
 
 	@RequestMapping(value="/resource/imagery/icons/circle/{rgb}.png", method = RequestMethod.GET)

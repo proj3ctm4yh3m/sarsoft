@@ -44,6 +44,12 @@ public class WebMercator {
         int ty = (int) Math.ceil(py / tilesize) - 1;
         return new int[] {tx, ty};
 	}
+    
+    public static double[] PixelsToDecimalTile(double px, double py) {
+        double tx = (px / tilesize) - 1;
+        double ty = (py / tilesize) - 1;
+        return new double[] {tx, ty};
+    }
 	
     public static double[] TileBounds(int tx, int ty, int zoom) {
         double[] min = PixelsToMeters(tx*tilesize, ty*tilesize, zoom);
@@ -71,7 +77,7 @@ public class WebMercator {
     	int[] tile = PixelsToTile(pixels[0], pixels[1]);
     	return new int[] {tile[0], tile[1], (int) pixels[0] - (tile[0] * tilesize), (int) pixels[1] - (tile[1] * tilesize)};
     }
-	
+    	
 }
 
 
