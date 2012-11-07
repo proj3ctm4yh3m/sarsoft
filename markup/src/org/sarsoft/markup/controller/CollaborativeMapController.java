@@ -172,6 +172,11 @@ public class CollaborativeMapController extends JSONBaseController {
 			String val = adminController.setTenant(model, id, CollaborativeMap.class, request);
 			if(val != null) return val;
 		}
+
+		if(request.getSession(true).getAttribute("message") != null) {
+			model.addAttribute("message", request.getSession().getAttribute("message"));
+			request.getSession().removeAttribute("message");
+		}
 		
 		if(request.getParameter("dest") != null)
 			return "redirect:" + request.getParameter("dest");
