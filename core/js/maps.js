@@ -2666,6 +2666,107 @@ org.sarsoft.InteractiveMap.prototype.addWay = function(way, config, label) {
 	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config, label), config: config};
 }
 
+org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect, d_height) {
+	var that = this;
+	
+	var box = new Object();
+	box.aspect = aspect;
+	box.d_height = d_height;
+	
+	box.g = new Array();
+	box.g.push(new google.maps.LatLng(sw.lat(), sw.lng()));
+	box.g.push(new google.maps.LatLng(ne.lat(), sw.lng()));
+	box.g.push(new google.maps.LatLng(ne.lat(), ne.lng()));
+	box.g.push(new google.maps.LatLng(sw.lat(), ne.lng()));
+	box.poly = new google.maps.Polygon({map: this.map, path: box.g, strokeColor: "#FF0000", strokeOpacity: 1, strokeWeight: 2, fillOpacity: 0.2, fillColor: "#FF0000"});
+
+	box.update = function(corner) {
+		var m1 = corner - 1;
+		var p1 = corner + 1;
+		if(m1 < 0) m1 = 3;
+		if(p1 > 3) p1 = 0;
+		
+		if(box.d_height != null) {
+			var scale = box.d_height / google.maps.geometry.spherical.computeDistanceBetween(box.g[1], box.g[0]);
+			if(corner == 1 || corner == 2) {
+				var south = box.g[1].lat() - (box.g[1].lat() - box.g[0].lat())*scale;
+				box.g[0] = new google.maps.LatLng(south, box.g[0].lng());
+				box.g[3] = new google.maps.LatLng(south, box.g[3].lng());
+			} else {
+				var north = box.g[0].lat() + (box.g[1].lat() - box.g[0].lat())*scale;
+				box.g[1] = new google.maps.LatLng(north, box.g[1].lng());
+				box.g[2] = new google.maps.LatLng(north, box.g[2].lng());
+			}
+		}
+		if(box.aspect != null) {
+			var px_nw = that.projection.fromLatLngToDivPixel(box.g[1]);
+			var px_sw = that.projection.fromLatLngToDivPixel(box.g[0]);
+			var px_ne = that.projection.fromLatLngToDivPixel(box.g[2]);
+			var width = px_ne.x - px_nw.x;
+			var height = px_sw.y - px_nw.y;
+			if(width/height != box.aspect) {
+				width = height * box.aspect;
+				if((corner <= 1 && box.d_height == null) || (corner >= 2 && box.d_height != null)) {
+					var west = that.projection.fromDivPixelToLatLng(new google.maps.Point(px_ne.x - width, px_ne.y)).lng();
+					box.g[0] = new google.maps.LatLng(box.g[0].lat(), west);
+					box.g[1] = new google.maps.LatLng(box.g[1].lat(), west);
+				} else {
+					var east = that.projection.fromDivPixelToLatLng(new google.maps.Point(px_nw.x + width, px_ne.y)).lng();
+					box.g[2] = new google.maps.LatLng(box.g[2].lat(), east);
+					box.g[3] = new google.maps.LatLng(box.g[3].lat(), east);
+				}
+				box.m[corner].setPosition(box.g[corner]);
+			}
+		}
+		box.poly.setPath(box.g);
+		for(var i = 0; i < 4; i++) {
+			if(i != corner) box.m[i].setPosition(box.g[i]);
+		}
+		if(adjbox.listener != null) adjbox.listener();
+	}
+	
+	var icon = org.sarsoft.MapUtil.createFlatCircleImage(12, "#FF0000");
+	box.m = new Array();
+	box.f = new Array();
+	box.f[0] = function() {
+		var p = box.m[0].getPosition();
+		box.g[0] = p;
+		box.g[1] = new google.maps.LatLng(box.g[1].lat(), p.lng());
+		box.g[3] = new google.maps.LatLng(p.lat(), box.g[3].lng());
+		box.update(0);
+	}
+	box.f[1] = function() {
+		var p = box.m[1].getPosition();
+		box.g[1] = p;
+		box.g[0] = new google.maps.LatLng(box.g[0].lat(), p.lng());
+		box.g[2] = new google.maps.LatLng(p.lat(), box.g[2].lng());
+		box.poly.setPath(box.g);
+		box.update(1);
+	}
+	box.f[2] = function() {
+		var p = box.m[2].getPosition();
+		box.g[2] = p;
+		box.g[3] = new google.maps.LatLng(box.g[3].lat(), p.lng());
+		box.g[1] = new google.maps.LatLng(p.lat(), box.g[1].lng());
+		box.update(2);
+	}
+	box.f[3] = function() {
+		var p = box.m[3].getPosition();
+		box.g[3] = p;
+		box.g[2] = new google.maps.LatLng(box.g[2].lat(), p.lng());
+		box.g[0] = new google.maps.LatLng(p.lat(), box.g[0].lng());
+		box.update(3);
+	}
+
+	for(var i = 0; i < 4; i++) {
+		box.m[i] = new google.maps.Marker({icon: icon, position: box.g[i], map: this.map, shape: icon.shape, draggable: true});
+		google.maps.event.addListener(box.m[i], "drag", box.f[i]);
+		google.maps.event.addListener(box.m[i], "dragend", box.f[i]);
+	}
+	
+	return box;
+}
+
 org.sarsoft.InteractiveMap.prototype.addRangeRing = function(center, radius, vertices) {
 	var glls = new Array();
 	var centerUTM = GeoUtil.GLatLngToUTM(new google.maps.LatLng(center.lat, center.lng));
@@ -3120,7 +3221,7 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 	if(config.base != null) this.imap.setConfig(config);
 	this.config = config;
 	this.ignorehash=false;
-	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
+	if(imap.registered["org.sarsoft.DataNavigator"] != null && imap.registered["org.sarsoft.DataNavigator"].defaults.sharing != null) {
 		var url = "http://" + window.location.host + '/map.html#' + hash;
 		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
 		'Embed it in a webpage or forum:<textarea rows="4" cols="60" style="vertical-align: text-top">&lt;iframe width="500px" height="500px" src="' + url + '"&gt;&lt;/iframe&gt;</textarea>');
@@ -3835,6 +3936,7 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
 	var type = this.select.val();
 	if(type == "UTM") {
+		var utm = this.utmform.read();
 		callback(GeoUtil.UTMToGLatLng(utm));
 	} else if(type == "name") {
 		var gcg = new google.maps.Geocoder();

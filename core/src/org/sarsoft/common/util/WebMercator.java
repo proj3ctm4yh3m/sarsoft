@@ -46,7 +46,7 @@ public class WebMercator {
 	}
     
     public static double[] PixelsToDecimalTile(double px, double py) {
-        double tx = (px / tilesize) - 1;
+        double tx = (px / tilesize);
         double ty = (py / tilesize) - 1;
         return new double[] {tx, ty};
     }
