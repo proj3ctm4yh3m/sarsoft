@@ -272,7 +272,11 @@ google.maps.Map = function(node, opts) {
 	window.setInterval(function() {google.maps.event.trigger(that, "tilesloaded", {})}, 1000);
 	
 	google.maps.event.addListener(this, "resize", function() {
+		var b1 = that.ol.map.getExtent();
 		that.ol.map.updateSize();
+		var b2 = that.ol.map.getExtent();
+		var c2 = that.ol.map.getCenter();
+		that.ol.map.moveTo(new OpenLayers.LonLat(c2.lon, c2.lat + (b1.top - b2.top)));
 	});
 
 	this.controls = [];
