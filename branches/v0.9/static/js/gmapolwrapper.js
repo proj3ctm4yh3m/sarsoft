@@ -187,7 +187,18 @@ google.maps.Map = function(node, opts) {
 	this.ol.map.addControl(this.ol.modifyControl);
 	this.ol.modifyControl.standalone = true;
 	this.ol.modifyControl.activate();
-
+	this.ol.modified = new Object();
+	this.ol.modify = function(feature) {
+		that.ol.modified[feature.id] = true;
+		that.ol.modifyControl.selectFeature(feature);
+	}
+	this.ol.unmodify = function(feature) {
+		if(that.ol.modified[feature.id]) {
+			delete that.ol.modified[feature.id];
+			that.ol.modifyControl.unselectFeature(feature);
+		}
+	}
+	
 	this.ol.drawLineControl = new OpenLayers.Control.DrawFeature(this.ol.vectorLayer, OpenLayers.Handler.Path);
 	this.ol.drawLineControl.handler.dblclickTolerance=5
 	this.ol.map.addControl(this.ol.drawLineControl);
@@ -384,10 +395,10 @@ google.maps.Map.prototype.removeOverlay = function(overlay) {
 	}
 	if(overlay.ol == null) return;
 	if(overlay.ol.vector != null) {
-		this.ol.modifyControl.unselectFeature(overlay.ol.vector);
+		this.ol.unmodify(overlay.ol.vector);
 		this.ol.vectorLayer.removeFeatures([overlay.ol.vector]);
 	} else if(overlay.ol.marker != null) {	
-		this.ol.modifyControl.unselectFeature(overlay.ol.marker);
+		this.ol.unmodify(overlay.ol.marker);
 		this.ol.vectorLayer.removeFeatures([overlay.ol.marker]);
 	}
 }
@@ -571,10 +582,10 @@ google.maps.Poly.prototype.getVertex = function(idx) {
 google.maps.Poly.prototype.setEditable = function(editable) {
 	if(editable) {
 		this._editable = true;
-		this.map.ol.modifyControl.selectFeature(this.ol.vector);
+		this.map.ol.modify(this.ol.vector);
 	} else {
 		this._editable = false;
-		this.map.ol.modifyControl.unselectFeature(this.ol.vector);
+		this.map.ol.unmodify(this.ol.vector);
 	}
 }
 
@@ -725,12 +736,12 @@ google.maps.Marker.prototype.setPosition = function(position) {
 google.maps.Marker.prototype.setDraggable = function(val) {
 	var that = this;
 	if(val) {
-		this.map.ol.modifyControl.selectFeature(this.ol.marker);
+		this.map.ol.modify(this.ol.marker);
 		this.map.ol.modifyControl.dragControl.onComplete = function() {
 			google.maps.event.trigger(that, "dragend");
 		}
 	} else {
-		this.map.ol.modifyControl.unselectFeature(this.ol.marker);
+		this.map.ol.unmodify(this.ol.marker);
 		this.map.ol.modifyControl.dragControl.onComplete = null;
 	}
 }
