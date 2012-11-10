@@ -2160,7 +2160,7 @@ org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, s
 
 	var buttons = new Array();
 	if(yes != null) {
-		buttons.push({ text : yes, handler: ok, isDefault: true});
+		buttons.push({ text : yes, handler: function() { that.dialog.hide(); ok() }, isDefault: true});
 	}
 	if(no != null) {
 		buttons.push({text : no, handler : function() { that.dialog.hide(); }});
