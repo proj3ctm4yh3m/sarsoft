@@ -1272,6 +1272,7 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 
 		if((org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN")) {
 			jQuery('<span style="color: green; cursor: pointer">+ New Clue</span>').appendTo(jQuery('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(cluetree.body)).click(function() {
+    			that.clueDlg.point=that.imap.projection.fromLatLngToContainerPixel(that.imap.map.getCenter());
 				that.clueDlg.show();
 			});
 		}
@@ -1288,8 +1289,8 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 				});
 			});
 		} else { 
-			var center = that.imap.map.getCenter();
-			updated.position = {lat: center.lat(), lng: center.lng()}
+			var wpt = that.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(that.clueDlg.point.x, that.clueDlg.point.y));
+			updated.position = {lat: wpt.lat(), lng: wpt.lng()};
 			that.clueDAO.create(function(c) {
 				that.showClue(c);
 			}, updated);
