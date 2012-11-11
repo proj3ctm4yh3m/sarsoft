@@ -3866,6 +3866,7 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
 	var type = this.select.val();
 	if(type == "UTM") {
+		var utm = this.utmform.read();
 		callback(GeoUtil.UTMToGLatLng(utm));
 	} else if(type == "name") {
 		var gcg = new google.maps.Geocoder();
