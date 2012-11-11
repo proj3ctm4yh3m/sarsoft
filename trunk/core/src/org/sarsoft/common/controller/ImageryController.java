@@ -9,7 +9,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -164,6 +163,7 @@ public class ImageryController extends JSONBaseController {
 			g.drawImage(original, 0, 0, 256, 256, dx*tilesize, dy*tilesize, (dx+1)*tilesize, (dy+1)*tilesize, null);
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(zoomed, "png", out);
+			g.dispose();
 			return new ByteArrayInputStream(out.toByteArray());
 		} catch (Exception e) {
 		}
@@ -184,6 +184,7 @@ public class ImageryController extends JSONBaseController {
 			}
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(composited, "png", out);
+			graphics.dispose();
 			return new ByteArrayInputStream(out.toByteArray());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -204,6 +205,7 @@ public class ImageryController extends JSONBaseController {
 			}
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(composited, "png", out);
+			g.dispose();
 			return new ByteArrayInputStream(out.toByteArray());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -313,6 +315,9 @@ public class ImageryController extends JSONBaseController {
 		}
 		
 		InputStream out = compositeAlpha(joint, opacity, 1024, 1024);
+		for(int i = 0; i < g.length; i++) {
+			g[i].dispose();
+		}
 		respond(out, response, layerNames + "/" + z + "/joint");
 	}
 	
@@ -416,6 +421,9 @@ public class ImageryController extends JSONBaseController {
 			}
 	
 			InputStream out = compositeAlpha(joint, opacity, width, height);
+			for(int i = 0; i < g.length; i++) {
+				g[i].dispose();
+			}
 			respond(out, response, layerNames + "/" + z + "/joint");
 		} catch (IOException e) {
 			e.printStackTrace();
