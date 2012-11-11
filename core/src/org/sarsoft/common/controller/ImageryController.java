@@ -87,8 +87,7 @@ public class ImageryController extends JSONBaseController {
 		return in;
 	}
 
-	protected InputStream getRemoteTileInputStream(MapSource source, int z, int x, int y) {
-		String url = source.getTemplate();
+	protected InputStream getRemoteTileInputStream(String url, int z, int x, int y) {
 		url = url.replaceAll("\\{Z\\}", Integer.toString(z));
 		url = url.replaceAll("\\{X\\}", Integer.toString(x));
 		url = url.replaceAll("\\{Y\\}", Integer.toString(y));
@@ -118,6 +117,15 @@ public class ImageryController extends JSONBaseController {
 		} catch (Exception e) {
 		}
 		return null;
+	}
+	
+	protected InputStream getTileInputStream(String url, int z, int x, int y) {
+		if(url.indexOf("/resource/imagery/tiles/") == 0) {
+			url = url.substring(24, url.length() - 16);
+			return getLocalTileInputStream(url, z, x, y);
+		} else {
+			return getRemoteTileInputStream(url, z, x, y);
+		}
 	}
 
 	protected void respond(InputStream in, HttpServletResponse response, String url) {
@@ -252,11 +260,11 @@ public class ImageryController extends JSONBaseController {
 		InputStream in = null;
 		if(source != null && (Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled")) || Boolean.valueOf(getProperty("sarsoft.map.overzoom.enabled")) && z > source.getMaxresolution())) {
 			if(z <= source.getMaxresolution()) {
-				in = getRemoteTileInputStream(source, z, x, y);
+				in = getRemoteTileInputStream(source.getTemplate(), z, x, y);
 			} else {
 				int dz = z - source.getMaxresolution();
 				int pow = (int) Math.pow(2, dz);
-				in = getRemoteTileInputStream(source, source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+				in = getTileInputStream(source.getTemplate(), source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
 				int dx = (x - pow * (int) Math.floor(x/pow));
 				int dy = (y - pow * (int) Math.floor(y/pow));
 				in = zoom(in, dz, dx, dy);
@@ -271,7 +279,7 @@ public class ImageryController extends JSONBaseController {
 		InputStream[] images = new InputStream[layers.length];
 		for(int i = 0; i < layers.length; i++) {
 			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
-			images[i] = getRemoteTileInputStream(source, z, x, y);
+			images[i] = getTileInputStream(source.getTemplate(), z, x, y);
 		}
 		respond(composite(images), response, layer + "/" + z + "/" + x + "/" + y);
 	}
