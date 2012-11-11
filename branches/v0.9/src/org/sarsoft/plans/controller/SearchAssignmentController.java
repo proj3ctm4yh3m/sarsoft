@@ -27,8 +27,10 @@ import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.OperationalPeriod;
+import org.sarsoft.plans.model.Probability;
 import org.sarsoft.plans.model.Search;
 import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.model.SearchAssignment.ResourceType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -163,11 +165,11 @@ public class SearchAssignmentController extends JSONBaseController {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
 //		assignment.setId(form.getId());
 		assignment.setDetails(form.getDetails());
-		assignment.setResourceType(form.getResourceType());
+		if(form.getResourceType() != null) assignment.setResourceType(form.getResourceType());
 		assignment.setTimeAllocated(form.getTimeAllocated());
-		assignment.setResponsivePOD(form.getResponsivePOD());
-		assignment.setUnresponsivePOD(form.getUnresponsivePOD());
-		assignment.setCluePOD(form.getCluePOD());
+		if(form.getResponsivePOD() != null) assignment.setResponsivePOD(form.getResponsivePOD());
+		if(form.getUnresponsivePOD() != null) assignment.setUnresponsivePOD(form.getUnresponsivePOD());
+		if(form.getCluePOD() != null) assignment.setCluePOD(form.getCluePOD());
 		assignment.setStatus(SearchAssignment.Status.DRAFT);
 		assignment.setPrimaryFrequency(form.getPrimaryFrequency());
 		assignment.setSecondaryFrequency(form.getSecondaryFrequency());
@@ -296,6 +298,10 @@ public class SearchAssignmentController extends JSONBaseController {
 			}
 			assignment.setId(maxId+1);
 		}
+		if(assignment.getResourceType() == null) assignment.setResourceType(ResourceType.GROUND);
+		if(assignment.getResponsivePOD() == null) assignment.setResponsivePOD(Probability.LOW);
+		if(assignment.getUnresponsivePOD() == null) assignment.setUnresponsivePOD(Probability.LOW);
+		if(assignment.getCluePOD() == null) assignment.setCluePOD(Probability.LOW);
 		Long opid = assignment.getOperationalPeriodId();
 		if(opid != null) {
 			OperationalPeriod period = dao.load(OperationalPeriod.class, opid);
