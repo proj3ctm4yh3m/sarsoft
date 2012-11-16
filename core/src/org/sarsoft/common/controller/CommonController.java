@@ -47,6 +47,21 @@ public class CommonController extends JSONBaseController {
 		return go;
 	}
 	
+	public String getKML(String template, String header, int z, int[] min, int[] max) {
+		String kml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<kml xmlns=\"http://earth.google.com/kml/2.1\">";
+		kml = kml + "<Document>";
+		if(header != null) kml = kml + header;
+
+		for(int x = min[0]; x <= max[0]; x++) {
+			for(int y = min[1]; y <= max[1]; y++) {
+				kml = kml + makeGroundOverlay(template, z, x, y);
+			}
+		}
+		
+		kml = kml + "</Document></kml>";
+		return kml;
+	}
+	
 	@RequestMapping(value="/kml", method = RequestMethod.GET)
 	public String getKML(Model model, @RequestParam(value="layer") String layernames, @RequestParam(value="supersize") Boolean supersize, @RequestParam(value="bounds") String lbrt, HttpServletResponse response) {
 		String[] layers = layernames.split(",");
@@ -86,9 +101,8 @@ public class CommonController extends JSONBaseController {
 		int[] mint = WebMercator.PixelsToTile(minpx[0], minpx[1]);
 		int[] maxt = WebMercator.PixelsToTile(maxpx[0], maxpx[1]);
 		
-		String kml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<kml xmlns=\"http://earth.google.com/kml/2.1\">";
-		kml = kml + "<Document><name>" + getProperty("sarsoft.version") + " " + name + " Export (" + z + "/" + max + ")</name>";
-		kml = kml + "<LookAt><longitude>" + ((minb[1] + maxb[1]) / 2) + "</longitude><latitude>" + ((minb[0] + maxb[0]) / 2) + "</latitude><altitude>0</altitude><range>10000</range><tilt>0</tilt><heading>0</heading></LookAt>\n";
+		String header = "<name>" + getProperty("sarsoft.version") + " " + name + " Export (" + z + "/" + max + ")</name>" +
+			"<LookAt><longitude>" + ((minb[1] + maxb[1]) / 2) + "</longitude><latitude>" + ((minb[0] + maxb[0]) / 2) + "</latitude><altitude>0</altitude><range>10000</range><tilt>0</tilt><heading>0</heading></LookAt>\n";
 
 		String template = sources[0].getTemplate();
 		if(sources.length > 1) {
@@ -103,13 +117,8 @@ public class CommonController extends JSONBaseController {
 			mint[1] = centert[1]-8;
 			maxt[1] = centert[1]+7;
 		}
-		for(int x = mint[0]; x <= maxt[0]; x++) {
-			for(int y = mint[1]; y <= maxt[1]; y++) {
-				kml = kml + makeGroundOverlay(template, z, x, y);
-			}
-		}
 		
-		kml = kml + "</Document></kml>";
+		String kml = getKML(template, header, z, mint, maxt);
 
 		response.setContentType("application/vnd.google-earth.kml+xml");
 		response.setHeader("Content-Disposition", "attachment; filename=" + sources[0].getName().replaceAll(" ", "_") + ".kml");
@@ -119,7 +128,7 @@ public class CommonController extends JSONBaseController {
 			response.getOutputStream().close();
 		} catch (Exception e) {}
 		return null;
-
+		
 	}
 
 }
