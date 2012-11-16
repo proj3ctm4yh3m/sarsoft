@@ -2678,7 +2678,7 @@ org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect,
 	box.g.push(new google.maps.LatLng(ne.lat(), sw.lng()));
 	box.g.push(new google.maps.LatLng(ne.lat(), ne.lng()));
 	box.g.push(new google.maps.LatLng(sw.lat(), ne.lng()));
-	box.poly = new google.maps.Polygon({map: this.map, path: box.g, strokeColor: "#FF0000", strokeOpacity: 1, strokeWeight: 2, fillOpacity: 0.2, fillColor: "#FF0000"});
+	box.poly = new google.maps.Polygon({map: this.map, path: box.g, strokeColor: "#FF0000", strokeOpacity: 1, strokeWeight: 2, fillOpacity: 0.1, fillColor: "#FF0000"});
 
 	box.update = function(corner) {
 		var m1 = corner - 1;
@@ -2722,10 +2722,10 @@ org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect,
 		for(var i = 0; i < 4; i++) {
 			if(i != corner) box.m[i].setPosition(box.g[i]);
 		}
+		box.m[5].setPosition(new google.maps.LatLng((box.g[0].lat() + box.g[1].lat()) / 2, (box.g[1].lng() + box.g[2].lng()) / 2));
 		if(adjbox.listener != null) adjbox.listener();
 	}
 	
-	var icon = org.sarsoft.MapUtil.createFlatCircleImage(12, "#FF0000");
 	box.m = new Array();
 	box.f = new Array();
 	box.f[0] = function() {
@@ -2759,10 +2759,37 @@ org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect,
 	}
 
 	for(var i = 0; i < 4; i++) {
+		var corner = "sw";
+		if(i == 1) corner = "nw";
+		if(i == 2) corner = "ne";
+		if(i == 3) corner = "se";
+		var icon = org.sarsoft.MapUtil.createImage(24, org.sarsoft.imgPrefix + "/icons/arr-" + corner + ".png");
 		box.m[i] = new google.maps.Marker({icon: icon, position: box.g[i], map: this.map, shape: icon.shape, draggable: true});
 		google.maps.event.addListener(box.m[i], "drag", box.f[i]);
 		google.maps.event.addListener(box.m[i], "dragend", box.f[i]);
 	}
+	
+	var icon = org.sarsoft.MapUtil.createFlatCircleImage(12, "#FF0000");
+	box.m[5] = new google.maps.Marker({icon: icon, position: new google.maps.LatLng((box.g[0].lat() + box.g[1].lat()) / 2, (box.g[1].lng() + box.g[2].lng()) / 2), map: this.map, shape: icon.shape, draggable: true});
+	box.f[5] = function() {
+		var p = box.m[5].getPosition();
+		var dlat = (box.g[1].lat() - box.g[0].lat()) / 2;
+		var dlng = (box.g[2].lng() - box.g[1].lng()) / 2;
+		box.g[0] = new google.maps.LatLng(p.lat() - dlat, p.lng() - dlng);
+		box.g[1] = new google.maps.LatLng(p.lat() + dlat, p.lng() - dlng);
+		box.g[2] = new google.maps.LatLng(p.lat() + dlat, p.lng() + dlng);
+		box.g[3] = new google.maps.LatLng(p.lat() - dlat, p.lng() + dlng);
+
+		box.poly.setPath(box.g);
+		for(var i = 0; i < 4; i++) {
+			box.m[i].setPosition(box.g[i]);
+		}
+		
+		adjbox.update(1);
+		if(adjbox.listener != null) adjbox.listener();
+	}
+	google.maps.event.addListener(box.m[5], "drag", box.f[5]);	
+	google.maps.event.addListener(box.m[5], "dragend", box.f[5]);
 	
 	return box;
 }
