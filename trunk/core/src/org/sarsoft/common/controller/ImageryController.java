@@ -29,14 +29,11 @@ import net.sf.ehcache.Element;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
-import org.sarsoft.common.model.MapSource;
-import org.sarsoft.common.controller.JSONBaseController;
-import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.GeoRef;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.util.WebMercator;
-import org.sarsoft.markup.model.Marker;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -44,7 +41,6 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
@@ -115,20 +111,45 @@ public class ImageryController extends JSONBaseController {
 			cache.put(element);
 			return new ByteArrayInputStream(array);
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return null;
 	}
 	
-	protected InputStream getTileInputStream(String url, int z, int x, int y) {
+	protected BufferedImage getTile(String url, int z, int x, int y) {
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {
 			url = url.substring(24, url.length() - 16);
-			return getLocalTileInputStream(url, z, x, y);
+			return streamToImage(getLocalTileInputStream(url, z, x, y));
 		} else {
-			return getRemoteTileInputStream(url, z, x, y);
+			return streamToImage(getRemoteTileInputStream(url, z, x, y));
 		}
 	}
+		
+	public BufferedImage streamToImage(InputStream stream) {
+		try {
+			return ImageIO.read(stream);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public InputStream imageToInputStream(BufferedImage image) {
+		try {
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ImageIO.write(image, "png", out);
+			return new ByteArrayInputStream(out.toByteArray());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public void respond(BufferedImage image, HttpServletResponse response) {
+		respond(imageToInputStream(image), response);
+	}
 
-	protected void respond(InputStream in, HttpServletResponse response, String url) {
+	public void respond(InputStream in, HttpServletResponse response) {
 		if(in == null) {
 			try {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -142,179 +163,68 @@ public class ImageryController extends JSONBaseController {
 		byte[] bytes = new byte[512];
 		int bytesRead;
 		response.setHeader("Cache-Control", "max-age=432000, public");
-	
+
 		try {
 			out = response.getOutputStream();
 			while ((bytesRead = in.read(bytes)) != -1) {
 			    out.write(bytes, 0, bytesRead);
 			}
 		} catch (Exception e) {
-			if(e.getClass() != java.net.SocketException.class) logger.error("Error reading local tile " + url, e);
+			if(e.getClass() != java.net.SocketException.class) logger.error("Error sending image response", e);
 		} finally {
 			try { if(in != null) in.close(); } catch(Exception e) {
-				logger.error("Doubly bad error closing inputstream for local tile " + url, e);
+				logger.error("Doubly bad error closing inputstream for image response", e);
 			}
 		}
 	}
 
-	protected InputStream zoom(InputStream in, int dz, int dx, int dy) {
+	
+	
+	protected BufferedImage zoom(BufferedImage original, int dz, int dx, int dy) {
 		int tilesize = 256 / ((int) Math.pow(2, dz));
-		try {
-			BufferedImage original = ImageIO.read(in);
-			BufferedImage zoomed = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
-			Graphics2D g = zoomed.createGraphics();
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-			g.setBackground(new Color(255, 255, 255, 0));
-			g.clearRect(0, 0, 256, 256);
+		BufferedImage zoomed = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
+		Graphics2D g = zoomed.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+		g.setBackground(new Color(255, 255, 255, 0));
+		g.clearRect(0, 0, 256, 256);
 
-			g.drawImage(original, 0, 0, 256, 256, dx*tilesize, dy*tilesize, (dx+1)*tilesize, (dy+1)*tilesize, null);
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ImageIO.write(zoomed, "png", out);
-			g.dispose();
-			return new ByteArrayInputStream(out.toByteArray());
-		} catch (Exception e) {
-		}
-		return null;
+		g.drawImage(original, 0, 0, 256, 256, dx*tilesize, dy*tilesize, (dx+1)*tilesize, (dy+1)*tilesize, null);
+		return zoomed;
 	}
 	
-	protected InputStream compositeAlpha(BufferedImage[] images, float[] transparency, int width, int height) {
-		try {
-			BufferedImage composited = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
-			Graphics2D graphics = composited.createGraphics();
-			graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-			graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-			graphics.setBackground(new Color(255, 255, 255, 0));
-			graphics.clearRect(0, 0, width, height);
-			for(int i = 0; i < images.length; i++) {
-				graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, transparency[i])); 
-				graphics.drawImage(images[i], 0, 0, width, height, 0, 0, width, height, null);
-			}
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ImageIO.write(composited, "png", out);
-			graphics.dispose();
-			return new ByteArrayInputStream(out.toByteArray());
-		} catch (Exception e) {
-			e.printStackTrace();
+	protected BufferedImage composite(BufferedImage[] images, float[] opacity, int width, int height) {
+		BufferedImage composited = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
+		Graphics2D graphics = composited.createGraphics();
+		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		graphics.setBackground(new Color(255, 255, 255, 0));
+		graphics.clearRect(0, 0, width, height);
+		for(int i = 0; i < images.length; i++) {
+			graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity[i])); 
+			graphics.drawImage(images[i], 0, 0, width, height, 0, 0, width, height, null);
 		}
-		return null;
+		return composited;
 	}
 	
-	protected InputStream compositeXY(BufferedImage[] images, int width, int height) {
-		try {
-			BufferedImage composited = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-			Graphics2D g = composited.createGraphics();
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-			g.setBackground(new Color(255, 255, 255, 0));
-			g.clearRect(0, 0, width, height);
-			for(int i = 0; i < images.length; i++) {
-				g.drawImage(images[i], 0, 0, width, height, 0, 0, width, height, null);
-			}
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ImageIO.write(composited, "png", out);
-			g.dispose();
-			return new ByteArrayInputStream(out.toByteArray());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	protected InputStream composite(InputStream[] in) {
-		try {
-			BufferedImage[] images = new BufferedImage[in.length];
-			for(int i = 0; i < in.length; i++) {
-					images[i] = ImageIO.read(in[i]);
-			}
-			return compositeXY(images, 256, 256);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		InputStream in = getLocalTileInputStream(layer, z, x, y);
-		if(in != null) {
-			respond(in, response, layer + "/" + z + "/" + x + "/" + y);
-			return;
-		}
-		for(int dz = 1; dz < 5; dz++) {
-			int pow = (int) Math.pow(2, dz);
-			in = getLocalTileInputStream(layer, z-dz, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
-			if(in != null) {
-				int dx = (x - pow * (int) Math.floor(x/pow));
-				int dy = (y - pow * (int) Math.floor(y/pow));
-				in = zoom(in, dz, dx, dy);
-				respond(in, response, layer + "/" + z + "/" + x + "/" + y);
-				return;
-			}
-		}
-	}
-
-	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		MapSource source = RuntimeProperties.getMapSourceByName(layer);
-		InputStream in = null;
-		if(source != null && (Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled")) || Boolean.valueOf(getProperty("sarsoft.map.overzoom.enabled")) && z > source.getMaxresolution())) {
-			if(z <= source.getMaxresolution()) {
-				in = getRemoteTileInputStream(source.getTemplate(), z, x, y);
-			} else {
-				int dz = z - source.getMaxresolution();
-				int pow = (int) Math.pow(2, dz);
-				in = getTileInputStream(source.getTemplate(), source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
-				int dx = (x - pow * (int) Math.floor(x/pow));
-				int dy = (y - pow * (int) Math.floor(y/pow));
-				in = zoom(in, dz, dx, dy);
-			}
-		}
-		respond(in, response, layer + "/" + z + "/" + x + "/" + y);
-	}
-	
-	@RequestMapping(value="/resource/imagery/compositetile/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getCompositeTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		String[] layers = layer.split(",");
-		InputStream[] images = new InputStream[layers.length];
-		for(int i = 0; i < layers.length; i++) {
-			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
-			images[i] = getTileInputStream(source.getTemplate(), z, x, y);
-		}
-		respond(composite(images), response, layer + "/" + z + "/" + x + "/" + y);
-	}
-	
-	@RequestMapping(value="/resource/imagery/supertile/{layer}/{z}/{x}/{y}", method = RequestMethod.GET)
-	public void getSuperTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layerNames, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		String[] layers = layerNames.split(",");
-		float[] opacity = new float[layers.length];
-		
+	public BufferedImage superTile(String[] layers, float[] opacity, int z, int x, int y) {		
 		BufferedImage[] joint = new BufferedImage[layers.length];
 		Graphics2D[] g = new Graphics2D[layers.length];
 		
 		for(int i = 0; i < layers.length; i++) {
-			int idx = layers[i].indexOf("@");
-			if(idx > 0) {
-				opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
-				layers[i] = layers[i].substring(0, idx);
-			} else {
-				opacity[i] = 1f;
-			}
-			String layer = layers[i];
 			joint[i] = new BufferedImage(1024, 1024, BufferedImage.TYPE_4BYTE_ABGR);
 			g[i] = joint[i].createGraphics();
-			g[i].setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g[i].setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g[i].setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 			g[i].setBackground(new Color(255, 255, 255, 0));
 			g[i].clearRect(0, 0, 1024, 1024);
-			MapSource source = RuntimeProperties.getMapSourceByAlias(layer);
+			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
 			
 			try {
 			for(int dx = 0; dx < 4; dx++) {
 				for(int dy = 0; dy < 4; dy++) {
-					BufferedImage tile = ImageIO.read(getRemoteTileInputStream(source, z+2, x*4+dx, y*4+dy));
-					g[i].drawImage(tile, 255*dx, 255*dy, 255*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
-					
+					BufferedImage tile = ImageIO.read(getRemoteTileInputStream(source.getTemplate(), z+2, x*4+dx, y*4+dy));
+					g[i].drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
 				}
 			}
 			} catch (IOException e) {
@@ -322,31 +232,15 @@ public class ImageryController extends JSONBaseController {
 			}
 		}
 		
-		InputStream out = compositeAlpha(joint, opacity, 1024, 1024);
+		BufferedImage supertile = composite(joint, opacity, 1024, 1024);
 		for(int i = 0; i < g.length; i++) {
 			g[i].dispose();
 		}
-		respond(out, response, layerNames + "/" + z + "/joint");
+		
+		return supertile;
 	}
-	
-	@RequestMapping(value="/resource/imagery/joint/{layer}", method = RequestMethod.GET)
-	public void getJointImage(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layerNames, @RequestParam("bbox") String bbox, @RequestParam("size") String size) {
-		String[] layers = layerNames.split(",");
-		float[] opacity = new float[layers.length];
 
-		String[] bounds = bbox.split(",");
-		double west = Double.parseDouble(bounds[0]);
-		double south = Double.parseDouble(bounds[1]);
-		double east = Double.parseDouble(bounds[2]);
-		double north = Double.parseDouble(bounds[3]);
-		
-		String[] dimensions = size.split(",");
-		int width = Integer.parseInt(dimensions[0]);
-		int height = Integer.parseInt(dimensions[1]);
-		
-		double[] m_ne = WebMercator.LatLngToMeters(north, east);
-		double[] m_sw = WebMercator.LatLngToMeters(south, west);
-
+	public BufferedImage retile(String[] layers, float[] opacity, double[] m_sw, double[] m_ne, int width, int height) {
 		int z = 1;
 		double r = WebMercator.Resolution(z);
 		double r_target = Math.sqrt(Math.pow(m_ne[0] - m_sw[0], 2) + Math.pow(m_ne[1] - m_sw[1], 2)) / Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
@@ -364,8 +258,6 @@ public class ImageryController extends JSONBaseController {
     	t_ne[1] = Math.pow(2, z) - 1 - t_ne[1];
     	t_sw[1] = Math.pow(2, z) - 1 - t_sw[1];
 
-		System.out.println(z + ", " + t_sw[0] + ", " + t_sw[1] + ", " + t_ne[0] + ", " + t_ne[1]);
-		
 		double p_dx = ((t_ne[0] - t_sw[0])*256);
 		double p_dy = ((t_sw[1] - t_ne[1])*256);
 
@@ -376,15 +268,9 @@ public class ImageryController extends JSONBaseController {
 		BufferedImage[] joint = new BufferedImage[layers.length];
 		Graphics2D[] g = new Graphics2D[layers.length];
 		MapSource[] sources = new MapSource[layers.length];
+		String[] cfg = new String[layers.length];
 		
 		for(int i = 0; i < layers.length; i++) {
-			int idx = layers[i].indexOf("@");
-			if(idx > 0) {
-				opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
-				layers[i] = layers[i].substring(0, idx);
-			} else {
-				opacity[i] = 1f;
-			}
 			String layer = layers[i];
 			joint[i] = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
 			g[i] = joint[i].createGraphics();
@@ -392,53 +278,126 @@ public class ImageryController extends JSONBaseController {
 			g[i].setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 			g[i].setBackground(new Color(255, 255, 255, 0));
 			g[i].clearRect(0, 0, width, height);
+			if(layer.indexOf("_") > 0) {
+				cfg[i] = layer.split("_")[1];
+				layer = layer.split("_")[0];
+			}
 			sources[i] = RuntimeProperties.getMapSourceByAlias(layer);
 		}
 
-		try {
-			for(int x = (int) Math.floor(t_sw[0]); x <= (int) Math.floor(t_ne[0]); x++) {
-				for(int y = (int) Math.floor(t_ne[1]); y <= (int) Math.floor(t_sw[1]); y++) {
-					int dx1 = (int) Math.floor((((double) x - t_sw[0])*scale)*256);
-					int dy1 = (int) Math.floor((((double) y - t_ne[1])*scale)*256);
-					int dx2 = (int) Math.ceil((((double) x+1 - t_sw[0])*scale)*256);
-					int dy2 = (int) Math.ceil((((double) y+1 - t_ne[1])*scale)*256);
-					
-					dx1 = Math.max(dx1, 0);
-					dy1 = Math.max(dy1, 0);
-					dx2 = Math.min(dx2, width);
-					dy2 = Math.min(dy2, height);
+		for(int x = (int) Math.floor(t_sw[0]); x <= (int) Math.floor(t_ne[0]); x++) {
+			for(int y = (int) Math.floor(t_ne[1]); y <= (int) Math.floor(t_sw[1]); y++) {
+				int dx1 = (int) Math.floor((((double) x - t_sw[0])*scale)*256);
+				int dy1 = (int) Math.floor((((double) y - t_ne[1])*scale)*256);
+				int dx2 = (int) Math.ceil((((double) x+1 - t_sw[0])*scale)*256);
+				int dy2 = (int) Math.ceil((((double) y+1 - t_ne[1])*scale)*256);
+				
+				dx1 = Math.max(dx1, 0);
+				dy1 = Math.max(dy1, 0);
+				dx2 = Math.min(dx2, width);
+				dy2 = Math.min(dy2, height);
 
-					int sx1 = 0;
-					int sy1 = 0;
-					int sx2 = 256;
-					int sy2 = 256;
+				int sx1 = 0;
+				int sy1 = 0;
+				int sx2 = 256;
+				int sy2 = 256;
 
-					if(x == Math.floor(t_sw[0])) sx1 = (int) ((t_sw[0] - (double) x) * 256);
-					if(y == Math.floor(t_ne[1])) sy1 = (int) ((t_ne[1] - (double) y) * 256);
+				if(x == Math.floor(t_sw[0])) sx1 = (int) ((t_sw[0] - (double) x) * 256);
+				if(y == Math.floor(t_ne[1])) sy1 = (int) ((t_ne[1] - (double) y) * 256);
 
-					if(x == Math.floor(t_ne[0])) sx2 = (int) ((t_ne[0] - (double) x) * 256);
-					if(y == Math.floor(t_sw[1])) sy2 = (int) ((t_sw[1] - (double) y) * 256);
+				if(x == Math.floor(t_ne[0])) sx2 = (int) ((t_ne[0] - (double) x) * 256);
+				if(y == Math.floor(t_sw[1])) sy2 = (int) ((t_sw[1] - (double) y) * 256);
 
-//					System.out.println(z + ", " + x + ", " + y + " :: " + dx1 + ", " + dy1 + ", " + dx2 + ", " + dy2 + " :: " + sx1 + ", " + sy1 + ", " + sx2 + ", " + sy2);
-					for(int i = 0; i < layers.length; i++) {
-						InputStream image = getRemoteTileInputStream(sources[i], z, x, y);
-						BufferedImage tile = ImageIO.read(image);
+				for(int i = 0; i < layers.length; i++) {
+					String template = sources[i].getTemplate();
+					template = template.replaceAll("\\{V\\}", cfg[i]);
+					InputStream is = getRemoteTileInputStream(template, z, x, y);
+					if(is != null) {
+						BufferedImage tile = streamToImage(is);
 						g[i].drawImage(tile, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
 					}
 				}
 			}
-	
-			InputStream out = compositeAlpha(joint, opacity, width, height);
-			for(int i = 0; i < g.length; i++) {
-				g[i].dispose();
+		}
+
+		BufferedImage image = composite(joint, opacity, width, height);
+		for(int i = 0; i < g.length; i++) {
+			g[i].dispose();
+		}
+
+		return image;
+	}
+
+
+	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		InputStream in = getLocalTileInputStream(layer, z, x, y);
+		if(in != null) {
+			respond(in, response);
+			return;
+		}
+		for(int dz = 1; dz < 5; dz++) {
+			int pow = (int) Math.pow(2, dz);
+			in = getLocalTileInputStream(layer, z-dz, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+			if(in != null) {
+				int dx = (x - pow * (int) Math.floor(x/pow));
+				int dy = (y - pow * (int) Math.floor(y/pow));
+				respond(zoom(streamToImage(in), dz, dx, dy), response);
+				return;
 			}
-			respond(out, response, layerNames + "/" + z + "/joint");
-		} catch (IOException e) {
-			e.printStackTrace();
-			// TODO
 		}
 	}
 
+	@RequestMapping(value="/resource/imagery/tilecache/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		MapSource source = RuntimeProperties.getMapSourceByName(layer);
+		InputStream in = null;
+		if(source != null && (Boolean.valueOf(getProperty("sarsoft.map.tileCacheEnabled")) || Boolean.valueOf(getProperty("sarsoft.map.overzoom.enabled")) && z > source.getMaxresolution())) {
+			if(z <= source.getMaxresolution()) {
+				respond(getRemoteTileInputStream(source.getTemplate(), z, x, y), response);
+			} else {
+				int dz = z - source.getMaxresolution();
+				int pow = (int) Math.pow(2, dz);
+				BufferedImage img = getTile(source.getTemplate(), source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+				int dx = (x - pow * (int) Math.floor(x/pow));
+				int dy = (y - pow * (int) Math.floor(y/pow));
+				respond(zoom(img, dz, dx, dy), response);
+			}
+		}
+	}
+	
+	@RequestMapping(value="/resource/imagery/compositetile/{layers}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getCompositeTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layers") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		String[] layers = layer.split(",");
+		BufferedImage[] images = new BufferedImage[layers.length];
+		float[] opacity = new float[layers.length];
+		for(int i = 0; i < layers.length; i++) {
+			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
+			images[i] = getTile(source.getTemplate(), z, x, y);
+			opacity[i] = 1;
+		}
+		respond(composite(images, opacity, 256, 256), response);
+	}
+	
+    @RequestMapping(value="/resource/imagery/supertile/{layer}/{z}/{x}/{y}", method = RequestMethod.GET)
+    public void getSuperTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layerNames, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+    	String[] layers = layerNames.split(",");
+    	float[] opacity = new float[layers.length];
+    	
+    	for(int i = 0; i < layers.length; i++) {
+    		int idx = layers[i].indexOf("@");
+    		if(idx > 0) {
+    			opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
+    			layers[i] = layers[i].substring(0, idx);
+    		} else {
+    			opacity[i] = 1f;
+    		}
+    		String layer = layers[i];
+    	}
+
+		respond(superTile(layers, opacity, z, x, y), response);
+    }
+ 
 	@RequestMapping(value="/resource/imagery/icons/circle/{rgb}.png", method = RequestMethod.GET)
 	public void getCircle(HttpServletResponse response, @PathVariable("rgb") String rgb) {
 		response.setContentType("image/png");
