@@ -35,8 +35,8 @@ public class Waypoint extends SarModelObject {
 
 	public Waypoint(double easting, double northing, int zone) {
 		double[] latlng = UTMXYToLatLon(easting, northing, zone, false);
-		this.lat = latlng[0];
-		this.lng = latlng[1];
+		this.lat = latlng[0] * 180/Math.PI;
+		this.lng = latlng[1] * 180/Math.PI;
 	}
 
 	public static Waypoint createFromJSON(JSONObject json) {
@@ -93,7 +93,7 @@ public class Waypoint extends SarModelObject {
 	}
 
 	public double distanceFrom(Waypoint wpt) {
-		double R = 6371;
+		double R = 6378137;
 	    double pi = 3.14159265358979323;
 		double dLat = (wpt.lat-this.lat)/180*pi;
 		double dLon = (wpt.lng-this.lng)/180*pi; 
@@ -101,7 +101,7 @@ public class Waypoint extends SarModelObject {
 		        Math.cos(this.lat/180*pi) * Math.cos(wpt.lat/180*pi) * 
 		        Math.sin(dLon/2) * Math.sin(dLon/2);
 		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-		return R * c * 1000;
+		return R * c;
 	}
 
 	@Transient
@@ -110,10 +110,15 @@ public class Waypoint extends SarModelObject {
 		double[] utm = getUTMXY();
 		return String.format("%1$3s %2$07dE\n    %3$07dN", new Object[] {zone, Math.round(utm[0]), Math.round(utm[1])});
 	}
+	
+	@Transient
+	public double[] getUTMXY(int zone) {
+		return LatLonToUTMXY(lat*Math.PI/180, lng*Math.PI/180, zone);
+	}
 
 	@Transient
 	public double[] getUTMXY() {
-		return LatLonToUTMXY(lat*Math.PI/180, lng*Math.PI/180, getUTMZone());
+		return getUTMXY(getUTMZone());
 	}
 
 	@Transient
