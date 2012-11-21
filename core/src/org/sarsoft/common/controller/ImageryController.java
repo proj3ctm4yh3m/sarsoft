@@ -244,7 +244,7 @@ public class ImageryController extends JSONBaseController {
 		int z = 1;
 		double r = WebMercator.Resolution(z);
 		double r_target = Math.sqrt(Math.pow(m_ne[0] - m_sw[0], 2) + Math.pow(m_ne[1] - m_sw[1], 2)) / Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
-		while(z <= 16 && r > r_target) { // r is meters/px
+		while(z < 16 && r > r_target) { // r is meters/px
 			z++;
 			r = WebMercator.Resolution(z);
 		}

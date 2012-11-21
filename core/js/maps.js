@@ -2666,12 +2666,12 @@ org.sarsoft.InteractiveMap.prototype.addWay = function(way, config, label) {
 	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config, label), config: config};
 }
 
-org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect, d_height) {
+org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect, scale) {
 	var that = this;
 	
 	var box = new Object();
 	box.aspect = aspect;
-	box.d_height = d_height;
+	box.scale = scale;
 	
 	box.g = new Array();
 	box.g.push(new google.maps.LatLng(sw.lat(), sw.lng()));
@@ -2686,14 +2686,14 @@ org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect,
 		if(m1 < 0) m1 = 3;
 		if(p1 > 3) p1 = 0;
 		
-		if(box.d_height != null) {
-			var scale = box.d_height / google.maps.geometry.spherical.computeDistanceBetween(box.g[1], box.g[0]);
+		if(box.scale != null) {
+			var scale = (google.maps.geometry.spherical.computeDistanceBetween(box.g[2], box.g[0]) * 39.3701) / Math.sqrt(box.in_h*box.in_h + box.in_w*box.in_w);
 			if(corner == 1 || corner == 2) {
-				var south = box.g[1].lat() - (box.g[1].lat() - box.g[0].lat())*scale;
+				var south = box.g[1].lat() - (box.g[1].lat() - box.g[0].lat())*(box.scale/scale);
 				box.g[0] = new google.maps.LatLng(south, box.g[0].lng());
 				box.g[3] = new google.maps.LatLng(south, box.g[3].lng());
 			} else {
-				var north = box.g[0].lat() + (box.g[1].lat() - box.g[0].lat())*scale;
+				var north = box.g[0].lat() + (box.g[1].lat() - box.g[0].lat())*(box.scale/scale);
 				box.g[1] = new google.maps.LatLng(north, box.g[1].lng());
 				box.g[2] = new google.maps.LatLng(north, box.g[2].lng());
 			}
@@ -2706,7 +2706,7 @@ org.sarsoft.InteractiveMap.prototype.addAdjustableBox = function(sw, ne, aspect,
 			var height = px_sw.y - px_nw.y;
 			if(width/height != box.aspect) {
 				width = height * box.aspect;
-				if((corner <= 1 && box.d_height == null) || (corner >= 2 && box.d_height != null)) {
+				if((corner <= 1 && box.scale == null) || (corner >= 2 && box.scale != null)) {
 					var west = that.projection.fromDivPixelToLatLng(new google.maps.Point(px_ne.x - width, px_ne.y)).lng();
 					box.g[0] = new google.maps.LatLng(box.g[0].lat(), west);
 					box.g[1] = new google.maps.LatLng(box.g[1].lat(), west);
