@@ -24,6 +24,8 @@ public class Waypoint extends SarModelObject {
     private static double sma = 6378137.0;
     private static double smb = 6356752.314;
     private static double UTMScaleFactor = 0.9996;
+    
+    private static String[] zoneLetters = new String[] {"C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X"};
 
 	public Waypoint() {
 	}
@@ -124,6 +126,13 @@ public class Waypoint extends SarModelObject {
 	@Transient
 	public int getUTMZone() {
 		return (int) (Math.floor((lng + 180) / 6) + 1);
+	}
+	
+	@Transient
+	public String getUTMLetter() {
+		int idx = (int) Math.floor((80+lat)/8);
+		idx = Math.max(Math.min(idx, zoneLetters.length-1), 0);
+		return zoneLetters[idx];
 	}
 
 	public double[] offsetFrom(Waypoint wpt) {

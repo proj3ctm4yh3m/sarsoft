@@ -47,7 +47,7 @@ org.sarsoft.WebMercator.prototype.pixelsToMeters = function(px, py, zoom) {
 }
 
 org.sarsoft.WebMercator.prototype.metersToPixels = function(mx, my, zoom) {
-    var res = this.esolution(zoom);
+    var res = this.resolution(zoom);
     var px = (mx + this.originshift) / res;
     var py = (my + this.originshift) / res;
     return [px, py];
@@ -57,6 +57,17 @@ org.sarsoft.WebMercator.prototype.pixelsToTile = function(px, py) {
     var tx = Math.ceil(px / this.tilesize) - 1;
     var ty = Math.ceil(py / this.tilesize) - 1;
     return [tx, ty];
+}
+
+org.sarsoft.WebMercator.prototype.pixelsToDecimalTile = function(px, py) {
+    var tx = px / this.tilesize;
+    var ty = py / this.tilesize;
+    return [tx, ty];
+}
+
+org.sarsoft.WebMercator.prototype.metersToDecimalTile = function(mx, my, zoom) {
+	var p = this.metersToPixels(mx, my, zoom);
+	return this.pixelsToDecimalTile(p[0], p[1]);
 }
 
 org.sarsoft.WebMercator.prototype.tileBounds = function(tx, ty, zoom) {
@@ -1607,7 +1618,7 @@ org.sarsoft.DataNavigatorToggleControl.prototype.setCookie = function() {
 	YAHOO.util.Cookie.set("org.sarsoft.browsersettings", YAHOO.lang.JSON.stringify(config));
 }
 
-org.sarsoft.DataNavigatorToggleControl.prototype.showDataNavigator = function() {
+org.sarsoft.DataNavigatorToggleControl.prototype.showDataNavigator = function(skipCookie) {
 	this.minmax[0].title = "Hide Left Bar";
 	var center = this.map.getCenter();
 	if(this.mobile) {
@@ -1625,7 +1636,7 @@ org.sarsoft.DataNavigatorToggleControl.prototype.showDataNavigator = function() 
 	google.maps.event.trigger(this.map, 'resize');
 	this.map.setCenter(center);
 	this.state = true;
-	this.setCookie();
+	if(!skipCookie) this.setCookie();
 }
 
 org.sarsoft.DataNavigatorToggleControl.prototype.hideDataNavigator = function() {
@@ -2313,6 +2324,175 @@ org.sarsoft.ProjectionCaptureOverlay.prototype.draw = function() {
 	this.imap.projection = this.getProjection();
 }
 
+org.sarsoft.AdjustableBox = function(imap, sw, ne) {
+	var that = this;
+	if(imap == null) return;
+	this.imap = imap;
+	
+	this.g = new Array();
+	this.g.push(new google.maps.LatLng(sw.lat(), sw.lng()));
+	this.g.push(new google.maps.LatLng(ne.lat(), sw.lng()));
+	this.g.push(new google.maps.LatLng(ne.lat(), ne.lng()));
+	this.g.push(new google.maps.LatLng(sw.lat(), ne.lng()));
+
+	this.poly = new google.maps.Polygon({map: this.imap.map, path: this.g, strokeColor: "#FF0000", strokeOpacity: 1, strokeWeight: 2, fillOpacity: 0.1, fillColor: "#FF0000"});
+
+	this.m = new Array();
+
+	for(var i = 0; i < 4; i++) {
+		var corner = "sw";
+		if(i == 1) corner = "nw";
+		if(i == 2) corner = "ne";
+		if(i == 3) corner = "se";
+		var icon = org.sarsoft.MapUtil.createImage(24, org.sarsoft.imgPrefix + "/icons/arr-" + corner + ".png");
+		that.m[i] = new google.maps.Marker({icon: icon, position: that.g[i], map: this.imap.map, shape: icon.shape, draggable: true});
+		
+		google.maps.event.addListener(that.m[i], "drag", function(j) { return function() {that.update(j)}}(i));
+		google.maps.event.addListener(that.m[i], "dragend", function(j) { return function() {that.update(j)}}(i));
+	}
+	
+	var icon = org.sarsoft.MapUtil.createFlatCircleImage(12, "#FF0000");
+	that.m[5] = new google.maps.Marker({icon: icon, position: new google.maps.LatLng((this.g[0].lat() + this.g[1].lat()) / 2, (this.g[1].lng() + this.g[2].lng()) / 2), map: this.imap.map, shape: icon.shape, draggable: true});
+
+	google.maps.event.addListener(that.m[5], "drag", function() {that.update(5)});
+	google.maps.event.addListener(that.m[5], "dragend", function() {that.update(5)});
+
+}
+
+org.sarsoft.AdjustableBox.prototype.update = function(corner) {
+	var p = this.m[corner].getPosition();
+	if(corner < 4) this.g[corner] = p;
+	if(corner == 0) {
+		this.g[1] = new google.maps.LatLng(this.g[1].lat(), p.lng());
+		this.g[3] = new google.maps.LatLng(p.lat(), this.g[3].lng());
+	} else if(corner == 1) {
+		this.g[0] = new google.maps.LatLng(this.g[0].lat(), p.lng());
+		this.g[2] = new google.maps.LatLng(p.lat(), this.g[2].lng());
+	} else if(corner == 2) {
+		this.g[3] = new google.maps.LatLng(this.g[3].lat(), p.lng());
+		this.g[1] = new google.maps.LatLng(p.lat(), this.g[1].lng());		
+	} else if(corner == 3) {
+		this.g[2] = new google.maps.LatLng(this.g[2].lat(), p.lng());
+		this.g[0] = new google.maps.LatLng(p.lat(), this.g[0].lng());
+	} else if(corner == 5) {
+		var dlat = (this.g[1].lat() - this.g[0].lat()) / 2;
+		var dlng = (this.g[2].lng() - this.g[1].lng()) / 2;
+		this.g[0] = new google.maps.LatLng(p.lat() - dlat, p.lng() - dlng);
+		this.g[1] = new google.maps.LatLng(p.lat() + dlat, p.lng() - dlng);
+		this.g[2] = new google.maps.LatLng(p.lat() + dlat, p.lng() + dlng);
+		this.g[3] = new google.maps.LatLng(p.lat() - dlat, p.lng() + dlng);
+	}
+	
+	this.check(corner);	
+	this.redraw();
+}
+
+org.sarsoft.AdjustableBox.prototype.redraw = function() {
+	this.poly.setPath(this.g);
+	for(var i = 0; i < 4; i++) {
+		this.m[i].setPosition(this.g[i]);
+	}
+	this.m[5].setPosition(new google.maps.LatLng((this.g[0].lat() + this.g[1].lat()) / 2, (this.g[1].lng() + this.g[2].lng()) / 2));
+	if(this.listener != null) this.listener();
+}
+
+org.sarsoft.AdjustablePrintBox = function(imap, sw, ne, aspect, scale) {
+	org.sarsoft.AdjustableBox.call(this, imap, sw, ne);
+	this.aspect = aspect;
+	this.scale = scale;	
+}
+
+org.sarsoft.AdjustablePrintBox.prototype = new org.sarsoft.AdjustableBox();
+
+org.sarsoft.AdjustablePrintBox.prototype.check = function(corner) {
+	if(this.scale != null) {
+		var scale = (google.maps.geometry.spherical.computeDistanceBetween(this.g[2], this.g[0]) * 39.3701) / Math.sqrt(this.in_h*this.in_h + this.in_w*this.in_w);
+		if(corner == 1 || corner == 2) {
+			var south = this.g[1].lat() - (this.g[1].lat() - this.g[0].lat())*(this.scale/scale);
+			this.g[0] = new google.maps.LatLng(south, this.g[0].lng());
+			this.g[3] = new google.maps.LatLng(south, this.g[3].lng());
+		} else {
+			var north = this.g[0].lat() + (this.g[1].lat() - this.g[0].lat())*(this.scale/scale);
+			this.g[1] = new google.maps.LatLng(north, this.g[1].lng());
+			this.g[2] = new google.maps.LatLng(north, this.g[2].lng());
+		}
+	}
+	if(this.aspect != null) {
+		var px_nw = this.imap.projection.fromLatLngToDivPixel(this.g[1]);
+		var px_sw = this.imap.projection.fromLatLngToDivPixel(this.g[0]);
+		var px_ne = this.imap.projection.fromLatLngToDivPixel(this.g[2]);
+		var width = px_ne.x - px_nw.x;
+		var height = px_sw.y - px_nw.y;
+		if(width/height != this.aspect) {
+			width = height * this.aspect;
+			if((corner <= 1 && this.scale == null) || (corner >= 2 && this.scale != null)) {
+				var west = this.imap.projection.fromDivPixelToLatLng(new google.maps.Point(px_ne.x - width, px_ne.y)).lng();
+				this.g[0] = new google.maps.LatLng(this.g[0].lat(), west);
+				this.g[1] = new google.maps.LatLng(this.g[1].lat(), west);
+			} else {
+				var east = this.imap.projection.fromDivPixelToLatLng(new google.maps.Point(px_nw.x + width, px_ne.y)).lng();
+				this.g[2] = new google.maps.LatLng(this.g[2].lat(), east);
+				this.g[3] = new google.maps.LatLng(this.g[3].lat(), east);
+			}
+			this.m[corner].setPosition(this.g[corner]);
+		}
+	}
+}
+
+org.sarsoft.AdjustableTileBox = function(imap, sw, ne, zoom, max) {
+	org.sarsoft.AdjustableBox.call(this, imap, sw, ne);
+	this.wm = new org.sarsoft.WebMercator();
+	this.zoom = zoom;
+	this.max = max;
+}
+
+org.sarsoft.AdjustableTileBox.prototype = new org.sarsoft.AdjustableBox();
+
+org.sarsoft.AdjustableTileBox.prototype.check = function(corner) {
+	// compute tile bounds based on zoom level
+	var m_sw = this.wm.latLngToMeters(this.g[0].lat(), this.g[0].lng());
+	var m_ne = this.wm.latLngToMeters(this.g[2].lat(), this.g[2].lng());
+	var t_sw = this.wm.metersToDecimalTile(m_sw[0], m_sw[1], this.zoom);
+	var t_ne = this.wm.metersToDecimalTile(m_ne[0], m_ne[1], this.zoom);
+	var t_w = Math.round(t_ne[0] - t_sw[0]);
+	var t_h = Math.round(t_ne[1] - t_sw[1]);
+
+	t_sw = [Math.round(t_sw[0]), Math.round(t_sw[1])];
+	if(corner == 5) {
+		t_ne = [t_sw[0] + t_w, t_sw[1] + t_h];
+	} else {
+		t_ne = [Math.round(t_ne[0]), Math.round(t_ne[1])];
+	}
+	if(t_sw[0] == t_ne[0]) t_ne[0] = t_ne[0]+1;
+	if(t_sw[1] == t_ne[1]) t_ne[1] = t_ne[1]+1;
+	
+	this.t_sw = t_sw;
+	this.t_ne = t_ne;
+		
+	var area = (t_ne[0] - t_sw[0])*(t_ne[1] - t_sw[1]);
+	this.area = area // TODO compensate for area
+	
+	if(corner == 0 || corner == 1 || corner == 5) {
+		var w = this.wm.tileLatLngBounds(t_sw[0], t_sw[1], this.zoom)[1]; // miny, minx, maxy, maxx
+		this.g[0] = new google.maps.LatLng(this.g[0].lat(), w);
+		this.g[1] = new google.maps.LatLng(this.g[1].lat(), w);
+	}
+	if(corner == 1 || corner == 2 || corner == 5) {
+		var n = this.wm.tileLatLngBounds(t_sw[0], t_ne[1], this.zoom)[0];
+		this.g[1] = new google.maps.LatLng(n, this.g[1].lng());
+		this.g[2] = new google.maps.LatLng(n, this.g[2].lng());
+	}
+	if(corner == 2 || corner == 3 || corner == 5) {
+		var e = this.wm.tileLatLngBounds(t_ne[0], t_ne[1], this.zoom)[1];
+		this.g[2] = new google.maps.LatLng(this.g[2].lat(), e);
+		this.g[3] = new google.maps.LatLng(this.g[3].lat(), e);
+	}
+	if(corner == 3 || corner == 0 || corner == 5) {
+		var s = this.wm.tileLatLngBounds(t_sw[0], t_sw[1], this.zoom)[0];
+		this.g[3] = new google.maps.LatLng(s, this.g[3].lng());
+		this.g[0] = new google.maps.LatLng(s, this.g[0].lng());
+	}
+}
 
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
