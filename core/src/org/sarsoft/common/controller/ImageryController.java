@@ -253,9 +253,23 @@ public class ImageryController extends JSONBaseController {
 	public BufferedImage retile(String[] layers, float[] opacity, double[] m_sw, double[] m_ne, int width, int height) {
 		int z = 1;
 		double r_target = Math.sqrt(Math.pow(m_ne[0] - m_sw[0], 2) + Math.pow(m_ne[1] - m_sw[1], 2)) / Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+		MapSource[] sources = new MapSource[layers.length];
+		String[] cfg = new String[layers.length];
 		
+		int max = 16;
+		for(int i = 0; i < layers.length; i++) {
+			String layer = layers[i];
+			if(layer.indexOf("_") > 0) {
+				cfg[i] = layer.split("_")[1];
+				layer = layer.split("_")[0];
+			}
+			sources[i] = RuntimeProperties.getMapSourceByAlias(layer);
+			max = Math.min(max, sources[i].getMaxresolution());
+		}
+
+	
 		int z_itr = 1;
-		while(z_itr <= 16) {
+		while(z_itr <= max) {
 			double r = WebMercator.Resolution(z_itr);
 			
 			double[] px_ne = WebMercator.MetersToPixels(m_ne[0], m_ne[1], z_itr);
@@ -284,9 +298,6 @@ public class ImageryController extends JSONBaseController {
 		width = (int) Math.round(scale*p_dx);
 		height = (int) Math.round(scale*p_dy);
 		
-		MapSource[] sources = new MapSource[layers.length];
-		String[] cfg = new String[layers.length];
-		
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
 		Graphics2D graphics = image.createGraphics();
 		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -294,15 +305,6 @@ public class ImageryController extends JSONBaseController {
 		graphics.setBackground(new Color(255, 255, 255, 0));
 		graphics.clearRect(0, 0, width, height);		
 				
-		for(int i = 0; i < layers.length; i++) {
-			String layer = layers[i];
-			if(layer.indexOf("_") > 0) {
-				cfg[i] = layer.split("_")[1];
-				layer = layer.split("_")[0];
-			}
-			sources[i] = RuntimeProperties.getMapSourceByAlias(layer);
-		}
-
 		for(int x = (int) Math.floor(t_sw[0]); x <= (int) Math.floor(t_ne[0]); x++) {
 			for(int y = (int) Math.floor(t_ne[1]); y <= (int) Math.floor(t_sw[1]); y++) {
 				int dx1 = (int) Math.floor((((double) x - t_sw[0])*scale)*256);
