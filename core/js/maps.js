@@ -938,8 +938,7 @@ org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
 org.sarsoft.MapDeclinationWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
-	google.maps.event.addListener(imap.map, "moveend", function() { that.refresh(); });
-	google.maps.event.addListener(imap.map, "zoomend", function(foo, bar) { that.refresh(); });
+	google.maps.event.addListener(imap.map, "center_changed", function() { that.refresh(); });
 	this.refresh();
 }
 
