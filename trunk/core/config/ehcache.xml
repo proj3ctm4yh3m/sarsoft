@@ -10,7 +10,7 @@
 		memoryStoreEvictionPolicy="LRU"/>
 		
 	<cache name="tileCache"
-		maxElementsInMemory="5000"
+		maxElementsInMemory="1000"
 		eternal="false"
 		timeToIdleSeconds="172800"
 		timeToLiveSeconds="172800"

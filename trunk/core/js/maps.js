@@ -771,25 +771,15 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 		container.css('display', 'none');
 		that.fullscreen();
 	});
-
+	this.header = header;
+	
 	div.append(document.createTextNode("Page Size: "));
 	this.presetInput = jQuery('<select><option value="Custom">Custom</option></select>').appendTo(div).change(this.updateToPreset);
 	for(var i = 0; i < this.presets.length; i++) {
 		jQuery('<option value="' + this.presets[i].name + '">' + this.presets[i].description + '</option>').appendTo(this.presetInput);
 	}
 
-	this.preset = jQuery('<span></span>').appendTo(div);
-	this.cborientation = jQuery('<input type="checkbox" style="margin-left: 5px"/>').appendTo(this.preset).change(this.updateToPreset);
-	this.preset.append('<span style="padding-right: 5px">Landscape</span>');
-	this.cbmargin = jQuery('<input style="margin-left: 5px" type="checkbox"/>').appendTo(this.preset).change(this.updateToPreset);
-	this.preset.append('<span>Borderless</span>');
-
-	this.cbborder = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
-	div.append('<span style="padding-right: 5px">Show Coordinates in Margin</span>');
-	this.cbscale = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
-	div.append('<span>Fit Preview To Screen</span>');	
-	
-	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
+	var div = jQuery('<span style="padding-left: 1ex"></span>').appendTo(div);
 	div.append(document.createTextNode("Width: "));
 	this.widthInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
 	div.append(document.createTextNode("   Height: "));
@@ -802,7 +792,19 @@ org.sarsoft.view.MapSizeForm = function(map, container) {
 		this.marginInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
 	}
 	this.custom = div;
-	
+		
+	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
+	this.preset = jQuery('<span></span>').appendTo(div);
+	this.cborientation = jQuery('<input type="checkbox" style="margin-left: 5px"/>').appendTo(this.preset).change(this.updateToPreset);
+	this.preset.append('<span style="padding-right: 5px">Landscape</span>');
+	this.cbmargin = jQuery('<input style="margin-left: 5px" type="checkbox"/>').appendTo(this.preset).change(this.updateToPreset);
+	this.preset.append('<span>Borderless</span>');
+
+	this.cbborder = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
+	div.append('<span style="padding-right: 5px">Show Coordinates in Margin</span>');
+	this.cbscale = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
+	div.append('<span>Fit Preview To Screen</span>');	
+		
 	if($.browser.msie) {
 		jQuery('<div style="font-weight: bold; color: red">Printing is not supported on Internet Explorer and may not work properly.</div>').appendTo(container);
 	} else if($.browser.mozilla) {
