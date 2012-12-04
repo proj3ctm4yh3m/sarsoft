@@ -3382,7 +3382,7 @@ org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 
 org.sarsoft.MapURLHashWidget.prototype.saveMap = function() {
 	var hash = org.sarsoft.MapURLHashWidget.createConfigStr(this.imap);
-	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
+	if(imap.registered["org.sarsoft.DataNavigator"] != null && imap.registered["org.sarsoft.DataNavigator"].defaults.sharing != null) {
 		var url = "http://" + window.location.host + '/map.html#' + hash;
 		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
 		'Embed it in a webpage or forum:<textarea rows="4" cols="60" style="vertical-align: text-top">&lt;iframe width="500px" height="500px" src="' + url + '"&gt;&lt;/iframe&gt;</textarea>');
@@ -3752,6 +3752,7 @@ org.sarsoft.widget.ImportExport = function(imap, container) {
 	});
 	
 	this.kml.click(function() { kmlSelect.val(map.getMapTypeId()); kmlDlg.swap(); });
+	this.kmlBody = kmlBody;
 }
 
 org.sarsoft.widget.Account = function(imap, container, acctlink) {
