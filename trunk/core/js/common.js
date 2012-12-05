@@ -80,7 +80,10 @@ org.sarsoft.BaseDAO.prototype.dehydrate = function() {
 org.sarsoft.BaseDAO.prototype.rehydrate = function(state) {
 	this.preload = true;
 	for(var i = 0; i < state.length; i++) {
-		if(state[i] != null) this.objs[i] = this.sanitize(state[i]);
+		if(state[i] != null) {
+			var s = this.sanitize(state[i]); 
+			this.objs[s.id] = s;
+		}
 	}
 }
 
@@ -204,7 +207,7 @@ org.sarsoft.BaseDAO.prototype.loadAll = function(handler) {
 		org.sarsoft.async(function() {
 			var r = []
 			for(var i = 0; i < that.objs.length; i++) {
-				r[i] = that.getObj(i);
+				if(that.getObj(i) != null) r.push(that.getObj(i));
 			}
 			handler(r)
 		});
