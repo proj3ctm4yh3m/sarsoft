@@ -85,12 +85,8 @@ public class ImageryController extends JSONBaseController {
 		}
 		return in;
 	}
-
-	protected InputStream getRemoteTileInputStream(String url, int z, int x, int y) {
-		url = url.replaceAll("\\{Z\\}", Integer.toString(z));
-		url = url.replaceAll("\\{X\\}", Integer.toString(x));
-		url = url.replaceAll("\\{Y\\}", Integer.toString(y));
-		url = url.replaceAll("\\{V\\}", "s-11111111");
+	
+	public InputStream getRemoteImageStream(String url) {
 		Cache cache = CacheManager.getInstance().getCache("tileCache");
 
 		byte[] array = null;
@@ -115,7 +111,16 @@ public class ImageryController extends JSONBaseController {
 			return new ByteArrayInputStream(array);
 		} catch (Exception e) {
 		}
-		return null;
+		return null;		
+	}
+
+	protected InputStream getRemoteTileInputStream(String url, int z, int x, int y) {
+		url = url.replaceAll("\\{Z\\}", Integer.toString(z));
+		url = url.replaceAll("\\{X\\}", Integer.toString(x));
+		url = url.replaceAll("\\{Y\\}", Integer.toString(y));
+		url = url.replaceAll("\\{V\\}", "s-11111111");
+		
+		return getRemoteImageStream(url);
 	}
 	
 	protected BufferedImage getTile(String url, int z, int x, int y) {
