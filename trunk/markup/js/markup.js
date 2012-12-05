@@ -781,7 +781,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	
 	}
 
-	if(nestMenuItems != false && !embedded) {
+	if(nestMenuItems == false && !embedded) {
 		this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
 	}
 
