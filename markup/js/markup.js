@@ -391,7 +391,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		this.impcomms = new org.sarsoft.GPSComms(this.impHeader);
 
 	} else {
-		if(dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
+		if(dn.defaults.io != null && dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
 	}
 	
 	// TODO IE may require form to be in DOM
@@ -404,7 +404,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	var exp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To export data, click on the file type you wish to export to:</div></div>');
 	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, null, "Export Complete", function() {
 	});
-	if(dn.defaults.io.exp != null) dn.defaults.io.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
+	if(dn.defaults.io != null && dn.defaults.io.exp != null) dn.defaults.io.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
 
 	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
 	gpsout.click(function() {
@@ -582,6 +582,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	this.showMarkers = true;
 	this.showShapes = true;
 	this.embedded = embedded;
+	this.nestMenuItems = nestMenuItems;
 	
 	var dcbody = jQuery('<div>Delete - Are You Sure?</div>');
 	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", dcbody, "Delete", "Cancel", function() {
@@ -593,7 +594,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 		that.delconfirm.show();
 	}
 	
-	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
+	if(imap.registered["org.sarsoft.DataNavigator"] != null && nestMenuItems == false) {
 		var dn = imap.registered["org.sarsoft.DataNavigator"];
 		this.dn = new Object();
 		if(org.sarsoft.tenantid == null) {
@@ -780,7 +781,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, nestMenuItems, embed
 	
 	}
 
-	if(!nestMenuItems && !embedded) {
+	if(nestMenuItems != false && !embedded) {
 		this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
 	}
 
@@ -824,6 +825,7 @@ org.sarsoft.controller.MarkupMapController.prototype.rehydrate = function(state)
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function() {
+	if(this.nestMenuItems == "none") return;
 	var mkeys = Object.keys(this.markers).length;
 	var skeys = Object.keys(this.shapes).length;
 	if(org.sarsoft.tenantid == null) {
