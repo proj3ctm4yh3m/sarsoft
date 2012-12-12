@@ -282,7 +282,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked"})
-	private Shape reconstructShape(Map mapobj) {
+	public Shape reconstructShape(Map mapobj) {
 		Way way = new Way();
 		way.setWaypoints((List<Waypoint>) mapobj.get("waypoints"));
 		way.setType(WayType.valueOf((String) mapobj.get("type")));
@@ -306,7 +306,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked"})
-	private Marker reconstructMarker(Map mapobj) {
+	public Marker reconstructMarker(Map mapobj) {
 		Waypoint wpt = new Waypoint();
 		wpt.setLat((Double) mapobj.get("lat"));
 		wpt.setLng((Double) mapobj.get("lng"));
