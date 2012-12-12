@@ -2784,7 +2784,7 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 		}
 	});
 	google.maps.event.addListener(poly, "mousemove", function(evt) {
-		if(that.registered["org.sarsoft.PositionInfoControl"].value == org.sarsoft.PositionInfoControl.CURSOR) that.registered["org.sarsoft.PositionInfoControl"].update(evt.latLng);
+		if(that.registered["org.sarsoft.PositionInfoControl"] != null && that.registered["org.sarsoft.PositionInfoControl"].value == org.sarsoft.PositionInfoControl.CURSOR) that.registered["org.sarsoft.PositionInfoControl"].update(evt.latLng);
 	});
 	google.maps.event.addListener(poly, "mouseout", function() {
 		if(config.clickable) that.unselect(way);
