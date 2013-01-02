@@ -147,7 +147,7 @@ public class Way extends SarModelObject implements IPreSave {
 		}
 		
 		List<Waypoint> results = new ArrayList<Waypoint>();
-		if(dmax >= epsilon*epsilon) {
+		if(dmax >= epsilon) {
 			List<Waypoint> r1 = douglasPeucker(points.subList(0, index+1), epsilon);
 			List<Waypoint> r2 = douglasPeucker(points.subList(index, points.size()), epsilon);
 			results.addAll(r1.subList(0, r1.size()-1));
