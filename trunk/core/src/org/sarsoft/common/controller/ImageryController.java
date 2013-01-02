@@ -123,7 +123,7 @@ public class ImageryController extends JSONBaseController {
 		return getRemoteImageStream(url);
 	}
 	
-	protected BufferedImage getTile(String url, int z, int x, int y) {
+	public BufferedImage getTile(String url, int z, int x, int y) {
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {
 			url = url.substring(24, url.length() - 16);
 			return streamToImage(getLocalTileInputStream(url, z, x, y));
