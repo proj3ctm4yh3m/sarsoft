@@ -113,25 +113,14 @@ public class Way extends SarModelObject implements IPreSave {
 		double dy = p2.getLat() - p1.getLat();
 		
 		if(dx != 0 || dy != 0) {
-			double t = ((p0.getLng() - p1.getLng()) * dx + (p0.getLat() - p1.getLat()) * dy) / (dx*dx + dy*dy);
-			if(t > 1) {
-				dx = p0.getLng() - p2.getLng();
-				dy = p0.getLat() - p2.getLat();
-				return dx*dx + dy*dy;
-			} else if(t > 0) {
-				dx = p0.getLng() - (p1.getLng() + (dx * t));
-				dy = p0.getLat() - (p1.getLat() + (dx * t));
-				return dx*dx + dy*dy;
-			} else {
-				dx = p0.getLng() - p1.getLng();
-				dy = p0.getLat() - p1.getLat();
-				return dx*dx + dy*dy;
-			}
+			double x = p0.getLng() - p1.getLng();
+			double y = p0.getLat() - p1.getLat();
+			double k = dy/dx;
+			return Math.abs(k*x - y) / Math.sqrt(k*k + 1);
 		}
-		
 		dx = p0.getLng()-p1.getLng();
 		dy = p0.getLat()-p1.getLat();
-		return dx*dx+dy*dy;
+		return Math.sqrt(dx*dx+dy*dy);
 	}
 	
 	public static List<Waypoint> douglasPeucker(List<Waypoint> points, double epsilon) {
@@ -151,7 +140,7 @@ public class Way extends SarModelObject implements IPreSave {
 			List<Waypoint> r1 = douglasPeucker(points.subList(0, index+1), epsilon);
 			List<Waypoint> r2 = douglasPeucker(points.subList(index, points.size()), epsilon);
 			results.addAll(r1.subList(0, r1.size()-1));
-			results.addAll(r2);			
+			results.addAll(r2);
 		} else {
 			results.add(points.get(0));
 			results.add(points.get(points.size()-1));
@@ -162,8 +151,8 @@ public class Way extends SarModelObject implements IPreSave {
 	@JSONSerializable
 	@Transient
 	public List<Waypoint> getZoomAdjustedWaypoints() {
-		if(precision == 0 || waypoints.size() < 4) return waypoints;
-		return douglasPeucker(waypoints, 0.0001);
+		if(precision == 0 || waypoints.size() < 100) return waypoints;
+		return douglasPeucker(waypoints, 0.00005);
 	}
 	
 	public String toString() {
