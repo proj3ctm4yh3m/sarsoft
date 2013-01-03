@@ -136,7 +136,7 @@ public class ImageryController extends JSONBaseController {
 		try {
 			return ImageIO.read(stream);
 		} catch (IOException e) {
-			e.printStackTrace();
+			// missing overzoom tiles clutter the system log
 		}
 		return null;
 	}
