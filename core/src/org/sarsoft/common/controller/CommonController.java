@@ -41,8 +41,8 @@ public class CommonController extends JSONBaseController {
 		String go = "<GroundOverlay><Icon><href>" + template + "</href></Icon>\n<LatLonBox>";
 		go = go + "<north>" + bounds[2] + "</north>\n";
 		go = go + "<south>" + bounds[0] + "</south>\n";
-		go = go + "<east>" + bounds[1] + "</east>\n";
-		go = go + "<west>" + bounds[3] + "</west>\n";
+		go = go + "<east>" + bounds[3] + "</east>\n";
+		go = go + "<west>" + bounds[1] + "</west>\n";
 		go = go + "</LatLonBox></GroundOverlay>";
 		return go;
 	}
