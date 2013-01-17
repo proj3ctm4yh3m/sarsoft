@@ -242,7 +242,7 @@ public class ImageryController extends JSONBaseController {
 			for(int dx = 0; dx < 4; dx++) {
 				for(int dy = 0; dy < 4; dy++) {
 					try {
-						BufferedImage tile = ImageIO.read(getRemoteTileInputStream(template, z+2, x*4+dx, y*4+dy));
+						BufferedImage tile = this.getTile(template, z+2, x*4+dx, y*4+dy);
 						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity[i])); 
 						graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
 					} catch (Exception e) {
