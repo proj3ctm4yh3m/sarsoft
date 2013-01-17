@@ -2506,7 +2506,9 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.markers = new Array();
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
-	this._menuItems = [];
+	this._contextMenu._vertex
+	this._menuItems = [{ text: "Delete Vertex", applicable: function() {var g = that._contextMenu._gmapobj; return g.getEditable() && that._contextMenu._vertex != null && (g.getPath().getLength() > 3 || (g.getPath().getLength() > 2 && g.getPaths == null)) }, handler: function(obj) { that._contextMenu._gmapobj.getPath().removeAt(that._contextMenu._vertex); } }];
+
 	this._menuItemsOverride = null;
 	this.registered = new Object();
 	this._mapInfoMessages = new Object();
@@ -2520,7 +2522,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	google.maps.event.addListener(map, "rightclick", function(evt) {
 		that.click(evt);
 	});
-
+	
 	this.loadBrowserSettings();
 	this.map._imap = this;
 	this.mapMessageControl = new org.sarsoft.MapMessageControl(this.map);
@@ -2574,6 +2576,8 @@ org.sarsoft.InteractiveMap = function(map, options) {
 }
 
 org.sarsoft.InteractiveMap.prototype.click = function(evt, obj) {
+	this._contextMenu._vertex = evt.vertex;
+	this._contextMenu._gmapobj = obj;
 	if(this._selected != null) {
 		obj = this._selected;
 	}
