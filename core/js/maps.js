@@ -2507,7 +2507,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
 	this._contextMenu._vertex
-	this._menuItems = [{ text: "Delete Vertex", applicable: function() {var g = that._contextMenu._gmapobj; return g != null && g.getEditable() && that._contextMenu._vertex != null && (g.getPath().getLength() > 3 || (g.getPath().getLength() > 2 && g.getPaths == null)) }, handler: function(obj) { that._contextMenu._gmapobj.getPath().removeAt(that._contextMenu._vertex); } }];
+	this._menuItems = [{ text: "Delete Vertex", applicable: function() {var g = that._contextMenu._gmapobj; return g != null && g.getEditable != null && g.getEditable() && that._contextMenu._vertex != null && (g.getPath().getLength() > 3 || (g.getPath().getLength() > 2 && g.getPaths == null)) }, handler: function(obj) { that._contextMenu._gmapobj.getPath().removeAt(that._contextMenu._vertex); } }];
 
 	this._menuItemsOverride = null;
 	this.registered = new Object();
