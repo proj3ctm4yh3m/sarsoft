@@ -22,11 +22,13 @@ public class MapSource {
 	private String copyright;
 	private int minresolution;
 	private int maxresolution;
+	private int opacity;
 	private boolean png;
 	private boolean alphaOverlay;
 	private String template;
 	private String info;
 	private String description;
+	private int date;
 
 	public static MapSource createFromJSON(JSONObject json) {
 		return (MapSource) JSONObject.toBean(json, MapSource.class);
@@ -69,6 +71,13 @@ public class MapSource {
 		this.minresolution = minresolution;
 	}
 	@JSONSerializable
+	public int getOpacity() {
+		return opacity;
+	}
+	public void setOpacity(int opacity) {
+		this.opacity = opacity;
+	}
+	@JSONSerializable
 	public boolean isPng() {
 		return png;
 	}
@@ -108,5 +117,12 @@ public class MapSource {
 	}
 	public void setType(Type type) {
 		this.type = type;
+	}
+	@JSONSerializable
+	public int getDate() {
+		return date;
+	}
+	public void setDate(int date) {
+		this.date = date;
 	}
 }

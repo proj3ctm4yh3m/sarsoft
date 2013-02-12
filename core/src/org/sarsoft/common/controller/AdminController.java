@@ -323,6 +323,7 @@ public class AdminController extends JSONBaseController {
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		tenant.setMapConfig((String) m.get("value"));
+		tenant.setCfgUpdated(System.currentTimeMillis());
 		dao.save(tenant);
 		return json(model, tenant);
 	}
@@ -333,6 +334,7 @@ public class AdminController extends JSONBaseController {
 		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		tenant.setLayers((String) m.get("value"));
+		tenant.setCfgUpdated(System.currentTimeMillis());
 		dao.save(tenant);
 		return json(model, tenant);
 	}

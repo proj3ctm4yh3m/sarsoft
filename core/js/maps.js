@@ -100,7 +100,7 @@ org.sarsoft.EnhancedGMap.nativeAliases = {};
 org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 	var ts = config.tilesize ? config.tilesize : 256;
 	if(config.type == "TILE"){
-		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
+		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: config.opacity == null ? 1 : config.opacity/100, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
 			var url = config.template;
 			if(zoom > config.maxresolution) {
 				url = '/resource/imagery/tilecache/' + config.name + '/{Z}/{X}/{Y}.png';
@@ -281,10 +281,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 		
 		var div = jQuery('<div></div>').appendTo(this.aDiv)
 		div.append('<span style="margin-right: 2px; float: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></span>');
-		var dataset = jQuery('<select><option value="s">Slope</option><option value="a">Aspect</option></select>').appendTo(
-				jQuery('<div style="margin-left: 2px">Color By: </div>').appendTo(div));
 
-		var cfg2 = jQuery('<div style="margin-top: 5px"><span style="color: green; margin-left: 2px">20&deg;-27&deg;</span><span style="background-color: #F5FF0A; margin-left: 5px">28&deg;-34&deg;</span><span style="color: #FF0000; margin-left: 5px">35&deg;-45&deg;</span><span style="color: #0000FF; margin-left: 5px">46&deg;+</span></div>').appendTo(div);
 		var cfg = jQuery('<table style="color: black; display: none" border="0"></table>').appendTo(div);
 		var tb = jQuery('<tbody></tbody').appendTo(cfg);
 		var tr = jQuery('<tr></tr>').appendTo(tb);
@@ -300,24 +297,17 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 		elements[4] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">S</td>').appendTo(tr);
 		elements[3] = jQuery('<td style="cursor: pointer; width: 2em; height: 2em; text-align: center; background-repeat: no-repeat">SE</td>').appendTo(tr);
 		var swapLayer = function() {
-			that.swapConfigurableAlphaLayer(idx, dataset.val() + "-" + hazards.join(""));
+			that.swapConfigurableAlphaLayer(idx, "a-" + hazards.join(""));
 			that.handleLayerChange();
 		}
 		var setBackground = function(aspect) {
 			var hazard = hazards[aspect];
-			if(dataset.val() == "s") {
-				cfg.css('display', 'none');
-				cfg2.css('display', 'block');
-			} else {
-				cfg2.css('display', 'none');
-				cfg.css('display', 'block');
-				elements[aspect].css('background-color', colors[hazard]);
-			}
+			cfg.css('display', 'block');
+			elements[aspect].css('background-color', colors[hazard]);
 		}
 		var incrementAspect = function(aspect) {
 			var hazard = hazards[aspect]+1;
 			if(hazard > 4) hazard = 0;
-			if(dataset.val() == "s" && hazard > 1) hazard = 0;
 			hazards[aspect] = hazard;
 			setBackground(aspect);
 		}
@@ -331,19 +321,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 			}
 			swapLayer();
 		});
-		dataset.change(function() {
-			var total = 0;
-			for(var i = 0; i < 8; i++) {
-				total = total + hazards[i];
-			}
-			for(var i = 0; i < 8; i++) {
-				if((dataset.val() == "s" && hazards[i] > 1) || total == 0) hazards[i] = 1;
-				setBackground(i);
-			}
-			swapLayer();
-		});
 		cfg.readCfgValue = function(hazard) {
-			dataset.val(hazard.split("-")[0]);
 			newHazards = hazard.split("-")[1].split("");
 			for(var i = 0; i < 8; i++) {
 				hazards[i] = 1*newHazards[i];
@@ -359,7 +337,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 	$(this.alphaOverlayBoxes[idx]).change(function() { that.handleLayerChange() });
 	this.alphaOverlayTypes[idx] = alias;
 	this.hasAlphaOverlays = true;
-	if(type._alias != null && type._alias.indexOf("slp") == 0) this.swapConfigurableAlphaLayer(idx, "s-11111111");
+	if(type._alias != null && type._alias.indexOf("slp") == 0) this.swapConfigurableAlphaLayer(idx, "a-11111111");
 }
 
 OverlayDropdownMapControl.prototype.getConfigFromAlias = function(alias) {
@@ -2021,17 +1999,23 @@ org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function(handler) {
 	}
 
 	YAHOO.util.Cookie.set("org.sarsoft.mapLayers", layers.join(","));
+	YAHOO.util.Cookie.set("org.sarsoft.updated", new Date().getTime());
 	if(handler != null) handler();
 }
 
 org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 	if(YAHOO.util.Cookie.exists("org.sarsoft.mapLayers")) {
 		var layers = YAHOO.util.Cookie.get("org.sarsoft.mapLayers").split(",");
+		var date = YAHOO.util.Cookie.exists("org.sarsoft.updated") ? Math.round(YAHOO.util.Cookie.get("org.sarsoft.updated", Number)/(1000*60*60*24)) : 0;
 		org.sarsoft.EnhancedGMap.visibleMapTypes = [];
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-			for(var j = 0; j < layers.length; j++) {
-				var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-				if(layers[j] == type.alias) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
+			var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+			if(type.date > date) {
+				org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
+			} else {
+				for(var j = 0; j < layers.length; j++) {
+					if(layers[j] == type.alias) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.name);
+				}
 			}
 		}
 		var config = imap.getConfig();
@@ -2657,6 +2641,7 @@ org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 	if(config.alphaOverlays != null && config.alphaOverlays.length > 0) {
 		names = config.alphaOverlays.split(",");
 		for (var i = 0; i < names.length; i++) {
+			if(names[i] == "slp_s-11111111") names[i] = "s1";
 			if(names[i].indexOf("_") >= 0) {
 				var parts = names[i].split("_");
 				names[i] = parts[0];
