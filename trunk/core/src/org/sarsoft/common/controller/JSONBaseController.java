@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -85,6 +86,11 @@ public abstract class JSONBaseController {
 				List<String> sources = new ArrayList<String>();
 				for(String layer : layers) {
 					sources.add(getProperty("sarsoft.map.background." + layer + ".name"));
+				}
+				int time = Math.round((tenant.getCfgUpdated() != null ? tenant.getCfgUpdated() : 0L) / (1000*60*60*24)); // TODO tenant's timestamp
+				List<MapSource> defaults = RuntimeProperties.getMapSources();
+				for(MapSource ms : defaults) {
+					if(ms.getDate() > time && !sources.contains(ms.getName())) sources.add(ms.getName());
 				}
 				return sources;
 			}
@@ -208,7 +214,7 @@ public abstract class JSONBaseController {
 			for(MapSource source : RuntimeProperties.getMapSources()) {
 				if(!source.isAlphaOverlay()) {
 					preheader = preheader + ((first) ? "" : ",") + "{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
-						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
+						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + ", date: " + source.getDate() +
 						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + 
 						"\", description: \"" + ((source.getDescription() == null) ? "" : source.getDescription()) + "\", template: \"";
 					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
@@ -223,8 +229,8 @@ public abstract class JSONBaseController {
 			for(MapSource source : RuntimeProperties.getMapSources()) {
 				if(source.isAlphaOverlay()) {
 					preheader = preheader + ",{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
-						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + 
-						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + 
+						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + ", date: " + source.getDate() +
+						", opacity: " + source.getOpacity() + ", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + 
 						"\", description: \"" + ((source.getDescription() == null) ? "" : source.getDescription()) + "\", template: \"";
 					if(source.getType() == MapSource.Type.TILE && tileCacheEnabled && source.getTemplate().startsWith("http")) {
 						preheader = preheader + "/resource/imagery/tilecache/" + source.getName() + "/{Z}/{X}/{Y}.png";

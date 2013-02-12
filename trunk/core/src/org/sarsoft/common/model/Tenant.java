@@ -37,6 +37,7 @@ public abstract class Tenant {
 	private UserAccount account;
 	private String mapConfig;
 	private Boolean shared;
+	private Long cfgUpdated;
 	
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -130,6 +131,14 @@ public abstract class Tenant {
 	
 	public void setShared(Boolean shared) {
 		this.shared = shared;
+	}
+	
+	public Long getCfgUpdated() {
+		return cfgUpdated;
+	}
+	
+	public void setCfgUpdated(Long updated) {
+		this.cfgUpdated = updated;
 	}
 
 	@SuppressWarnings("rawtypes")

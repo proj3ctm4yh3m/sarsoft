@@ -81,7 +81,17 @@ public class RuntimeProperties {
 						source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
 						source.setAlphaOverlay(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".alphaOverlay")));
 						source.setInfo(getProperty("sarsoft.map.background." + name + ".info"));
+						if(source.isAlphaOverlay()) {
+							int opacity = 100;
+							String opacitystr = getProperty("sarsoft.map.background." + name + ".opacity");
+							if(opacitystr != null) opacity = Integer.parseInt(opacitystr);
+							source.setOpacity(opacity);
+						}
 					}
+					String datestr = getProperty("sarsoft.map.background." + name + ".date");
+					int date = 0;
+					if(datestr != null) date = Integer.parseInt(datestr);
+					source.setDate(date);
 					mapSources.add(source);
 				} catch (Exception e) {
 					logger.error("Error with map layer " + name, e);
