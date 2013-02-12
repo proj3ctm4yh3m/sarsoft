@@ -58,6 +58,10 @@ public class ImageryController extends JSONBaseController {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 		binder.registerCustomEditor(byte[].class, new ByteArrayMultipartFileEditor());
 	}
+	
+	public int makeRGBA(int r, int g, int b, int a) {
+		return (a << 24) | (r << 16) | (g << 8) | b;
+	}
 
 	protected InputStream getLocalTileInputStream(String layer, int z, int x, int y) {
 		InputStream in = null;
