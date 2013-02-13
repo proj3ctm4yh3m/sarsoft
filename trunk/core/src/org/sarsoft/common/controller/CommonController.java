@@ -108,7 +108,7 @@ public class CommonController extends JSONBaseController {
 		if(sources.length > 1) {
 			template =  RuntimeProperties.getServerUrl() + "resource/imagery/compositetile/" + layernames + "/{Z}/{X}/{Y}.png";
 		} else {
-			template = template.replaceAll("\\{V\\}", "s-11111111");
+			template = template.replaceAll("\\{V\\}", "a-11111111");
 		}
 
 		if(supersize) {
