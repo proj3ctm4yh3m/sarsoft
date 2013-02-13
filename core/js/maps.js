@@ -282,7 +282,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 			ta.val(hazard.replace(/p/g, '\n').replace(/c/g, ' '));
 			that.swapConfigurableAlphaLayer(idx, hazard);
 		}
-		div.append('<span style="margin-right: 2px; float: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></span>');
+		div.append('<span style="margin-right: 2px; float: right"><a href="http://caltopo.blogspot.com/2013/02/custom-dem-shading.html" target="_new">documentation</a></span>');
 		var change = jQuery("<a href=\"#\">Update Shading</a>").appendTo(div);
 		change.click(function() {
 			var hazard = ta.val();
