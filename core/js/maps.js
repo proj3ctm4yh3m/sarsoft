@@ -273,6 +273,28 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 	if(idx > 0) this.aDiv.append(document.createElement("br"));
 	this.alphaOverlayBoxes[idx] = jQuery('<input type="checkbox" value="' + idx + '" name="' + type.name + '"/>').appendTo(this.aDiv)[0];
 	this.aDiv.append(type.name);
+	if(type._alias != null && type._alias.indexOf("sh") == 0) {
+		var div = jQuery('<div></div>').appendTo(this.aDiv)
+		var ta = jQuery('<textarea style="width: 95%; height: 3.2em"></textarea>').appendTo(div);
+		var cfg = new Object();
+		cfg.readCfgValue = function(hazard) {
+			if(hazard == null) hazard = "";
+			ta.val(hazard.replace(/p/g, '\n').replace(/c/g, ' '));
+			that.swapConfigurableAlphaLayer(idx, hazard);
+		}
+		div.append('<span style="margin-right: 2px; float: right"><a href="http://caltopo.blogspot.com/2012/02/avalanche-slope-analysis.html" target="_new">please read</a></span>');
+		var change = jQuery("<a href=\"#\">Update Shading</a>").appendTo(div);
+		change.click(function() {
+			var hazard = ta.val();
+			if(hazard == null) hazard = "";
+			hazard = hazard.trim().replace(/\n/g, 'p').replace(/ /g, 'c');
+			that.swapConfigurableAlphaLayer(idx, hazard);
+			that.handleLayerChange();
+			return false;
+		});
+		this.alphaOverlayBoxes[idx]._cfg = cfg;
+		this.alphaOverlayBoxes[idx]._div = div;
+	}
 	if(type._alias != null && type._alias.indexOf("slp") == 0) {
 		var hazards = [1, 1, 1, 1, 1, 1, 1, 1];
 		var elements = [];
@@ -3479,7 +3501,7 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 				if(url.indexOf("http") == 0) {
 					url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";
 				} else {
-					url = url.replace(/\{Z\}/, 12).replace(/\{X\}/, 657).replace(/\{Y\}/, 1529).replace(/\{V\}/, 's-11111111');
+					url = url.replace(/\{Z\}/, 12).replace(/\{X\}/, 657).replace(/\{Y\}/, 1529).replace(/\{V\}/, '');
 				}
 			} else if(type.type == "WMS") {
 				url = "http://s3-us-west-1.amazonaws.com/caltopo/web/" + type.alias + ".jpg";

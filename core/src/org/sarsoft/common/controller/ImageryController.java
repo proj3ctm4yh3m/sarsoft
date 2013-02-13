@@ -122,7 +122,7 @@ public class ImageryController extends JSONBaseController {
 		url = url.replaceAll("\\{Z\\}", Integer.toString(z));
 		url = url.replaceAll("\\{X\\}", Integer.toString(x));
 		url = url.replaceAll("\\{Y\\}", Integer.toString(y));
-		url = url.replaceAll("\\{V\\}", "s-11111111");
+		url = url.replaceAll("\\{V\\}", "a-11111111");
 		
 		return getRemoteImageStream(url);
 	}
@@ -131,6 +131,9 @@ public class ImageryController extends JSONBaseController {
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {
 			url = url.substring(24, url.length() - 16);
 			return streamToImage(getLocalTileInputStream(url, z, x, y));
+		} else if(url.indexOf("/") == 0) {
+			url = "http://localhost:" + RuntimeProperties.getServerPort() + url;
+			return streamToImage(getRemoteTileInputStream(url, z, x, y));
 		} else {
 			return streamToImage(getRemoteTileInputStream(url, z, x, y));
 		}
@@ -196,7 +199,7 @@ public class ImageryController extends JSONBaseController {
 
 	
 	
-	protected BufferedImage zoom(BufferedImage original, int dz, int dx, int dy) {
+	public BufferedImage zoom(BufferedImage original, int dz, int dx, int dy) {
 		int tilesize = 256 / ((int) Math.pow(2, dz));
 		BufferedImage zoomed = new BufferedImage(256, 256, BufferedImage.TYPE_4BYTE_ABGR);
 		Graphics2D g = zoomed.createGraphics();
@@ -223,7 +226,7 @@ public class ImageryController extends JSONBaseController {
 		return composited;
 	}
 	
-	public BufferedImage superTile(String[] layers, float[] opacity, int z, int x, int y) {		
+	public BufferedImage superTile(String[] layers, float[] opacity, int z, int x, int y) {
 		BufferedImage image = new BufferedImage(1024, 1024, BufferedImage.TYPE_3BYTE_BGR);
 		Graphics2D graphics = image.createGraphics();
 		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -247,7 +250,7 @@ public class ImageryController extends JSONBaseController {
 				for(int dy = 0; dy < 4; dy++) {
 					try {
 						BufferedImage tile = this.getTile(template, z+2, x*4+dx, y*4+dy);
-						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity[i])); 
+						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
 						graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
 					} catch (Exception e) {
 						// don't write missing or corrupted tiles
@@ -340,10 +343,9 @@ public class ImageryController extends JSONBaseController {
 				for(int i = 0; i < layers.length; i++) {
 					String template = sources[i].getTemplate();
 					template = template.replaceAll("\\{V\\}", cfg[i]);
-					InputStream is = getRemoteTileInputStream(template, z, x, y);
-					if(is != null) {
-						BufferedImage tile = streamToImage(is);
-						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity[i])); 
+					BufferedImage tile = getTile(template, z, x, y);
+					if(tile != null) {
+						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sources[i].isAlphaOverlay() ? opacity[i] * sources[i].getOpacity() / 100 : opacity[i])); 
 						graphics.drawImage(tile, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
 					}
 				}
