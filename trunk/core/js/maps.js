@@ -273,7 +273,7 @@ OverlayDropdownMapControl.prototype.addAlphaType = function(alias) {
 	if(idx > 0) this.aDiv.append(document.createElement("br"));
 	this.alphaOverlayBoxes[idx] = jQuery('<input type="checkbox" value="' + idx + '" name="' + type.name + '"/>').appendTo(this.aDiv)[0];
 	this.aDiv.append(type.name);
-	if(type._alias != null && type._alias.indexOf("sh") == 0) {
+	if(type._alias != null && type._alias.indexOf("sc") == 0) {
 		var div = jQuery('<div></div>').appendTo(this.aDiv)
 		var ta = jQuery('<textarea style="width: 95%; height: 3.2em"></textarea>').appendTo(div);
 		var cfg = new Object();
@@ -2663,7 +2663,7 @@ org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
 	if(config.alphaOverlays != null && config.alphaOverlays.length > 0) {
 		names = config.alphaOverlays.split(",");
 		for (var i = 0; i < names.length; i++) {
-			if(names[i] == "slp_s-11111111") names[i] = "s1";
+			if(names[i] == "slp_s-11111111") names[i] = "sf";
 			if(names[i].indexOf("_") >= 0) {
 				var parts = names[i].split("_");
 				names[i] = parts[0];

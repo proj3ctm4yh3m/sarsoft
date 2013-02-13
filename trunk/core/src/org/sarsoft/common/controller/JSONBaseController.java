@@ -212,7 +212,7 @@ public abstract class JSONBaseController {
 			boolean first = true;
 			boolean tileCacheEnabled = Boolean.parseBoolean(getProperty("sarsoft.map.tileCacheEnabled"));
 			for(MapSource source : RuntimeProperties.getMapSources()) {
-				if(!source.isAlphaOverlay()) {
+				if(!source.isAlphaOverlay() && !source.isData()) {
 					preheader = preheader + ((first) ? "" : ",") + "{name: \"" + source.getName() + "\", alias: \"" + source.getAlias() + "\", type: \"" + source.getType() + 
 						"\", copyright: \"" + source.getCopyright() + "\", minresolution: " + source.getMinresolution() + ", maxresolution: " + source.getMaxresolution() + ", date: " + source.getDate() +
 						", png: " + source.isPng() + ", alphaOverlay: " + source.isAlphaOverlay() + ", info: \"" + ((source.getInfo() == null) ? "" : source.getInfo()) + 

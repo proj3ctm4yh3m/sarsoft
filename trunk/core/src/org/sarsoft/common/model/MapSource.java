@@ -25,6 +25,7 @@ public class MapSource {
 	private int opacity;
 	private boolean png;
 	private boolean alphaOverlay;
+	private boolean data;
 	private String template;
 	private String info;
 	private String description;
@@ -90,6 +91,12 @@ public class MapSource {
 	}
 	public void setAlphaOverlay(boolean alphaOverlay) {
 		this.alphaOverlay = alphaOverlay;
+	}
+	public boolean isData() {
+		return data;
+	}
+	public void setData(boolean data) {
+		this.data = data;
 	}
 	@JSONSerializable
 	public String getTemplate() {

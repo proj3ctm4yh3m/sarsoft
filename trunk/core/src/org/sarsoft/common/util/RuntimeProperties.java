@@ -80,6 +80,7 @@ public class RuntimeProperties {
 						source.setMinresolution(Integer.parseInt(getProperty("sarsoft.map.background." + name + ".minresolution")));
 						source.setPng(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".png")));
 						source.setAlphaOverlay(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".alphaOverlay")));
+						source.setData(Boolean.valueOf(getProperty("sarsoft.map.background." + name + ".data")));
 						source.setInfo(getProperty("sarsoft.map.background." + name + ".info"));
 						if(source.isAlphaOverlay()) {
 							int opacity = 100;
