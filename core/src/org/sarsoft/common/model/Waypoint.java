@@ -6,6 +6,8 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
 
+import org.sarsoft.common.util.Datum;
+
 import com.sun.xml.internal.rngom.parse.compact.ParseException;
 
 import net.sf.json.JSONArray;
@@ -19,26 +21,39 @@ public class Waypoint extends SarModelObject {
 	private double lat;
 	private double lng;
 	private Date time;
+	private Datum datum = Datum.WGS84;
 
-    /* Ellipsoid model constants (actual values here are for WGS84) */
-    private static double sma = 6378137.0;
-    private static double smb = 6356752.314;
-    private static double UTMScaleFactor = 0.9996;
-    
+    private static double UTMScaleFactor = 0.9996;    
     private static String[] zoneLetters = new String[] {"C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X"};
+    
+    public static void main(String[] args) {
+    	
+        Waypoint wpt2 = new Waypoint(738000, 4352099, 10, Datum.NAD27);
+    	System.out.println(wpt2.getLat() + " " + wpt2.getLng());
+    }
 
 	public Waypoint() {
 	}
-
-	public Waypoint(double lat, double lng) {
+	
+	public Waypoint(double lat, double lng, Datum datum) {
 		this.lat = lat;
 		this.lng = lng;
+		this.datum = datum;
 	}
 
-	public Waypoint(double easting, double northing, int zone) {
-		double[] latlng = UTMXYToLatLon(easting, northing, zone, false);
+	public Waypoint(double lat, double lng) {
+		this(lat, lng, Datum.WGS84);
+	}
+
+	public Waypoint(double easting, double northing, int zone, Datum datum) {
+		this.datum = datum;
+		double[] latlng = UTMXYToLatLon(easting, northing, zone, false, datum);
 		this.lat = latlng[0] * 180/Math.PI;
 		this.lng = latlng[1] * 180/Math.PI;
+	}
+	
+	public Waypoint(double easting, double northing, int zone) {
+		this(easting, northing, zone, Datum.WGS84);
 	}
 
 	public static Waypoint createFromJSON(JSONObject json) {
@@ -115,7 +130,7 @@ public class Waypoint extends SarModelObject {
 	
 	@Transient
 	public double[] getUTMXY(int zone) {
-		return LatLonToUTMXY(lat*Math.PI/180, lng*Math.PI/180, zone);
+		return LatLonToUTMXY(lat*Math.PI/180, lng*Math.PI/180, zone, datum);
 	}
 
 	@Transient
@@ -137,14 +152,14 @@ public class Waypoint extends SarModelObject {
 
 	public double[] offsetFrom(Waypoint wpt) {
 		int zone = (int) (Math.floor((Math.min(lng, wpt.getLng()) + 180) / 6) + 1);
-		double[] me = LatLonToUTMXY(lat*Math.PI/180, lng*Math.PI/180, zone);
-		double[] them = LatLonToUTMXY(wpt.getLat()*Math.PI/180, wpt.getLng()*Math.PI/180, zone);
+		double[] me = LatLonToUTMXY(lat*Math.PI/180, lng*Math.PI/180, zone, datum);
+		double[] them = LatLonToUTMXY(wpt.getLat()*Math.PI/180, wpt.getLng()*Math.PI/180, zone, datum);
 		return new double[] {them[0] - me[0], them[1] - me[1]};
 	}
 
-    private static double ArcLengthOfMeridian(double phi) {
-        double n = (sma - smb) / (sma + smb);
-        double alpha = (sma + smb)/2 * (1 + Math.pow(n, 2)/4 + Math.pow (n, 4)/64);
+    private static double ArcLengthOfMeridian(double phi, Datum datum) {
+        double n = (datum.a - datum.b) / (datum.a + datum.b);
+        double alpha = (datum.a + datum.b)/2 * (1 + Math.pow(n, 2)/4 + Math.pow (n, 4)/64);
         double beta = -3*n/2 + 9/16*Math.pow (n, 3) - 3/32*Math.pow (n, 5);
         double gamma = 15/16 * Math.pow (n, 2)- 15/32 * Math.pow (n, 4);
         double delta = -35/48 * Math.pow (n, 3) + 105/256 * Math.pow (n, 5.0);
@@ -158,9 +173,9 @@ public class Waypoint extends SarModelObject {
     }
 
 
-    private static double FootpointLatitude(double northing) {
-        double n = (sma - smb) / (sma + smb);
-        double alpha = (sma + smb)/2 * (1 + Math.pow(n, 2)/4 + Math.pow (n, 4)/64);
+    private static double FootpointLatitude(double northing, Datum datum) {
+        double n = (datum.a - datum.b) / (datum.a + datum.b);
+        double alpha = (datum.a + datum.b)/2 * (1 + Math.pow(n, 2)/4 + Math.pow (n, 4)/64);
 
         double beta = (3.0 * n / 2.0) + (-27.0 * Math.pow (n, 3.0) / 32.0) + (269.0 * Math.pow (n, 5.0) / 512.0);
         double gamma = (21.0 * Math.pow (n, 2.0) / 16.0) + (-55.0 * Math.pow (n, 4.0) / 32.0);
@@ -171,10 +186,10 @@ public class Waypoint extends SarModelObject {
         return y + (beta * Math.sin (2.0 * y)) + (gamma * Math.sin (4.0 * y)) + (delta * Math.sin (6.0 * y)) + (epsilon * Math.sin (8.0 * y));
     }
 
-    private static double[] MapLatLonToXY (double phi, double lambda, double lambda0) {
-        double ep2 = (Math.pow (sma, 2.0) - Math.pow (smb, 2.0)) / Math.pow (smb, 2.0);
+    private static double[] MapLatLonToXY (double phi, double lambda, double lambda0, Datum datum) {
+        double ep2 = (Math.pow (datum.a, 2.0) - Math.pow (datum.b, 2.0)) / Math.pow (datum.b, 2.0);
         double nu2 = ep2 * Math.pow (Math.cos (phi), 2.0);
-        double n = Math.pow (sma, 2.0) / (smb * Math.sqrt (1 + nu2));
+        double n = Math.pow (datum.a, 2.0) / (datum.b * Math.sqrt (1 + nu2));
         double t = Math.tan (phi);
         double t2 = t * t;
         double l = lambda - lambda0;
@@ -191,7 +206,7 @@ public class Waypoint extends SarModelObject {
             + (n / 6.0 * Math.pow (Math.cos (phi), 3.0) * l3coef * Math.pow (l, 3.0))
             + (n / 120.0 * Math.pow (Math.cos (phi), 5.0) * l5coef * Math.pow (l, 5.0))
             + (n / 5040.0 * Math.pow (Math.cos (phi), 7.0) * l7coef * Math.pow (l, 7.0));
-        xy[1] = ArcLengthOfMeridian (phi)
+        xy[1] = ArcLengthOfMeridian (phi, datum)
             + (t / 2.0 * n * Math.pow (Math.cos (phi), 2.0) * Math.pow (l, 2.0))
             + (t / 24.0 * n * Math.pow (Math.cos (phi), 4.0) * l4coef * Math.pow (l, 4.0))
             + (t / 720.0 * n * Math.pow (Math.cos (phi), 6.0) * l6coef * Math.pow (l, 6.0))
@@ -202,12 +217,12 @@ public class Waypoint extends SarModelObject {
 
 
 
-    private static double[] MapXYToLatLon (double x, double y, double lambda0) {
-        double phif = FootpointLatitude (y);
-        double ep2 = (Math.pow (sma, 2.0) - Math.pow (smb, 2.0)) / Math.pow (smb, 2.0);
+    private static double[] MapXYToLatLon (double x, double y, double lambda0, Datum datum) {
+        double phif = FootpointLatitude (y, datum);
+        double ep2 = (Math.pow (datum.a, 2.0) - Math.pow (datum.b, 2.0)) / Math.pow (datum.b, 2.0);
         double cf = Math.cos (phif);
         double nuf2 = ep2 * Math.pow (cf, 2.0);
-        double nf = Math.pow (sma, 2.0) / (smb * Math.sqrt (1 + nuf2));
+        double nf = Math.pow (datum.a, 2.0) / (datum.b * Math.sqrt (1 + nuf2));
         double nfpow = nf*nf;
 
         double tf = Math.tan (phif);
@@ -250,8 +265,8 @@ public class Waypoint extends SarModelObject {
         return philambda;
     }
 
-    private static double[] LatLonToUTMXY (double lat, double lon, int zone) {
-        double[] xy = MapLatLonToXY (lat, lon, UTMCentralMeridian(zone));
+    private static double[] LatLonToUTMXY (double lat, double lon, int zone, Datum datum) {
+        double[] xy = MapLatLonToXY (lat, lon, UTMCentralMeridian(zone), datum);
 
         xy[0] = xy[0] * UTMScaleFactor + 500000.0;
         xy[1] = xy[1] * UTMScaleFactor;
@@ -261,7 +276,7 @@ public class Waypoint extends SarModelObject {
         return xy;
     }
 
-    private static double[] UTMXYToLatLon (double x, double y, int zone, boolean southhemi) {
+    private static double[] UTMXYToLatLon (double x, double y, int zone, boolean southhemi, Datum datum) {
         x -= 500000.0;
         x /= UTMScaleFactor;
 
@@ -271,7 +286,7 @@ public class Waypoint extends SarModelObject {
         y /= UTMScaleFactor;
 
         double cmeridian = UTMCentralMeridian (zone);
-        return MapXYToLatLon (x, y, cmeridian);
+        return MapXYToLatLon (x, y, cmeridian, datum);
     }
 
     public boolean equals(Object o) {
@@ -286,5 +301,10 @@ public class Waypoint extends SarModelObject {
     	Waypoint wpt = new Waypoint(getLat(), getLng());
     	wpt.setTime(getTime());
     	return wpt;
+    }
+    
+    @Transient
+    public Datum getDatum() {
+    	return datum;
     }
 }
