@@ -1193,13 +1193,72 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 	
 	this.alertDiv = document.createElement("div");
 	this.dlg = new org.sarsoft.view.AlertDialog("Measure", this.alertDiv);
+	
+	this.pg = new org.sarsoft.view.ProfileGraph();
+	this.profileDlg = new org.sarsoft.view.MapDialog(imap, "Elevation Profile", this.pg.div, "OK", null, function() { that.pg.hide(); });
+	this.profileDlg.dialog.hideEvent.subscribe(function() { 
+		that.pg.hide(); if(that.poly != null) { that.poly.setMap(null); that.poly = null; } 
+		});	
 
 	var items = [{text: "Measure \u2192", applicable: function(obj) { return obj == null }, items:
 		[{text: "Distance", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, false);}},
-		 {text: "Area", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, true);}}]
+		 {text: "Area", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, true);}},
+		 {text: "Profile", applicable : function(obj) { return obj == null}, handler: function(data) { that.profile(data.point)}}]
 	}];
 	
 	this.imap.addContextMenuItems(items);
+}
+
+org.sarsoft.controller.MapToolsController.prototype._profileHandler = function(poly) {
+	var that = this;
+	if(this.poly != null) {
+		this.profileDlg.hide();
+	}
+	this.poly = poly;
+	google.maps.event.removeListener(this.complete);
+	this.imap.unlockContextMenu();
+	$(document).unbind("keydown", this._escHandler);
+	this.imap.drawingManager.setOptions({drawingMode: null});
+	
+	var path = this.imap._getPath(poly);
+	var length = google.maps.geometry.spherical.computeLength(path);
+
+	var service = new google.maps.ElevationService();
+	service.getElevationAlongPath({path: path.getArray(), samples: 100}, function(result, status) {
+		if(status == google.maps.ElevationStatus.OK) {
+			that.profileDlg.show();
+			that.pg.draw(result, "#000000");
+		} else {
+			alert("An error occurred while retrieving profile data from Google Maps: " + status);
+		}
+	});
+}
+
+org.sarsoft.controller.MapToolsController.prototype._escHandler = function(e) {
+	if(e.which == 27) {
+		this.imap.drawingManager.setOptions({drawingMode: null});
+		if(this.complete != null) {
+			google.maps.event.removeListener(this.complete);
+			this.complete = null;
+		}
+	}
+}
+
+org.sarsoft.controller.MapToolsController.prototype.profile = function() {
+	var that = this;
+	this.imap.lockContextMenu();
+	
+	this.imap.drawingManager.setOptions({polylineOptions: {strokeColor: "#000000", strokeOpacity: 1, strokeWeight: 1}});
+	this.imap.drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
+	
+	$(document).bind("keydown", this._escHandler);
+	
+	this.complete = google.maps.event.addListener(this.imap.drawingManager, "polylinecomplete", function(poly) {
+		google.maps.event.removeListener(that.complete);
+		that.complete = null;
+		window.setTimeout(function() { that._profileHandler(poly) }, 100);
+	});
+	
 }
 	
 org.sarsoft.controller.MapToolsController.prototype.measure = function(point, polygon) {

@@ -2216,6 +2216,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	if(this.marker != null) this.marker.setMap(null);
 	if(color == null) color = "#FF0000";
 	var width = this.div.width();
+	this.metric = false;
 	
 	var svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="height: 120px; width: 100%">' +
 		'<line x1="' + 0 + '" y1="' + 0 + '" x2="' + width + '" y2="' + 0 + '" style="stroke:rgb(0,0,0);stroke-width:1" />' +
@@ -2225,34 +2226,92 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	
 	var min = series[0].elevation;
 	var max = series[0].elevation;
+	var gross_gain = 0;
+	var gross_loss = 0;
+	var glls = [];
 	for(var i = 0; i < series.length; i++) {
+		glls[i] = series[i].location;
 		min = Math.min(min, series[i].elevation);
 		max = Math.max(max, series[i].elevation);
-	}
-
-	var ele = jQuery('<div style="height: 20px"></div>').appendTo(this.div);
-
-	for(var i = 0; i < series.length - 1; i++) {
-		var x1 = i*(width/(series.length-1));
-		var x2 = (i+1)*(width/(series.length-1));
-		var y1 = this.height-(series[i].elevation-min)*(this.height/(max-min))
-		var y2 = this.height-(series[i+1].elevation-min)*(this.height/(max-min))
-		svg = svg + '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" style="stroke:' + color + ';stroke-width:2" />';
-	}
-	for(var i = 0; i < series.length; i++) {
-		if(series[i].elevation == max || series[i].elevation == min) {
-			var x1 = i*(width/(series.length-1));
-			var y1 = this.height-(series[i].elevation-min)*(this.height/(max-min))
-			if(series[i].elevation == max) {
-				svg = svg + '<line x1="' + x1 + '" y1="' + (y1+1) + '" x2="' + x1 + '" y2="' + (y1+50) + '" style="stroke:rgb(0,0,0);stroke-width:1" />';
-				svg = svg + '<text dy="1em" style="text-anchor: middle; dominant-baseline: top" x="' + x1 + '" y="' + (y1+50) + '">' + Math.round(series[i].elevation*3.2808399) + 'ft / ' + Math.round(series[i].elevation) + 'm</text>';
-			}
-			if(series[i].elevation == min) {
-				svg = svg + '<line x1="' + x1 + '" y1="' + (y1-1) + '" x2="' + x1 + '" y2="' + (y1-50) + '" style="stroke:rgb(0,0,0);stroke-width:1" />';
-				svg = svg + '<text dy="-1em" style="text-anchor: middle; dominant-baseline: top" x="' + x1 + '" y="' + (y1-50) + '">' + Math.round(series[i].elevation*3.2808399) + 'ft / ' + Math.round(series[i].elevation) + 'm</text>';
+		if(i > 0) {
+			if(series[i].elevation - series[i-1].elevation > 0) {
+				gross_gain = gross_gain + (series[i].elevation - series[i-1].elevation);
+			} else {
+				gross_loss = gross_loss + Math.abs(series[i].elevation - series[i-1].elevation);
 			}
 		}
 	}
+	
+	var xscale = width/(series.length-1);
+	var yscale = this.height/(max-min);
+	
+	var total_dist = (google.maps.geometry.spherical.computeLength(glls));
+	var exaggeration = (120/this.div.width())*total_dist/(max-min);
+	var info = jQuery('<div stype="height: 20px"></div>').appendTo(this.div);
+	var ele = jQuery('<span></span>').appendTo(jQuery('<div style="display: inline-block; min-width: 20ex"></div>').appendTo(jQuery('<div style="display: inline-block; padding-left: 1ex">cursor: </div>').appendTo(info)));
+	
+	this.stats = jQuery('<span>range: ' + Math.round(min*3.2808399) + '\' to ' + Math.round(max*3.2808399) + '\' <span style="padding-left: 10px">gross: +' + Math.round(gross_gain*3.2808399) + '\' -' + Math.round(gross_loss*3.2808399) + '\'</span> <span style="padding-left: 10px">' + Math.round(total_dist*3.2808399/100) + '\' sampling interval, ' + (Math.round(exaggeration*10)/10) + 'x vertical exaggeration</span></span>').appendTo(info);
+	
+	for(var i = 0; i < series.length - 1; i++) {
+		var x1 = i*xscale;
+		var x2 = (i+1)*xscale;
+		var y1 = this.height-(series[i].elevation-min)*yscale;
+		var y2 = this.height-(series[i+1].elevation-min)*yscale;
+		svg = svg + '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" style="stroke:' + color + ';stroke-width:2" />';
+	}
+	
+	var startpoint = 0;
+ 	var direction = series[1].elevation - series[0].elevation;
+
+	for(var i = 1; i < series.length-1; i++) {
+		var d = series[i+1].elevation - series[i].elevation;
+		if(d/direction < 0 && i - startpoint < 4) {
+			startpoint = i;
+			direction = d;
+		} else if(d/direction < 0 || (i == series.length-2 && (d/direction > 0) && i - startpoint >= 4)) {
+			var testpoint = i;
+			for(var j = i; j < series.length; j++) {
+				if((series[j].elevation - series[startpoint].elevation) / (series[testpoint].elevation - series[startpoint].elevation) > 1) {
+					testpoint = j;
+				}
+				var dtestdstart = (series[j].elevation - series[testpoint].elevation) / (series[testpoint].elevation - series[startpoint].elevation);
+				if(dtestdstart < -0.1) break;
+			}
+			
+			for(var j = startpoint; j >= 0; j--) {
+				if((series[j].elevation - series[testpoint].elevation) / (series[startpoint].elevation - series[testpoint].elevation) > 1) {
+					startpoint = j;
+				}
+				var dtestdstart = (series[j].elevation - series[startpoint].elevation) / (series[startpoint].elevation - series[testpoint].elevation);
+				if(dtestdstart < -0.1) break;
+			}
+
+			if((testpoint-startpoint >= 6 && Math.abs((series[testpoint].elevation-series[startpoint].elevation)/(max-min)) >= 0.25) || Math.abs((series[testpoint].elevation-series[startpoint].elevation)/(max-min)) >= 0.5) {
+				var x1 = startpoint*xscale;
+				var y1 = this.height-(series[startpoint].elevation-min)*yscale;
+				var x2 = testpoint*xscale;
+				var y2 = this.height-(series[testpoint].elevation-min)*yscale;
+				var y = (y1+y2)/2;
+				svg = svg + '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x1 + '" y2="' + y2 + '" style="stroke:rgb(128,128,128);stroke-width:1" />';
+				svg = svg + '<line x1="' + x1 + '" y1="' + y2 + '" x2="' + x2 + '" y2="' + y2 + '" style="stroke:rgb(128,128,128);stroke-width:1" />';
+				de = Math.round(Math.abs(series[testpoint].elevation-series[startpoint].elevation));
+				dist = google.maps.geometry.spherical.computeLength(glls.slice(startpoint, testpoint));
+				dist = (Math.round(dist/160.934)/10);
+				if(y2 > y1) {
+					svg = svg + '<text style="text-anchor: middle; stroke:rgb(128,128,128); fill: rgb(128,128,128); stroke-width: 0.1" x="' + ((x1+x2)/2) + '" y="' + (y2-2) + '">' + dist + '\mi</text>';
+					svg = svg + '<text transform="rotate(90, ' + x1 + ',' + y + ')" dy="-0.7ex" style="writing-mode: bt; text-anchor: middle; stroke:rgb(128,128,128); fill: rgb(128,128,128); stroke-width: 0.1" x="' + x1 + '" y="' + y + '">' + Math.round(de*3.2808399) + '\'</text>';
+				} else {
+					svg = svg + '<text dy="1em" style="text-anchor: middle; stroke:rgb(128,128,128); fill: rgb(128,128,128); stroke-width: 0.1" x="' + ((x1+x2)/2) + '" y="' + (y2+2) + '">' + dist + '\mi</text>';
+					svg = svg + '<text transform="rotate(270, ' + x1 + ',' + y + ')" dy="1em" style="writing-mode: bt; text-anchor: middle; stroke:rgb(128,128,128); fill: rgb(128,128,128); stroke-width: 0.1" x="' + x1 + '" y="' + y + '">' + Math.round(de*3.2808399) + '\'</text>';
+				}
+			}
+			
+			startpoint=testpoint;
+			i=testpoint;
+			if(i < series.length - 1) direction = series[i+1].elevation-series[i].elevation;
+		}
+	}
+	
 	svg = svg + '</svg>';
 	svg = jQuery(svg).appendTo(jQuery('<div style="background-color: white; height: ' + this.height + 'px"></div>').appendTo(this.div));
 	
@@ -2266,7 +2325,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 			x = Math.max(0, Math.min(x, series.length-1));
 			var f = x - Math.floor(x);
 			var elevation = series[Math.floor(x)].elevation*(1-f) + series[Math.ceil(x)].elevation*f;
-			ele.html(Math.round(elevation*3.2808399) + "ft / " + Math.round(elevation) + "m");
+			ele.html(Math.round(elevation*3.2808399) + "' at " + (Math.round((x/(series.length-1))*total_dist/16.0934)/100) + "mi ");
 
 			var l = series[Math.floor(x)].location;
 			var r = series[Math.ceil(x)].location;
@@ -2275,6 +2334,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 			that.trace.css('left', (evt.pageX - svg.parent().offset().left) + 'px');
 		}
 	});
+	
 }
 
 org.sarsoft.view.ProfileGraph.prototype.hide = function() {
