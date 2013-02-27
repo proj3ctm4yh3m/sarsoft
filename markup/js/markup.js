@@ -1196,6 +1196,10 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 	
 	this.pg = new org.sarsoft.view.ProfileGraph();
 	this.profileDlg = new org.sarsoft.view.MapDialog(imap, "Elevation Profile", this.pg.div, "OK", null, function() { that.pg.hide(); });
+	
+	this.pointinfo = jQuery('<div></div>');
+	this.pointDlg = new org.sarsoft.view.MapDialog(imap, "Point Info", this.pointinfo, "OK", null, function() { that.pointinfo.empty(); });
+	
 	this.profileDlg.dialog.hideEvent.subscribe(function() { 
 		that.pg.hide(); if(that.poly != null) { that.poly.setMap(null); that.poly = null; } 
 		});	
@@ -1203,7 +1207,8 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 	var items = [{text: "Measure \u2192", applicable: function(obj) { return obj == null }, items:
 		[{text: "Distance", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, false);}},
 		 {text: "Area", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, true);}},
-		 {text: "Profile", applicable : function(obj) { return obj == null}, handler: function(data) { that.profile(data.point)}}]
+		 {text: "Profile", applicable : function(obj) { return obj == null}, handler: function(data) { that.profile(data.point)}},
+		 {text: "Point Info", applicable : function(obj) { return obj == null}, handler: function(data) { that.pointdata(data.point)}}]
 	}];
 	
 	this.imap.addContextMenuItems(items);
@@ -1259,6 +1264,21 @@ org.sarsoft.controller.MapToolsController.prototype.profile = function() {
 		window.setTimeout(function() { that._profileHandler(poly) }, 100);
 	});
 	
+}
+
+org.sarsoft.controller.MapToolsController.prototype.pointdata = function(point) {
+	var that = this;
+	var service = new org.sarsoft.DEMService();
+	var gll = this.imap.projection.fromContainerPixelToLatLng(point);
+	service.getElevationForLocations([gll], function(result, status) {
+		if(status == google.maps.ElevationStatus.OK) {
+			that.pointinfo.empty();
+			that.pointinfo.append('<span>' + Math.round(result[0].location.lat()*10000)/10000 + ', ' + Math.round(result[0].location.lng()*10000)/10000 + ': Elevation <b>' + Math.round(result[0].elevation*3.2808399) + '</b>\' Slope <b>' + result[0].slope + '</b>\u00B0 Aspect <b>' + result[0].aspect + '</b>\u00B0</span>');
+			that.pointDlg.show();
+		} else {
+			alert("An error occurred while retrieving profile data from CalTopo: " + status);
+		}
+	});
 }
 	
 org.sarsoft.controller.MapToolsController.prototype.measure = function(point, polygon) {
