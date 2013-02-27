@@ -1,6 +1,7 @@
 package org.sarsoft.common.controller;
 
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -14,6 +15,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.common.util.WebMercator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -28,6 +33,9 @@ public class ElevationController extends JSONBaseController {
 		
 	private static String EXTERNAL_TILE_DIR = "sardata/ned/elevation";
 	private Logger logger = Logger.getLogger(ImageryController.class);
+	
+	@Autowired
+	private ImageryController imageryController;
 	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
@@ -53,6 +61,26 @@ public class ElevationController extends JSONBaseController {
 		return 0F;
 	}
 	
+	private int[] getDEM(double lat, double lng, int z) {
+		double[] meters = WebMercator.LatLngToMeters(lat, lng);
+		double[] pixels = WebMercator.MetersToPixels(meters[0], meters[1], z);
+		double[] t = WebMercator.PixelsToDecimalTile(pixels[0], pixels[1]);
+		
+    	t[1] = Math.pow(2, z) - 1 - t[1];
+		int px_x = (int) Math.min(Math.round((t[0]-Math.floor(t[0]))*256), 255);
+		int px_y = (int) Math.min(Math.round((t[1]-Math.floor(t[1]))*256), 255);
+		
+		int x = (int) Math.floor(t[0]);
+		int y = (int) Math.floor(t[1]);
+				
+		double[] bounds = WebMercator.TileLatLngBounds(x, y, z);
+		
+		BufferedImage elevation = imageryController.getTile(RuntimeProperties.getMapSourceByAlias("elevation").getTemplate(), z, x, y);
+		BufferedImage slope = imageryController.getTile(RuntimeProperties.getMapSourceByAlias("slope").getTemplate(), z, x, y);
+		BufferedImage aspect = imageryController.getTile(RuntimeProperties.getMapSourceByAlias("aspect").getTemplate(), z, x, y);
+		return new int[] {elevation.getData().getSample(px_x, px_y, 0), slope.getData().getSample(px_x, px_y, 0), aspect.getData().getSample(px_x, px_y, 0)};
+	}
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@RequestMapping(value="/resource/elevation")
 	public String getElevelation(Model model, HttpServletRequest request, HttpServletResponse response, @RequestParam(value="locations", required=true) String locations) {
@@ -68,6 +96,44 @@ public class ElevationController extends JSONBaseController {
 			l.put("lng", lng);
 			m.put("location", l);
 			m.put("elevation", getElevation(lat, lng));
+			results.add(m);
+		}
+		Map r = new HashMap();
+		r.put("results", results);
+		r.put("status", "OK");
+		return json(model, r);
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@RequestMapping(value="/resource/dem")
+	public String getDEM(Model model, HttpServletRequest request, HttpServletResponse response, @RequestParam(value="locations", required=true) String locations) {
+		String[] coordinates = locations.split("\\|");
+		int zoom = 14;
+		if(coordinates.length > 5) {
+			double[] m1 = WebMercator.LatLngToMeters(Double.parseDouble(coordinates[0].split(",")[0]), Double.parseDouble(coordinates[0].split(",")[1]));
+			double[] m2 = WebMercator.LatLngToMeters(Double.parseDouble(coordinates[1].split(",")[0]), Double.parseDouble(coordinates[1].split(",")[1]));
+			
+			zoom = 8;
+			double spacing = Math.sqrt(Math.pow(m1[0]-m2[0], 2) + Math.pow(m1[1]-m2[1], 2)); // meters
+			for(int z = 14; z >= 8; z--) {
+				if(WebMercator.Resolution(z) * 2 < spacing) zoom = z;
+			}
+		}
+		
+		List results = new ArrayList();
+		for(String coordinate : coordinates) {
+			String[] points = coordinate.split(",");
+			double lat = Double.parseDouble(points[0]);
+			double lng = Double.parseDouble(points[1]);
+			Map m = new HashMap();
+			Map l = new HashMap();
+			l.put("lat", lat);
+			l.put("lng", lng);
+			m.put("location", l);
+			int[] dem = getDEM(lat, lng, zoom);
+			m.put("elevation", dem[0]);
+			m.put("slope", dem[1]);
+			m.put("aspect", (int) (dem[2]*1.5));
 			results.add(m);
 		}
 		Map r = new HashMap();

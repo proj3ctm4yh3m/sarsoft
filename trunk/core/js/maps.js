@@ -2205,6 +2205,65 @@ org.sarsoft.view.MapDialog.prototype.swap = function() {
 	}
 }
 
+org.sarsoft.DEMService = function() {
+}
+
+org.sarsoft.DEMService.prototype.resamplePath = function(path, samples) {
+	var length = google.maps.geometry.spherical.computeLength(path);
+	var interval = length / (samples - 1);
+	
+	var s_index = 1;
+	var leg = 0;
+	var rpt = path[0];
+	var resampled = []
+	resampled.push(path[0])
+
+	while(resampled.length < samples) {
+		var d = google.maps.geometry.spherical.computeDistanceBetween(rpt, path[s_index]);
+		if(d + leg < interval) {
+			leg += d;
+			rpt = path[s_index];
+			s_index++;
+			if(s_index >= path.length) {
+				resampled.push(path[path.length-1]);
+				return resampled;
+			}
+		} else {
+			var ratio = (interval-leg)/d;
+			rpt = new google.maps.LatLng(rpt.lat()*(1-ratio) + path[s_index].lat()*ratio, rpt.lng()*(1-ratio) + path[s_index].lng()*ratio);
+			resampled.push(rpt);
+			leg = 0;
+		}
+	}
+	
+	return resampled;
+	
+}
+
+org.sarsoft.DEMService.prototype.getElevationForLocations = function(obj, handler) {
+	var url = "/resource/dem?locations=";
+	for(var i = 0; i < obj.length; i++) {
+		url = url + (i > 0 ? "|" : "") + obj[i].lat() + "," + obj[i].lng();
+	}
+	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
+		var obj = YAHOO.lang.JSON.parse(response.responseText);
+		var results = []
+		for(var i = 0; i < obj.results.length; i++) {
+			results[i] = { elevation: obj.results[i].elevation, slope: obj.results[i].slope, aspect: obj.results[i].aspect, location: new google.maps.LatLng(obj.results[i].location.lat, obj.results[i].location.lng)};
+		}
+		handler(results, obj.status);
+	}, failure : function(response) {
+		throw("AJAX ERROR getting elevation: " + response.responseText);
+	}});
+}
+
+org.sarsoft.DEMService.prototype.getElevationAlongPath = function(obj, handler) {
+	var path = this.resamplePath(obj.path, obj.samples);
+	return this.getElevationForLocations(path, handler);
+}
+
+org.sarsoft.DEMStatus = { OK : "OK" }
+
 org.sarsoft.view.ProfileGraph = function() {
 	this.height=120;
 	this.div = jQuery('<div style="height: ' + (this.height+20) + 'px; position: relative"></div>');
