@@ -2309,7 +2309,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	var info = jQuery('<div stype="height: 20px"></div>').appendTo(this.div);
 	var ele = jQuery('<span></span>').appendTo(jQuery('<div style="display: inline-block; min-width: 20ex"></div>').appendTo(jQuery('<div style="display: inline-block; padding-left: 1ex">cursor: </div>').appendTo(info)));
 	
-	this.stats = jQuery('<span>range: <span style="font-weight: bold">' + Math.round(min*3.2808399) + '\'</span> to <span style="font-weight: bold">' + Math.round(max*3.2808399) + '\'</span> <span style="padding-left: 10px">gross: <span style="color: green; font-weight: bold">+' + Math.round(gross_gain*3.2808399) + '\'</span> <span style="color: #dc1d00; font-weight: bold">-' + Math.round(gross_loss*3.2808399) + '\'</span> <span style="padding-left: 10px">sampling interval <span style="font-weight: bold">' + Math.round(total_dist*3.2808399/100) + '\'</span> w/ <span style="font-weight: bold">' + (Math.round(exaggeration*10)/10) + 'x</span> vertical exaggeration</span></span>').appendTo(info);
+	this.stats = jQuery('<span>range: <span style="font-weight: bold">' + Math.round(min*3.2808399) + '\'</span> to <span style="font-weight: bold">' + Math.round(max*3.2808399) + '\'</span> <span style="padding-left: 10px">gross: <span style="color: green; font-weight: bold">+' + Math.round(gross_gain*3.2808399) + '\'</span> <span style="color: #dc1d00; font-weight: bold">-' + Math.round(gross_loss*3.2808399) + '\'</span> <span style="padding-left: 10px">sampling interval <span style="font-weight: bold">' + Math.round(total_dist*3.2808399/series.length) + '\'</span> w/ <span style="font-weight: bold">' + (Math.round(exaggeration*10)/10) + 'x</span> vertical exaggeration</span></span>').appendTo(info);
 	
 	for(var i = 0; i < series.length - 1; i++) {
 		var x1 = i*xscale;
@@ -2384,7 +2384,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 			x = Math.max(0, Math.min(x, series.length-1));
 			var f = x - Math.floor(x);
 			var elevation = series[Math.floor(x)].elevation*(1-f) + series[Math.ceil(x)].elevation*f;
-			ele.html('<span><span style="font-weight: bold">' + Math.round(elevation*3.2808399) + '\'</span> at <span style="font-weight: bold">' + (Math.round((x/(series.length-1))*total_dist/16.0934)/100) + "mi</span> ");
+			ele.html('<span><span style="font-weight: bold">' + Math.round(elevation*3.2808399) + '\'</span> at <span style="font-weight: bold">' + (Math.round((x/(series.length-1))*total_dist/16.0934)/series.length) + "mi</span> ");
 
 			var l = series[Math.floor(x)].location;
 			var r = series[Math.ceil(x)].location;
