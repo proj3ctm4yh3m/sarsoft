@@ -921,7 +921,7 @@ org.sarsoft.controller.MarkupMapController.prototype.profileShape = function(sha
 		path.push(new google.maps.LatLng(shape.way.waypoints[i].lat, shape.way.waypoints[i].lng));
 	}
 	if(shape.way.polygon) path.push(new google.maps.LatLng(shape.way.waypoints[0].lat, shape.way.waypoints[0].lng));
-	service.getElevationAlongPath({path: path, samples: 100}, function(result, status) {
+	service.getElevationAlongPath({path: path, samples: 200}, function(result, status) {
 		if(status == google.maps.ElevationStatus.OK) {
 			that.profileDlg.show();
 			that.pg.draw(result, shape.color);
@@ -1229,7 +1229,7 @@ org.sarsoft.controller.MapToolsController.prototype._profileHandler = function(p
 	var length = google.maps.geometry.spherical.computeLength(path);
 
 	var service = new google.maps.ElevationService();
-	service.getElevationAlongPath({path: path.getArray(), samples: 100}, function(result, status) {
+	service.getElevationAlongPath({path: path.getArray(), samples: 200}, function(result, status) {
 		if(status == google.maps.ElevationStatus.OK) {
 			that.profileDlg.show();
 			that.pg.draw(result, "#000000");
