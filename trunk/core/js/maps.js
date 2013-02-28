@@ -1774,11 +1774,12 @@ org.sarsoft.MapLabelWidget.prototype.getConfig = function(config) {
 org.sarsoft.MapSizeWidget = function(imap) {
 	imap.register("org.sarsoft.MapSizeWidget", this);
 	var that = this;
-	var img = jQuery('<img style="cursor: pointer; vertical-align: middle" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>');
 	var div = jQuery('<div style="display: none; padding-left: 20px" class="noprint"></div>').prependTo($(imap.map.getDiv()).parent());
 	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, div);
+	this.print_options = new org.sarsoft.view.MenuDropdown('<img style="cursor: pointer; vertical-align: middle" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>', 'left: 0; width: 100%', imap.map._overlaydropdownmapcontrol.div);
 
-	img.click(function() {
+	jQuery('<div style="margin-top: 1em"></div>').appendTo(this.print_options.div);
+	jQuery('<span style="cursor: pointer; color: #5a8ed7; font-weight: bold; margin-right: 1ex">&rarr; Print From Your Browser</span>').prependTo(jQuery('<div style="margin-top: 1ex">Works best with Google Chrome.  Create borderless prints with any combination of page sizes and map layers.</div>').appendTo(this.print_options.div)).click(function() {
 		if(div.css('display')=='none') {
 			if(imap.registered["org.sarsoft.view.MapDialog"] != null) imap.registered["org.sarsoft.view.MapDialog"].hide();
 			div.css('display', 'block');
@@ -1788,9 +1789,10 @@ org.sarsoft.MapSizeWidget = function(imap) {
 			div.css('display', 'none');
 			that.pageSizeForm.fullscreen();
 		}
+		that.print_options.hide();
 	});
-
-	imap.addMenuItem(img[0], 30);
+	
+	imap.addMenuItem(this.print_options.container, 30);
 }
 
 org.sarsoft.MapFindWidget = function(imap) {
@@ -5239,23 +5241,23 @@ org.sarsoft.PrintBoxController = function(imap, div) {
 	this.lines = [];
 	this.dd_orientations = [];
 
-	var line = jQuery('<div>Page Size: </div>').appendTo(div);
+	var line = jQuery('<div><span style="display: inline-block; min-width: 10ex">Page Size</span></div>').appendTo(div);
 	this.dd_size = jQuery('<select><option value="8.5x11">8.5x11</option><option>13x19</option></select>').appendTo(line);
 	this.dd_size.change(function() { that.updateBoxes() });
 	
-	var line = jQuery('<div style="margin-top: 1em">Scale: </div>').appendTo(div);
-	this.dd_scale = jQuery('<select><option value="0">Not Fixed</option><option value="24000">1:24,000</option><option value="25000">1:25,000</option><option value="62500">1:62,500</option><option value="63360">1:63,360</option></selet>').appendTo(line).change(function() {
+	var line = jQuery('<div><span style="display: inline-block; min-width: 10ex">Scale</span></div>').appendTo(div);
+	this.dd_scale = jQuery('<select><option value="0">Not Fixed</option><option value="24000">1:24,000</option><option value="25000">1:25,000</option><option value="50000">1:50,000</option><option value="62500">1:62,500</option><option value="63360">1:63,360</option></selet>').appendTo(line).change(function() {
 		that.updateBoxes();
 	});
 	
-	var line = jQuery('<div style="margin-top: 1em">Customize Your Map: </div>').appendTo(div);
-	this.dd_datum = jQuery('<select><option value="WGS84" selected="selected">WGS84</option><option value="NAD27">NAD27</option></select>').appendTo(jQuery('<div></div>').appendTo(line));
+	var line = jQuery('<div style="margin-top: 1em"></div>').appendTo(div);
+	this.dd_datum = jQuery('<select><option value="WGS84" selected="selected">WGS84</option><option value="NAD27">NAD27</option></select>').appendTo(jQuery('<div><span style="display: inline-block; min-width: 10ex">Datum</span></div>').appendTo(line));
 	this.cb_utm = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span>UTM Grid</span>').appendTo(jQuery('<div></div>').appendTo(line))).change(function() { that.updateBoxes(); });
 	this.cb_dd = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span>Lat/Long Grid</span>').appendTo(jQuery('<div></div>').appendTo(line))).change(function() { that.updateBoxes(); });
 
 	var line = jQuery('<div style="padding-top: 1em"></div>').appendTo(div);
 	this.list = jQuery('<tbody></tbody>').appendTo(jQuery('<table border="0" style="margin-bottom: 0.5em"><thead><tr><th style="font-weight: bold; text-align: left">Page</th><th style="font-weight: bold; text-align: left; padding-left: 2ex">Scale</th><th style="font-weight: bold; text-align: left; padding-left: 2ex">Orientation</th></tr></thead></table>').appendTo(line));
-	var link_new = jQuery('<span style="color: green; cursor: pointer; font-size: 120%">+ New Page</span>').appendTo(line).click(function() {
+	var link_new = jQuery('<span style="color: green; cursor: pointer; font-size: 120%">+ Add Page</span>').appendTo(line).click(function() {
 		that.addBox();
 	});
 	var link_redraw = jQuery('<span style="margin-left: 40px; color: #dc1d00; cursor: pointer; font-size: 120%">X Start Over</span>').appendTo(line).click(function() {
