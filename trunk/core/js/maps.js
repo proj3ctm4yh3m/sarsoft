@@ -2485,6 +2485,13 @@ org.sarsoft.AdjustableBox = function(imap, sw, ne) {
 
 }
 
+org.sarsoft.AdjustableBox.prototype.remove = function() {
+	if(this.poly != null) this.poly.setMap(null);
+	for(var i = 0; i <= 5; i++) {
+		if(this.m[i] != null) this.m[i].setMap(null);
+	}
+}
+
 org.sarsoft.AdjustableBox.prototype.update = function(corner) {
 	var p = this.m[corner].getPosition();
 	if(corner < 4) this.g[corner] = p;
@@ -5221,5 +5228,115 @@ org.sarsoft.controller.CustomLayerController.prototype.removeGR = function(id) {
 	if(this.dn.layers[id] != null) {
 		this.dn.layers[id].remove();
 		delete this.dn.layers[id];
+	}
+}
+
+org.sarsoft.PrintBoxController = function(imap, div) {
+	var that = this;
+	this.imap = imap;
+	this.div = div;
+	this.boxes = [];
+	this.lines = [];
+	this.dd_orientations = [];
+
+	var line = jQuery('<div>Page Size: </div>').appendTo(div);
+	this.dd_size = jQuery('<select><option value="8.5x11">8.5x11</option><option>13x19</option></select>').appendTo(line);
+	this.dd_size.change(function() { that.updateBoxes() });
+	
+	var line = jQuery('<div style="margin-top: 1em">Scale: </div>').appendTo(div);
+	this.dd_scale = jQuery('<select><option value="0">Not Fixed</option><option value="24000">1:24,000</option><option value="25000">1:25,000</option><option value="62500">1:62,500</option><option value="63360">1:63,360</option></selet>').appendTo(line).change(function() {
+		that.updateBoxes();
+	});
+	
+	var line = jQuery('<div style="margin-top: 1em">Customize Your Map: </div>').appendTo(div);
+	this.dd_datum = jQuery('<select><option value="WGS84" selected="selected">WGS84</option><option value="NAD27">NAD27</option></select>').appendTo(jQuery('<div></div>').appendTo(line));
+	this.cb_utm = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span>UTM Grid</span>').appendTo(jQuery('<div></div>').appendTo(line))).change(function() { that.updateBoxes(); });
+	this.cb_dd = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span>Lat/Long Grid</span>').appendTo(jQuery('<div></div>').appendTo(line))).change(function() { that.updateBoxes(); });
+
+	var line = jQuery('<div style="padding-top: 1em"></div>').appendTo(div);
+	this.list = jQuery('<tbody></tbody>').appendTo(jQuery('<table border="0" style="margin-bottom: 0.5em"><thead><tr><th style="font-weight: bold; text-align: left">Page</th><th style="font-weight: bold; text-align: left; padding-left: 2ex">Scale</th><th style="font-weight: bold; text-align: left; padding-left: 2ex">Orientation</th></tr></thead></table>').appendTo(line));
+	var link_new = jQuery('<span style="color: green; cursor: pointer; font-size: 120%">+ New Page</span>').appendTo(line).click(function() {
+		that.addBox();
+	});
+	var link_redraw = jQuery('<span style="margin-left: 40px; color: #dc1d00; cursor: pointer; font-size: 120%">X Start Over</span>').appendTo(line).click(function() {
+		that.reset();
+	});
+
+}
+
+org.sarsoft.PrintBoxController.prototype.reset = function() {
+	for(var i = 0; i < this.boxes.length; i++) {
+		this.boxes[i].remove();
+	}
+	this.list.empty();
+	this.lines = [];
+	this.boxes = [];
+	
+	this.addBox();
+	
+	var bounds = map.getBounds();
+	var y_off = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())/10;
+	var x_off = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())/10;
+	adjbox.g = [new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getSouthWest().lng() + x_off),
+	            new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getSouthWest().lng() + x_off),
+	            new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getNorthEast().lng() - x_off),
+	            new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getNorthEast().lng() - x_off)];
+	adjbox.redraw();
+	adjbox.update(2);
+	adjbox.update(2);
+}
+
+org.sarsoft.PrintBoxController.prototype.addBox = function() {
+	var that = this;
+	var bounds = this.imap.map.getBounds();
+	var y_off = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())/10;
+	var x_off = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())/10;
+	var idx = this.boxes.length;
+	if(idx >= 15) {
+		alert("Sorry, there is a 15 page limit for this service");
+		return;
+	}
+	this.lines[idx] = jQuery('<tr><td>' + (idx + 1) + '</td><td style="padding-left: 2ex"></td><td style="padding-left: 2ex"></td></tr>').appendTo(this.list);
+	this.dd_orientations[idx] = jQuery('<select><option value="p">Portrait</option><option value="l">Landscape</option></select>').appendTo(this.lines[idx].children()[2]);
+	this.dd_orientations[idx].change(function() { that.updateBoxes() });
+
+	this.boxes.push(new org.sarsoft.AdjustablePrintBox(this.imap, new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getSouthWest().lng() + x_off), new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getNorthEast().lng() - x_off), 8.5/11));
+	this.boxes[idx].listener = function() {
+		var scale = google.maps.geometry.spherical.computeDistanceBetween(that.boxes[idx].g[0], that.boxes[idx].g[1]) / (that.boxes[idx].in_h*0.0254);
+		$(that.lines[idx].children()[1]).html('1:' + Math.round(scale));
+	}
+	this.boxes[idx].m[5].set("title", "Page " + (idx+1));
+	this.boxes[idx].redraw();
+	this.updateBoxes();
+}
+
+org.sarsoft.PrintBoxController.prototype.updateBoxes = function() {
+	var size = this.dd_size.val();
+	var do_utm = (this.cb_utm.attr("checked")=="checked");
+	var do_dd = (this.cb_dd.attr("checked")=="checked");
+	var margin = 1;
+	if(do_utm || do_dd) margin = 1.25;
+	if(do_utm && do_dd) margin = 1.5;
+	for(var i = 0; i < this.boxes.length; i++) {
+		var adjbox = this.boxes[i];
+		if(adjbox != null) {
+			var landscape = ("l" == this.dd_orientations[i].val());
+			var w = 1*(landscape ? size.split("x")[1] : size.split("x")[0]);
+			var h = 1*(landscape ? size.split("x")[0] : size.split("x")[1]);
+			adjbox.in_w = w - margin;
+			adjbox.in_h = h - margin - 0.75;
+			adjbox.in_p_w = w;
+			adjbox.in_p_h = h;
+			adjbox.aspect = adjbox.in_w/adjbox.in_h;
+			var scale = this.dd_scale.val();
+			if(scale > 0) {
+				adjbox.scale = scale;
+				adjbox.update(1);
+			} else {
+				adjbox.scale = null;
+			}
+			adjbox.update(2);
+			adjbox.update(2); // need to call twice for proper scale and aspect after an orientation change
+		}
 	}
 }
