@@ -127,6 +127,20 @@ public class ImageryController extends JSONBaseController {
 		return getRemoteImageStream(url);
 	}
 	
+	public BufferedImage getTile(String url, int z, int x, int y, int max_z) {
+		if(z <= max_z) {
+			return getTile(url, z, x, y);
+		} else {
+			int dz = z - max_z;
+			int pow = (int) Math.pow(2, dz);
+			BufferedImage img = getTile(url, max_z, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+			int dx = (x - pow * (int) Math.floor(x/pow));
+			int dy = (y - pow * (int) Math.floor(y/pow));
+			return zoom(img, dz, dx, dy);
+		}
+	}
+
+	
 	public BufferedImage getTile(String url, int z, int x, int y) {
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {
 			url = url.substring(24, url.length() - 16);
@@ -142,7 +156,7 @@ public class ImageryController extends JSONBaseController {
 	public BufferedImage streamToImage(InputStream stream) {
 		try {
 			return ImageIO.read(stream);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// missing overzoom tiles clutter the system log
 		}
 		return null;
@@ -249,7 +263,7 @@ public class ImageryController extends JSONBaseController {
 			for(int dx = 0; dx < 4; dx++) {
 				for(int dy = 0; dy < 4; dy++) {
 					try {
-						BufferedImage tile = this.getTile(template, z+2, x*4+dx, y*4+dy);
+						BufferedImage tile = this.getTile(template, z+2, x*4+dx, y*4+dy, source.getMaxresolution());
 						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
 						graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
 					} catch (Exception e) {
@@ -268,7 +282,7 @@ public class ImageryController extends JSONBaseController {
 		MapSource[] sources = new MapSource[layers.length];
 		String[] cfg = new String[layers.length];
 		
-		int max = 16;
+		int max = 1;
 		for(int i = 0; i < layers.length; i++) {
 			String layer = layers[i];
 			if(layer.indexOf("_") > 0) {
@@ -276,22 +290,25 @@ public class ImageryController extends JSONBaseController {
 				layer = layer.split("_")[0];
 			}
 			sources[i] = RuntimeProperties.getMapSourceByAlias(layer);
-			max = Math.min(max, sources[i].getMaxresolution());
+			max = Math.max(max, sources[i].getMaxresolution());
 		}
 
-	
-		int z_itr = 1;
-		while(z_itr <= max) {
-			double r = WebMercator.Resolution(z_itr);
-			
-			double[] px_ne = WebMercator.MetersToPixels(m_ne[0], m_ne[1], z_itr);
-			double[] px_sw = WebMercator.MetersToPixels(m_sw[0], m_sw[1], z_itr);
+		double r = WebMercator.Resolution(z);
+		while(z <= max && r > r_target) { // r is meters/px
+			z++;
+			r = WebMercator.Resolution(z);
+		}
+		
+		int tiles = 1000;
+		while(z > 5 && tiles > 80) {
+			double[] px_ne = WebMercator.MetersToPixels(m_ne[0], m_ne[1], z);
+			double[] px_sw = WebMercator.MetersToPixels(m_sw[0], m_sw[1], z);
 			
 			double[] t_ne = WebMercator.PixelsToDecimalTile(px_ne[0], px_ne[1]);
 			double[] t_sw = WebMercator.PixelsToDecimalTile(px_sw[0], px_sw[1]);
 			
-			if((Math.round(t_ne[0]-t_sw[0])*Math.round(t_ne[1]-t_sw[1]) <= 40) && r > r_target) z = z_itr;
-			z_itr++;
+			tiles = (int) (Math.round(t_ne[0]-t_sw[0])*Math.round(t_ne[1]-t_sw[1]));
+			if(tiles > 80) z--;
 		}
 		
 		double[] px_ne = WebMercator.MetersToPixels(m_ne[0], m_ne[1], z);
@@ -343,7 +360,7 @@ public class ImageryController extends JSONBaseController {
 				for(int i = 0; i < layers.length; i++) {
 					String template = sources[i].getTemplate();
 					template = template.replaceAll("\\{V\\}", cfg[i]);
-					BufferedImage tile = getTile(template, z, x, y);
+					BufferedImage tile = getTile(template, z, x, y, sources[i].getMaxresolution());
 					if(tile != null) {
 						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sources[i].isAlphaOverlay() ? opacity[i] * sources[i].getOpacity() / 100 : opacity[i])); 
 						graphics.drawImage(tile, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
@@ -400,7 +417,7 @@ public class ImageryController extends JSONBaseController {
 		float[] opacity = new float[layers.length];
 		for(int i = 0; i < layers.length; i++) {
 			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
-			images[i] = getTile(source.getTemplate(), z, x, y);
+			images[i] = getTile(source.getTemplate(), z, x, y, source.getMaxresolution());
 			opacity[i] = 1;
 		}
 		respond(composite(images, opacity, 256, 256), response);
