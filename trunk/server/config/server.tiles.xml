@@ -13,11 +13,6 @@
 		<put-attribute name="app" value="setup-admin"/>
 	</definition>
 
-	<definition name="Pages.Account" extends="App.Base">
-		<put-attribute name="content" value="/account.jsp"/>
-		<put-attribute name="app" value="admin"/>
-	</definition>
-	
 	<definition name="Map.Guide" extends="Map.Base">
 		<put-attribute name="content" value="/guide.jsp"/>
 		<put-attribute name="app" value="guide"/>

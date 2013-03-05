@@ -3785,15 +3785,18 @@ org.sarsoft.widget.Account = function(imap, container, acctlink) {
 	
 	jQuery('<div style="clear: both"><a style="font-weight: bold; color: #5a8ed7" href="javascript:window.location=\'/app/logout?dest=/map.html#\' + org.sarsoft.MapURLHashWidget.createConfigStr(imap)">Logout of ' + org.sarsoft.version + '</a></div>').appendTo(bn);
 
-	jQuery('<div style="max-width: 500px; padding-top: 1em">Your email is <b>' + org.sarsoft.username + '</b>.  By default, your account name will show up ' +
+	var uname = jQuery('<b></b>').appendTo(jQuery('<div style="max-width: 500px; padding-top: 1em">Your email is <b>' + org.sarsoft.username + '</b>.  By default, your account name will show up ' +
 			'as a shortened version of your email.  You can choose a different username by entering it below or leave the box blank to ' +
-			'use the default name.<br/><br/>Your current username is <b>' + org.sarsoft.alias + '<b/></div>').appendTo(bn);
+			'use the default name.<br/><br/>Your current username is </div>').appendTo(bn));
 	
-	var f = jQuery('<form action="/account.html" method="post" style="padding-top: 2em; display: inline-block">Username: <input type="text" size="15" name="alias" value="' + org.sarsoft.alias + '"/></form>').appendTo(bn);
-	var h = jQuery('<input type="hidden" name="dest" value=""/>').appendTo(f);
+	var i = jQuery('<input type="text" size="15" name="alias" value="' + org.sarsoft.alias + '"/>=').appendTo(bn);
 	jQuery('<button>GO</button>').appendTo(bn).click(function() {
-		h.val(window.location.href);
-		f.submit();
+		var dao = new org.sarsoft.BaseDAO();
+		dao.baseURL = "";
+		dao._doPost("/rest/account", function(obj) {
+			i.val(obj.alias);
+			accountpane.hide();
+		}, {}, "alias=" + i.val());
 	});
 
 	var bn = jQuery('<div></div>');

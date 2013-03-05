@@ -1,5 +1,6 @@
 package org.sarsoft.server.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,39 +25,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class AppController extends JSONBaseController {
 
-	@RequestMapping(value="/account.html", method = RequestMethod.GET)
+	@RequestMapping(value="/rest/account", method = RequestMethod.GET)
 	public String getAccount(Model model) {
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
 		if(account == null) {
-			model.addAttribute("message", "Account not found");
-			return bounce(model);
+			return json(model, new HashMap());
 		}
-		model.addAttribute("account", account);
-		return app(model, "Pages.Account");
+		return json(model, account);
 	}
 	
-	@RequestMapping(value="/account.html", method = RequestMethod.POST)
-	public String updateAccount(Model model, @RequestParam(value="alias", required=false) String alias, @RequestParam(value="dest", required=false) String dest) {
+	@RequestMapping(value="/rest/account", method = RequestMethod.POST)
+	public String updateAccount(Model model, @RequestParam(value="alias", required=false) String alias) {
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-		if(account == null) {
-			model.addAttribute("message", "Account not found");
-			return bounce(model);
-		}
 		if(alias != null && alias.length() == 0) alias = null;
 		if(alias != null && !alias.equalsIgnoreCase(account.getAlias())) {
 			alias = alias.trim().replaceAll("\\s+", " ");
 			alias = alias.replaceAll("[^a-zA-Z0-9_ ]", "");
 			Object obj = dao.getByCaselessAttr(UserAccount.class, "alias", alias);
-			if(obj != null) {
-				model.addAttribute("message", "Username already taken");
-				return getAccount(model);
+			if(obj == null) {
+				account.setAlias(alias);
+				dao.superSave(account);
 			}
 		}
-		account.setAlias(alias);
-		dao.superSave(account);
-		model.addAttribute("account", account);
-		if(dest != null) return "redirect:" + dest;
-		return app(model, "Pages.Account");
+		account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		return json(model, account);
 	}
 	
 	@RequestMapping(value="/admin/delete", method = RequestMethod.GET)
