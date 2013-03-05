@@ -156,7 +156,7 @@
 <xsl:template name="LineToKml">
     <LineString>
       <altitudeMode>clampToGround</altitudeMode>
-      <tesselate>1</tesselate>
+      <tessellate>1</tessellate>
       <coordinates>
       	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
       	  <xsl:call-template name="WaypointToKml"/>
@@ -170,8 +170,8 @@
 
 <xsl:template name="PolygonToKml">
     <Polygon>
-   		<tesselate>1</tesselate>
     	<altitudeMode>clampToGround</altitudeMode>
+   		<tessellate>1</tessellate>
     	<outerBoundaryIs>
     	  <LinearRing>
     	    <coordinates>
