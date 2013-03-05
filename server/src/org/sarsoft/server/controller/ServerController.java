@@ -46,7 +46,7 @@ public class ServerController implements IServerController {
 	}
 	
 	public boolean isTenantRestrictedPage(String view) {
-		return !("/map".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Account".equals(view) || "Pages.Find".equals(view));
+		return !("/map".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Find".equals(view));
 	}
 
 	public boolean isLoginRestrictedPage(String view) {

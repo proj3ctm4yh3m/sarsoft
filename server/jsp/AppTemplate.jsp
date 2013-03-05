@@ -46,7 +46,6 @@ function toggleAcctDropdown() {
 			${account.email}&nbsp;<span style="cursor: pointer; font-weight: bold; color: red; position: relative" onclick="toggleAcctDropdown();">&darr;
 				<div id="acctinfo" style="visibility: hidden; background: #f8f8f8; position: absolute; right: 0; top: 0.5em; padding-top: 1em; width: 10em; z-index: -1">
 					<div style="color: black; font-weight: normal">
-						<a style="float: right" href="/account.html">Account</a>
 						<a style="float: right; clear: both" href="/app/logout">Logout</a>
 					</div>
 				</div>
