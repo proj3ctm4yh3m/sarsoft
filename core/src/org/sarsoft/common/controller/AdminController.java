@@ -243,7 +243,7 @@ public class AdminController extends JSONBaseController {
 			if(dest != null) {
 				return "redirect:" + dest;
 			}
-			return "redirect:/maps";
+			return "redirect:/map.html";
 		} catch (Exception e) {
 			logger.error("Exception encountered handling OpenID response", e);
 			return "error";

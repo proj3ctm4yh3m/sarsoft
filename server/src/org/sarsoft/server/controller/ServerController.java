@@ -46,11 +46,11 @@ public class ServerController implements IServerController {
 	}
 	
 	public boolean isTenantRestrictedPage(String view) {
-		return !("/map".equals(view) || "Pages.Maps".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Account".equals(view) || "Pages.Find".equals(view));
+		return !("/map".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Account".equals(view) || "Pages.Find".equals(view));
 	}
 
 	public boolean isLoginRestrictedPage(String view) {
-		return ("Pages.Maps".equals(view) || "Pages.Searches".equals(view));
+		return ("Pages.Searches".equals(view));
 	}
 
 	public String bounce(Model model) {
@@ -73,7 +73,7 @@ public class ServerController implements IServerController {
 		if(model.asMap().containsKey("targetDest")) return "Pages.Password";
 		if(isHosted && account == null) return splash(model);
 		
-		return "Pages.Maps";
+		return "Pages.Splash";
 	}
 
 	public String splash(Model model) {

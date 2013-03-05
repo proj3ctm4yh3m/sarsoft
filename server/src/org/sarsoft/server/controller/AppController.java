@@ -24,12 +24,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class AppController extends JSONBaseController {
 
-	@RequestMapping(value="/login", method = RequestMethod.GET)
-	public String login(Model model) {
-		model.addAttribute("welcomeMessage", getProperty("sarsoft.welcomeMessage"));
-		return app(model, "Pages.Splash");
-	}
-
 	@RequestMapping(value="/account.html", method = RequestMethod.GET)
 	public String getAccount(Model model) {
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
@@ -102,7 +96,7 @@ public class AppController extends JSONBaseController {
 		if(dest != null) return "redirect:" + dest;
 		
 		if("org.sarsoft.plans.model.Search".equals(tenant.getClass().getName())) return "redirect:/searches";
-		return "redirect:/maps";
+		return "redirect:/";
 	}
 	
 	@RequestMapping(value="/admin.html", method = RequestMethod.GET)
@@ -170,17 +164,6 @@ public class AppController extends JSONBaseController {
 			model.addAttribute("clientState", clientState);
 		}
 		return app(model, "/map");
-	}
-
-	@SuppressWarnings("unused")
-	@RequestMapping(value="/maps", method = RequestMethod.GET)
-	public String homePage(Model model, HttpServletRequest request) {
-		String tenant = RuntimeProperties.getTenant();
-		if(tenant != null) {
-			// Pre-load map object so that it gets instantiated as a CollaborativeMap and not as a Tenant
-			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", tenant);
-		}
-		return app(model, "Pages.Maps");
 	}
 
 }
