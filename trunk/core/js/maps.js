@@ -3793,9 +3793,13 @@ org.sarsoft.widget.Account = function(imap, container, acctlink) {
 	jQuery('<button>GO</button>').appendTo(bn).click(function() {
 		var dao = new org.sarsoft.BaseDAO();
 		dao.baseURL = "";
-		dao._doPost("/rest/account", function(obj) {
+		dao._doPost("/rest/account", { success : function(obj) {
 			i.val(obj.alias);
 			accountpane.hide();
+		}, failure: function(obj) {
+			i.val(obj.alias);
+			alert("Error updating username.");
+		}
 		}, {}, "alias=" + i.val());
 	});
 
