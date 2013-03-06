@@ -119,6 +119,17 @@ org.sarsoft.BaseDAO.prototype._doGet = function(url, handler) {
 		}});
 }
 
+org.sarsoft.BaseDAO.prototype._doDelete = function(url, handler) {
+	var that = this;
+	var url = this.baseURL + url;
+	if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
+	YAHOO.util.Connect.asyncRequest('DELETE', url, { success : function(response) {
+			handler(YAHOO.lang.JSON.parse(response.responseText));
+		}, failure : function(response) {
+			throw("AJAX ERROR getting from " + url + ": " + response.responseText);
+		}});
+}
+
 org.sarsoft.BaseDAO.prototype.create = function(handler, obj) {
 	var that = this;
 	obj = this.sanitize(obj);
@@ -155,6 +166,15 @@ org.sarsoft.BaseDAO.prototype.del = function(id) {
 		delete this.objs[id];
 	} else {
 		this._doPost("/" + id + ".do", function() { delete that.objs[id] }, new Object(), "action=delete");
+	}
+}
+
+org.sarsoft.BaseDAO.prototype.del2 = function(id, handler) {
+	var that = this;
+	if(this.offline) {
+		delete this.objs[id];
+	} else {
+		this._doDelete("/" + id + ".do", function() { delete that.objs[id]; if(handler != null) handler() } );
 	}
 }
 

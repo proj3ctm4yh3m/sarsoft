@@ -7,12 +7,6 @@
 		<put-attribute name="content" value="/splash.jsp"/>
 	</definition>
 	
-	<definition name="Pages.Admin" extends="App.Base">
-		<put-attribute name="content" value="/admin.jsp"/>
-		<put-attribute name="subHeader" value=""/>
-		<put-attribute name="app" value="setup-admin"/>
-	</definition>
-
 	<definition name="Map.Guide" extends="Map.Base">
 		<put-attribute name="content" value="/guide.jsp"/>
 		<put-attribute name="app" value="guide"/>

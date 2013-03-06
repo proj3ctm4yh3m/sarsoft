@@ -9,9 +9,6 @@
 <div class="phead">Setup</div>
 
 <ul>
-<c:if test="${userPermissionLevel eq admin}">
- <li><a href="/admin.html">Search Admin.</a>  Change search name and sharing.</li>
-</c:if>
  <li><a href="/app/location/status">Location Tracking.</a>  Debug location tracking issues.</li>
 </ul>
  
