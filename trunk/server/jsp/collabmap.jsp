@@ -54,14 +54,27 @@ org.sarsoft.Loader.queue(function() {
 
   <c:if test="${userPermission eq admin}">
 	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/details.png"/>Details</div>').insertBefore(dn.defaults.layers.tree.block);
-	var settings_details = jQuery('<div></div>').append($('#detailsform').css('display', 'block'));
+
+	var settings_details = $('<div></div>');
+	var settings_table = $('<tbody></tbody>').appendTo($('<table border="0" style="width: 90%"></table>').appendTo(settings_details));
+	
+	var details_name = jQuery('<input type="text" size="30" value="${tenant.publicName}"/>').appendTo($('<td></td>').appendTo($('<tr><td valign="top" style="width: 10em">Name</td></tr>').appendTo(settings_table)));
+	var details_comments = jQuery('<textarea style="width: 100%; height: 6em">${tenant.comments}</textarea>').appendTo($('<td></td>').appendTo($('<tr><td valign="top">Comments</td></tr>').appendTo(settings_table)));
+	
+	settings_details.append('<div style="padding-top: 20px">You can also <a href="javascript:deleteDlg.show()">delete this map</a>.</div>');	
+	
 	var detailsDlg = new org.sarsoft.view.MapDialog(imap, "Details", settings_details, "OK", "Cancel", function() {
-		$('#detailsform').submit();
+		var dao = new org.sarsoft.TenantDAO();
+		dao.save('${tenant.name}', {'description': details_name.val(), 'comments': details_comments.val()});
 	});
+
 	detailslink.click(function() {detailsDlg.swap();});
 
 	deleteDlg = new org.sarsoft.view.MapDialog(imap, "Delete ${tenant.publicName}", $('#deleteObject'), "OK", "Cancel", function() {
-		window.location="/admin/delete?id=${tenant.name}&dest=/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
+		var dao = new org.sarsoft.TenantDAO();
+		dao.del2('${tenant.name}', function() {
+			window.location='/map.html';
+		});
 	});
 	</c:if>
   if(!embed) {
@@ -80,20 +93,6 @@ org.sarsoft.Loader.queue(function() {
   <div id="map_canvas" style="width: 100%; height: 100%"></div>
  </div>
 </div>
-
-<c:if test="${userPermission eq admin}">
-<form action="/admin.html" method="post" id="detailsform" style="display: none">
-<input type="hidden" name="tid" value="${tenant.name}"/>
-<input type="hidden" name="type" value="map"/>
-<table border="0" style="width: 90%"><tbody>
-<tr><td valign="top" style="width: 10em">Name</td><td><input type="text" size="30" value="${tenant.publicName}" name="description"/></td></tr>
-<tr><td valign="top">Comments</td><td><textarea style="width: 100%; height: 6em" name="comments">${tenant.comments}</textarea></td></tr>
-</tbody></table>
-<div style="padding-top: 20px">
-You can also <a href="javascript:deleteDlg.show()">delete this map</a>.
-</div>
-</form>
-</c:if>
 
 <div style="display: none" id="sharingpermissions">
 

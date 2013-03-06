@@ -14,6 +14,8 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+import org.sarsoft.markup.model.Shape;
+
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
@@ -46,7 +48,13 @@ public abstract class Tenant {
 		@SuppressWarnings("rawtypes")
 		Map<String, Class> m = new HashMap<String, Class>();
 		m.put("MapDatumWidget", HashMap.class);
+		m.put("allUserPermission", Permission.class);
+		m.put("passwordProtectedUserPermission", Permission.class);
 		classHints = Collections.unmodifiableMap(m);
+	}
+
+	public static Tenant createFromJSON(JSONObject json) {
+		return (Tenant) JSONObject.toBean(json, Tenant.class, classHints);
 	}
 
 	public void setName(String name) {

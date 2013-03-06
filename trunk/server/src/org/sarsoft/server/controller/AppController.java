@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.sarsoft.common.controller.JSONBaseController;
+import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Tenant.Permission;
@@ -18,6 +19,7 @@ import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Search;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,26 +53,25 @@ public class AppController extends JSONBaseController {
 		return json(model, account);
 	}
 	
-	@RequestMapping(value="/admin/delete", method = RequestMethod.GET)
-	public String delete(Model model, @RequestParam("id") String id, HttpServletRequest request) {
+	@RequestMapping(value="/rest/tenant/{id}", method = RequestMethod.DELETE)
+	public String delete(Model model, HttpServletRequest request, @PathVariable("id") String id) {		
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
-			model.addAttribute("message", "You don't own this object, and therefore can't delete it.");
-			return "redirect:/admin.html";
+			return json(model, new HashMap()); // TODO communicate error condition
 		}
 		
 		if(!id.equals(RuntimeProperties.getTenant())) {
-			model.addAttribute("message", "Something seems to have gone wrong - it looks like you're trying to delete a different object than the one you're currently viewing.");
-			return "redirect:/admin.html";
+			return json(model, new HashMap());
 		}
 
 		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
 		if(l != null && l.size() > 0) {
 			model.addAttribute("message", "You must delete all operational periods before deleting this search.");
-			return "redirect:/admin.html";
+			return json(model, new HashMap());
 		}
-
+		
 		dao.deleteAll(Marker.class);
 		dao.deleteAll(Shape.class);
+		
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		if(tenant.getAccount() != null) {
 			UserAccount account = tenant.getAccount();
@@ -84,65 +85,36 @@ public class AppController extends JSONBaseController {
 		RuntimeProperties.setTenant(null);
 		request.getSession(true).removeAttribute("tenantid");
 
-		String dest = request.getParameter("dest");
-		if(dest != null) return "redirect:" + dest;
-		
-		if("org.sarsoft.plans.model.Search".equals(tenant.getClass().getName())) return "redirect:/searches";
-		return "redirect:/";
+		return json(model, new HashMap());
 	}
-	
-	@RequestMapping(value="/admin.html", method = RequestMethod.GET)
-	public String getAdmin(Model model) {
+
+	@RequestMapping(value="/rest/tenant/{id}", method = RequestMethod.POST)
+	public String updateAdmin(Model model, JSONForm params, HttpServletRequest request, @PathVariable("id") String id) {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
-			model.addAttribute("message", "You don't own this object, and therefore can't edit it.");
-			return "error";
+			return json(model, new HashMap()); // TODO communicate error condition
 		}
 
-		model.addAttribute("tenant", tenant);
-		model.addAttribute("hosted", isHosted());
-		model.addAttribute("server", RuntimeProperties.getServerUrl());
-		List<OperationalPeriod> l = dao.loadAll(OperationalPeriod.class);
-		model.addAttribute("deleteable", (l == null || l.size() == 0) ? true : false);
-		return app(model, "Pages.Admin");
-	}
-
-	@RequestMapping(value="/admin.html", method = RequestMethod.POST)
-	public String updateAdmin(Model model, HttpServletRequest request) {
-		Tenant tenant = null;
-		if("map".equals(request.getParameter("type"))) {
-			tenant = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
-		} else {
-			tenant = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
+		if(!id.equals(RuntimeProperties.getTenant())) {
+			return json(model, new HashMap());
 		}
 
-		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
-			model.addAttribute("message", "You don't own this object, and therefore can't edit it.");
-			return "error";
+		Tenant updated = CollaborativeMap.createFromJSON(parseObject(params));
+		if(updated.getAllUserPermission() == null) {
+			tenant.setDescription(updated.getDescription());
+			tenant.setComments(updated.getComments());
+		} else if(tenant.getAccount() != null) {
+			tenant.setShared(updated.getShared());
+			tenant.setAllUserPermission(updated.getAllUserPermission());
+			tenant.setPasswordProtectedUserPermission(updated.getPasswordProtectedUserPermission());
+			if(updated.getPassword() != null) tenant.setPassword(hash(updated.getPassword()));
 		}
 
-		if(request.getParameter("description") != null && request.getParameter("description").length() > 0) {
-			tenant.setDescription(request.getParameter("description"));
-		}
-		if(request.getParameter("comments") != null && request.getParameter("comments").length() > 0) {
-			tenant.setComments(request.getParameter("comments"));
-			dao.save(tenant);
-		} else if(request.getParameter("allUsers") == null || request.getParameter("allUsers").length() == 0){
-			tenant.setComments("");
-		}
 		dao.save(tenant);
-		if(tenant.getAccount() != null && request.getParameter("allUsers") != null && request.getParameter("allUsers").length() > 0) {
-			tenant.setShared(Boolean.valueOf(request.getParameter("shared")));
-			tenant.setAllUserPermission(Permission.valueOf(request.getParameter("allUsers")));
-			tenant.setPasswordProtectedUserPermission(Permission.valueOf(request.getParameter("passwordUsers")));
-			if(request.getParameter("password") != null && request.getParameter("password").length() > 0) {
-				tenant.setPassword(hash(request.getParameter("password")));
-			}
-			dao.save(tenant);
-		}
+		tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		
-		return "redirect:/" + ((tenant.getClass().getName() == "org.sarsoft.plans.model.Search") ? "setup" : "map?id=" + tenant.getName());
+		return json(model, tenant);
 	}
 	
 	@RequestMapping(value="/map.html", method = RequestMethod.GET)
