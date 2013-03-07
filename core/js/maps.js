@@ -2101,7 +2101,9 @@ org.sarsoft.view.MenuDropdown.prototype.hide = function() {
 	if(this.isArrow) this.trigger.html('&darr;');
 }
 
+// Like a map dialog, but supports reading / writing an entity form
 org.sarsoft.view.MapEntityDialog = function(imap, title, entityform, handler, okButton) {
+	if(imap == null) return;
 	if(okButton == null) okButton = "Create";
 	var that = this;
 	this.handler = handler;
@@ -2118,6 +2120,49 @@ org.sarsoft.view.MapEntityDialog = function(imap, title, entityform, handler, ok
 org.sarsoft.view.MapEntityDialog.prototype.show = function(obj) {
 	if(obj != null) this.entityform.write(obj);
 	this.dialog.show();
+}
+
+/*
+ *  Extends the MapEntityDialog for objects with geospatial information.  3 states:
+ *  1. New Object
+ *  2. Edit data only
+ *  3. Edit data and geospatial info
+ */
+org.sarsoft.view.MapObjectEntityDialog = function(imap, title, entityform) {
+	var that = this;
+	org.sarsoft.view.MapEntityDialog.call(this, imap, title, entityform, function(obj) { that.ok(obj) }, "OK");
+	
+	this.dialog.dialog.hideEvent.subscribe(function() {
+		if(that.hasGeoInfo) that.discardGeoInfo();
+		if(that.live) that.live = false;
+	});
+}
+
+org.sarsoft.view.MapObjectEntityDialog.prototype = new org.sarsoft.view.MapEntityDialog();
+
+org.sarsoft.view.MapObjectEntityDialog.prototype.ok = function(obj) {
+	var that = this;
+	if(this.object.id == null) {
+		this.create(obj);
+	} else if(this.hasGeoInfo) {
+		this.saveGeoInfo(obj, function() { that.saveData(obj); });
+		this.hasGeoInfo = false;
+	} else {
+		this.saveData(obj);
+	}
+}
+
+// override these stubs
+org.sarsoft.view.MapObjectEntityDialog.prototype.discardGeoInfo = function() { }
+org.sarsoft.view.MapObjectEntityDialog.prototype.saveGeoInfo = function(obj) { }
+org.sarsoft.view.MapObjectEntityDialog.prototype.saveData = function(obj) { }
+org.sarsoft.view.MapObjectEntityDialog.prototype.create = function(obj) { }
+
+org.sarsoft.view.MapObjectEntityDialog.prototype.show = function(obj, point, hasGeoInfo) {
+	this.object = obj;
+	this.point = point;
+	this.hasGeoInfo = hasGeoInfo;
+	org.sarsoft.view.MapEntityDialog.prototype.show.call(this, obj);
 }
 
 org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, style) {
@@ -4787,6 +4832,164 @@ Label.prototype.draw = function() {
 	this.div2_.style.left = Math.round(p.x + this.pixelOffset.width + w * this.centerOffset.width) + "px";
 	this.div2_.style.top = Math.round(p.y +this.pixelOffset.height + h * this.centerOffset.height) + "px";
 };
+
+
+
+
+org.sarsoft.MapObjectController = function(imap, types, nestMenuItems, embedded, hideIfEmpty) {
+	if(imap == null) return;
+	var that = this;
+	this.imap = imap;
+	this.types = types;
+	this.nestMenuItems = nestMenuItems;
+	this.embedded = embedded
+	this.hideIfEmpty = hideIfEmpty;
+
+	this.dataNavigator = imap.registered["org.sarsoft.DataNavigator"]
+	if(this.dataNavigator != null) this.dn = [];
+	
+	this.dao = [];
+	this.objects = [];
+	this.attrs = [];
+	this.visible = [];
+	this.tree = [];
+	this.dn = [];
+	for(var i = 0; i < this.types.length; i++) {
+		var type = this.types[i];
+		this.dao[i] = new type.dao(function () { that.imap.message("Server Communication Error"); });
+		this.objects[i] = new Object();
+		this.attrs[i] = new Object();
+		this.visible[i] = true;
+		this.dn[i] = new Object();
+		this.buildTree(i);
+	}
+		
+	for(var i = 0; i < this.types.length; i++) {
+		var type = this.types[i];
+		if(org.sarsoft.preload[type.name] != null) this.dao[i].rehydrate(org.sarsoft.preload[type.name]);
+		new function(idx) {
+			that.dao[idx].loadAll(function(objects) {
+				if(objects.length > 0) that.tree[idx].body.css('display', 'block');
+				that.refresh(idx, objects);
+				that.growmap(idx, objects);
+			});
+		}(i);
+		this.dao[i].mark();
+	}
+}
+
+org.sarsoft.MapObjectController.prototype.buildTree = function(i) {
+	var that = this;
+	var tree = this.tree[i] = this.dataNavigator.addDataType(this.types[i].name);
+	if(this.hideIfEmpty) tree.body.css('display', 'none');
+	this.dn[i].div = $('<div></div>').appendTo(tree.body);
+	this.dn[i].lines = new Object();
+	this.dn[i].cb = $('<input style="display: none" type="checkbox"' + (that.visible[i] ? ' checked="checked"' : '') + '/>').prependTo(tree.header).click(function(evt) {
+		var val = that.dn[i].cb.checked;
+		that.visible[i] = val;
+		tree.body.cs('display', val ? 'block' : 'none');
+		tree.lock = !val;
+		evt.stopPropagation();
+		that.handleShapeSetupChange();
+	});
+}
+
+org.sarsoft.MapObjectController.prototype.buildAddButton = function(i, text, handler) {
+	var that = this;
+	return $('<span style="color: green; cursor: pointer">' + text + '</span>').appendTo($('<div style="padding-top: 1em; font-size: 120%"></div>').appendTo(this.tree[i].body)).click(function() {
+		var center = that.imap.map.getCenter();
+		handler(that.imap.projection.fromLatLngToContainerPixel(center));
+	});
+}
+
+org.sarsoft.MapObjectController.prototype.growmap = function(i, objects) {
+	// override this stub
+}
+
+org.sarsoft.MapObjectController.prototype.dehydrate = function() {
+	if(this.types.length == 1) return this.dao[0].dehydrate();
+	var state = new Object();
+	for(var i = 0; i < this.types.length; i++) {
+		state[this.types[i].name] = this.dao[i].dehydrate();
+	}
+	return state;
+}
+
+org.sarsoft.MapObjectController.prototype.rehydrate = function(state) {
+	if(this.types.length == 1) this.dao[0].rehydrate(state);
+	for(var i = 0; i < this.types.length; i++) {
+		this.dao[i].rehydrate(state[this.types[i].name]);
+	}
+}
+
+org.sarsoft.MapObjectController.prototype.setAttr = function(i, object, key, value) {
+	if(object == null) return null;
+	if(typeof this.attrs[i][object.id] == "undefined") this.attrs[i][object.id] = new Object();
+	this.attrs[i][object.id][key] = value;
+}
+
+org.sarsoft.MapObjectController.prototype.getAttr = function(i, object, key) {
+	if(object == null || typeof this.attrs[i][object.id] == "undefined") return null;
+	return this.attrs[i][object.id][key];
+}
+
+org.sarsoft.MapObjectController.prototype.timer = function() {
+	var that = this;
+	for(var i = 0; i < this.types.length; i++) {
+		new function(idx) {
+			this.dao[idx].loadSince(function(objects) {
+				that.refresh(idx, objects);
+			});
+		}(i);
+		this.dao[i].mark();
+	}
+}
+
+org.sarsoft.MapObjectController.prototype.DNAdd = function(i, object) {
+	var that = this;
+	if(this.dn == null) return;
+	
+	if(this.dn[i].lines[object.id] == null) this.dn[i].lines[object.id] = $('<div></div>').appendTo(this.dn[i].div);
+	this.dn[i].lines[object.id].empty();
+	
+	this.buildDN(i, object);
+}
+
+org.sarsoft.MapObjectController.prototype.buildDN = function(i, object) {
+	// override this stub
+}
+
+org.sarsoft.MapObjectController.prototype.helpRemove = function(i, id) {
+	this.setAttr(i, this.objects[i][id], "inedit", false);
+	if(this.dn != null && this.dn[i].lines[id] != null) {
+		this.dn[i].lines[id].empty();
+	}
+	delete this.objects[i][id];
+}
+
+org.sarsoft.MapObjectController.prototype.helpShow = function(i, object) {
+	this.objects[i][object.id] = object;
+	this.setAttr(i, object, "inedit", false);
+	if(!this.visible[i]) return;
+	this.DNAdd(i, object);
+}
+
+org.sarsoft.MapObjectController.prototype.show = function(i, object) {
+	// override this stub
+	this.helpShow(i, object);
+}
+
+org.sarsoft.MapObjectController.prototype.refresh = function(i, objects) {
+	var that = this;
+	for(var j = 0; j < objects.length; j++) {
+		if(!this.getAttr(i, objects[j], "inedit"))
+			this.show(i, objects[j]);
+	}
+}
+
+org.sarsoft.MapObjectController.prototype.handleSetupChange = function(i) {
+	// override this stub
+}
 
 org.sarsoft.GeoRefImageOverlay = function(map, name, url, p1, p2, ll1, ll2, opacity, top) {
 	this.set("p1", p1);
