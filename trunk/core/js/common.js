@@ -13,7 +13,10 @@ if(typeof org.sarsoft.preload == "undefined") org.sarsoft.preload = new Object()
 
 org.sarsoft.touch = (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/) != null);
 org.sarsoft.mobile = org.sarsoft.touch && $(window).width() < 600;
+org.sarsoft.iframe = (!window==top);
 org.sarsoft.writeable = (org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.tenantid == null)
+
+
 org.sarsoft.async = function(fn) {
 	window.setTimeout(fn, 0);
 }
