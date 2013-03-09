@@ -2314,6 +2314,28 @@ org.sarsoft.DEMStatus = { OK : "OK" }
 org.sarsoft.view.ProfileGraph = function() {
 	this.height=120;
 	this.div = jQuery('<div style="height: ' + (this.height+20) + 'px; position: relative"></div>');
+	this.service = new google.maps.ElevationService();
+}
+
+org.sarsoft.view.ProfileGraph.prototype.profile = function(way, color, callback) {
+	var that = this;
+	var path = [];
+	if(way.waypoints != null) {
+		for(var i = 0; i < way.waypoints.length; i++) {
+			path.push(new google.maps.LatLng(way.waypoints[i].lat, way.waypoints[i].lng));
+		}
+		if(way.polygon) path.push(new google.maps.LatLng(way.waypoints[0].lat, way.waypoints[0].lng));
+	} else {
+		path = way;
+	}
+	this.service.getElevationAlongPath({path: path, samples: 200}, function(result, status) {
+		if(status == google.maps.ElevationStatus.OK) {
+			if(callback != null) callback();
+			that.draw(result, color);
+		} else {
+			alert("An error occurred while retrieving profile data from Google Maps: " + status);
+		}
+	});
 }
 
 org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
@@ -2431,7 +2453,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 			x = Math.max(0, Math.min(x, series.length-1));
 			var f = x - Math.floor(x);
 			var elevation = series[Math.floor(x)].elevation*(1-f) + series[Math.ceil(x)].elevation*f;
-			ele.html('<span><span style="font-weight: bold">' + Math.round(elevation*3.2808399) + '\'</span> at <span style="font-weight: bold">' + (Math.round((x/(series.length-1))*total_dist/16.0934)/series.length) + "mi</span> ");
+			ele.html('<span><span style="font-weight: bold">' + Math.round(elevation*3.2808399) + '\'</span> at <span style="font-weight: bold">' + (Math.round((x/(series.length-1))*total_dist/16.0934)/100) + "mi</span> ");
 
 			var l = series[Math.floor(x)].location;
 			var r = series[Math.ceil(x)].location;
@@ -4951,18 +4973,25 @@ org.sarsoft.MapObjectController.prototype.DNAdd = function(i, object) {
 	var that = this;
 	if(this.dn == null) return;
 	
-	if(this.dn[i].lines[object.id] == null) this.dn[i].lines[object.id] = $('<div style="clear: both"></div>').appendTo(this.dn[i].div);
+	if(this.dn[i].lines[object.id] == null) this.dn[i].lines[object.id] = $('<div style="clear: both; padding-top: 0.5em"></div>').appendTo(this.dn[i].div);
 	this.dn[i].lines[object.id].html('<div style="float: left"></div><div style="float: right; margin-right: 5px"></div>');
 	
 	this.buildDN(i, object);
 }
 
-org.sarsoft.MapObjectController.prototype.DNAddIcon = function(i, object, title) {
-	return $('<span style="cursor: pointer; margin-right: 5px" title="' + title + '"></span>').appendTo(this.dn[i].lines[object.id].children()[1]);
+org.sarsoft.MapObjectController.prototype.DNAddIcon = function(i, object, title, html) {
+	var icon = $('<span style="cursor: pointer; margin-right: 5px" title="' + title + '"></span>').html(html || '').appendTo(this.DNGetLine(i, object, 1));
+	icon.find('img').css('vertical-align', 'top');
+	return icon;
 }
 
 org.sarsoft.MapObjectController.prototype.DNAddComments = function(i, object, comments) {
-	$('<div></div>').append($('<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex"></div>').append(comments)).appendTo(this.dn[i].lines[object.id]);
+	$('<div></div>').append($('<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex"></div>').append(comments)).appendTo(this.DNGetLine(i, object));
+}
+
+org.sarsoft.MapObjectController.prototype.DNGetLine = function(i, object, child) {
+	var line = this.dn[i].lines[object.id];
+	return (child == null) ? line : $(line.children()[child]);
 }
 
 org.sarsoft.MapObjectController.prototype.buildDN = function(i, object) {
@@ -5369,7 +5398,7 @@ org.sarsoft.controller.CustomLayerController.prototype.show = function(i, gr) {
 org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, gr) {
 	var that = this;
 
-	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn[i].lines[gr.id].children()[0]);
+	var line = this.DNGetLine(i, gr, 0);
 	line.append('<img style="vertical-align: middle; padding-right: 0.5em; height: 16px; width: 16px" src="' + gr.url + '"/>');
 	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(gr.name) + '</span>';
 	jQuery(s).appendTo(line).click(function() {
@@ -5380,7 +5409,7 @@ org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, gr)
 	});
 	
 	if(org.sarsoft.writeable) {	
-		this.DNAddIcon(i, gr, "Edit").html('<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
+		this.DNAddIcon(i, gr, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
 			var config = that.imap.getConfig();
 			if(config.overlay == "_gr" + gr.id) {
 				config.overlay = null;
@@ -5390,7 +5419,7 @@ org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, gr)
 			that.georefDlg.show(gr);
 			that.georefDlg.id = gr.id;
 		});
-		this.DNAddIcon(i, object, "Delete").css({'font-weight': 'bold', color: 'red'}).html('-').click(function() {
+		this.DNAddIcon(i, gr, "Delete", '-').css({'font-weight': 'bold', color: 'red'}).click(function() {
 			that.del(function() { that.removeGR(gr.id); that.dao[0].del(gr.id); });
 		});
 	}

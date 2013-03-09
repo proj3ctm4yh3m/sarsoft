@@ -538,9 +538,9 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 				alert('Please enter a name for this map.');
 				return;
 			}
-			shapes.val(YAHOO.lang.JSON.stringify(markupController.shapeDAO.objs));
-			markers.val(YAHOO.lang.JSON.stringify(markupController.markerDAO.objs));
-			if(imap.registered["org.sarsoft.controller.CustomLayerController"] != null) georefs.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao.objs));
+			shapes.val(YAHOO.lang.JSON.stringify(markupController.dao[1].objs));
+			markers.val(YAHOO.lang.JSON.stringify(markupController.dao[0].objs));
+			if(imap.registered["org.sarsoft.controller.CustomLayerController"] != null) georefs.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao[0].objs));
 			var center = imap.map.getCenter();
 			newlat.val(center.lat());
 			newlng.val(center.lng());
@@ -628,7 +628,7 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 			shape.way.waypoints = that.imap.getNewWaypoints(this.point, this.object.way.polygon);
 			that.dao[1].create(function(obj) {
 				that.refresh(1, [obj]);
-				that.redrawShape(obj, function() { that.saveShape(obj); }, function() { that.removeShape(obj.id); that.dao[1].del(obj.id); });
+				that.redrawShape(obj, function() { that.saveShape(obj, function() { that.refresh(1, [obj]);}); }, function() { that.removeShape(obj.id); that.dao[1].del(obj.id); });
 			}, shape);
 		}
 		
@@ -721,19 +721,8 @@ org.sarsoft.controller.MarkupMapController.prototype.editShape = function(shape)
 
 org.sarsoft.controller.MarkupMapController.prototype.profileShape = function(shape) {
 	var that = this;
-	var service = new google.maps.ElevationService();
-	var path = [];
-	for(var i = 0; i < shape.way.waypoints.length; i++) {
-		path.push(new google.maps.LatLng(shape.way.waypoints[i].lat, shape.way.waypoints[i].lng));
-	}
-	if(shape.way.polygon) path.push(new google.maps.LatLng(shape.way.waypoints[0].lat, shape.way.waypoints[0].lng));
-	service.getElevationAlongPath({path: path, samples: 200}, function(result, status) {
-		if(status == google.maps.ElevationStatus.OK) {
-			that.profileDlg.show();
-			that.pg.draw(result, shape.color);
-		} else {
-			alert("An error occurred while retrieving profile data from Google Maps: " + status);
-		}
+	this.pg.profile(shape.way, shape.color, function() {
+		that.profileDlg.show();
 	});
 }
 
@@ -792,11 +781,11 @@ org.sarsoft.controller.MarkupMapController.prototype.getShapeIdFromWay = functio
 
 org.sarsoft.controller.MarkupMapController.prototype.buildDN = function(i, object) {
 	var that = this;
-	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn[i].lines[object.id].children()[0]);
+	
+	var line = this.DNGetLine(i, object, 0);
 	
 	if(i == 0) {
-		
-		line.append('<img style="vertical-align: middle; padding-right: 0.5em; height: 16px; width: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(object.url) + '"/>');
+		line.append('<img style="vertical-align: top; padding-right: 0.5em; height: 16px; width: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(object.url) + '"/>');
 		var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(object.label) + '</span>';
 		if(object.label == null || object.label.length == 0) s = '<span style="cursor: pointer; font-weight: bold; color: #CCCCCC">N/A</span>'
 		jQuery(s).appendTo(line).click(function() {
@@ -805,12 +794,12 @@ org.sarsoft.controller.MarkupMapController.prototype.buildDN = function(i, objec
 		});
 		
 		if(org.sarsoft.writeable) {
-			this.DNAddIcon(i, object, "Edit").html('<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
+			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
 				that.markerDlg.show(object, null, true);
 				that.markerDlg.live = true;
 				that.editMarkerPosition(object);
 			});
-			this.DNAddIcon(i, object, "Delete").css({'font-weight': 'bold', color: 'red'}).html('-').click(function() {
+			this.DNAddIcon(i, object, "Delete", '-').css({'font-weight': 'bold', color: 'red'}).click(function() {
 				that.del(function() { that.removeMarker(object.id); that.dao[0].del(object.id); });
 			});
 		}
@@ -825,15 +814,15 @@ org.sarsoft.controller.MarkupMapController.prototype.buildDN = function(i, objec
 			that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(object.way.boundingBox[0].lat, object.way.boundingBox[0].lng), new google.maps.LatLng(object.way.boundingBox[1].lat, object.way.boundingBox[1].lng)));
 		});
 		
+		this.DNAddIcon(i, object, "Elevation Profile", '<img src="' + org.sarsoft.imgPrefix + '/profile.png"/>').click(function() {
+			that.profileShape(object);
+		});
 		
 		if(org.sarsoft.writeable) {
-			this.DNAddIcon(i, object, "Elevation Profile").html('<img src="' + org.sarsoft.imgPrefix + '/profile.png"/>').click(function() {
-				that.profileShape(object);
-			});
-			this.DNAddIcon(i, object, "Edit").html('<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
+			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
 				 that.shapeDlg.show(object, null, true); that.shapeDlg.live = true; that.editShape(object);
 			});
-			this.DNAddIcon(i, object, "Delete").css({'font-weight': 'bold', color: 'red'}).html('-').click(function() {
+			this.DNAddIcon(i, object, "Delete", '-').css({'font-weight': 'bold', color: 'red'}).click(function() {
 				that.del(function() { that.removeShape(object.id); that.dao[1].del(object.id); });
 			});
 		}
@@ -960,18 +949,9 @@ org.sarsoft.controller.MapToolsController.prototype._profileHandler = function(p
 	this.imap.unlockContextMenu();
 	$(document).unbind("keydown", this._escHandler);
 	this.imap.drawingManager.setOptions({drawingMode: null});
-	
-	var path = this.imap._getPath(poly);
-	var length = google.maps.geometry.spherical.computeLength(path);
 
-	var service = new google.maps.ElevationService();
-	service.getElevationAlongPath({path: path.getArray(), samples: 200}, function(result, status) {
-		if(status == google.maps.ElevationStatus.OK) {
-			that.profileDlg.show();
-			that.pg.draw(result, "#000000");
-		} else {
-			alert("An error occurred while retrieving profile data from Google Maps: " + status);
-		}
+	this.pg.profile(this.imap._getPath(poly).getArray(), "#000000", function() {
+		that.profileDlg.show();
 	});
 }
 
