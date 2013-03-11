@@ -441,15 +441,15 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 	var url = "";
 	if(val == null) {
 		url = window.location.href+"&format=" + format;
-		this.exp.markers.val(YAHOO.lang.JSON.stringify(this.controller.markerDAO.objs));
-		this.exp.shapes.val(YAHOO.lang.JSON.stringify(this.controller.shapeDAO.objs));
+		this.exp.markers.val(YAHOO.lang.JSON.stringify(this.controller.dao[0].objs));
+		this.exp.shapes.val(YAHOO.lang.JSON.stringify(this.controller.dao[1].objs));
 	} else if(val.url == null) {
 		url = "/rest/marker/" + val.id + "?format=" + format;
 		this.exp.markers.val(YAHOO.lang.JSON.stringify([]));
-		this.exp.shapes.val(YAHOO.lang.JSON.stringify([this.controller.shapes[val.id]]));
+		this.exp.shapes.val(YAHOO.lang.JSON.stringify([this.controller.objects[1][val.id]]));
 	} else {
 		url = "/rest/shape/" + val.id + "?format=" + format;
-		this.exp.markers.val(YAHOO.lang.JSON.stringify([this.controller.markers[val.id]]));
+		this.exp.markers.val(YAHOO.lang.JSON.stringify([this.controller.objects[0][val.id]]));
 		this.exp.shapes.val(YAHOO.lang.JSON.stringify([]));
 	}
 	
@@ -486,8 +486,8 @@ org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
 	});
 	header.append('Limit export to a single object:');
 
-	for(var key in this.controller.markers) {
-		var marker = this.controller.markers[key];
+	for(var key in this.controller.objects[0]) {
+		var marker = this.controller.objects[0][key];
 		if(marker.label != null && marker.label.length > 0) {
 			var m = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"><img style="vertical-align: middle; width: 16px; height: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>' + org.sarsoft.htmlescape(marker.label) + '</div>').appendTo(this.exportables);
 			var devnull = function(dom, obj) {
@@ -500,8 +500,8 @@ org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
 			}(m, marker);
 		}
 	}
-	for(var key in this.controller.shapes) {
-		var shape = this.controller.shapes[key];
+	for(var key in this.controller.objects[1]) {
+		var shape = this.controller.objects[1][key];
 		if(shape.label != null && shape.label.length > 0) {
 			var s = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"></div>').append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape)).append(org.sarsoft.htmlescape(shape.label)).appendTo(this.exportables);
 			var devnull = function(dom, obj) {
