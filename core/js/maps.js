@@ -4322,6 +4322,10 @@ UTM.prototype.toHTMLString = function() {
 
 GeoUtil = new Object();
 
+GeoUtil.wpt2gll = function(wpt) {
+	return new google.maps.LatLng(wpt.lat, wpt.lng);
+}
+
 GeoUtil.formatDD = function(deg) {
 	return deg.toFixed(4);
 }
@@ -5001,7 +5005,8 @@ org.sarsoft.MapObjectController.prototype.buildDN = function(i, object) {
 org.sarsoft.MapObjectController.prototype.helpRemove = function(i, id) {
 	this.setAttr(i, this.objects[i][id], "inedit", false);
 	if(this.dn != null && this.dn[i].lines[id] != null) {
-		this.dn[i].lines[id].empty();
+		this.dn[i].lines[id].remove();
+		this.dn[i].lines[id] = null;
 	}
 	delete this.objects[i][id];
 }
