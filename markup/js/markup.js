@@ -269,7 +269,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	var dn = imap.registered["org.sarsoft.DataNavigator"];
 	if(dn == null) return;
 
-	if(org.sarsoft.userPermissionLevel != "READ") {
+	if(org.sarsoft.writeable) {
 		this.imp = new Object();
 		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
 		this.imp.body = this.imp.dlg.bd.children().first();
@@ -470,34 +470,32 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 }
 
 
-org.sarsoft.controller.MarkupMapController = function(imap) {
+org.sarsoft.controller.MarkupMapController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, [{name: "markers", dao : org.sarsoft.MarkerDAO, label: "Markers"}, {name: "shapes", dao: org.sarsoft.ShapeDAO, label: "Shapes"}]);	
+	org.sarsoft.MapObjectController.call(this, imap, [{name: "markers", dao : org.sarsoft.MarkerDAO, label: "Markers"}, {name: "shapes", dao: org.sarsoft.ShapeDAO, label: "Shapes"}], background_load);	
 	this.imap.register("org.sarsoft.controller.MarkupMapController", this);
 	
-	if(this.dataNavigator != null) { // TODO make this work with non-markup objects like assignments
+	if(this.dn != null && org.sarsoft.writeable) { // TODO make this work with non-markup objects like assignments
 		if(org.sarsoft.tenantid == null) {
 			this.saveAs = new org.sarsoft.widget.MarkupSaveAs(imap, this.dataNavigator.defaults.body);
 			this.saveAs.tree.block.insertBefore(this.dataNavigator.defaults.layers.tree.block)
 			this.saveAs.tree.block.css('display', 'none');
 		}
 		
-		if(org.sarsoft.writeable) {
-			this.buildAddButton(0, "+ New Marker", function(point) {
-				that.markerDlg.show({url: "#FF0000"}, point);
-			});
-			
-			this.buildAddButton(1, "+ New Line", function(point) {
-				that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, point);
-			}).css('margin-right', '2em');
+		this.buildAddButton(0, "+ New Marker", function(point) {
+			that.markerDlg.show({url: "#FF0000"}, point);
+		});
+		
+		this.buildAddButton(1, "+ New Line", function(point) {
+			that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, point);
+		}).css('margin-right', '2em');
 
-			this.buildAddButton(1, "+ New Polygon", function(point) {
-			    that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, point);
-			});
-		}
+		this.buildAddButton(1, "+ New Polygon", function(point) {
+		    that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, point);
+		});
 	}
 
-	if(!org.sarsoft.iframe) {
+	if(!org.sarsoft.iframe && !this.bgload) {
 		this.alertDlgDiv = document.createElement("div");
 		this.alertDlg = org.sarsoft.view.AlertDialog("Comments", this.alertDlgDiv)
 	
@@ -598,7 +596,7 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 			return { shape: shape }
 		}
 		
-		if(org.sarsoft.writeable) {
+		if(org.sarsoft.writeable && !this.bgload) {
 			this.imap.addContextMenuItems(items.concat([
 	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.marker != null }, handler: function(data) { that.markerDlg.show(data.pc.marker) }},
 	    		{text : "Drag to New Location", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live;}, handler: function(data) { that.dragMarker(data.pc.marker)}},
@@ -616,7 +614,7 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 		}
 	}
 
-	if(!org.sarsoft.iframe) this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
+	if(!org.sarsoft.iframe && this.dn != null) this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
 
 }
 
@@ -635,7 +633,7 @@ org.sarsoft.controller.MarkupMapController.prototype.growmap = function(idx, obj
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function() {
-	if(this.dataNavigator == null) return;
+	if(this.dataNavigator == null || this.bgload) return;
 	
 	var mkeys = Object.keys(this.objects[0]).length;
 	var skeys = Object.keys(this.objects[1]).length;

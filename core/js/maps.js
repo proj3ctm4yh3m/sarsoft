@@ -4860,34 +4860,36 @@ Label.prototype.draw = function() {
 };
 
 
-org.sarsoft.MapObjectController = function(imap, types) {
+org.sarsoft.MapObjectController = function(imap, types, background_load) {
 	if(imap == null) return;
 	var that = this;
 	this.imap = imap;
 	this.types = types;
+	this.bgload = background_load;
 
 	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", $('<div>Delete - Are You Sure?</div>'), "Delete", "Cancel", function() {
 			that.dchandler();
 			that.dchandler = null;
 		});
-	
-	this.dataNavigator = imap.registered["org.sarsoft.DataNavigator"]
-	if(this.dataNavigator != null) this.dn = [];
-	
+
 	this.dao = [];
 	this.objects = [];
 	this.attrs = [];
 	this.visible = [];
-	this.tree = [];
-	this.dn = [];
+
+	this.dataNavigator = imap.registered["org.sarsoft.DataNavigator"]
+	if(this.dataNavigator != null && !this.bgload) {
+		this.dn = [];		
+		this.tree = [];
+	}
 	for(var i = 0; i < this.types.length; i++) {
 		var type = this.types[i];
 		this.dao[i] = new type.dao(function () { that.imap.message("Server Communication Error"); });
 		this.objects[i] = new Object();
 		this.attrs[i] = new Object();
 		this.visible[i] = true;
-		this.dn[i] = new Object();
-		this.buildTree(i);
+		if(this.dn != null) this.dn[i] = new Object();
+		if(this.tree != null) this.buildTree(i);
 	}
 		
 	for(var i = 0; i < this.types.length; i++) {
@@ -4895,7 +4897,7 @@ org.sarsoft.MapObjectController = function(imap, types) {
 		if(org.sarsoft.preload[type.name] != null) this.dao[i].rehydrate(org.sarsoft.preload[type.name]);
 		new function(idx) {
 			that.dao[idx].loadAll(function(objects) {
-				if(objects.length > 0) that.tree[idx].body.css('display', 'block');
+				if(objects.length > 0 && that.tree != null) that.tree[idx].body.css('display', 'block');
 				that.refresh(idx, objects);
 				that.growmap(idx, objects);
 			});
