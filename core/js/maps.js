@@ -3789,11 +3789,11 @@ org.sarsoft.widget.Sharing = function(imap, container) {
 }
 
 org.sarsoft.widget.ImportExport = function(imap, container) {
-	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/gps.png"/>Data Transfer');
-	this.imp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/right.png"/>Import Data</div>').appendTo(this.tree.body);
-	this.exp = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px; display: none"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/left.png"/>Export Data</div>').appendTo(this.tree.body);
-	this.kml = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>Export to Google Earth</div>').appendTo(this.tree.body);
-
+	var that = this;
+	this.div = $('<div style="font-weight: bold; color: black;"></div>').appendTo(container);
+	this.kml = $('<span title="Export Map Layers to Google Earth" style="cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML</span>').appendTo(this.div);
+	this.kml.mouseover(function() { that.kml.css('text-decoration', 'underline')}).mouseout(function() { that.kml.css('text-decoration', 'none')});
+	
 	var kmlBody = jQuery('<div>Export map layers to Google Earth.  Export will be limited to the current map bounds; zooming in can give you a higher resolution export.<br/><br/></div>');
 	var supersize = jQuery('<input type="checkbox"/>').appendTo(kmlBody);
 	kmlBody.append('<span>Super size this export (more tiles, more coverage, larger file)</span><br/><br/>');

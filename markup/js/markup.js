@@ -112,19 +112,17 @@ org.sarsoft.view.MarkerForm = function() {
 
 org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	var that = this;
-	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
-	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(form)));
-	var left = jQuery('<td width="50%"></td>').appendTo(form);
-	var right = jQuery('<td width="50%"></td>').appendTo(form);
-	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left);
-	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);
-		
-	div = jQuery('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(left);
-	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(left);
-
-	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(left);
+	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"><table style="border: 0"><tbody><tr></tr></tbody></table></form>').appendTo(container);
+	var left = $('<td width="50%"></td>').appendTo(form.find('tr'));
+	var right = $('<td width="50%"></td>').appendTo(form.find('tr'));
 	
-	div = jQuery('<div class="item" style="min-height: 22px"><label for="image" style="width: 80px">Image:</label></div>').appendTo(right);
+	this.labelInput = $('<input name="label" type="text" size="15"/>').appendTo($('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left));
+
+	var div = $('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(left);
+	this.comments = $('<textarea rows="5" cols="50"></textarea>').appendTo(left);
+	this.specsDiv = $('<div class="item" style="padding-top: 10px"></div>').appendTo(left);
+	
+	div = $('<div class="item" style="min-height: 22px"><label for="image" style="width: 80px">Image:</label></div>').appendTo(right);
 	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px;" valign="top"/>').appendTo(div);
 	jQuery('<img style="width: 20px; height: 20px; visibility: hidden" src="' + org.sarsoft.imgPrefix + '/blank.gif"/>').appendTo(div);
 
@@ -145,10 +143,10 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 			for(var i = 0; i < that.images[key].length; i++) {
 				var url = that.images[key][i];
 				if(url.indexOf("#") == 0) {
-					var swatch = jQuery('<img style="width: 16px; height: 16px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
+					var swatch = jQuery('<img style="cursor: pointer; width: 16px; height: 16px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
 					swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["circles"][j].substr(1)); that.imageInput.trigger('change');}}());
 				} else {
-					var swatch = jQuery('<img style="width: 20px; height: 20px" src="' + org.sarsoft.imgPrefix + '/icons/' + url + '.png"/>').appendTo(ic2);
+					var swatch = jQuery('<img style="cursor: pointer; width: 20px; height: 20px" src="' + org.sarsoft.imgPrefix + '/icons/' + url + '.png"/>').appendTo(ic2);
 					swatch.click(function() { var j = i; var l = key; return function() {
 						that.imageInput.val(""); that.imageUrl = that.images[l][j]; that.handleChange();}}());
 				}
@@ -207,68 +205,18 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.handleChange();
 }
 
-org.sarsoft.view.MarkerLocationForm = function() {
-}
-
-org.sarsoft.view.MarkerLocationForm.prototype.create = function(container, callback) {
-	var that = this;
-	var form = jQuery('<div></div>').appendTo(container);
-	jQuery('<div><span style="font-weight: bold">Current Location</span></div>').appendTo(form);
-	var div = jQuery('<div class="item"></div>').appendTo(form);
-	this.currentSelect = jQuery('<select><option value="UTM">UTM</option><option value="DD">DD</option><option value="DDMMHH">DMH</option><option value="DDMMSS">DMS</option></select>').appendTo(div);
-	this.currentLocation = jQuery('<span style="margin-left: 10px"></span>').appendTo(div);
-	
-	jQuery('<div style="padding-top: 1em"><span style="font-weight: bold; padding-top: 1em">Enter New Location</span></div>').appendTo(form);
-	var div = jQuery('<div class="item" style="clear: both"></div>').appendTo(form);
-
-	this.locationEntryForm = new org.sarsoft.LocationEntryForm();
-	this.locationEntryForm.create(div, callback, true);
-
-	this.currentSelect.change(function() {
-		that.updateCurrentLocation();
-	});
-}
-
-org.sarsoft.view.MarkerLocationForm.prototype.updateCurrentLocation = function() {
-	var type = this.currentSelect.val();
-	var html = "";
-	if(type == "UTM") {
-		html = GeoUtil.GLatLngToUTM(this.value).toHTMLString();
-	} else if(type == "DD") {
-		html = GeoUtil.formatDD(this.value.lat()) + ", " + GeoUtil.formatDD(this.value.lng());
-	} else if(type == "DDMMHH") {
-		html = GeoUtil.formatDDMMHH(this.value.lat()) + ", " + GeoUtil.formatDDMMHH(this.value.lng());
-	} else if(type == "DDMMSS") {
-		html = GeoUtil.formatDDMMSS(this.value.lat()) + ", " + GeoUtil.formatDDMMSS(this.value.lng());
-	}
-	this.currentLocation.html(html);
-}
-
-org.sarsoft.view.MarkerLocationForm.prototype.write = function(wpt) {
-	this.value = new google.maps.LatLng(wpt.lat, wpt.lng);
-	this.currentSelect.val("utm");
-	this.updateCurrentLocation();
-	this.locationEntryForm.clear();
-}
-
-org.sarsoft.view.MarkerLocationForm.prototype.read = function(callback) {
-	return this.locationEntryForm.read(callback);
-}
-
 org.sarsoft.view.ShapeForm = function() {
 }
 
 org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	var that = this;
-	var form = jQuery('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"></form>').appendTo(container);
-	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(form)));
-	var left = jQuery('<td width="50%"></td>').appendTo(form);
-	var right = jQuery('<td width="50%" style="padding-left: 20px"></td>').appendTo(form);
+	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"><table style="border: 0"><tbody><tr></tr></tbody></table></form>').appendTo(container);
+	var left = $('<td width="50%"></td>').appendTo(form.find('tr'));
+	var right = $('<td width="50%"></td>').appendTo(form.find('tr'));
 	
-	var div = jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left);
-	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(div);	
+	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left));	
 
-	div = jQuery('<div class="item" style="clear: both"><label for="color" style="width: 80px">Weight:</label></div>').appendTo(left);
+	var div = jQuery('<div class="item" style="clear: both"><label for="color" style="width: 80px">Weight:</label></div>').appendTo(left);
 	this.weightInput = jQuery('<select name="weight"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>').appendTo(div);
 
 	this.fillDiv = jQuery('<div class="item"><label for="color" style="width: 80px">Fill:</label></div>').appendTo(left);
@@ -319,138 +267,138 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	var that = this;
 	this.controller = controller;
 	var dn = imap.registered["org.sarsoft.DataNavigator"];
-	this.dn = new Object();
-	var bn = jQuery('<div></div>');
-	var pane = new org.sarsoft.view.MapRightPane(imap, bn);
+	if(dn == null) return;
 
 	if(org.sarsoft.userPermissionLevel != "READ") {
-		
-		var imp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>');
-		this.impDlg = new org.sarsoft.view.MapDialog(imap, "Import Data", imp, null, "Cancel", function() {
+		this.imp = new Object();
+		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
+		this.imp.body = this.imp.dlg.bd.children().first();
+		this.imp.link = $('<span title="Import Data" style="cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</span>').appendTo(dn.defaults.io.div).click(function() {
+			that.imp.comms.clear();
+			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
+			that.imp.gpx.form.css('display', 'none');
+			that.imp.dlg.swap();
 		});
-		if(dn != null && dn.defaults.io.imp != null) dn.defaults.io.imp.click(function() { that.impcomms.clear(); that.refreshImportables(); that.impDlg.swap(); });
+		this.imp.link.mouseover(function() { that.imp.link.css('text-decoration', 'underline')}).mouseout(function() { that.imp.link.css('text-decoration', 'none')});
 		
 		var hastyHandler = function(data) {
 			for(var i = 0; i < data.shapes.length; i++) {
 				var shape = data.shapes[i];
 				shape.id = null;
 				shape.way.id = null;
-				that.controller.shapeDAO.offlineLoad(shape);
+				that.controller.dao[1].offlineLoad(shape);
 				that.controller.show(1, shape);
 			}
 			for(var i = 0; i < data.markers.length; i++) {
 				var marker = data.markers[i];
 				marker.id = null;
 				marker.position.id = null;
-				that.controller.markerDAO.offlineLoad(marker);
+				that.controller.dao[0].offlineLoad(marker);
 				that.controller.show(0, marker);
 			}
-			that.impDlg.hide();
+			that.imp.dlg.hide();
 		}
 	
-		var gpsin = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>');
-		gpsin.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(imp));
-		gpsin.click(function() {
-			that.impHeader.css('visibility', 'inherit');
-			if(org.sarsoft.tenantid == null) {
-				that.impcomms.init(false, "/hastyupload", "", hastyHandler);
-			} else {
-				that.impcomms.init(false, "/rest/gpxupload", "");
-			}
-		});
-		
-		this.gpxin = jQuery('<form name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/></form>');
-		this.gpxfile = jQuery('<input type="file" name="file" style="margin-top: 40px; margin-left: 10px"/>').appendTo(this.gpxin);
-		this.gpxval = jQuery('<div style="margin-left: 10px; margin-top: 5px"></div>').appendTo(this.gpxin);
-		// TODO after cloning, this won't work
-		this.gpxfile.change(function() {
-			that.gpxval.html(that.gpxfile.val());
-		})
-		var gpxicon = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>');
-		jQuery('<div style="display: inline-block"></div>').append(jQuery('<div style="float: left"></div').append(gpxicon)).append(jQuery('<div style="float: left"></div>').append(this.gpxin)).appendTo(imp);
-		gpxicon.click(function() {
-			if("" == that.gpxfile.val()) {
-				alert("Please choose a GPX file to import.");
-			} else {
-				if(org.sarsoft.tenantid != null) {
-					that.gpxin.submit();
-				} else {
-					if(that.bgframe == null)  {
-						that.bgframe = jQuery('<iframe name="markupIOFrame" id="markupIOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
-						that.bgform = jQuery('<form style="display: none" name="gpsform" action="/hastyupload" target="markupIOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
+		$('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.imp.body).append(
+				$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').click(function() {
+					that.impHeader.css('visibility', 'inherit');
+					if(org.sarsoft.tenantid == null) {
+						that.imp.comms.init(false, "/hastyupload", "", hastyHandler);
+					} else {
+						that.imp.comms.init(false, "/rest/gpxupload", "");
 					}
-					jsonFrameCallback = hastyHandler;
-					_bgframe = that.bgframe;
-					that.gpxfile.appendTo(that.bgform);
-					that.bgform.submit();
+				}));
+		
+		this.imp.gpx = new Object();
+		this.imp.gpx.form = $('<form style="float: left; display: none; padding-left: 10px" name="gpsform" action="/map/gpxupload?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/>Please choose a file to import:<br/></form>');
+		this.imp.gpx.file = $('<input type="file" name="file" style="margin-top: 10px;"/>').appendTo(this.imp.gpx.form);
+		this.imp.gpx.file.change(function() {
+			if(org.sarsoft.tenantid != null) {
+				that.imp.gpx.form.submit();
+			} else {
+				if(that.bgframe == null)  {
+					that.bgframe = jQuery('<iframe name="markupIOFrame" id="markupIOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
+					that.bgform = jQuery('<form style="display: none" name="gpsform" action="/hastyupload" target="markupIOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
 				}
+				jsonFrameCallback = hastyHandler;
+				_bgframe = that.bgframe;
+				that.imp.gpx.file.appendTo(that.bgform);
+				that.bgform.submit();
 			}
 		});
+		$('<div style="cursor: pointer; float: left"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>').click(function() {
+			that.imp.gpx.form.css('display', 'block');
+		}).prependTo($('<div style="float: left"></div').append(this.imp.gpx.form).appendTo($('<div style="display: inline-block"></div>').appendTo(this.imp.body)));
 
-		this.impHeader = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(imp);
-		this.impcomms = new org.sarsoft.GPSComms(this.impHeader);
+		
+		this.imp.header = $('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(this.imp.body);
+		this.imp.comms = new org.sarsoft.GPSComms(this.imp.header);
 
-	} else {
-		if(dn.defaults.io != null && dn.defaults.io.imp != null) dn.defaults.io.imp.css('display', 'none');
 	}
 	
-	// TODO IE may require form to be in DOM
 	this.exp = new Object();
-	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"></form>').appendTo(document.body);
-	this.exp.format = jQuery('<input type="hidden" name="format"/>').appendTo(this.exp.form);
-	this.exp.shapes = jQuery('<input type="hidden" name="shapes"/>').appendTo(this.exp.form);
-	this.exp.markers = jQuery('<input type="hidden" name="markers"/>').appendTo(this.exp.form);
+	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
+	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
+	this.exp.link = $('<span title="Export Data" style="visibility: hidden; cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</span>').appendTo(dn.defaults.io.div).click(function() {
+		that.exp.comms.clear();
+		that.exp.dlg.swap(); 
 
-	var exp = jQuery('<div><div style="font-weight: bold; margin-bottom: 10px">To export data, click on the file type you wish to export to:</div></div>');
-	this.expDlg = new org.sarsoft.view.MapDialog(imap, "Export Data", exp, null, "Export Complete", function() {
-	});
-	if(dn.defaults.io != null && dn.defaults.io.exp != null) dn.defaults.io.exp.click(function() { that.refreshExportables(); that.expcomms.clear(); that.expDlg.swap(); });
+		var exportables = that.exp.body.find('select');
+		exportables.empty();
+		exportables.append('<option value="a0">All Objects</option>');
+		
+		for(var i = 0; i <= 1; i++) {
+			for(var key in that.controller.objects[i]) {
+				var obj = that.controller.objects[i][key];
+				if((obj.label || "").length > 0) exportables.append('<option value="' + (i == 0 ? 'm' : 's') + obj.id + '">' + obj.label + '</option>');
+			}
+		}
+		});
+	this.exp.link.mouseover(function() { that.exp.link.css('text-decoration', 'underline')}).mouseout(function() { that.exp.link.css('text-decoration', 'none')});
+	this.exp.body = this.exp.dlg.bd.children().first();
 
-	var gpsout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
-	gpsout.click(function() {
+	$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body)).click(function() {
 		that.expHeader.css('visibility', 'inherit');
 		that.doexport("GPS");
 	});
 
-	var gpxout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>');
-	gpxout.appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
-	gpxout.click(function() {
+	$('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body).append($('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>').click(function () {
 		that.doexport("GPX");
-	});
+	}));
 
-	var kmlout = jQuery('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(exp));
-	kmlout.click(function() {
+	$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body)).click(function() {
 		that.doexport("KML");
 	});
 
-	this.expHeader = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(exp);
-	this.expcomms = new org.sarsoft.GPSComms(this.expHeader);
-	this.exportables = jQuery('<div style="clear: both; width: 100%; padding-top: 10px"></div>').appendTo(exp);
+	this.exp.header = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(this.exp.body);
+	this.exp.comms = new org.sarsoft.GPSComms(this.exp.header);
 }
 
 org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
-	var val = this.exportables._selected;
+	var val = this.exp.body.find('select').val();
+	var type = val.substring(0,1);
+	var id = Number(val.substring(1, val.length));
 
 	var gps = false;
 	if(format == "GPS") {
 		gps = true;
 		format = "GPX";
 	}
-	this.exp.format.val(format);
+	this.exp.form.find('[name="format"]').val(format);
 
 	var url = "";
-	if(val == null) {
+	if(type == "a") {
 		url = window.location.href+"&format=" + format;
-		this.exp.markers.val(YAHOO.lang.JSON.stringify(this.controller.dao[0].objs));
-		this.exp.shapes.val(YAHOO.lang.JSON.stringify(this.controller.dao[1].objs));
-	} else if(val.url == null) {
-		url = "/rest/marker/" + val.id + "?format=" + format;
-		this.exp.markers.val(YAHOO.lang.JSON.stringify([]));
-		this.exp.shapes.val(YAHOO.lang.JSON.stringify([this.controller.objects[1][val.id]]));
+		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify(this.controller.dao[0].objs));
+		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify(this.controller.dao[1].objs));
+	} else if(type == "m") {
+		url = "/rest/marker/" + id + "?format=" + format;
+		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify([]));
+		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify([this.controller.objects[1][id]]));
 	} else {
-		url = "/rest/shape/" + val.id + "?format=" + format;
-		this.exp.markers.val(YAHOO.lang.JSON.stringify([this.controller.objects[0][val.id]]));
-		this.exp.shapes.val(YAHOO.lang.JSON.stringify([]));
+		url = "/rest/shape/" + id + "?format=" + format;
+		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify([this.controller.objects[0][id]]));
+		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify([]));
 	}
 	
 	if(org.sarsoft.tenantid != null) {
@@ -466,53 +414,6 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 			this.exp.form.submit();
 		}
 		
-	}
-
-}
-
-org.sarsoft.view.MarkupIO.prototype.refreshImportables = function() {
-	this.gpxfile.insertBefore(this.gpxval);
-}
-
-org.sarsoft.view.MarkupIO.prototype.refreshExportables = function() {
-	var that = this;
-	this.exportables.empty();
-	var header = jQuery('<div style="font-size: 120%; margin-bottom: 5px"></div>').appendTo(this.exportables);
-	var expcb = jQuery('<input type="checkbox" style="vertical-align: text-top"/>').appendTo(header).change(function() {
-		if(!expcb[0].checked) {
-			that.exportables._selected = null;
-			that.exportables.children().css('background-image', 'none');
-		}
-	});
-	header.append('Limit export to a single object:');
-
-	for(var key in this.controller.objects[0]) {
-		var marker = this.controller.objects[0][key];
-		if(marker.label != null && marker.label.length > 0) {
-			var m = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"><img style="vertical-align: middle; width: 16px; height: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(marker.url) + '"/>' + org.sarsoft.htmlescape(marker.label) + '</div>').appendTo(this.exportables);
-			var devnull = function(dom, obj) {
-				dom.click(function() {
-					expcb[0].checked = true;
-					that.exportables._selected = obj;
-					that.exportables.children().css('background-image', 'none');
-					dom.css('background-image', 'url(' + org.sarsoft.imgPrefix + '/ok.png)');
-				});
-			}(m, marker);
-		}
-	}
-	for(var key in this.controller.objects[1]) {
-		var shape = this.controller.objects[1][key];
-		if(shape.label != null && shape.label.length > 0) {
-			var s = jQuery('<div style="font-weight: bold; color: #945e3b; cursor: pointer; float: left; padding-left: 24px; margin-right: 10px; min-height: 24px; background-repeat: no-repeat no-repeat"></div>').append(org.sarsoft.controller.MarkupMapController.getIconForShape(shape)).append(org.sarsoft.htmlescape(shape.label)).appendTo(this.exportables);
-			var devnull = function(dom, obj) {
-				dom.click(function() {
-					expcb[0].checked = true;
-					that.exportables._selected = obj;
-					that.exportables.children().css('background-image', 'none');
-					dom.css('background-image', 'url(' + org.sarsoft.imgPrefix + '/ok.png)');
-				});
-			}(s, shape);
-		}
 	}
 }
 
@@ -752,7 +653,7 @@ org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function()
 		}
 	}
 	
-	this.dataNavigator.defaults.io.exp.css('display', (mkeys > 0 || skeys > 0) ? 'block' : 'none');
+	this.markupio.exp.link.css('visibility', (mkeys > 0 || skeys > 0) ? 'visible' : 'hidden');
 	this.dn[0].cb.css('display', mkeys > 0 ? 'inline' : 'none');
 	this.dn[1].cb.css('display', skeys > 0 ? 'inline' : 'none');
 }
