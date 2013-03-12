@@ -420,12 +420,20 @@ org.sarsoft.view.ContextMenu.prototype.setItems = function(items) {
 }
 
 org.sarsoft.view.ContextMenu.prototype._addItems = function(menu, items, subject, data) {
+	var pc_fn = [];
+	var pc_result = [];
+
 	var createhandler = function(idx) {
-		return function() { items[idx].handler(data)}
+		return function() { data.pc = pc_result[pc_fn.indexOf(items[idx].precheck)]; items[idx].handler(data) }
 	}
 	
 	for(var i = 0; i < items.length; i++) {
-		if(items[i].applicable(subject)) {
+		var pc = items[i].precheck;
+		if(pc != null && pc_fn.indexOf(pc) < 0) {
+			pc_fn.push(pc);
+			pc_result.push(pc(subject));
+		}
+		if(items[i].applicable((pc == null) ? subject : pc_result[pc_fn.indexOf(pc)])) {
 			if(items[i].items != null) {
 				var submenu = new YAHOO.widget.Menu("ContextMenu_" + org.sarsoft.view.ContextMenu._idx++, { hidedelay : 750, showdelay : 0, zIndex : "1010"});
 				this._addItems(submenu, items[i].items, subject, data);

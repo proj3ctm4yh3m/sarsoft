@@ -684,23 +684,35 @@ org.sarsoft.controller.MarkupMapController = function(imap) {
 		    {text : "New Line", applicable : function(obj) { return obj == null && that.visible[1]}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, data.point); }},
 		    {text : "New Polygon", applicable : function(obj) { return obj == null && that.visible[1]}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, data.point); }}];
 
+		var pc = function(obj) {
+			if(obj == null) return {}
+			var marker = that.objects[0][that.getMarkerIdFromWpt(obj)];
+			var shape = that.objects[1][that.getShapeIdFromWay(obj)];
+			var inedit = ((marker != null && that.getAttr(0, marker, "inedit")) || (shape != null && that.getAttr(1, shape, "inedit")));
+			return { marker: marker, shape: shape, inedit: inedit}
+		}
+		
+		var pc2 = function(obj) {
+			var shape = that.objects[1][that.getShapeIdFromWay(obj)];
+			return { shape: shape }
+		}
+		
 		if(org.sarsoft.writeable) {
 			this.imap.addContextMenuItems(items.concat([
-	    		{text : "Details", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { that.markerDlg.show(that.objects[0][that.getMarkerIdFromWpt(data.subject)]) }},
-	    		{text : "Drag to New Location", applicable : function(obj) { var marker = that.objects[0][that.getMarkerIdFromWpt(obj)]; return marker != null && !that.getAttr(0, marker, "inedit") && !that.markerDlg.live;}, handler: function(data) { var marker = that.objects[0][that.getMarkerIdFromWpt(data.subject)]; that.dragMarker(marker)}},
-	    		{text : "Delete Marker", applicable : function(obj) { return obj != null && that.getMarkerIdFromWpt(obj) != null}, handler: function(data) { var id = that.getMarkerIdFromWpt(data.subject); that.del(function() { that.removeMarker(id); that.dao[0].del(id);}); }},
-	    		{text : "Details", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getAttr(1, that.objects[1][id], "inedit") && !that.shapeDlg.live; }, handler: function(data) { that.shapeDlg.show(that.objects[1][that.getShapeIdFromWay(data.subject)], data.point) }},
-	    		{text : "Profile", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getAttr(1, that.objects[1][id], "inedit") && !that.shapeDlg.live; }, handler: function(data) { var shape = that.objects[1][that.getShapeIdFromWay(data.subject)]; that.profileShape(shape);}},
-	    		{text: "Modify \u2192", applicable: function(obj) { var shape = that.objects[1][that.getShapeIdFromWay(obj)]; return shape != null && !that.getAttr(1, shape, "inedit") }, items:
-	    			[{text : "Drag Vertices", applicable : function(obj) { var shape = that.objects[1][that.getShapeIdFromWay(obj)]; return shape != null && !that.getAttr(1, shape, "inedit"); }, handler : function(data) { that.editShape(that.objects[1][that.getShapeIdFromWay(data.subject)]) }},
-		    		{text : "Split Here", applicable: function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getAttr(1, that.objects[1][id], "inedit") && !that.shapeDlg.live && !that.objects[1][id].way.polygon}, handler: function(data) { that.splitLineAt(that.objects[1][that.getShapeIdFromWay(data.subject)], that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
-		    		{text : "Join Lines", applicable: function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getAttr(1, that.objects[1][id], "inedit") && !that.shapeDlg.live && !that.objects[1][id].way.polygon}, handler: function(data) { that.joinDlg.show(that.objects[1][that.getShapeIdFromWay(data.subject)]); }}]},
-	    		{text : "Save Changes", applicable : function(obj) { var shape = that.objects[1][that.getShapeIdFromWay(obj)]; return shape != null && that.getAttr(1, shape, "inedit") && !that.shapeDlg.live; }, handler: function(data) { that.saveShape(that.objects[1][that.getShapeIdFromWay(data.subject)]) }},
-	    		{text : "Discard Changes", applicable : function(obj) { var shape = that.objects[1][that.getShapeIdFromWay(obj)]; return shape != null && that.getAttr(1, shape, "inedit"); }, handler: function(data) { that.discardShape(that.objects[1][that.getShapeIdFromWay(data.subject)]) }},
-	    		{text : "Delete Shape", applicable : function(obj) { var id = that.getShapeIdFromWay(obj); return obj != null && id != null && !that.getAttr(1, that.objects[1][id], "inedit");}, handler: function(data) { var id = that.getShapeIdFromWay(data.subject); that.del(function() { that.removeShape(id); that.dao[1].del(id);});}}
+	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.marker != null }, handler: function(data) { that.markerDlg.show(data.pc.marker) }},
+	    		{text : "Drag to New Location", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live;}, handler: function(data) { that.dragMarker(data.pc.marker)}},
+	    		{text : "Delete Marker", precheck: pc, applicable : function(obj) { return obj.marker != null}, handler: function(data) { that.del(function() { that.removeMarker(data.pc.marker.id); that.dao[0].del(data.pc.marker.id);}); }},
+	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.shapeDlg.show(data.pc.shape, data.point) }},
+	    		{text : "Profile", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.profileShape(data.pc.shape);}},
+	    		{text: "Modify \u2192", precheck: pc, applicable: function(obj) { return obj.shape != null && !obj.inedit }, items:
+	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return true }, handler : function(data) { that.editShape(data.pc.shape) }},
+		    		{text : "Split Here", precheck: pc2, applicable: function(obj) { return !obj.shape.way.polygon}, handler: function(data) { that.splitLineAt(data.pc.shape, that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
+		    		{text : "Join Lines", precheck: pc2, applicable: function(obj) { return !obj.shape.way.polygon}, handler: function(data) { that.joinDlg.show(data.pc.shape); }}]},
+	    		{text : "Save Changes", precheck: pc, applicable : function(obj) { return obj.shape != null && obj.inedit && !that.shapeDlg.live; }, handler: function(data) { that.saveShape(data.pc.shape) }},
+	    		{text : "Discard Changes", precheck: pc, applicable : function(obj) { return obj.shape != null && obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.discardShape(data.pc.shape) }},
+	    		{text : "Delete Shape", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit }, handler: function(data) { that.del(function() { that.removeShape(data.pc.shape.id); that.dao[1].del(data.pc.shape.id);});}}
 	     		]));
 		}
-	
 	}
 
 	if(!org.sarsoft.iframe) this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
