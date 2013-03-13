@@ -301,7 +301,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	
 		$('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.imp.body).append(
 				$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').click(function() {
-					that.impHeader.css('visibility', 'inherit');
+					that.imp.header.css('visibility', 'inherit');
 					if(org.sarsoft.tenantid == null) {
 						that.imp.comms.init(false, "/hastyupload", "", hastyHandler);
 					} else {
@@ -340,9 +340,6 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
 	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
 	this.exp.link = $('<span title="Export Data" style="visibility: hidden; cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</span>').appendTo(dn.defaults.io).click(function() {
-		that.exp.comms.clear();
-		that.exp.dlg.swap(); 
-
 		var exportables = that.exp.body.find('select');
 		exportables.empty();
 		exportables.append('<option value="a0">All Objects</option>');
@@ -353,12 +350,14 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 				if((obj.label || "").length > 0) exportables.append('<option value="' + (i == 0 ? 'm' : 's') + obj.id + '">' + obj.label + '</option>');
 			}
 		}
+		that.exp.comms.clear();
+		that.exp.dlg.swap(); 
 		});
 	this.exp.link.mouseover(function() { that.exp.link.css('text-decoration', 'underline')}).mouseout(function() { that.exp.link.css('text-decoration', 'none')});
 	this.exp.body = this.exp.dlg.bd.children().first();
 
 	$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body)).click(function() {
-		that.expHeader.css('visibility', 'inherit');
+		that.exp.header.css('visibility', 'inherit');
 		that.doexport("GPS");
 	});
 
@@ -403,13 +402,13 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 	
 	if(org.sarsoft.tenantid != null) {
 		if(gps) {
-			this.expcomms.init(true, url, "");
+			this.exp.comms.init(true, url, "");
 		} else {
 			window.location = url;
 		}
 	} else {
 		if(gps) {
-			this.expcomms.init(true, this.exp.form, "");
+			this.exp.comms.init(true, this.exp.form, "");
 		} else {
 			this.exp.form.submit();
 		}
