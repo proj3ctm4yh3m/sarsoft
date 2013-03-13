@@ -62,16 +62,30 @@ public class CommonController extends JSONBaseController {
 		return kml;
 	}
 	
-	@RequestMapping(value="/kml", method = RequestMethod.GET)
-	public String getKML(Model model, @RequestParam(value="layer") String layernames, @RequestParam(value="supersize") Boolean supersize, @RequestParam(value="bounds") String lbrt, HttpServletResponse response) {
+	@RequestMapping(value="/resource/kml", method = RequestMethod.GET)
+	public String getKML(Model model, @RequestParam(value="layer") String layernames, @RequestParam(value="bounds") String lbrt, @RequestParam(value="zoom") int z, HttpServletResponse response) {
 		String[] layers = layernames.split(",");
+    	float[] opacity = new float[layers.length];    	
 		MapSource[] sources = new MapSource[layers.length];
 		
 		int max = 32;
 		int min = 0;
 		String name = "";
 		for(int i = 0; i < layers.length; i++) {
-			sources[i] = RuntimeProperties.getMapSourceByAlias(layers[i]);
+    		int idx = layers[i].indexOf("@");
+    		if(idx > 0) {
+    			opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
+    			layers[i] = layers[i].substring(0, idx);
+    		} else {
+    			opacity[i] = 1f;
+    		}
+
+			if(layers[i].indexOf("_") > 0) {
+				sources[i] = RuntimeProperties.getMapSourceByAlias(layers[i].split("_")[0]);
+			} else {
+				sources[i] = RuntimeProperties.getMapSourceByAlias(layers[i]);
+			}
+    		
 			max = Math.min(max, sources[i].getMaxresolution());
 			min = Math.max(min, sources[i].getMinresolution());
 			name = name + sources[i].getName() + (i < layers.length - 1 ? ", " : "");
@@ -79,47 +93,35 @@ public class CommonController extends JSONBaseController {
 		
 		String[] bounds = lbrt.split(",");
 		
-		double[] minb = new double[] {Double.parseDouble(bounds[1]), Double.parseDouble(bounds[0])};
-		double[] maxb = new double[] {Double.parseDouble(bounds[3]), Double.parseDouble(bounds[2])};
+		int left = Integer.parseInt(bounds[0]);
+		int bottom = Integer.parseInt(bounds[1]);
+		int right = Integer.parseInt(bounds[2]);
+		int top = Integer.parseInt(bounds[3]);
 		
-		double[] minmeters = WebMercator.LatLngToMeters(minb[0], minb[1]);
-		double[] maxmeters = WebMercator.LatLngToMeters(maxb[0], maxb[1]);
-		
-		double dx = Math.abs(maxmeters[0]-minmeters[0]);
-		double dy = Math.abs(maxmeters[1]-minmeters[1]);
-		double target = Math.max(dx, dy)/(16*256);
-		
-		int z = max;
-		while(z > min && target > WebMercator.Resolution(z)) {
+		while((right-left)*(top-bottom) > 1600 || z > max) {
 			z--;
+			left = (int) Math.floor(left/2);
+			right = (int) Math.ceil(right/2);
+			bottom = (int) Math.floor(bottom/2);
+			top = (int) Math.ceil(top/2);
 		}
 		
-		double[] centerpx = WebMercator.MetersToPixels((minmeters[0]+maxmeters[0])/2, (minmeters[1]+maxmeters[1])/2, z);
-		int[] centert = WebMercator.PixelsToTile(centerpx[0], centerpx[1]);
-		double[] minpx = WebMercator.MetersToPixels(minmeters[0], minmeters[1], z);
-		double[] maxpx = WebMercator.MetersToPixels(maxmeters[0], maxmeters[1], z);
-		int[] mint = WebMercator.PixelsToTile(minpx[0], minpx[1]);
-		int[] maxt = WebMercator.PixelsToTile(maxpx[0], maxpx[1]);
-		
-		String header = "<name>" + getProperty("sarsoft.version") + " " + name + " Export (" + z + "/" + max + ")</name>" +
+		int[] mint = new int[] {left, bottom};
+		int[] maxt = new int[] {right, top};
+
+		double[] minb = WebMercator.TileLatLngBounds(mint[0], mint[1], z);
+		double[] maxb = WebMercator.TileLatLngBounds(maxt[0], maxt[1], z);
+
+		String header = "<name>" + getProperty("sarsoft.version") + " " + name + " Export (" + (z+2) + "/" + max + ")</name>" +
 			"<LookAt><longitude>" + ((minb[1] + maxb[1]) / 2) + "</longitude><latitude>" + ((minb[0] + maxb[0]) / 2) + "</latitude><altitude>0</altitude><range>10000</range><tilt>0</tilt><heading>0</heading></LookAt>\n";
 
-		String template = sources[0].getTemplate();
-		if(sources.length > 1) {
-			template =  RuntimeProperties.getServerUrl() + "resource/imagery/compositetile/" + layernames + "/{Z}/{X}/{Y}.png";
-		} else {
-			template = template.replaceAll("\\{V\\}", "a-11111111");
-		}
-
-		if(supersize) {
-			mint[0] = centert[0]-8;
-			maxt[0] = centert[0]+7;
-			mint[1] = centert[1]-8;
-			maxt[1] = centert[1]+7;
-		}
+        String template = sources[0].getTemplate();
+        if(sources.length > 1) {
+                template =  RuntimeProperties.getServerUrl() + "resource/imagery/compositetile/" + layernames + "/{Z}/{X}/{Y}.png";
+        }
 		
-		String kml = getKML(template, header, z, mint, maxt);
-
+		String kml = this.getKML(template, header, z, mint, new int[] {maxt[0]-1, maxt[1]-1});
+		
 		response.setContentType("application/vnd.google-earth.kml+xml");
 		response.setHeader("Content-Disposition", "attachment; filename=" + sources[0].getName().replaceAll(" ", "_") + ".kml");
 

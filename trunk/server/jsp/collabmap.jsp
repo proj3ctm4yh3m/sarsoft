@@ -36,7 +36,6 @@ org.sarsoft.Loader.queue(function() {
   new org.sarsoft.widget.BrowserSettings(imap, tc.body);  
   
   dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
-  dn.defaults.io = new org.sarsoft.widget.ImportExport(imap, tc.body);
   
   jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(tc.header).click(function() {
     window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);

@@ -3788,51 +3788,6 @@ org.sarsoft.widget.Sharing = function(imap, container) {
 	
 }
 
-org.sarsoft.widget.ImportExport = function(imap, container) {
-	var that = this;
-	this.div = $('<div style="font-weight: bold; color: black;"></div>').appendTo(container);
-	this.kml = $('<span title="Export Map Layers to Google Earth" style="cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML</span>').appendTo(this.div);
-	this.kml.mouseover(function() { that.kml.css('text-decoration', 'underline')}).mouseout(function() { that.kml.css('text-decoration', 'none')});
-	
-	var kmlBody = jQuery('<div>Export map layers to Google Earth.  Export will be limited to the current map bounds; zooming in can give you a higher resolution export.<br/><br/></div>');
-	var supersize = jQuery('<input type="checkbox"/>').appendTo(kmlBody);
-	kmlBody.append('<span>Super size this export (more tiles, more coverage, larger file)</span><br/><br/>');
-
-	var kmlTable = jQuery('<tbody></tbody').appendTo(jQuery('<table></table>').appendTo(kmlBody));
-	var baseRow = jQuery('<tr><td valign="top" style="font-weight: bold; color: #5a8ed7">Base Layer</td></tr>').appendTo(kmlTable);
-	var kmlSelect = jQuery('<select></select>').appendTo(jQuery('<td></td>').appendTo(baseRow));
-	
-	var overlayRow = jQuery('<tr><td valign="top" style="font-weight: bold; color: #5a8ed7">Overlays</td></tr>').appendTo(kmlTable);
-	var overlayCell = jQuery('<td></td>').appendTo(overlayRow);
-	
-	var kmlAlphaOverlays = [];
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		if(type.type == "TILE") {
-			if(!type.alphaOverlay) {
-				jQuery('<option value="' + type.alias + '">' + type.name + '</option>').appendTo(kmlSelect);
-			} else {
-				kmlAlphaOverlays.push(jQuery('<input type="checkbox" value="' + type.alias + '"/>').appendTo(overlayCell));
-				overlayCell.append(type.name + '<br/>');
-			}
-		}
-	}
-	var kmlDlg = new org.sarsoft.view.MapDialog(imap, "Export Map Layer to Google Earth", kmlBody, "Export", "Cancel", function() {
-		var layer = kmlSelect.val();
-		imap.registered["org.sarsoft.view.MapDialog"].hide(); // dialog is still open, bounds not accurate
-		var bounds = map.getBounds();
-		var aolayers = "";
-		for(var i = 0; i < kmlAlphaOverlays.length; i++) {
-			if(kmlAlphaOverlays[i].attr("checked")=="checked") aolayers = aolayers + (aolayers.length > 0 ? "," : "") + kmlAlphaOverlays[i].val();
-		}
-		if(aolayers.length > 0) layer = layer + "," + aolayers;
-		window.location="/kml?layer=" + encodeURIComponent(layer) + "&supersize=" + (supersize.attr("checked")=="checked") + "&bounds=" + bounds.getSouthWest().lng() + "," + bounds.getSouthWest().lat() + "," + bounds.getNorthEast().lng() + "," + bounds.getNorthEast().lat();
-	});
-	
-	this.kml.click(function() { kmlSelect.val(map.getMapTypeId()); kmlDlg.swap(); });
-	this.kmlBody = kmlBody;
-}
-
 org.sarsoft.widget.Account = function(imap, container, acctlink) {
 	
 	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>Your Maps</div>').appendTo(container);

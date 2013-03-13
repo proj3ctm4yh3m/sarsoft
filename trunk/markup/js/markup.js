@@ -273,7 +273,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		this.imp = new Object();
 		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
 		this.imp.body = this.imp.dlg.bd.children().first();
-		this.imp.link = $('<span title="Import Data" style="cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</span>').appendTo(dn.defaults.io.div).click(function() {
+		this.imp.link = $('<span title="Import Data" style="cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</span>').appendTo(dn.defaults.io).click(function() {
 			that.imp.comms.clear();
 			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
 			that.imp.gpx.form.css('display', 'none');
@@ -339,7 +339,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	this.exp = new Object();
 	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
 	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
-	this.exp.link = $('<span title="Export Data" style="visibility: hidden; cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</span>').appendTo(dn.defaults.io.div).click(function() {
+	this.exp.link = $('<span title="Export Data" style="visibility: hidden; cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</span>').appendTo(dn.defaults.io).click(function() {
 		that.exp.comms.clear();
 		that.exp.dlg.swap(); 
 
