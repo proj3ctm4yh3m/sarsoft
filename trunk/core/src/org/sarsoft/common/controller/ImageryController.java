@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
@@ -539,5 +540,30 @@ public class ImageryController extends JSONBaseController {
 		}
 		return json(model, georef);
 	}
+
+	@RequestMapping(value="/resource/imagery/wms")
+	public String getWMS(Model model, HttpServletRequest request, HttpServletResponse response, @RequestParam("REQUEST") String req) {
+		if("GetCapabilities".equals(req)) {
+			model.addAttribute("serverURL", RuntimeProperties.getServerUrl());
+			model.addAttribute("layers",  RuntimeProperties.getMapSources());
+			return "/wms_capabilities";
+		}
+
+		String layers = request.getParameter("LAYERS");
+		String srs = request.getParameter("SRS");
+		String bbox = request.getParameter("BBOX");
+		int width = Integer.parseInt(request.getParameter("WIDTH"));
+		int height = Integer.parseInt(request.getParameter("HEIGHT"));
+		String format = request.getParameter("FORMAT");
+		
+		String[] bounds = bbox.split(",");
+		
+		double[] m_ne = new double[] { Double.parseDouble(bounds[2]), Double.parseDouble(bounds[3]) };
+		double[] m_sw = new double[] { Double.parseDouble(bounds[0]), Double.parseDouble(bounds[1]) };
+		
+		respond(retile(new String[] {layers}, new float[] {1f}, m_sw, m_ne, width, height), response);
+		return null;
+	}
+	
 	
 }
