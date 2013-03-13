@@ -764,7 +764,7 @@ org.sarsoft.controller.MarkupMapController.prototype.getMarkerIdFromWpt = functi
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.getShapeIdFromWay = function(way) {
-	if(way == null) return null;
+	if(way == null || way.waypoints == null) return null;
 	for(var key in this.objects[1]) {
 		if(this.objects[1][key] != null && this.objects[1][key].way.id == way.id) return key;
 	}
