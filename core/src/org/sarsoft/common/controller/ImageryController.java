@@ -413,12 +413,30 @@ public class ImageryController extends JSONBaseController {
 	@RequestMapping(value="/resource/imagery/compositetile/{layers}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getCompositeTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layers") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		String[] layers = layer.split(",");
-		BufferedImage[] images = new BufferedImage[layers.length];
 		float[] opacity = new float[layers.length];
+		String[] cfg = new String[layers.length];
+
+		for(int i = 0; i < layers.length; i++) {
+    		int idx = layers[i].indexOf("@");
+    		if(idx > 0) {
+    			opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
+    			layers[i] = layers[i].substring(0, idx);
+    		} else {
+    			opacity[i] = 1f;
+    		}
+    		if(layers[i].indexOf("_") > 0) {
+    			cfg[i] = layers[i].split("_")[1];
+    			layers[i] = layers[i].split("_")[0];
+    		}
+    	}
+
+		BufferedImage[] images = new BufferedImage[layers.length];
 		for(int i = 0; i < layers.length; i++) {
 			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
-			images[i] = getTile(source.getTemplate(), z, x, y, source.getMaxresolution());
-			opacity[i] = 1;
+			String template = source.getTemplate();
+			template = template.replaceAll("\\{V\\}", cfg[i]);
+			images[i] = getTile(template, z, x, y, source.getMaxresolution());
+    		if(source.isAlphaOverlay()) opacity[i] = opacity[i] * source.getOpacity() / 100;  		
 		}
 		respond(composite(images, opacity, 256, 256), response);
 	}
