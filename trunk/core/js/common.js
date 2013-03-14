@@ -16,7 +16,6 @@ org.sarsoft.mobile = org.sarsoft.touch && $(window).width() < 600;
 org.sarsoft.iframe = (!window==top);
 org.sarsoft.writeable = (org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.tenantid == null)
 
-
 org.sarsoft.async = function(fn) {
 	window.setTimeout(fn, 0);
 }
@@ -458,6 +457,45 @@ org.sarsoft.view.ContextMenu.prototype.show = function(point, subject, screenxy)
 	this.menu.render(document.body);
 	this.menu.show();
 }
+
+org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
+	var that = this;
+	this.onShow = onShow;
+	var container = jQuery('<span style="position: relative"></span>');
+	var trigger = jQuery('<span style="cursor: pointer"></span>').append(html).appendTo(container);
+	
+	this.isArrow = (html == "&darr;");
+
+	var div = jQuery('<div style="color: black; font-weight: normal; visibility: hidden; background: white; position: absolute; right: 0; z-index: -1; ' + ($.browser.msie ? 'top: 0em; padding-top: 1.5em; ' : 'top: 0em; padding-top: 1.5em; ') + css + '"></div>');
+	div.appendTo(parent != null ? parent : container);
+	trigger.click(function() {
+		if(div.css("visibility")=="hidden") {
+			that.show();
+		} else {
+			that.hide();
+		}
+	});
+		
+	this.content = jQuery('<div style="padding-top: 2px"></div>').appendTo(div);
+	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>').appendTo(this.content);
+	upArrow.click(function() {that.hide()});
+
+	this.trigger = trigger;
+	this.container = container[0];
+	this.div = div;	
+}
+
+org.sarsoft.view.MenuDropdown.prototype.show = function() {
+	this.div.css("visibility", "visible");
+	if(this.isArrow) this.trigger.html('&uarr;');
+	if(this.onShow != null) this.onShow();
+}
+
+org.sarsoft.view.MenuDropdown.prototype.hide = function() {
+	this.div.css("visibility", "hidden");
+	if(this.isArrow) this.trigger.html('&darr;');
+}
+
 
 org.sarsoft.view.getColorFormatter = function(colors) {
   return function(cell, record, column, data) {

@@ -42,7 +42,7 @@ public class RuntimeProperties {
 			String defaults = getProperty("sarsoft.map.backgrounds.default");
 			if(defaults == null || defaults.length() == 0) defaults = getProperty("sarsoft.map.backgrounds");
 			for(String source : defaults.split(",")) {
-				visibleMapSources.add(getProperty("sarsoft.map.background." + source + ".name"));
+				visibleMapSources.add(source);
 			}
 		}
 		return visibleMapSources;

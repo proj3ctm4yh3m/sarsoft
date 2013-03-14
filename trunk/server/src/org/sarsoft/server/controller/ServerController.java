@@ -38,6 +38,7 @@ public class ServerController implements IServerController {
 		return "<script src=\"/static/js/jquery.event.drag-1.5.js\"></script>\n" +
 		"<script src=\"/static/js/common.js\"></script>\n" +
 		"<script src=\"/static/js/maps.js\"></script>\n" +
+		"<script src=\"/static/js/core.js\"></script>\n" +
 		"<script src=\"/static/js/plans.js\"></script>\n" +
 		"<script src=\"/static/js/ops.js\"></script>\n" +
 		"<script src=\"/static/js/markup.js\"></script>\n" +
