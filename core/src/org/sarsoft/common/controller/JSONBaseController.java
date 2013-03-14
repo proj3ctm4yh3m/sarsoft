@@ -85,12 +85,12 @@ public abstract class JSONBaseController {
 				String[] layers = tenant.getLayers().split(",");
 				List<String> sources = new ArrayList<String>();
 				for(String layer : layers) {
-					sources.add(getProperty("sarsoft.map.background." + layer + ".name"));
+					sources.add(layer);
 				}
 				int time = Math.round((tenant.getCfgUpdated() != null ? tenant.getCfgUpdated() : 0L) / (1000*60*60*24)); // TODO tenant's timestamp
 				List<MapSource> defaults = RuntimeProperties.getMapSources();
 				for(MapSource ms : defaults) {
-					if(ms.getDate() > time && !sources.contains(ms.getName())) sources.add(ms.getName());
+					if(ms.getDate() > time && !sources.contains(ms.getAlias())) sources.add(ms.getAlias());
 				}
 				return sources;
 			}
