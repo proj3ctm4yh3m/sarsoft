@@ -1512,7 +1512,7 @@ org.sarsoft.DNTree = function(container, label) {
 	var that = this;
 	this.label = label;
 	this.container = container;
-	this._lock = false;
+	this.lock = false;
 	
 	this.block = jQuery('<div></div>').appendTo(container);
 	this.header = jQuery('<div style="cursor: pointer; white-space: nowrap; overflow: hidden; width: 100%">' + label + '</div>').appendTo(this.block);
@@ -1522,7 +1522,7 @@ org.sarsoft.DNTree = function(container, label) {
 	this.body.css('padding-left', '10px');
 	
 	this.header.click(function() {
-		if(that._lock) return;
+		if(that.lock) return;
 		if(that.body.css('display')=='none') {
 			that.body.css('display', 'block');
 		} else {
