@@ -3890,7 +3890,7 @@ org.sarsoft.GeoRefImageOverlay.prototype.onRemove = function() {
 
 org.sarsoft.GeoRefImageOverlay.prototype.draw = function() {
 	if(this.center == null) {
-		this._drawOnImageLoad = true;
+		this._drawImageOnLoad = true;
 		return;
 	}
 	
