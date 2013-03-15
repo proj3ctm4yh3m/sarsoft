@@ -896,7 +896,7 @@ org.sarsoft.controller.MarkupMapController.prototype.handleSetupChange = functio
 		}
 	} else {
 		for(var key in this.objects[i]) {
-			this.show(i, this.objects[key]);
+			this.show(i, this.objects[i][key]);
 		}
 	}
 }

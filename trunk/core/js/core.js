@@ -227,12 +227,12 @@ org.sarsoft.MapObjectController.prototype.buildTree = function(i) {
 	this.dn[i].div = $('<div></div>').appendTo(tree.body);
 	this.dn[i].lines = new Object();
 	this.dn[i].cb = $('<input style="display: none" type="checkbox"' + (that.visible[i] ? ' checked="checked"' : '') + '/>').prependTo(tree.header).click(function(evt) {
-		var val = that.dn[i].cb.checked;
+		var val = that.dn[i].cb[0].checked;
 		that.visible[i] = val;
-		tree.body.cs('display', val ? 'block' : 'none');
+		tree.body.css('display', val ? 'block' : 'none');
 		tree.lock = !val;
 		evt.stopPropagation();
-		that.handleShapeSetupChange();
+		that.handleSetupChange(i);
 	});
 }
 
