@@ -68,8 +68,7 @@ public class CommonController extends JSONBaseController {
     	float[] opacity = new float[layers.length];    	
 		MapSource[] sources = new MapSource[layers.length];
 		
-		int max = 32;
-		int min = 0;
+		int max = 5;
 		String name = "";
 		for(int i = 0; i < layers.length; i++) {
     		int idx = layers[i].indexOf("@");
@@ -86,8 +85,7 @@ public class CommonController extends JSONBaseController {
 				sources[i] = RuntimeProperties.getMapSourceByAlias(layers[i]);
 			}
     		
-			max = Math.min(max, sources[i].getMaxresolution());
-			min = Math.max(min, sources[i].getMinresolution());
+			max = Math.max(max, sources[i].getMaxresolution());
 			name = name + sources[i].getName() + (i < layers.length - 1 ? ", " : "");
 		}
 		
