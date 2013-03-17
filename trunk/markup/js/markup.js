@@ -453,6 +453,12 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 				alert('Please enter a name for this map.');
 				return;
 			}
+			for(var i = 0; i < markupController.dao[1].objs.length; i++) {
+				if(markupController.dao[1].objs[i] != null) {
+					delete markupController.dao[1].objs[i].way.displayMessage;
+					delete markupController.dao[1].objs[i].updated;
+				}
+			}
 			shapes.val(YAHOO.lang.JSON.stringify(markupController.dao[1].objs));
 			markers.val(YAHOO.lang.JSON.stringify(markupController.dao[0].objs));
 			if(imap.registered["org.sarsoft.controller.CustomLayerController"] != null) georefs.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao[0].objs));
