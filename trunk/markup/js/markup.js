@@ -36,6 +36,14 @@ org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
 		if(obj.way.boundingBox == null) {
 			this.addBoundingBox(obj.way);
 		}
+		if(obj.way.polygon) {
+			var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(obj.way.waypoints))/1000000;
+			obj.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
+		} else {
+			var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(obj.way.waypoints))/1000;
+			obj.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
+		}
+		obj.updated = new Date().getTime();
 		if(obj.way.zoomAdjustedWaypoints == null) obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
 		if(obj.way.waypoints == null) obj.way.waypoints = obj.way.zoomAdjustedWaypoints;
 	}
@@ -63,6 +71,13 @@ org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handle
 		way.waypoints = waypoints;
 		way.zoomAdjustedWaypoints = waypoints;
 		this.addBoundingBox(way);
+		if(way.polygon) {
+			var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(way.waypoints))/1000000;
+			shape.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
+		} else {
+			var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(way.waypoints))/1000;
+			shape.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
+		}
 		if(handler != null) org.sarsoft.async(function() { handler(way) });
 	} else {
 		this._doPost("/" + shape.id + "/way", function(r) { that.getObj(shape.id).way = r; if(handler != null) handler(r);}, waypoints);

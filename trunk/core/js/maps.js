@@ -3939,6 +3939,12 @@ GeoUtil.wpt2gll = function(wpt) {
 	return new google.maps.LatLng(wpt.lat, wpt.lng);
 }
 
+GeoUtil.wpts2path = function(waypoints) {
+	var path = [];
+	for(var i = 0; i < waypoints.length; i++) path.push(GeoUtil.wpt2gll(waypoints[i]));
+	return path;
+}
+
 GeoUtil.formatDD = function(deg) {
 	return deg.toFixed(4);
 }
