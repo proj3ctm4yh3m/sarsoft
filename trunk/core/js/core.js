@@ -616,6 +616,8 @@ org.sarsoft.PrintBoxController = function(imap, div) {
 	this.lines = [];
 	this.dd_orientations = [];
 
+	imap.register("org.sarsoft.PrintBoxController", this);
+	
 	var line = jQuery('<div><span style="display: inline-block; min-width: 10ex">Page Size</span></div>').appendTo(div);
 	this.dd_size = jQuery('<select><option value="8.5x11">8.5x11</option><option>13x19</option></select>').appendTo(line);
 	this.dd_size.change(function() { that.updateBoxes() });
@@ -650,34 +652,27 @@ org.sarsoft.PrintBoxController.prototype.reset = function() {
 	this.boxes = [];
 	
 	this.addBox();
-	
-	var bounds = map.getBounds();
-	var y_off = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())/10;
-	var x_off = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())/10;
-	adjbox.g = [new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getSouthWest().lng() + x_off),
-	            new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getSouthWest().lng() + x_off),
-	            new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getNorthEast().lng() - x_off),
-	            new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getNorthEast().lng() - x_off)];
-	adjbox.redraw();
-	adjbox.update(2);
-	adjbox.update(2);
 }
 
-org.sarsoft.PrintBoxController.prototype.addBox = function() {
+org.sarsoft.PrintBoxController.prototype.addBox = function(box) {
 	var that = this;
-	var bounds = this.imap.map.getBounds();
-	var y_off = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())/10;
-	var x_off = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())/10;
 	var idx = this.boxes.length;
 	if(idx >= 15) {
 		alert("Sorry, there is a 15 page limit for this service");
 		return;
 	}
+	if(box == null) {
+		var bounds = this.imap.map.getBounds();
+		var y_off = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())/10;
+		var x_off = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())/10;
+		box = new org.sarsoft.AdjustablePrintBox(this.imap, new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getSouthWest().lng() + x_off), new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getNorthEast().lng() - x_off), 8.5/11);
+	}
+
 	this.lines[idx] = jQuery('<tr><td>' + (idx + 1) + '</td><td style="padding-left: 2ex"></td><td style="padding-left: 2ex"></td></tr>').appendTo(this.list);
-	this.dd_orientations[idx] = jQuery('<select><option value="p">Portrait</option><option value="l">Landscape</option></select>').appendTo(this.lines[idx].children()[2]);
+	this.dd_orientations[idx] = jQuery('<select><option value="p">Portrait</option><option value="l">Landscape</option></select>').appendTo(this.lines[idx].children()[2]).val(box.aspect < 1 ? "p" : "l");
 	this.dd_orientations[idx].change(function() { that.updateBoxes() });
 
-	this.boxes.push(new org.sarsoft.AdjustablePrintBox(this.imap, new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getSouthWest().lng() + x_off), new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getNorthEast().lng() - x_off), 8.5/11));
+	this.boxes.push(box);
 	this.boxes[idx].listener = function() {
 		var scale = google.maps.geometry.spherical.computeDistanceBetween(that.boxes[idx].g[0], that.boxes[idx].g[1]) / (that.boxes[idx].in_h*0.0254);
 		$(that.lines[idx].children()[1]).html('1:' + Math.round(scale));
@@ -716,6 +711,51 @@ org.sarsoft.PrintBoxController.prototype.updateBoxes = function() {
 			adjbox.update(2); // need to call twice for proper scale and aspect after an orientation change
 		}
 	}
+}
+
+org.sarsoft.PrintBoxController.prototype.getURLState = function() {
+	var state = {}
+	state.size = this.dd_size.val();
+	state.scale = this.dd_scale.val();
+	state.grid_utm = (this.cb_utm.attr("checked")=="checked");
+	state.grid_dd = (this.cb_dd.attr("checked")=="checked");
+	state.datum = this.dd_datum.val();
+	state.boxes = [];
+	for(var i = 0; i < this.boxes.length; i++) {
+		var adjbox = this.boxes[i];
+		if(adjbox != null) {
+			state.boxes.push({s: adjbox.g[0].lat(), w: adjbox.g[0].lng(), n: adjbox.g[2].lat(), e: adjbox.g[2].lng(), aspect: adjbox.aspect});
+		}
+	}
+	return state;
+}
+
+org.sarsoft.PrintBoxController.prototype.setURLState = function(state) {
+	var that = this;
+	if(!imap.projection) {
+		window.setTimeout(function() {
+			that.setURLState(state);
+		}, 500);
+		return;
+	}
+	this.dd_size.val(state.size);
+	this.dd_scale.val(state.scale);
+	this.dd_datum.val(state.datum);
+	this.cb_utm[0].checked = state.grid_utm;
+	this.cb_dd[0].checked = state.grid_dd;
+	
+	for(var i = 0; i < this.boxes.length; i++) {
+		this.boxes[i].remove();
+	}
+	this.list.empty();
+	this.lines = [];
+	this.boxes = [];
+	
+	for(var i = 0; i < state.boxes.length; i++) {
+		var b = state.boxes[i];
+		this.addBox(new org.sarsoft.AdjustablePrintBox(this.imap, new google.maps.LatLng(b.s, b.w), new google.maps.LatLng(b.n, b.e), b.aspect));
+	}
+	this.updateBoxes();
 }
 
 org.sarsoft.DEMService = function() {

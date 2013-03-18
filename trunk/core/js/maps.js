@@ -2963,6 +2963,8 @@ org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 	if(config.alphas != null) hash = hash + "&a=" + config.alphas.join(",");
 	var clc = imap.registered["org.sarsoft.controller.CustomLayerController"];
 	if(clc != null && clc.dao[0].objs.length > 0) hash = hash + "&cl=" + encodeURIComponent(YAHOO.lang.JSON.stringify(clc.dehydrate()));
+	var pbc = imap.registered["org.sarsoft.PrintBoxController"];
+	if(pbc != null) hash = hash + "&print=" + encodeURIComponent(YAHOO.lang.JSON.stringify(pbc.getURLState()));
 	return hash;
 }
 
@@ -2996,6 +2998,7 @@ org.sarsoft.MapURLHashWidget.parseConfigStr = function(hash, imap) {
 		if(prop[0] == "opacity" || prop[0] == "n") config.opacity = prop[1].split(",");
 		if(prop[0] == "alphaOverlays" || prop[0] == "a") config.alphas = decodeURIComponent(prop[1]).split(",");
 		if(prop[0] == "cl") config.georef = YAHOO.lang.JSON.parse(decodeURIComponent(prop[1]));
+		if(prop[0] == "print") config.print = YAHOO.lang.JSON.parse(decodeURIComponent(prop[1]));
 	}
 	if(config.base != null) {
 		config.layers = config.layers || [];
@@ -3025,6 +3028,9 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 	}
 	if(config.georef != null && imap.registered["org.sarsoft.controller.CustomLayerController"] != null) {
 		imap.registered["org.sarsoft.controller.CustomLayerController"].rehydrate(config.georef);
+	}
+	if(config.print != null && imap.registered["org.sarsoft.PrintBoxController"] != null) {
+		imap.registered["org.sarsoft.PrintBoxController"].setURLState(config.print);
 	}
 }
 
