@@ -573,7 +573,7 @@ org.sarsoft.MapOverlayControl.prototype.updateMap = function(base, layers, opaci
 		layers[0] = base;
 		opacity[0] = 1-opacity[0];
 		base = tmp;
-		this.updateMap(base, layers, opacity, alphaOverlays);
+		this.updateMap(base, layers, opacity, alphas);
 		return;
 	}
 	
