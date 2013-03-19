@@ -1,3 +1,125 @@
+org.sarsoft.widget.Sharing = function(imap, dn) {
+	var that = this;
+	
+	this.settings = jQuery('<div></div>');
+	var body = jQuery('<div></div>').append(this.settings);
+	var sharingDlg = new org.sarsoft.view.MapDialog(imap, "Sharing", body, "OK", "Cancel", function() {
+		if(that.handler != null) that.handler();
+	});
+	dn.defaults.share.click(function() {sharingDlg.swap();});
+
+	if(org.sarsoft.tenantid != null) {
+
+		body.prepend('<div style="font-size: 120%; color: #5a8ed7">Share</div>');
+		
+		this.collaborate = jQuery('<div><div style="font-size: 120%; color: #5a8ed7; padding-top: 5px">Collaborate</div></div>').appendTo(body);
+				
+		this.sync = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Sync map to changes made by other users.  Work on the same map together.</div>').appendTo(this.collaborate));
+		this.sync.change(function() {
+			if(that.timer != null) {
+				clearInterval(that.timer);
+				that.timer = null;
+			}
+			if(that.killswitch != null) {
+				clearTimeout(that.killswitch);
+				that.killswitch = null;
+			}
+			var val = that.sync.attr("checked")=="checked";
+			if(val) {
+				alert('This page will automatically sync with changes made by other users for the next hour.');
+				that.timer = setInterval(function() {that.imap.timer();}, 10000);
+				that.killswitch = setTimeout(function() { that.toggle.setValue(false); clearInterval(that.timer); that.timer = null; that.killswitch = null}, 3600000)
+			}
+		});
+
+		if(org.sarsoft.map.autoRefresh) {
+			this.sync.attr("checked", "checked");
+		}
+	}
+	
+}
+
+org.sarsoft.StructuredDataNavigator = function(imap) {
+	var that = this;
+	org.sarsoft.DataNavigator.call(this, imap);
+
+	this.account = this._getHeader(org.sarsoft.username == null ? "Not Signed In" : org.sarsoft.username, "account.png");
+	if(org.sarsoft.username != null) {
+	  new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
+	} else {
+	  new org.sarsoft.widget.NoAccount(imap, this.account.body);
+	}
+	new org.sarsoft.widget.BrowserSettings(imap, this.account.body);
+
+	this.tenant = this._getHeader(org.sarsoft.tenantname || "Unsaved Map", "favicon.png");
+	this.defaults.io = $('<div style="font-weight: bold; color: black; padding-top: 3px"></div>').appendTo(this.tenant.body);
+	this.defaults.iobody = $('<div></div>').appendTo(this.tenant.body);
+	this.defaults.save = $('<div style="display: none; float: left; margin-right: 10px; color: red; font-weight: bold"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png"/>Save</span>').appendTo(this.defaults.io);
+	this.defaults.share = jQuery('<div style="float: left; margin-right: 10px; font-weight: bold; color: black; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Share</span>').appendTo(this.defaults.io);
+	
+	this.defaults.sharing = new org.sarsoft.widget.Sharing(imap, this);
+	this.defaults.body = this.tenant.body;
+	
+	var div = $('<div style="padding-top: 5px; padding-bottom: 5px; clear: both"></div>').appendTo(this.tenant.body).css('display', org.sarsoft.writeable ? 'block' : 'none');
+	this.addmenu = new YAHOO.widget.Menu("ContextMenu_" + org.sarsoft.view.ContextMenu._idx++, { hidedelay: 750, showdelay: 0, zIndex: "1000"});
+	this.addmenu.render(document.body);
+
+	var addlink = $('<span style="font-size: 120%; color: green; cursor: pointer">+ Add to Map</span>').prependTo(div).click(function() {
+		var p = addlink.position();
+		that.addmenu.moveTo(p.left + addlink.width() + 10, p.top);
+		that.addmenu.render(document.body);
+		that.addmenu.show();
+	});
+	
+	var settings = this.addDataType("Settings");
+	settings.body.css({'padding-left': '0px'});
+	settings.block.css({'margin-bottom': '5px'});
+	this.defaults.settings = settings.body;
+	this.defaults.settings.save = settings.getTool().css('font-size', '83%').html('<img style="vertical-align: text-bottom; margin-right: 2px; height: 14px; width: 14px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save').
+		attr("title", 'Save current background, available data sources and UTM grid settings for future visits');
+
+	new org.sarsoft.widget.MapLayers(imap, this.tenant.body);
+
+	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
+		this.savedAt = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>');
+		org.sarsoft.BaseDAO.addListener(function(success) {
+			if(success) {
+				var d = new Date();
+				var pm = false;
+				var hours = d.getHours();
+				if(hours > 12) {
+					hours = hours - 12;
+					pm = true;
+				}
+				that.savedAt.css('display', 'block').html('Last saved at ' + hours + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes() + ':' + (d.getSeconds() < 10 ? '0' : '') + d.getSeconds() + (pm ? ' PM' : ' AM'));
+			} else {
+				that.savedAt.css({'display': 'block', 'font-style': 'normal', 'font-weight': 'bold', 'color': 'red'}).html('CHANGES NOT SAVED');
+			}
+		});
+	}
+
+}
+
+org.sarsoft.StructuredDataNavigator.prototype = new org.sarsoft.DataNavigator();
+
+org.sarsoft.StructuredDataNavigator.prototype._getHeader = function(text, icon) {
+	var tree = new org.sarsoft.DNTree(this.left, text);
+	tree._lock = true;
+	tree.header.css({"padding-top": "3px", "margin": "0px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
+	tree.header.prepend(jQuery('<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/' + icon + '"/>'));
+	tree.body.css('padding-left', '2px');
+	return tree;
+}
+
+org.sarsoft.StructuredDataNavigator.prototype.setDraftMode = function(draft) {
+	this.defaults.save.css('display', draft ? 'block' : 'none');
+	this.defaults.share.css('display', draft ? 'none' : 'block');
+}
+
+org.sarsoft.StructuredDataNavigator.prototype.addNewOption = function(text, handler) {
+	this.addmenu.addItem(new YAHOO.widget.MenuItem(text, { onclick: { fn: handler}}));
+}
+
 org.sarsoft.AdjustableBox = function(imap, sw, ne) {
 	var that = this;
 	if(imap == null) return;
@@ -224,9 +346,10 @@ org.sarsoft.MapObjectController = function(imap, types, background_load) {
 org.sarsoft.MapObjectController.prototype.buildTree = function(i) {
 	var that = this;
 	var tree = this.tree[i] = this.dataNavigator.addDataType(this.types[i].label);
+	tree.block.css({'display': 'none', 'margin-bottom': '5px'});
 	this.dn[i].div = $('<div></div>').appendTo(tree.body);
 	this.dn[i].lines = new Object();
-	this.dn[i].cb = $('<input style="display: none" type="checkbox"' + (that.visible[i] ? ' checked="checked"' : '') + '/>').prependTo(tree.header).click(function(evt) {
+	this.dn[i].cb = $('<input type="checkbox"' + (that.visible[i] ? ' checked="checked"' : '') + '/>').prependTo(tree.header).click(function(evt) {
 		var val = that.dn[i].cb[0].checked;
 		that.visible[i] = val;
 		tree.body.css('display', val ? 'block' : 'none');
@@ -238,7 +361,7 @@ org.sarsoft.MapObjectController.prototype.buildTree = function(i) {
 
 org.sarsoft.MapObjectController.prototype.buildAddButton = function(i, text, handler) {
 	var that = this;
-	return $('<span style="color: green; cursor: pointer">' + text + '</span>').appendTo($('<div style="clear: both; padding-top: 1em; font-size: 120%"></div>').appendTo(this.tree[i].body)).click(function() {
+	this.imap.dataNavigator.addNewOption("Add " + text, function() {
 		var center = that.imap.map.getCenter();
 		handler(that.imap.projection.fromLatLngToContainerPixel(center));
 	});
@@ -326,6 +449,7 @@ org.sarsoft.MapObjectController.prototype.helpRemove = function(i, id) {
 		this.dn[i].lines[id] = null;
 	}
 	delete this.objects[i][id];
+	this.checkForObjects(i);
 }
 
 org.sarsoft.MapObjectController.prototype.helpShow = function(i, object) {
@@ -333,6 +457,7 @@ org.sarsoft.MapObjectController.prototype.helpShow = function(i, object) {
 	this.setAttr(i, object, "inedit", false);
 	if(!this.visible[i]) return;
 	this.DNAdd(i, object);
+	this.checkForObjects(i);
 }
 
 org.sarsoft.MapObjectController.prototype.show = function(i, object) {
@@ -355,6 +480,11 @@ org.sarsoft.MapObjectController.prototype.refresh = function(i, objects) {
 
 org.sarsoft.MapObjectController.prototype.handleSetupChange = function(i) {
 	// override this stub
+}
+
+org.sarsoft.MapObjectController.prototype.checkForObjects = function(i) {
+	var keys = Object.keys(this.objects[i]).length;
+	this.tree[i].block.css('display', keys > 0 ? 'block' : 'none');
 }
 
 org.sarsoft.GeoRefImageDlg = function(imap, handler) {
@@ -520,10 +650,11 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 	var that = this;
 	org.sarsoft.MapObjectController.call(this, imap, [{name: "georefs", dao: org.sarsoft.GeoRefDAO, label: "Custom Layers"}]);
 	this.imap.register("org.sarsoft.controller.CustomLayerController", this);
+	this.dn[0].cb.css('display', 'none');
 	
 	if(this.dataNavigator != null) {
 		if(org.sarsoft.writeable) {
-			this.buildAddButton(0, "+ New Layer", function(point) {
+			this.buildAddButton(0, "Layer", function(point) {
 				that.georefDlg.show(null, point);
 			});
 		}
@@ -637,7 +768,7 @@ org.sarsoft.PrintBoxController = function(imap, div) {
 	var link_new = jQuery('<span style="color: green; cursor: pointer; font-size: 120%">+ Add Page</span>').appendTo(line).click(function() {
 		that.addBox();
 	});
-	var link_redraw = jQuery('<span style="margin-left: 40px; color: #dc1d00; cursor: pointer; font-size: 120%">X Start Over</span>').appendTo(line).click(function() {
+	var link_redraw = jQuery('<span style="margin-left: 40px; color: red; cursor: pointer; font-size: 120%">X Start Over</span>').appendTo(line).click(function() {
 		that.reset();
 	});
 
@@ -884,7 +1015,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	var info = jQuery('<div stype="height: 20px"></div>').appendTo(this.div);
 	var ele = jQuery('<span></span>').appendTo(jQuery('<div style="display: inline-block; min-width: 20ex"></div>').appendTo(jQuery('<div style="display: inline-block; padding-left: 1ex">cursor: </div>').appendTo(info)));
 	
-	this.stats = jQuery('<span>range: <span style="font-weight: bold">' + Math.round(min*3.2808399) + '\'</span> to <span style="font-weight: bold">' + Math.round(max*3.2808399) + '\'</span> <span style="padding-left: 10px">gross: <span style="color: green; font-weight: bold">+' + Math.round(gross_gain*3.2808399) + '\'</span> <span style="color: #dc1d00; font-weight: bold">-' + Math.round(gross_loss*3.2808399) + '\'</span> <span style="padding-left: 10px">sampling interval <span style="font-weight: bold">' + Math.round(total_dist*3.2808399/series.length) + '\'</span> w/ <span style="font-weight: bold">' + (Math.round(exaggeration*10)/10) + 'x</span> vertical exaggeration</span></span>').appendTo(info);
+	this.stats = jQuery('<span>range: <span style="font-weight: bold">' + Math.round(min*3.2808399) + '\'</span> to <span style="font-weight: bold">' + Math.round(max*3.2808399) + '\'</span> <span style="padding-left: 10px">gross: <span style="color: green; font-weight: bold">+' + Math.round(gross_gain*3.2808399) + '\'</span> <span style="color: red; font-weight: bold">-' + Math.round(gross_loss*3.2808399) + '\'</span> <span style="padding-left: 10px">sampling interval <span style="font-weight: bold">' + Math.round(total_dist*3.2808399/series.length) + '\'</span> w/ <span style="font-weight: bold">' + (Math.round(exaggeration*10)/10) + 'x</span> vertical exaggeration</span></span>').appendTo(info);
 	
 	for(var i = 0; i < series.length - 1; i++) {
 		var x1 = i*xscale;
