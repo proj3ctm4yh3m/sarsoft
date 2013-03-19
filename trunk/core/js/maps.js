@@ -323,7 +323,8 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 	this.div.append(this.extras = document.createElement("span"), this.typeDM.container, this.dd.container);
 
 	this.baseOverlayContainer = jQuery('<div></div>').appendTo(this.dd.div);
-	this.addLayer = jQuery('<div style="color: red; font-weight: bold; cursor: pointer; padding-left: 3px; padding-top: 3px">+ Add Layer</div>').appendTo(this.dd.div);
+	this.addLayerDiv = jQuery('<div style="font-weight: bold; padding-left: 3px; padding-top: 3px; padding-right: 3px"></div>').appendTo(this.dd.div);
+	this.addLayer = $('<span style="color: red; cursor: pointer">+ Add Layer</span>').appendTo(this.addLayerDiv);
 	this.aDiv = jQuery('<div style="clear: both; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #808080"></div>').appendTo(this.dd.div);
 
 	this.addLayer.click(function() {
@@ -393,7 +394,7 @@ org.sarsoft.MapOverlayControl.prototype.checkControls = function() {
 		this.baseOverlayControls[i].div.css('clear', 'both');
 	}
 	
-	this.addLayer.css('display', this.baseOverlayControls.length < 3 ? 'block' : 'none');
+	this.addLayerDiv.css('display', this.baseOverlayControls.length < 3 ? 'block' : 'none');
 }
 
 org.sarsoft.MapOverlayControl.prototype.handleLayerChange = function() {
@@ -1042,44 +1043,20 @@ org.sarsoft.UTMGridControl = function(imap) {
 	this.showborder = false;
 	this.imap = imap;
 	if(imap != null) {
-		this._UTMToggle = new org.sarsoft.ToggleControl("UTM", "Toggle UTM grid", function(value) {
-			that.setValue(value);
+		var div = $('<div></div>').appendTo(imap.dataNavigator.defaults.settings);
+		var line = $('<div>Show UTM Grid</div>').appendTo(div);
+		this.cb = $('<input type="checkbox"/>').prependTo(line).change(function() { that.setValue(that.cb[0].checked) });
+		var line = $('<div><div style="float: left">Intensity:</div></div>').appendTo(div);
+		this.slider = org.sarsoft.view.CreateSlider($('<div style="float: left"></div>').appendTo(line), 50);
+		this.slider.subscribe('slideEnd', function() {
+			that.style.major = that.slider.getValue()/50;
+			that.style.minor = that.style.major*0.5;
+			that._drawUTMGrid(true);
 		});
-		this._UTMToggle.setValue(this._showUTM);
-		imap.addMenuItem(this._UTMToggle.node, 10);
-
-		if(org.sarsoft.touch) {
-			this._UTMConfig = {div: jQuery('<div></div>')}
-		} else {
-			this._UTMConfig = new org.sarsoft.view.MenuDropdown('&darr;', 'left: 0; width: 100%', imap.map._overlaycontrol.div);
-		}
+		$('<div style="clear: both"></div>').appendTo(div);
 		
-		var crosshatchContainer = jQuery('<div style="float: left; padding-right: 1em">Show grid as</div>').appendTo(this._UTMConfig.div)
-		this.crosshatchSelect = jQuery('<select style="margin-left: 1em"><option value="0">Tickmarks</option><option value="20">Crosshatches</option><option value="100">Lines</option></select>').appendTo(crosshatchContainer);
-		this.crosshatchSelect.change(function() {
-			that.style.crosshatch = that.crosshatchSelect.val();
-			that._drawUTMGrid(true);
-		});
-		this.crosshatchSelect.val(this.style.crosshatch);
-
-		var div = jQuery('<div style="width: 100%; clear: both; padding-top: 5px"></div>').appendTo(this._UTMConfig.div);
-		var majorContainer = jQuery('<div style="width: 250px; clear: both"><div style="float: left">1km grid</div></div>').appendTo(div);
-		var subContainer = jQuery('<div style="float: right"></div>').appendTo(majorContainer);
-		this.majorSlider = org.sarsoft.view.CreateSlider(subContainer);
-		this.majorSlider.subscribe('slideEnd', function() {
-			that.style.major = that.majorSlider.getValue()/100;
-			that._drawUTMGrid(true);
-		});
-
-		var minorContainer = jQuery('<div style="width: 250px; clear: both"><div style="float: left">100m grid</div></div>').appendTo(div);
-		var subContainer = jQuery('<div style="float: right"></div>').appendTo(minorContainer);
-		this.minorSlider = org.sarsoft.view.CreateSlider(subContainer);
-		this.minorSlider.subscribe('slideEnd', function() {
-			that.style.minor = that.minorSlider.getValue()/100;
-			that._drawUTMGrid(true);
-		});
-					
-		if(!org.sarsoft.touch) imap.addMenuItem(this._UTMConfig.container, 10);
+		this.cb[0].checked = this._showUTM;
+		
 		imap.register("org.sarsoft.UTMGridControl", this);
 		this.map = imap.map;
 		this.borders = [];
@@ -1097,8 +1074,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 					for(var i = 0; i < 4; i++) that.borders[i].clear();
 				});
 				that.utminitialized=true;
-				that.majorSlider.setValue(that.style.major*100);
-				that.minorSlider.setValue(that.style.minor*100);			
+				that.slider.setValue(that.style.major*50);
 			}
 		}
 	
@@ -1126,7 +1102,7 @@ org.sarsoft.UTMGridControl.prototype.hidePrintBorder = function() {
 org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
 	this._showUTM = value;
 	this._drawUTMGrid(true);
-	this._UTMToggle.setValue(this._showUTM);
+	this.cb[0].checked = this._showUTM;
 }
 
 org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
@@ -1134,15 +1110,11 @@ org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
 	this.setValue(config.UTMGridControl.showUTM);
 	if(config.UTMGridControl.major != null) {
 		this.style.major = config.UTMGridControl.major;
-		this.majorSlider.setValue(this.style.major*100);
+		this.slider.setValue(this.style.major*50);
 	}
+	this.style.crosshatch = 100;
 	if(config.UTMGridControl.minor != null) {
 		this.style.minor = config.UTMGridControl.minor;
-		this.minorSlider.setValue(this.style.minor*100);
-	}
-	if(config.UTMGridControl.crosshatch != null) {
-		this.style.crosshatch = config.UTMGridControl.crosshatch;
-		this.crosshatchSelect.val(this.style.crosshatch);
 	}
 	this._drawUTMGrid(true);
 }
@@ -1517,49 +1489,45 @@ org.sarsoft.DNTree = function(container, label) {
 	this.block = jQuery('<div></div>').appendTo(container);
 	this.header = jQuery('<div style="cursor: pointer; white-space: nowrap; overflow: hidden; width: 100%">' + label + '</div>').appendTo(this.block);
 	this.body = jQuery('<div></div>').appendTo(this.block);
+	$('<div style="clear: both"></div>').appendTo(this.block);
 
-	this.header.css({"margin-bottom": "3px", "margin-top": "3px", "font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+	this.header.css({"font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
 	this.body.css('padding-left', '10px');
 	
 	this.header.click(function() {
 		if(that.lock) return;
 		if(that.body.css('display')=='none') {
 			that.body.css('display', 'block');
+			if(that.tool != null) that.tool.css('display', 'block');
 		} else {
 			that.body.css('display', 'none');
+			if(that.tool != null) that.tool.css('display', 'none');
 		}
 	});
+}
+
+org.sarsoft.DNTree.prototype.getTool = function() {
+	if(this.tool != null) return this.tool;
+	return this.tool = $('<div style="float: right; cursor: pointer; font-weight: normal; padding-right: 3px">Save</div>').css('display', this.body.css('display')).prependTo(this.header);
 }
 
 org.sarsoft.DataNavigator = function(imap) {
 	var that = this;
 	this.imap = imap;
+	if(imap == null) return;
 	imap.register("org.sarsoft.DataNavigator", this);
-	
-	this.defaults = new Object();
 
-	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
-		this.defaults.savedAt = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>');
-		org.sarsoft.BaseDAO.addListener(function(success) {
-			if(success) {
-				var d = new Date();
-				var pm = false;
-				var hours = d.getHours();
-				if(hours > 12) {
-					hours = hours - 12;
-					pm = true;
-				}
-				that.defaults.savedAt.css('display', 'block').html('Last saved at ' + hours + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes() + ':' + (d.getSeconds() < 10 ? '0' : '') + d.getSeconds() + (pm ? ' PM' : ' AM'));
-			} else {
-				that.defaults.savedAt.css({'display': 'block', 'font-style': 'normal', 'font-weight': 'bold', 'color': 'red'}).html('CHANGES NOT SAVED');
-			}
-		});
-	}
+	this.left = $('<div style="width: 100%"></div>').appendTo($('<div style="width: 100%; height: 100%; overflow-y: auto"></div>').appendTo(imap.container.left));	
+	$('<div style="height: 1em; width: 90%; background-color: white; position: absolute; bottom: 0px; font-size: 120%; font-weight: bold; z-index: 100; padding-bottom: 10px; padding-left: 2px"><a style="color: red" href="/about.html" target="_blank">About ' + org.sarsoft.version + '</a></div>').appendTo(imap.container.left);
+	imap.container.left.css('overflow-y', 'hidden');
+	
+	this.defaults = { body : this.left }
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
 	var tree = new org.sarsoft.DNTree(this.defaults.body, title);
-	tree.header.css({"font-size": "120%", "font-weight": "bold", "color": "black", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
+	tree.header.css({"font-size": "120%", "font-weight": "bold", "color": "black", "border-top": "1px solid #CCCCCC"});
+	tree.block.css("clear", "both");
 	return tree;
 }
 
@@ -1685,7 +1653,7 @@ org.sarsoft.DataNavigatorToggleControl.prototype.hide = function() {
 	this.hideDataNavigator();
 }
 
-org.sarsoft.PositionInfoControl = function(imap) {
+org.sarsoft.PositionInfoControl = function(imap, container) {
 	if(imap != null) {
 		this.imap = imap;
 		imap.register("org.sarsoft.PositionInfoControl", this);
@@ -1696,7 +1664,7 @@ org.sarsoft.PositionInfoControl = function(imap) {
 		this._show = true;
 		
 		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 999; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
-		var div = jQuery('<div style="text-align: right; position: absolute; right: 0; top: ' + imap.map._overlaycontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').prependTo(this.map.getDiv());
+		var div = jQuery('<div style="text-align: right; position: absolute; right: 0; top: ' + imap.map._overlaycontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').prependTo(container || this.map.getDiv());
 		this.display = jQuery('<div style="background-color: white; padding-top: 3px; font-weight: bold"></div>').appendTo(div);
 		
 		this.centerCrosshair();
@@ -1760,17 +1728,25 @@ org.sarsoft.MapLabelWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
 	this.label = "backlit";
-	this.toggle = new org.sarsoft.ToggleControl("LBL", "Toggle label display", function(value) {
-			that.label = value;
-			that.handleConfigChange();
-		},
-		[{value : "normal", style : ""},
-		 {value : "backlit", style : "color: white; background-color: #5a8ed7"},
-		 {value : "hidden", style : "text-decoration: line-through"}]);
-	this.toggle.setValue(this.label);
+	var div = $('<div>Show labels</div>').appendTo(imap.dataNavigator.defaults.settings);
+	this.cb1 = $('<input type="checkbox"/>').prependTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
+	this.cb2 = $('<input type="checkbox"/>').appendTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
+	div.append('w/ white');
+
+	this.writeCBs();
 	this.handleConfigChange();
-	imap.addMenuItem(this.toggle.node, 15);
 	imap.register("org.sarsoft.MapLabelWidget", this);
+}
+
+org.sarsoft.MapLabelWidget.prototype.readCBs = function() {
+	var v1 = this.cb1[0].checked;
+	var v2 = this.cb2[0].checked;
+	this.label = (v1 ? (v2 ? "backlit" : "normal") : "hidden");
+}
+
+org.sarsoft.MapLabelWidget.prototype.writeCBs = function() {
+	this.cb1[0].checked = (this.label != "hidden");
+	this.cb2[0].checked = (this.label == "backlit");
 }
 
 org.sarsoft.MapLabelWidget.prototype.handleConfigChange = function() {
@@ -1784,7 +1760,7 @@ org.sarsoft.MapLabelWidget.prototype.handleConfigChange = function() {
 org.sarsoft.MapLabelWidget.prototype.setConfig = function(config) {
 	if(config.MapLabelWidget == null) return;
 	this.label = config.MapLabelWidget.label;
-	this.toggle.setValue(this.label);
+	this.writeCBs();
 	this.handleConfigChange();
 }
 
@@ -1878,10 +1854,9 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 		this.imap = imap;
 		imap.register("org.sarsoft.view.BaseConfigWidget", this);
 		if(persist) {
-			var dn = imap.registered["org.sarsoft.DataNavigator"];
-			this.saveLink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer" title="Save current background, available data sources and UTM grid settings for future visits?"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save Configuration</div>').prependTo(dn.defaults.layers.tree.body);
-			this.saveLink.click(function() {
+			imap.dataNavigator.defaults.settings.save.css('display', 'block').click(function(evt) {
 				that.saveConfig(function() { alert('The following configuration items have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current Layers\n - Available Data Sources\n - Datum\n - UTM Grid\n');});
+				evt.stopPropagation();
 			});
 		}
 	}
@@ -2257,38 +2232,15 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this._mapInfoMessages = new Object();
 	
 	if(typeof map == undefined) return;
-	
+	this.map._imap = this;
+
 	this.projection = false;
 	var pco = new org.sarsoft.ProjectionCaptureOverlay(this);
 	this.drawingManager = new google.maps.drawing.DrawingManager({map: map, drawingMode: null, drawingControl: false});
 	
 	google.maps.event.addListener(map, "rightclick", function(evt) {
 		that.click(evt);
-	});
-	
-	this.loadBrowserSettings();
-	this.map._imap = this;
-	this.mapMessageControl = new org.sarsoft.MapMessageControl(this.map);
-	this._mapInfoControl = new org.sarsoft.MapInfoControl(this.map);
-	
-	if(options == null) options = {};
-	if(options.positionWindow || options.standardControls) {
-		this.positionInfoControl = new org.sarsoft.PositionInfoControl(this);
-	}
-	var dc = new org.sarsoft.MapDatumWidget(this, options.switchableDatum);
-	var mn = new org.sarsoft.MapDeclinationWidget(this);
-	if(options.standardControls || options.UTM) {
-		var ugc = new org.sarsoft.UTMGridControl(this);
-	}
-	if((options.standardControls && !org.sarsoft.mobile) || options.size) var sc = new org.sarsoft.MapSizeWidget(this);
-	if(options.standardControls || options.find) var fc = new org.sarsoft.MapFindWidget(this);
-	if(options.standardControls || options.label) var lc = new org.sarsoft.MapLabelWidget(this);
-	if(options.standardControls || options.separators) {
-		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 20);
-		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 100);
-	}
-	
-	$(map.getDiv()).addClass("printnotransform");
+	});	
 
 	if(options.container != null) {
 		this.container = new Object();
@@ -2308,14 +2260,35 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		}
 		
 		map._overlaycontrol.div.prependTo(this.container.right);
-		if(this.positionInfoControl != null) {
-			this.positionInfoControl.div.prependTo(this.container.right).css('z-index', '1001');
-		}
 		
-		var dn = new org.sarsoft.DataNavigator(this);
-		var dnc = new org.sarsoft.DataNavigatorToggleControl(this);
+		this.dataNavigator = options.dn ? new options.dn(this) : new org.sarsoft.DataNavigator(this);
+		var dntc = new org.sarsoft.DataNavigatorToggleControl(this);		
 	}
-
+		
+	this.loadBrowserSettings();
+	this.mapMessageControl = new org.sarsoft.MapMessageControl(this.map);
+	this._mapInfoControl = new org.sarsoft.MapInfoControl(this.map);
+	
+	if(options == null) options = {};
+	if(options.positionWindow || options.standardControls) {
+		this.positionInfoControl = new org.sarsoft.PositionInfoControl(this, this.container.right);
+		this.positionInfoControl.div.css('z-index', '1001');
+	}
+	var dc = new org.sarsoft.MapDatumWidget(this, options.switchableDatum);
+	var mn = new org.sarsoft.MapDeclinationWidget(this);
+	if((options.standardControls && !org.sarsoft.mobile) || options.size) var sc = new org.sarsoft.MapSizeWidget(this);
+	if(options.standardControls || options.find) var fc = new org.sarsoft.MapFindWidget(this);
+	if(options.standardControls || options.label) var lc = new org.sarsoft.MapLabelWidget(this);
+	if(options.standardControls || options.separators) {
+		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 20);
+		this.addMenuItem(jQuery('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 100);
+	}
+	if(options.url) var urlwidget = new org.sarsoft.MapURLHashWidget(this, org.sarsoft.iframe);
+	if(options.standardControls || options.UTM) {
+		var ugc = new org.sarsoft.UTMGridControl(this);
+	}
+	
+	$(map.getDiv()).addClass("printnotransform");
 }
 
 org.sarsoft.InteractiveMap.prototype.click = function(evt, obj) {
@@ -2925,17 +2898,16 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	if(!readonce) {
 		imap.register("org.sarsoft.MapURLHashWidget", this);
 	
-		if(!org.sarsoft.mobile) {
-			this.toggle = new org.sarsoft.ToggleControl("URL", "Toggle URL updates as map changes", function(value) {
-				that.track = value;
+		if(!org.sarsoft.mobile && imap.dataNavigator != null) {
+			this.cb = $('<input type="checkbox"/>').prependTo($('<div>Update URL as map changes</div>').appendTo(imap.dataNavigator.defaults.settings)).change(function() {
+				that.track = that.cb[0].checked;
 				if(!that.track) {
 					window.location.hash="";
 				} else {
 					that.saveMap();
 				}
-			});
-			this.toggle.setValue(this.track);
-			imap.addMenuItem(this.toggle.node, 18);
+			})
+			this.cb[0].checked = this.track;
 		}
 
 		google.maps.event.addListener(imap.map, "idle", function() {
@@ -3021,16 +2993,16 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 	if(config.base != null) this.imap.setConfig(config);
 	this.config = config;
 	this.ignorehash=false;
-	if(imap.registered["org.sarsoft.DataNavigator"] != null && imap.registered["org.sarsoft.DataNavigator"].defaults.sharing != null) {
+	if(this.imap.registered["org.sarsoft.DataNavigator"] != null && this.imap.registered["org.sarsoft.DataNavigator"].defaults.sharing != null) {
 		var url = "http://" + window.location.host + '/map.html#' + hash;
-		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
+		this.imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
 		'Embed it in a webpage or forum:<textarea rows="4" cols="60" style="vertical-align: text-top">&lt;iframe width="500px" height="500px" src="' + url + '"&gt;&lt;/iframe&gt;</textarea>');
 	}
-	if(config.georef != null && imap.registered["org.sarsoft.controller.CustomLayerController"] != null) {
-		imap.registered["org.sarsoft.controller.CustomLayerController"].rehydrate(config.georef);
+	if(config.georef != null && this.imap.registered["org.sarsoft.controller.CustomLayerController"] != null) {
+		this.imap.registered["org.sarsoft.controller.CustomLayerController"].rehydrate(config.georef);
 	}
-	if(config.print != null && imap.registered["org.sarsoft.PrintBoxController"] != null) {
-		imap.registered["org.sarsoft.PrintBoxController"].setURLState(config.print);
+	if(config.print != null && this.imap.registered["org.sarsoft.PrintBoxController"] != null) {
+		this.imap.registered["org.sarsoft.PrintBoxController"].setURLState(config.print);
 	}
 }
 
@@ -3043,7 +3015,7 @@ org.sarsoft.MapURLHashWidget.prototype.checkhashupdate = function() {
 org.sarsoft.MapURLHashWidget.prototype.setConfig = function(config) {
 	if(config.MapURLHashWidget == null) return;
 	this.track = config.MapURLHashWidget.track;
-	this.toggle.setValue(this.track);
+	this.cb[0].checked = this.track
 }
 
 org.sarsoft.MapURLHashWidget.prototype.getConfig = function(config) {
@@ -3117,11 +3089,6 @@ org.sarsoft.widget.BrowserSettings = function(imap, container) {
 		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scrollwheelzoom", swz[0].checked);
 		imap.loadBrowserSettings();
 	});
-	var overzoomcb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Allow Zooming Beyond Default Map Resolutions</div>').appendTo(cbcontainer)).change(function() {
-		org.sarsoft.EnhancedGMap._overzoom = overzoomcb[0].checked;
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "overzoom", org.sarsoft.EnhancedGMap._overzoom);
-		imap.map._overlaymanager.checkMaxZoom();
-	});
 	
 	this.tree.body.css('display', 'none');
 	
@@ -3131,12 +3098,11 @@ org.sarsoft.widget.BrowserSettings = function(imap, container) {
 	}
 	if(typeof swz != "undefined") swz[0].checked = (config.scrollwheelzoom == false ? false : true);
 	sb[0].checked = config.scalebar;
-	org.sarsoft.EnhancedGMap._overzoom = (config.overzoom == false ? false : true);
+	org.sarsoft.EnhancedGMap._overzoom = true;
 	imap.map._overlaymanager.checkMaxZoom();
-	overzoomcb[0].checked = org.sarsoft.EnhancedGMap._overzoom;
 	if(config.position != null) {
 		pos.val(config.position);
-		imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position);
+		org.sarsoft.async(function() { imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position) });
 	}
 	if(config.coordinates != null) {
 		llSelect.val(config.coordinates);
@@ -3146,24 +3112,28 @@ org.sarsoft.widget.BrowserSettings = function(imap, container) {
 	}
 }
 
-org.sarsoft.widget.MapLayers = function(imap, container) {
+org.sarsoft.widget.MapLayers = function(imap) {
 	var that = this;
 	
-	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/layers.png"/>Map Layers');
+	var dn = imap.registered["org.sarsoft.DataNavigator"];
+	this.tree = dn.addDataType("Map Layers");
 	if(org.sarsoft.tenantid != null) this.tree.body.css('display', 'none');
+	this.tree.body.css({'padding-left': '0px'});
+	this.tree.block.css({'margin-bottom': '5px'});
 
-	this.availableLayers = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Available Data Sources</div>').appendTo(this.tree.body);
+	this.availableLayers = $('<div style="float: right; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Get More</div>').insertBefore(imap.map._overlaycontrol.addLayer);
+	this.tree.getTool().css('font-size', '83%').html('<img style="vertical-align: text-bottom; margin-right: 2px; width: 14px; height: 14px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML').
+		attr("title", "Export Map Layers to Google Earth").click(function(evt) { evt.stopPropagation(); window.open("/kmz.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap), '_blank'); })
 	
 	if(org.sarsoft.EnhancedGMap.sampleMapTypes != null) {
-		this.sampleMaps = new org.sarsoft.DNTree(this.tree.body, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/favorites.png"/>Popular Combinations');
-		this.sampleMaps.body.css('padding-left', '18px');
+		this.sampleMaps = $('<div></div>').appendTo(this.tree.body);
 		
 		var samples = org.sarsoft.EnhancedGMap.sampleMapTypes.split(';');
 		for(var i = 0; i < samples.length; i++) {
 			var name = samples[i].split(':')[0];
 			var cfg = samples[i].split(':')[1];
 			var devnull = function(c) {
-				jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-style: normal; color: black; cursor: pointer">' + name + '</div>').appendTo(that.sampleMaps.body).click(function() {
+				$('<div style="margin-bottom: 3px; margin-top: 3px; font-style: normal; color: black; cursor: pointer">' + name + '</div>').appendTo(that.sampleMaps).click(function() {
 				imap.setConfig(org.sarsoft.MapURLHashWidget.parseConfigStr(c));});
 			}(cfg);
 		}
@@ -3261,48 +3231,6 @@ org.sarsoft.widget.MapLayers = function(imap, container) {
 			}
 		});
 	}, 1000);	
-}
-
-org.sarsoft.widget.Sharing = function(imap, container) {
-	var that = this;
-	
-	this.sharing = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Sharing</div>').appendTo(container);
-	this.settings = jQuery('<div></div>');
-	var body = jQuery('<div></div>').append(this.settings);
-	var sharingDlg = new org.sarsoft.view.MapDialog(imap, "Sharing", body, "OK", "Cancel", function() {
-		if(that.handler != null) that.handler();
-	});
-	this.sharing.click(function() {sharingDlg.swap();});
-
-	if(org.sarsoft.tenantid != null) {
-
-		body.prepend('<div style="font-size: 120%; color: #5a8ed7">Share</div>');
-		
-		this.collaborate = jQuery('<div><div style="font-size: 120%; color: #5a8ed7; padding-top: 5px">Collaborate</div></div>').appendTo(body);
-				
-		this.sync = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div>Sync map to changes made by other users.  Work on the same map together.</div>').appendTo(this.collaborate));
-		this.sync.change(function() {
-			if(that.timer != null) {
-				clearInterval(that.timer);
-				that.timer = null;
-			}
-			if(that.killswitch != null) {
-				clearTimeout(that.killswitch);
-				that.killswitch = null;
-			}
-			var val = that.sync.attr("checked")=="checked";
-			if(val) {
-				alert('This page will automatically sync with changes made by other users for the next hour.');
-				that.timer = setInterval(function() {that.imap.timer();}, 10000);
-				that.killswitch = setTimeout(function() { that.toggle.setValue(false); clearInterval(that.timer); that.timer = null; that.killswitch = null}, 3600000)
-			}
-		});
-
-		if(org.sarsoft.map.autoRefresh) {
-			this.sync.attr("checked", "checked");
-		}
-	}
-	
 }
 
 org.sarsoft.widget.Account = function(imap, container, acctlink) {

@@ -288,13 +288,12 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		this.imp = new Object();
 		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
 		this.imp.body = this.imp.dlg.bd.children().first();
-		this.imp.link = $('<span title="Import Data" style="cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</span>').appendTo(dn.defaults.io).click(function() {
+		this.imp.link = $('<div title="Import Data" style="cursor: pointer; float: left; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>').appendTo(dn.defaults.io).click(function() {
 			that.imp.comms.clear();
 			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
 			that.imp.gpx.form.css('display', 'none');
 			that.imp.dlg.swap();
 		});
-		this.imp.link.mouseover(function() { that.imp.link.css('text-decoration', 'underline')}).mouseout(function() { that.imp.link.css('text-decoration', 'none')});
 		
 		var hastyHandler = function(data) {
 			for(var i = 0; i < data.shapes.length; i++) {
@@ -354,7 +353,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	this.exp = new Object();
 	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
 	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
-	this.exp.link = $('<span title="Export Data" style="visibility: hidden; cursor: pointer; margin-right: 5px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</span>').appendTo(dn.defaults.io).click(function() {
+	this.exp.link = $('<div title="Export Data" style="visibility: hidden; cursor: pointer; float: left;"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>').appendTo(dn.defaults.io).click(function() {
 		var exportables = that.exp.body.find('select');
 		exportables.empty();
 		exportables.append('<option value="a0">All Objects</option>');
@@ -368,7 +367,6 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		that.exp.comms.clear();
 		that.exp.dlg.swap(); 
 		});
-	this.exp.link.mouseover(function() { that.exp.link.css('text-decoration', 'underline')}).mouseout(function() { that.exp.link.css('text-decoration', 'none')});
 	this.exp.body = this.exp.dlg.bd.children().first();
 
 	$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body)).click(function() {
@@ -431,13 +429,14 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 	}
 }
 
-org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
-	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png"/>Save As');
-	this.tree.header.css({'color': '#dc1d00'});
-	this.tree.body.css({'display': 'none'});
+org.sarsoft.widget.MarkupSaveAs = function(imap) {
+	var body = $('<div style="display: none"></div>').appendTo(imap.dataNavigator.defaults.iobody);
+	imap.dataNavigator.defaults.save.click(function() {
+		body.css('display', body.css('display') == "block" ? "none" : "block");
+	})
 	
 	if(org.sarsoft.username != null) {
-		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(this.tree.body);
+		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(body);
 		var saveAsName = jQuery('<input type="text" name="name"/>').appendTo(newform);
 			
 		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
@@ -447,7 +446,7 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 		var markers = jQuery('<input type="hidden" name="markers"/>').appendTo(newform);
 		var georefs = jQuery('<input type="hidden" name="georefs"/>').appendTo(newform);
 
-		jQuery('<button>Save</button>').appendTo(this.tree.body).click(function(evt) {
+		jQuery('<button>Save</button>').appendTo(body).click(function(evt) {
 			var name = saveAsName.val();
 			if(name == null || name == "") {
 				alert('Please enter a name for this map.');
@@ -476,12 +475,12 @@ org.sarsoft.widget.MarkupSaveAs = function(imap, container) {
 			newform.submit()
 		});
 	} else {
-		this.tree.body.append('Sign to save this map.  We\'ll keep track of it while you\'re gone.')
-		var login_yahoo = jQuery('<a href="#"><img style="border: none; vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(this.tree.body));
+		body.append('Sign to save this map.  We\'ll keep track of it while you\'re gone.')
+		var login_yahoo = jQuery('<a href="#"><img style="border: none; vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(body));
 		login_yahoo.click(function() {
 			imap.registered["org.sarsoft.DataNavigator"].defaults.account.login('yahoo');			
 		});
-		var login_google = jQuery('<a href="#"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(this.tree.body));
+		var login_google = jQuery('<a href="#"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(body));
 		login_google.click(function() {
 			imap.registered["org.sarsoft.DataNavigator"].defaults.account.login('google');			
 		});
@@ -497,20 +496,18 @@ org.sarsoft.controller.MarkupMapController = function(imap, background_load) {
 	
 	if(this.dn != null && org.sarsoft.writeable) { // TODO make this work with non-markup objects like assignments
 		if(org.sarsoft.tenantid == null) {
-			this.saveAs = new org.sarsoft.widget.MarkupSaveAs(imap, this.dataNavigator.defaults.body);
-			this.saveAs.tree.block.insertBefore(this.dataNavigator.defaults.layers.tree.block)
-			this.saveAs.tree.block.css('display', 'none');
+			this.saveAs = new org.sarsoft.widget.MarkupSaveAs(imap);
 		}
 		
-		this.buildAddButton(0, "+ New Marker", function(point) {
+		this.buildAddButton(0, "Marker", function(point) {
 			that.markerDlg.show({url: "#FF0000"}, point);
 		});
 		
-		this.buildAddButton(1, "+ New Line", function(point) {
+		this.buildAddButton(1, "Line", function(point) {
 			that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, point);
-		}).css('margin-right', '2em');
+		});
 
-		this.buildAddButton(1, "+ New Polygon", function(point) {
+		this.buildAddButton(1, "Polygon", function(point) {
 		    that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, point);
 		});
 	}
@@ -652,28 +649,19 @@ org.sarsoft.controller.MarkupMapController.prototype.growmap = function(idx, obj
 	}
 }
 
-org.sarsoft.controller.MarkupMapController.prototype.checkDraftMode = function() {
+org.sarsoft.controller.MarkupMapController.prototype.checkForObjects = function() {
 	if(this.dataNavigator == null || this.bgload) return;
+	
+	org.sarsoft.MapObjectController.prototype.checkForObjects.call(this, 0);
+	org.sarsoft.MapObjectController.prototype.checkForObjects.call(this, 1);
 	
 	var mkeys = Object.keys(this.objects[0]).length;
 	var skeys = Object.keys(this.objects[1]).length;
 	if(org.sarsoft.tenantid == null) {
-		if(mkeys > 0 || skeys > 0) {
-			if(this.saveAs.tree.block.css('display') != "block") {
-				this.saveAs.tree.block.css('display', 'block');
-				this.dataNavigator.defaults.sharing.sharing.css('display', 'none');
-			}
-		} else {
-			if(this.saveAs.tree.block.css('display') != "none") {
-				this.saveAs.tree.block.css('display', 'none');
-				this.dataNavigator.defaults.sharing.sharing.css('display', 'block');
-			}
-		}
+		this.imap.dataNavigator.setDraftMode(mkeys > 0 || skeys > 0);
 	}
 	
 	this.markupio.exp.link.css('visibility', (mkeys > 0 || skeys > 0) ? 'visible' : 'hidden');
-	this.dn[0].cb.css('display', mkeys > 0 ? 'inline' : 'none');
-	this.dn[1].cb.css('display', skeys > 0 ? 'inline' : 'none');
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.saveShape = function(shape, handler) {
@@ -768,13 +756,11 @@ org.sarsoft.controller.MarkupMapController.prototype.dragMarker = function(marke
 org.sarsoft.controller.MarkupMapController.prototype.removeMarker = function(id) {
 	if(this.objects[0][id] != null) this.imap.removeWaypoint(this.objects[0][id].position);
 	this.helpRemove(0, id);
-	this.checkDraftMode();
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.removeShape = function(id) {
 	if(this.objects[1][id] != null) this.imap.removeWay(this.objects[1][id].way);
 	this.helpRemove(1, id);
-	this.checkDraftMode();
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.getMarkerIdFromWpt = function(wpt) {
@@ -904,8 +890,7 @@ org.sarsoft.controller.MarkupMapController.prototype.show = function(i, object) 
 	} else {
 		var shape = object;
 		this.imap.addWay(shape.way, {clickable : (!org.sarsoft.iframe && (org.sarsoft.writeable || (shape.comments != null && shape.comments.length > 0))), fill: shape.fill, color: shape.color, weight: shape.weight}, org.sarsoft.htmlescape(shape.label));
-	}	
-	this.checkDraftMode();
+	}
 }
 
 
