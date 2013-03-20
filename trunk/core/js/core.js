@@ -45,42 +45,38 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 
 	this.account = this._getHeader(org.sarsoft.username == null ? "Not Signed In" : org.sarsoft.username, "account.png");
 	if(org.sarsoft.username != null) {
-	  new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
+	  this.defaults.account = new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
 	} else {
-	  new org.sarsoft.widget.NoAccount(imap, this.account.body);
+	  this.defaults.account = new org.sarsoft.widget.NoAccount(imap, this.account.body);
+	  this.account.block.css('padding-bottom', '5px');
 	}
 
 	this.tenant = this._getHeader(org.sarsoft.tenantname || "Unsaved Map", "favicon.png");
-	this.defaults.io = $('<div style="font-weight: bold; color: black; padding-top: 3px"></div>').appendTo(this.tenant.body);
+	this.defaults.io = $('<div style="font-weight: bold; color: black; padding-top: 5px"></div>').appendTo(this.tenant.body);
 	this.defaults.iobody = $('<div></div>').appendTo(this.tenant.body);
-	this.defaults.save = $('<div style="display: none; float: left; margin-right: 10px; color: red; font-weight: bold"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png"/>Save</span>').appendTo(this.defaults.io);
-	this.defaults.share = jQuery('<div style="float: left; margin-right: 10px; font-weight: bold; color: black; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Share</span>').appendTo(this.defaults.io);
+	$('<div style="clear: both; padding-bottom: 5px">').appendTo(this.tenant.body);
+	this.defaults.save = $('<div class="underlineOnHover" style="display: none; float: left; margin-right: 10px; color: red; font-weight: bold" title="Save This to ' + org.sarsoft.version + '"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/save.png"/>Save</span>').appendTo(this.defaults.io);
+	this.defaults.share = jQuery('<div class="underlineOnHover" style="float: left; margin-right: 10px; font-weight: bold; color: black; cursor: pointer" title="Share via Email, or Embed in a Forum Post"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Share</span>').appendTo(this.defaults.io);
 	
 	this.defaults.sharing = new org.sarsoft.widget.Sharing(imap, this);
-	this.defaults.body = this.tenant.body;
+	this.defaults.body = $('<div></div>').appendTo(this.tenant.body);
 	
-	var div = $('<div style="padding-top: 5px; padding-bottom: 5px; clear: both"></div>').appendTo(this.tenant.body).css('display', org.sarsoft.writeable ? 'block' : 'none');
-	this.addmenu = new YAHOO.widget.Menu("ContextMenu_" + org.sarsoft.view.ContextMenu._idx++, { hidedelay: 750, showdelay: 0, zIndex: "1000"});
-	this.addmenu.render(document.body);
-
-	var addlink = $('<span style="font-size: 120%; color: green; cursor: pointer">+ Add to Map</span>').prependTo(div).click(function() {
-		var p = addlink.position();
-		that.addmenu.moveTo(p.left + addlink.width() + 10, p.top);
-		that.addmenu.render(document.body);
-		that.addmenu.show();
-	});
+	var div = $('<div style="padding-top: 5px; padding-bottom: 10px; clear: both; font-size: 120%; color: green"></div>').appendTo(this.tenant.body).css('display', org.sarsoft.writeable ? 'block' : 'none');
+	
+	this.addlink = new org.sarsoft.view.DropSelect("+ Add Object To Map", {color: "green", "font-weight": "normal"});
+	this.addlink.container.appendTo(div);
 	
 	var settings = this.addDataType("Settings");
-	settings.body.css({'padding-left': '0px'});
-	settings.block.css({'margin-bottom': '5px'});
+	settings.body.css({'padding-left': '0px', 'padding-top': '5px'});
+	settings.block.css({'margin-bottom': '10px'});
 	this.defaults.settings = settings.body;
-	this.defaults.settings.save = settings.getTool().css({'font-size': '83%', 'display': 'none'}).html('<img style="vertical-align: text-bottom; margin-right: 2px; height: 14px; width: 14px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save').
-		attr("title", 'Save current background, available data sources and UTM grid settings for future visits');
+	if(org.sarsoft.writeable) this.defaults.settings.save = settings.getTool().addClass('underlineOnHover').css({'font-size': '83%', 'display': 'none', 'padding-top': '1px'}).html('<img style="vertical-align: text-bottom; margin-right: 2px; height: 14px; width: 14px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save').
+		attr("title", 'Save These and Other Map Settings for Future Visits');
 
-	new org.sarsoft.widget.MapLayers(imap, this.tenant.body);
+	new org.sarsoft.widget.MapLayers(imap, this.defaults.body);
 
 	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
-		this.savedAt = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>');
+		this.savedAt = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>').insertBefore(this.defaults.io);
 		org.sarsoft.BaseDAO.addListener(function(success) {
 			if(success) {
 				var d = new Date();
@@ -104,7 +100,7 @@ org.sarsoft.StructuredDataNavigator.prototype = new org.sarsoft.DataNavigator();
 org.sarsoft.StructuredDataNavigator.prototype._getHeader = function(text, icon) {
 	var tree = new org.sarsoft.DNTree(this.left, text);
 	tree.lock = true;
-	tree.header.css({"padding-top": "3px", "margin": "0px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
+	tree.header.addClass('dnheader').css('cursor', 'hand');
 	tree.header.prepend(jQuery('<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/' + icon + '"/>'));
 	tree.body.css('padding-left', '2px');
 	return tree;
@@ -116,7 +112,8 @@ org.sarsoft.StructuredDataNavigator.prototype.setDraftMode = function(draft) {
 }
 
 org.sarsoft.StructuredDataNavigator.prototype.addNewOption = function(text, handler) {
-	this.addmenu.addItem(new YAHOO.widget.MenuItem(text, { onclick: { fn: handler}}));
+//	this.addmenu.addItem(new YAHOO.widget.MenuItem(text, { onclick: { fn: handler}}));
+	this.addlink.addItem(text, handler);
 }
 
 org.sarsoft.AdjustableBox = function(imap, sw, ne) {
@@ -345,7 +342,8 @@ org.sarsoft.MapObjectController = function(imap, types, background_load) {
 org.sarsoft.MapObjectController.prototype.buildTree = function(i) {
 	var that = this;
 	var tree = this.tree[i] = this.dataNavigator.addDataType(this.types[i].label);
-	tree.block.css({'display': 'none', 'margin-bottom': '5px'});
+	tree.block.css({'display': 'none', 'margin-bottom': '10px'});
+	tree.body.css('padding-top', '5px');
 	this.dn[i].div = $('<div></div>').appendTo(tree.body);
 	this.dn[i].lines = new Object();
 	this.dn[i].cb = $('<input type="checkbox"' + (that.visible[i] ? ' checked="checked"' : '') + '/>').prependTo(tree.header).click(function(evt) {
@@ -653,7 +651,7 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 	
 	if(this.dataNavigator != null) {
 		if(org.sarsoft.writeable) {
-			this.buildAddButton(0, "Layer", function(point) {
+			this.buildAddButton(0, "Custom Layer", function(point) {
 				that.georefDlg.show(null, point);
 			});
 		}

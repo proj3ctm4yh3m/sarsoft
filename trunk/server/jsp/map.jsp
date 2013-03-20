@@ -31,7 +31,6 @@ org.sarsoft.Loader.queue(function() {
 	  
 	var tc = new org.sarsoft.DNTree(imap.container.left, "Unsaved Map");
 	tc._lock = true;
-	tc.header.css({"text-transform": "capitalize", "margin": "0px", "padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
 	tc.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
 	tc.body.css('padding-left', '2px');
 	dn.defaults.body = tc.body;
@@ -41,7 +40,7 @@ org.sarsoft.Loader.queue(function() {
 	  
 	dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
 	
-	jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(tc.header).click(function() {
+	jQuery('<div style="float: right; color: red; cursor: pointer; font-size: 140%; position: absolute; top: 0; right: 2px; font-weight: normal">X</div>').prependTo(tc.header).click(function() {
 		window.location.hash = "";
 		window.location.reload();
 	}).attr("title", "Close Unsaved Map");

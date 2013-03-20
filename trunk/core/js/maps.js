@@ -313,10 +313,10 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 	this.baseOverlayControls = new Array();
 	this.alphaOverlayBoxes = new Array();
 
-	this.typeDM = new org.sarsoft.view.DropMenu();
+	this.typeDM = new org.sarsoft.view.DropMenu(110);
 	this.typeDM.change(function() { that.handleLayerChange() });
 
-	this.alphaOverlayPlus = $('<span style="color: red; cursor: pointer; padding-left: 3px; padding-right: 3px" title="Additional Layers">+0</span>');
+	this.alphaOverlayPlus = $('<span style="font-size: 110%; color: red; cursor: pointer; padding-left: 3px; padding-right: 3px" title="Add More Layers to Map">+0</span>');
 	this.dd = new org.sarsoft.view.MenuDropdown(this.alphaOverlayPlus, 'width: 20em');
 
 	this.div = jQuery('<div style="color: #5a8ed7; background-color: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0" class="noprint"><img src="' + org.sarsoft.imgPrefix + 'blank.gif" style="vertical-align: middle; width: 1px; height: 1.7em"/></div>');
@@ -476,12 +476,12 @@ org.sarsoft.MapOverlayControl.prototype.addBaseTypeIfNecessary = function(alias)
 	if(mycfg == null) return;
 	org.sarsoft.EnhancedGMap.visibleMapTypes.push(alias);
 	
-	this.typeDM.addItem(mycfg.name, org.sarsoft.EnhancedGMap.nativeAliases[alias] || alias, this.grouping[alias]);
+	this.typeDM.addItem(mycfg.name, org.sarsoft.EnhancedGMap.nativeAliases[alias] || alias, this.grouping[alias], mycfg.description);
 	
 	if(mycfg.type == "NATIVE") return;
 	
 	for(var i = 0; i < this.baseOverlayControls.length; i++) {
-		this.baseOverlayControls[i].dm.addItem(mycfg.name, alias, this.grouping[alias]);
+		this.baseOverlayControls[i].dm.addItem(mycfg.name, alias, this.grouping[alias], mycfg.description);
 	}
 }
 
@@ -491,7 +491,7 @@ org.sarsoft.MapOverlayControl.prototype.resetDM = function(dm, base) {
 		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
 		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.alias) >= 0) {
 			if(!config.alphaOverlay && (config.type != "NATIVE" || base)) {
-				dm.addItem(config.name, org.sarsoft.EnhancedGMap.nativeAliases[config.alias] || config.alias, this.grouping[config.alias]);
+				dm.addItem(config.name, org.sarsoft.EnhancedGMap.nativeAliases[config.alias] || config.alias, this.grouping[config.alias], config.description);
 			}
 		}
 	}
@@ -988,7 +988,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '.</span>').appendTo(this.datumControl);
 	
 	if(switchable && imap.dataNavigator != null) {
-		this.datumSwitcher = jQuery('<a class="underlineOnHover" title="click to change datum" style="cursor: pointer"></a>').appendTo(this.datumControl).append(this.datumDisplay);
+		this.datumSwitcher = jQuery('<a class="underlineOnHover" title="Click to Change Datum" style="cursor: pointer"></a>').appendTo(this.datumControl).append(this.datumDisplay);
 		this.datumList = jQuery('<span style="display: none"><span style="margin-right: 10px">Set Datum:</span></span>').appendTo(this.datumControl);
 		
 		var fn = function(d) {
@@ -1044,9 +1044,10 @@ org.sarsoft.UTMGridControl = function(imap) {
 	this.imap = imap;
 	if(imap != null) {
 		var div = $('<div></div>').appendTo(imap.dataNavigator.defaults.settings);
-		var line = $('<div>Show UTM Grid</div>').appendTo(div);
-		this.cb = $('<input type="checkbox"/>').prependTo(line).change(function() { that.setValue(that.cb[0].checked) });
-		var line = $('<div><div style="float: left">Intensity:</div></div>').appendTo(div);
+		var line = $('<div></div>').appendTo(div);
+		this.cb = $('<input style="float: left" type="checkbox"/>').prependTo(line).change(function() { that.setValue(that.cb[0].checked) });
+		var line = $('<div style="float: left" title="Univeral Transverse Mercator grid.  One grid unit = 1 meter.">Show UTM Grid</div>').appendTo(line);
+		var line = $('<div><div style="float: left">Intensity:</div></div>').appendTo(line);
 		this.slider = org.sarsoft.view.CreateSlider($('<div style="float: left"></div>').appendTo(line), 50);
 		this.slider.subscribe('slideEnd', function() {
 			that.style.major = that.slider.getValue()/50;
@@ -1491,7 +1492,7 @@ org.sarsoft.DNTree = function(container, label) {
 	this.body = jQuery('<div></div>').appendTo(this.block);
 	$('<div style="clear: both"></div>').appendTo(this.block);
 
-	this.header.css({"font-weight": "bold", color: "#5a8ed7", cursor: "pointer"});
+	this.header.css({"font-weight": "bold", cursor: "pointer"});
 	this.body.css('padding-left', '10px');
 	
 	this.header.click(function() {
@@ -1517,7 +1518,7 @@ org.sarsoft.DataNavigator = function(imap) {
 	if(imap == null) return;
 	imap.register("org.sarsoft.DataNavigator", this);
 
-	this.left = $('<div style="width: 100%"></div>').appendTo($('<div style="width: 100%; height: 100%; overflow-y: auto"></div>').appendTo(imap.container.left));	
+	this.left = $('<div style="width: 100%; padding-bottom: 2em"></div>').appendTo($('<div style="width: 100%; height: 100%; overflow-y: auto" class="cs"></div>').appendTo(imap.container.left));	
 	$('<div style="height: 1em; width: 90%; background-color: white; position: absolute; bottom: 0px; font-size: 120%; font-weight: bold; z-index: 100; padding-bottom: 10px; padding-left: 2px"><a style="color: red" href="/about.html" target="_blank">About ' + org.sarsoft.version + '</a></div>').appendTo(imap.container.left);
 	imap.container.left.css('overflow-y', 'hidden');
 	
@@ -1673,7 +1674,7 @@ org.sarsoft.PositionInfoControl = function(imap, container) {
 			that.setValue(that._restoreto);
 			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", that.value);			
 		});
-		this.display.css('cursor', 'pointer').attr("title", "click to hide, right-click to configure").click(function(evt) {
+		this.display.css('cursor', 'pointer').attr("title", "Click to Hide, Right-Click to Configure").click(function(evt) {
 			that.setValue(org.sarsoft.PositionInfoControl.NONE);
 			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", that.value);
 		}).bind("contextmenu", function(evt) {
@@ -1774,10 +1775,10 @@ org.sarsoft.MapLabelWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
 	this.label = "backlit";
-	var div = $('<div>Show labels</div>').appendTo(imap.dataNavigator.defaults.settings);
+	var div = $('<div title="Applies to labeled map objects like markers and shapes">Show Labels</div>').appendTo(imap.dataNavigator.defaults.settings);
 	this.cb1 = $('<input type="checkbox"/>').prependTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
 	this.cb2 = $('<input type="checkbox"/>').appendTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
-	div.append('w/ white');
+	div.append('as Opaque');
 
 	this.writeCBs();
 	this.handleConfigChange();
@@ -1821,7 +1822,7 @@ org.sarsoft.MapSizeWidget = function(imap) {
 	var that = this;
 	var div = jQuery('<div style="display: none; padding-left: 20px" class="noprint"></div>').prependTo($(imap.map.getDiv()).parent());
 	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, div);
-	this.print_options = new org.sarsoft.view.MenuDropdown('<span style="color: black"><img style="cursor: pointer; vertical-align: text-top; margin-right: 3px" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>Print</span>', 'left: 0; width: 100%', imap.map._overlaycontrol.div);
+	this.print_options = new org.sarsoft.view.MenuDropdown('<span class="underlineOnHover" style="font-size: 110%; color: black" title="Print This Page or Make a PDF"><img style="vertical-align: text-top; margin-right: 3px" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>Print</span>', 'left: 0; width: 100%', imap.map._overlaycontrol.div);
 
 	jQuery('<div style="margin-top: 1em"></div>').appendTo(this.print_options.div);
 	jQuery('<span style="cursor: pointer; color: #5a8ed7; font-weight: bold; margin-right: 1ex">&rarr; Print From Your Browser</span>').prependTo(jQuery('<div style="margin-top: 1ex">Works best with Google Chrome.  Create borderless prints with any combination of page sizes and map layers.</div>').appendTo(this.print_options.div)).click(function() {
@@ -1848,7 +1849,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 	imap.register("org.sarsoft.MapFindWidget", this);
 
 	this.container = jQuery('<span style="white-space: nowrap; color: black; margin-left: 3px"></span>').append(this.find);
-	this.f1 = $('<span style="cursor: pointer"><img src="' + org.sarsoft.imgPrefix + '/find.png" style="vertical-align: text-top; margin-right: 3px"/>Find</span>').appendTo(this.container).click(function() {
+	this.f1 = $('<span class="underlineOnHover" style="font-size: 110%"><img src="' + org.sarsoft.imgPrefix + '/find.png" style="vertical-align: text-top; margin-right: 3px"/>Find</span>').appendTo(this.container).attr("title", "Center the Map on a Coordinate or Named Place").click(function() {
 		that.setState(!that.state);
 	});
 	this.f2 = $('<span></span>').appendTo(this.container);
@@ -1867,7 +1868,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 	});
 	
 	if(typeof(navigator.geolocation) != "undefined") {
-		this.mylocation = jQuery('<img src="' + org.sarsoft.imgPrefix + '/location.png" style="margin-left: 3px; cursor: pointer; vertical-align: middle" title="Go to my location"/>').appendTo(this.f2).click(function() {
+		this.mylocation = jQuery('<img src="' + org.sarsoft.imgPrefix + '/location.png" style="margin-left: 3px; cursor: pointer; vertical-align: middle" title="Go to Your Current Location"/>').appendTo(this.f2).click(function() {
 			navigator.geolocation.getCurrentPosition(function(pos) {
 				that.imap.setCenter(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude), 14);
 			}, function() { alert("Unable to determine your location.")});
@@ -1901,7 +1902,7 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 	if(imap != null) {
 		this.imap = imap;
 		imap.register("org.sarsoft.view.BaseConfigWidget", this);
-		if(persist) {
+		if(persist && imap.dataNavigator.defaults.settings.save != null) {
 			imap.dataNavigator.defaults.settings.save.css('display', 'block').click(function(evt) {
 				that.saveConfig(function() { alert('In addition to these settings, the following have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current and Available Layers\n - Datum\n');});
 				evt.stopPropagation();
@@ -1913,7 +1914,7 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 			this.sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(container)).change(function() {
 				imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
 			});
-			this.swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Enable Scroll Wheel Zoom</div>').appendTo(container)).change(function() {
+			this.swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;" title="Use your mouse\'s scroll wheel to zoom in and out.">Enable Scroll Wheel Zoom</div>').appendTo(container)).change(function() {
 				imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
 			});
 				
@@ -2983,7 +2984,7 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 		imap.register("org.sarsoft.MapURLHashWidget", this);
 	
 		if(!org.sarsoft.mobile && imap.dataNavigator != null && imap.dataNavigator.defaults.settings != null) {
-			this.cb = $('<input type="checkbox"/>').prependTo($('<div>Update URL as map changes</div>').appendTo(imap.dataNavigator.defaults.settings)).change(function() {
+			this.cb = $('<input type="checkbox"/>').prependTo($('<div title="The page URL will update to reflect the map center and layers, but not unsaved data.">Update URL on Map Drag</div>').appendTo(imap.dataNavigator.defaults.settings)).change(function() {
 				that.track = that.cb[0].checked;
 				if(!that.track) {
 					window.location.hash="";
@@ -3151,13 +3152,13 @@ org.sarsoft.widget.MapLayers = function(imap) {
 	var that = this;
 	
 	var dn = imap.registered["org.sarsoft.DataNavigator"];
-	this.tree = dn.addDataType("Map Layers");
+	this.tree = dn.addDataType("Layers");
 	if(org.sarsoft.tenantid != null) this.tree.body.css('display', 'none');
-	this.tree.body.css({'padding-left': '0px'});
-	this.tree.block.css({'margin-bottom': '5px'});
+	this.tree.body.css({'padding-left': '0px', 'padding-top': '5px'});
+	this.tree.block.css({'margin-bottom': '10px'}).attr("title", "These are just examples of what " + org.sarsoft.version + " can do.  Click the red +0 or +1 in the top right for more.");
 
-	this.availableLayers = $('<div style="float: right; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Get More</div>').insertBefore(imap.map._overlaycontrol.addLayer);
-	this.tree.getTool().css('font-size', '83%').html('<img style="vertical-align: text-bottom; margin-right: 2px; width: 14px; height: 14px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML').
+	this.availableLayers = $('<div style="float: right; cursor: pointer; font-weight: normal;"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Customize</div>').insertBefore(imap.map._overlaycontrol.addLayer);
+	this.tree.getTool().addClass('underlineOnHover').css({'font-size': '83%', 'padding-top': '1px'}).html('<img style="vertical-align: text-bottom; margin-right: 2px; width: 14px; height: 14px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML').
 		attr("title", "Export Map Layers to Google Earth").click(function(evt) { evt.stopPropagation(); window.open("/kmz.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap), '_blank'); })
 	
 	if(org.sarsoft.EnhancedGMap.sampleMapTypes != null) {
@@ -3168,7 +3169,7 @@ org.sarsoft.widget.MapLayers = function(imap) {
 			var name = samples[i].split(':')[0];
 			var cfg = samples[i].split(':')[1];
 			var devnull = function(c) {
-				$('<div style="margin-bottom: 3px; margin-top: 3px; font-style: normal; color: black; cursor: pointer">' + name + '</div>').appendTo(that.sampleMaps).click(function() {
+				$('<div style="margin-bottom: 3px; margin-top: 3px; font-style: normal; color: black; cursor: pointer">&rarr; ' + name + '</div>').appendTo(that.sampleMaps).click(function() {
 				imap.setConfig(org.sarsoft.MapURLHashWidget.parseConfigStr(c));});
 			}(cfg);
 		}
@@ -3621,33 +3622,33 @@ org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noL
 	this.utmform.create(this.containers["UTM"]);
 
 	var dd = this.containers["DD"];
-	this.lat = jQuery('<input type="text" size="8"/>').appendTo(dd);
+	this.lat = jQuery('<input type="text" size="8" placeholder="Latitude"/>').appendTo(dd);
 	dd.append(", ");
-	this.lng = jQuery('<input type="text" size="8"/>').appendTo(dd);
+	this.lng = jQuery('<input type="text" size="8" placeholder="Longitude"/>').appendTo(dd);
 	
 	var ddmmhh = this.containers["DMH"];
 	this.DDMMHH = new Object();
-	this.DDMMHH.latDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmhh);
+	this.DDMMHH.latDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmhh);
 	ddmmhh.append("\u00B0");
-	this.DDMMHH.latMM = jQuery('<input type="text" size="5"/>').appendTo(ddmmhh);
+	this.DDMMHH.latMM = jQuery('<input type="text" size="5" placeholder="Min"/>').appendTo(ddmmhh);
 	ddmmhh.append("', ");
-	this.DDMMHH.lngDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmhh);
+	this.DDMMHH.lngDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmhh);
 	ddmmhh.append("\u00B0");
-	this.DDMMHH.lngMM = jQuery('<input type="text" size="5"/>').appendTo(ddmmhh);
+	this.DDMMHH.lngMM = jQuery('<input type="text" size="5" placeholder="Min"/>').appendTo(ddmmhh);
 
 	var ddmmss = this.containers["DMS"];
 	this.DDMMSS = new Object();
-	this.DDMMSS.latDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmss);
+	this.DDMMSS.latDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmss);
 	ddmmss.append("\u00B0");
-	this.DDMMSS.latMM = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	this.DDMMSS.latMM = jQuery('<input type="text" size="2" placeholder="Min"/>').appendTo(ddmmss);
 	ddmmss.append("'");
-	this.DDMMSS.latSS = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	this.DDMMSS.latSS = jQuery('<input type="text" size="2" placeholder="Sec"/>').appendTo(ddmmss);
 	ddmmss.append("'', ");
-	this.DDMMSS.lngDD = jQuery('<input type="text" size="4"/>').appendTo(ddmmss);
+	this.DDMMSS.lngDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmss);
 	ddmmss.append("\u00B0");
-	this.DDMMSS.lngMM = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	this.DDMMSS.lngMM = jQuery('<input type="text" size="2" placeholder="Min"/>').appendTo(ddmmss);
 	ddmmss.append("'");
-	this.DDMMSS.lngSS = jQuery('<input type="text" size="2"/>').appendTo(ddmmss);
+	this.DDMMSS.lngSS = jQuery('<input type="text" size="2" placeholder="Sec"/>').appendTo(ddmmss);
 	
 	var name = this.containers["name"];
 	this.address = jQuery('<input type="text" size="16"/>').appendTo(name);
