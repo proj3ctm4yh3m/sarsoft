@@ -319,7 +319,7 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 	this.alphaOverlayPlus = $('<span style="color: red; cursor: pointer; padding-left: 3px; padding-right: 3px" title="Additional Layers">+0</span>');
 	this.dd = new org.sarsoft.view.MenuDropdown(this.alphaOverlayPlus, 'width: 20em');
 
-	this.div = jQuery('<div style="color: #5a8ed7; background: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0" class="noprint"></div>');
+	this.div = jQuery('<div style="color: #5a8ed7; background-color: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0" class="noprint"><img src="' + org.sarsoft.imgPrefix + 'blank.gif" style="vertical-align: middle; width: 1px; height: 1.7em"/></div>');
 	this.div.append(this.extras = document.createElement("span"), this.typeDM.container, this.dd.container);
 
 	this.baseOverlayContainer = jQuery('<div></div>').appendTo(this.dd.div);
@@ -987,7 +987,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	this.datumControl = jQuery('<span style="padding-left: 3px"></span>').appendTo(imap._mapInfoControl.premsg);
 	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '.</span>').appendTo(this.datumControl);
 	
-	if(switchable) {
+	if(switchable && imap.dataNavigator != null) {
 		this.datumSwitcher = jQuery('<a class="underlineOnHover" title="click to change datum" style="cursor: pointer"></a>').appendTo(this.datumControl).append(this.datumDisplay);
 		this.datumList = jQuery('<span style="display: none"><span style="margin-right: 10px">Set Datum:</span></span>').appendTo(this.datumControl);
 		
@@ -1658,19 +1658,62 @@ org.sarsoft.PositionInfoControl = function(imap, container) {
 		this.imap = imap;
 		imap.register("org.sarsoft.PositionInfoControl", this);
 		this.value = (org.sarsoft.touch ? org.sarsoft.PositionInfoControl.CENTER : org.sarsoft.PositionInfoControl.CURSOR);
+		this._restoreto = this.value;
 
 		var that = this;
 		this.map = imap.map;
 		this._show = true;
 		
 		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 999; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
-		var div = jQuery('<div style="text-align: right; position: absolute; right: 0; top: ' + imap.map._overlaycontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').prependTo(container || this.map.getDiv());
-		this.display = jQuery('<div style="background-color: white; padding-top: 3px; font-weight: bold"></div>').appendTo(div);
+		var div = this.div = jQuery('<div style="position: absolute; right: 0; top: ' + imap.map._overlaycontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').prependTo(container || this.map.getDiv());
+		var imgholder = $('<div style="position: absolute; right: 0; top; 0; width: 16px"><img style="position: absolute; right: 0; top: 0" src="' + org.sarsoft.imgPrefix + '/left.png"/></div>').appendTo(div);
+		this.display = jQuery('<div style="text-align: right; background-color: white; padding-top: 3px; font-weight: bold; white-space: nowrap"></div>').appendTo(div);
+				
+		this.minmax = $(imgholder.children()[0]).css('cursor', 'pointer').attr("title", "click to show coordinates").click(function() {
+			that.setValue(that._restoreto);
+			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", that.value);			
+		});
+		this.display.css('cursor', 'pointer').attr("title", "click to hide, right-click to configure").click(function(evt) {
+			that.setValue(org.sarsoft.PositionInfoControl.NONE);
+			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", that.value);
+		}).bind("contextmenu", function(evt) {
+			that.contextMenu.show({}, null, {x: evt.pageX, y: evt.pageY});
+			evt.stopPropagation();
+			return false;
+		});
+
+		var fn = function(obj) { return obj == null}
 		
+		var fn_p = function(val) {
+			that.setValue(val);
+			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", imap.registered["org.sarsoft.PositionInfoControl"].value);			
+		}
+		
+		var fn_c = function(val) {
+			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "coordinates", val);
+			org.sarsoft.EnhancedGMap._coordinates = val;
+			if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
+			that.update(imap.map.getCenter());
+		}
+		
+		var items = 
+			[{text : "Show Coordinates \u2192", applicable: fn, items:
+				[{ text : "At Cursor Position", applicable: fn, handler: function() { fn_p(org.sarsoft.PositionInfoControl.CURSOR) }},
+				 { text : "At Map Center", applicable: fn, handler: function() { fn_p(org.sarsoft.PositionInfoControl.CENTER) }}
+					]},
+			 {text : "Show Lat/Lng In \u2192", applicable: fn, items:
+				[{ text : "Decimal Degrees", applicable: fn, handler: function() { fn_c("DD") }},
+				 { text : "Degrees Minutes", applicable: fn, handler: function() { fn_c("DMH") }},
+				 { text : "Degrees Minutes Seconds", applicable: fn, handler: function() { fn_c("DMS") }}
+				]}];
+		
+		this.contextMenu = new org.sarsoft.view.ContextMenu();
+		this.contextMenu.setItems(items);
+				
 		this.centerCrosshair();
 		
 		google.maps.event.addListener(imap.map, "mousemove", function(evt) {
-			if(that.value == org.sarsoft.PositionInfoControl.CURSOR) that.update(evt.latLng);
+			that.update(that.value == org.sarsoft.PositionInfoControl.CURSOR ? evt.latLng : null);
 		});
 		google.maps.event.addListener(imap.map, "bounds_changed", function() {
 			if(that.value == org.sarsoft.PositionInfoControl.CENTER) that.update(imap.map.getCenter());
@@ -1679,7 +1722,6 @@ org.sarsoft.PositionInfoControl = function(imap, container) {
 			that.centerCrosshair();
 		});
 		$(window).resize(function() { that.centerCrosshair(); });
-		this.div = div;	
 	}
 }
 
@@ -1690,10 +1732,12 @@ org.sarsoft.PositionInfoControl.CENTER = 2;
 org.sarsoft.PositionInfoControl.prototype.centerCrosshair = function() {
 	var div = $(this.imap.map.getDiv());
 	this.crosshair.css({left: Math.round(div.width()/2)-8 + "px", top: Math.round(div.height()/2)-8 + "px"});
+	this.update(this.imap.map.getCenter());
 }
 
 org.sarsoft.PositionInfoControl.prototype.update = function(gll) {
 	this.div.css('top', this.imap.map._overlaycontrol.div.height() + 'px');
+	if(gll == null) return;
 	var datumll = GeoUtil.fromWGS84(gll);
 	var utm = GeoUtil.GLatLngToUTM(datumll);
 	var message = utm.toHTMLString() + "<br/>";
@@ -1710,8 +1754,8 @@ org.sarsoft.PositionInfoControl.prototype.update = function(gll) {
 }
 
 org.sarsoft.PositionInfoControl.prototype.setValue = function(value) {
-	this.value = value;
 	if(value == org.sarsoft.PositionInfoControl.NONE) {
+		this._restoreto = this.value;
 		this.display.css('display', 'none');
 		this.crosshair.css('visibility', 'hidden');
 	} else if (value == org.sarsoft.PositionInfoControl.CURSOR) {
@@ -1722,6 +1766,8 @@ org.sarsoft.PositionInfoControl.prototype.setValue = function(value) {
 		this.display.css('display', 'block');		
 		this.crosshair.css('visibility', 'visible');
 	}
+	this.value = value;
+	this.minmax.css("display", (value == org.sarsoft.PositionInfoControl.NONE ? "inline" : "none"));
 }
 
 org.sarsoft.MapLabelWidget = function(imap) {
@@ -1775,7 +1821,7 @@ org.sarsoft.MapSizeWidget = function(imap) {
 	var that = this;
 	var div = jQuery('<div style="display: none; padding-left: 20px" class="noprint"></div>').prependTo($(imap.map.getDiv()).parent());
 	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, div);
-	this.print_options = new org.sarsoft.view.MenuDropdown('<img style="cursor: pointer; vertical-align: middle" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>', 'left: 0; width: 100%', imap.map._overlaycontrol.div);
+	this.print_options = new org.sarsoft.view.MenuDropdown('<span style="color: black"><img style="cursor: pointer; vertical-align: text-top; margin-right: 3px" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>Print</span>', 'left: 0; width: 100%', imap.map._overlaycontrol.div);
 
 	jQuery('<div style="margin-top: 1em"></div>').appendTo(this.print_options.div);
 	jQuery('<span style="cursor: pointer; color: #5a8ed7; font-weight: bold; margin-right: 1ex">&rarr; Print From Your Browser</span>').prependTo(jQuery('<div style="margin-top: 1ex">Works best with Google Chrome.  Create borderless prints with any combination of page sizes and map layers.</div>').appendTo(this.print_options.div)).click(function() {
@@ -1801,48 +1847,50 @@ org.sarsoft.MapFindWidget = function(imap) {
 	
 	imap.register("org.sarsoft.MapFindWidget", this);
 
-	this.find = jQuery('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: middle" title="Find a coordinate"/>');
-	var container = jQuery('<span style="white-space: nowrap; color: black"></span>').append(this.find);
-
-	this.find.click(function() {
+	this.container = jQuery('<span style="white-space: nowrap; color: black; margin-left: 3px"></span>').append(this.find);
+	this.f1 = $('<span style="cursor: pointer"><img src="' + org.sarsoft.imgPrefix + '/find.png" style="vertical-align: text-top; margin-right: 3px"/>Find</span>').appendTo(this.container).click(function() {
 		that.setState(!that.state);
 	});
+	this.f2 = $('<span></span>').appendTo(this.container);
+	this.f2.append($('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: text-top; margin-right: 3px"/>').click(function() {
+		that.setState(!that.state);
+	}));
 
 	this.locationEntryForm = new org.sarsoft.ThinLocationForm();
-	this.locationEntryForm.create(container, function() {
+	this.locationEntryForm.create(this.f2, function() {
 		that.locationEntryForm.read(function (gll) {that.imap.setCenter(gll, 14);});
 	});
 	
-	var go = jQuery('<button>GO</button>').appendTo(container)
+	var go = jQuery('<button>GO</button>').appendTo(this.f2)
 	go.click(function() {
 		var entry = that.locationEntryForm.read(function(gll) { that.imap.setCenter(gll, 14);});
 	});
 	
 	if(typeof(navigator.geolocation) != "undefined") {
-		this.mylocation = jQuery('<img src="' + org.sarsoft.imgPrefix + '/location.png" style="margin-left: 3px; cursor: pointer; vertical-align: middle" title="Go to my location"/>').appendTo(container).click(function() {
+		this.mylocation = jQuery('<img src="' + org.sarsoft.imgPrefix + '/location.png" style="margin-left: 3px; cursor: pointer; vertical-align: middle" title="Go to my location"/>').appendTo(this.f2).click(function() {
 			navigator.geolocation.getCurrentPosition(function(pos) {
 				that.imap.setCenter(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude), 14);
 			}, function() { alert("Unable to determine your location.")});
 		});
 	}
 	
-	this.container = container;
 	this.setState(false);
 
-	imap.addMenuItem(container[0], 25);
+	imap.addMenuItem(this.container[0], 15);
 }
 
 org.sarsoft.MapFindWidget.prototype.setState = function(state) {
 	this.state = state;
 	if(this.state) {
-		this.container.children().css('display', 'inline');
+		this.f2.css('display', 'inline');
+		this.f1.css('display', 'none');
 		this.locationEntryForm.clear();
 		if(typeof google.maps.Geocoder != 'undefined' && !org.sarsoft.touch) {
 			this.locationEntryForm.address.focus();
 		}
 	} else {
-		this.container.children().css('display', 'none');
-		this.find.css('display', 'inline');
+		this.f1.css('display', 'inline');
+		this.f2.css('display', 'none');
 		if(org.sarsoft.touch && this.mylocation != null) this.mylocation.css('display', 'inline');
 	}
  }
@@ -1855,10 +1903,44 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
 		imap.register("org.sarsoft.view.BaseConfigWidget", this);
 		if(persist) {
 			imap.dataNavigator.defaults.settings.save.css('display', 'block').click(function(evt) {
-				that.saveConfig(function() { alert('The following configuration items have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current Layers\n - Available Data Sources\n - Datum\n - UTM Grid\n');});
+				that.saveConfig(function() { alert('In addition to these settings, the following have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current and Available Layers\n - Datum\n');});
 				evt.stopPropagation();
 			});
+			
 		}
+		if(imap.dataNavigator != null && imap.dataNavigator.defaults.settings != null) { 
+			var container = imap.dataNavigator.defaults.settings;
+			this.sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(container)).change(function() {
+				imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
+			});
+			this.swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Enable Scroll Wheel Zoom</div>').appendTo(container)).change(function() {
+				imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
+			});
+				
+			var config = {}
+			if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
+				config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
+			}
+			this.swz[0].checked = (config.scrollwheelzoom == false ? false : true);
+			this.sb[0].checked = config.scalebar;
+			org.sarsoft.EnhancedGMap._overzoom = true;
+			imap.map._overlaymanager.checkMaxZoom();
+			if(config.position != null) {
+				org.sarsoft.async(function() { imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position) });
+			}
+			if(config.coordinates != null) {
+				org.sarsoft.EnhancedGMap._coordinates = config.coordinates;
+				if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
+				if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
+			}
+		}
+	}
+}
+
+org.sarsoft.view.BaseConfigWidget.prototype.saveBrowserSettings = function() {
+	if(this.sb != null)  {
+		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scalebar", this.sb[0].checked);
+		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scrollwheelzoom", this.swz[0].checked);
 	}
 }
 
@@ -1893,6 +1975,7 @@ org.sarsoft.view.PersistedConfigWidget = function(imap, persist, saveCenter) {
 org.sarsoft.view.PersistedConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
 
 org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) {
+	this.saveBrowserSettings();
 	var that = this;
 	this.hasConfig = true;
 
@@ -1956,6 +2039,7 @@ org.sarsoft.view.CookieConfigWidget = function(imap, saveCenter) {
 org.sarsoft.view.CookieConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
 
 org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function(handler) {
+	this.saveBrowserSettings();
 	var config = {};
 	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
 	if(config.base == null) config = {}; // keep mis-set cookies from screwing everything up
@@ -2310,11 +2394,11 @@ org.sarsoft.InteractiveMap.prototype.click = function(evt, obj) {
 	}
 }
 
-org.sarsoft.InteractiveMap.prototype.loadBrowserSettings = function() {
-	if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
-		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
-		this.map.setOptions({scrollwheel: config.scrollwheelzoom, scaleControl: config.scalebar});
+org.sarsoft.InteractiveMap.prototype.loadBrowserSettings = function(config) {
+	if(config == null && YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
+		config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
 	}
+	if(config != null) this.map.setOptions({scrollwheel: config.scrollwheelzoom, scaleControl: config.scalebar});
 }
 
 org.sarsoft.InteractiveMap.prototype.updateDatum = function() {
@@ -2898,7 +2982,7 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	if(!readonce) {
 		imap.register("org.sarsoft.MapURLHashWidget", this);
 	
-		if(!org.sarsoft.mobile && imap.dataNavigator != null) {
+		if(!org.sarsoft.mobile && imap.dataNavigator != null && imap.dataNavigator.defaults.settings != null) {
 			this.cb = $('<input type="checkbox"/>').prependTo($('<div>Update URL as map changes</div>').appendTo(imap.dataNavigator.defaults.settings)).change(function() {
 				that.track = that.cb[0].checked;
 				if(!that.track) {
@@ -3062,55 +3146,6 @@ org.sarsoft.MapInfoControl.prototype.setMessage = function(message) {
 }
 
 if(typeof org.sarsoft.widget == "undefined") org.sarsoft.widget = new Object();
-
-org.sarsoft.widget.BrowserSettings = function(imap, container) {
-	this.tree = new org.sarsoft.DNTree(container, '<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/config.png"/>Browser Settings');
-	var cbcontainer = jQuery('<div style="padding-top: 3px; padding-bottom: 3px"></div>').appendTo(this.tree.body);
-	var pos = jQuery('<select style="margin-left: 1em">' + (org.sarsoft.touch ? '' : '<option value="1">Cursor</option>') + '<option value="2">Center</option><option value="0">None</option></select>').appendTo(jQuery('<div style="white-space: nowrap">Show Position:</div>').appendTo(cbcontainer)).change(function() {
-		var val = 1*pos.val();
-		imap.registered["org.sarsoft.PositionInfoControl"].setValue(val);
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", val);
-	});
-
-	var llContainer = jQuery('<div>Lat/Lng Format:</div>').appendTo(cbcontainer);
-	var llSelect = jQuery('<select style="margin-left: 1em"><option value="DD">DD</option><option value="DDMMHH">DMH</option><option value="DDMMSS">DMS</option></select>').appendTo(llContainer).change(function() {
-		var val = llSelect.val();
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "coordinates", val);
-		org.sarsoft.EnhancedGMap._coordinates = val;
-		if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
-		if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
-	});
-
-	var sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(cbcontainer)).change(function() {
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scalebar", sb[0].checked);
-		imap.loadBrowserSettings();
-	});
-	if(!org.sarsoft.touch) var swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Enable Scroll Wheel Zoom</div>').appendTo(cbcontainer)).change(function() {
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scrollwheelzoom", swz[0].checked);
-		imap.loadBrowserSettings();
-	});
-	
-	this.tree.body.css('display', 'none');
-	
-	var config = {}
-	if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
-		config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
-	}
-	if(typeof swz != "undefined") swz[0].checked = (config.scrollwheelzoom == false ? false : true);
-	sb[0].checked = config.scalebar;
-	org.sarsoft.EnhancedGMap._overzoom = true;
-	imap.map._overlaymanager.checkMaxZoom();
-	if(config.position != null) {
-		pos.val(config.position);
-		org.sarsoft.async(function() { imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position) });
-	}
-	if(config.coordinates != null) {
-		llSelect.val(config.coordinates);
-		org.sarsoft.EnhancedGMap._coordinates = config.coordinates;
-		if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
-		if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
-	}
-}
 
 org.sarsoft.widget.MapLayers = function(imap) {
 	var that = this;
