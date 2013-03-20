@@ -49,7 +49,6 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	} else {
 	  new org.sarsoft.widget.NoAccount(imap, this.account.body);
 	}
-	new org.sarsoft.widget.BrowserSettings(imap, this.account.body);
 
 	this.tenant = this._getHeader(org.sarsoft.tenantname || "Unsaved Map", "favicon.png");
 	this.defaults.io = $('<div style="font-weight: bold; color: black; padding-top: 3px"></div>').appendTo(this.tenant.body);
@@ -75,7 +74,7 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	settings.body.css({'padding-left': '0px'});
 	settings.block.css({'margin-bottom': '5px'});
 	this.defaults.settings = settings.body;
-	this.defaults.settings.save = settings.getTool().css('font-size', '83%').html('<img style="vertical-align: text-bottom; margin-right: 2px; height: 14px; width: 14px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save').
+	this.defaults.settings.save = settings.getTool().css({'font-size': '83%', 'display': 'none'}).html('<img style="vertical-align: text-bottom; margin-right: 2px; height: 14px; width: 14px" src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save').
 		attr("title", 'Save current background, available data sources and UTM grid settings for future visits');
 
 	new org.sarsoft.widget.MapLayers(imap, this.tenant.body);
@@ -104,7 +103,7 @@ org.sarsoft.StructuredDataNavigator.prototype = new org.sarsoft.DataNavigator();
 
 org.sarsoft.StructuredDataNavigator.prototype._getHeader = function(text, icon) {
 	var tree = new org.sarsoft.DNTree(this.left, text);
-	tree._lock = true;
+	tree.lock = true;
 	tree.header.css({"padding-top": "3px", "margin": "0px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
 	tree.header.prepend(jQuery('<img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/' + icon + '"/>'));
 	tree.body.css('padding-left', '2px');
