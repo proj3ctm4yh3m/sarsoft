@@ -1568,13 +1568,13 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 		this.dragbar = jQuery('<div style="visibility: hidden; top: 0; left: 0; position: absolute; z-index: 2000; height: 100%; width: 8px; background-color: black; opacity: 0.4; filter: alpha(opacity=40)"></div>').appendTo(this.imap.container.top);
 
 		this.minmax.bind('drag', function(evt) {
-			if(that.state) that.dragbar.css({visibility : 'visible', left : Math.max(evt.offsetX - 8, 150) + "px"});
+			if(that.state) that.dragbar.css({visibility : 'visible', left : Math.max(evt.offsetX - 8, 200) + "px"});
 		});
 		
 		this.minmax.bind('dragend', function(evt) {
 			if(that.state) {
 				that.dragbar.css({visibility: 'hidden', left: '0px'});
-				that.offset = Math.max(evt.offsetX, 150);
+				that.offset = Math.max(evt.offsetX, 200);
 				that.showDataNavigator();
 			}
 		});
