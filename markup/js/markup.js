@@ -33,6 +33,9 @@ org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
 		} else {
 			this.nextId = Math.max(obj.way.id+1, this.nextId); 
 		}
+		obj.updated = new Date().getTime();
+		if(obj.way.zoomAdjustedWaypoints == null) obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
+		if(obj.way.waypoints == null) obj.way.waypoints = obj.way.zoomAdjustedWaypoints;
 		if(obj.way.boundingBox == null) {
 			this.addBoundingBox(obj.way);
 		}
@@ -43,9 +46,6 @@ org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
 			var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(obj.way.waypoints))/1000;
 			obj.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
 		}
-		obj.updated = new Date().getTime();
-		if(obj.way.zoomAdjustedWaypoints == null) obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
-		if(obj.way.waypoints == null) obj.way.waypoints = obj.way.zoomAdjustedWaypoints;
 	}
 	return obj;
 }
@@ -288,7 +288,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		this.imp = new Object();
 		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
 		this.imp.body = this.imp.dlg.bd.children().first();
-		this.imp.link = $('<div title="Import Data" style="cursor: pointer; float: left; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>').appendTo(dn.defaults.io).click(function() {
+		this.imp.link = $('<div class="underlineOnHover" title="Import Data From a GPS or GPX File" style="cursor: pointer; float: left; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>').appendTo(dn.defaults.io).click(function() {
 			that.imp.comms.clear();
 			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
 			that.imp.gpx.form.css('display', 'none');
@@ -353,7 +353,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	this.exp = new Object();
 	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
 	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
-	this.exp.link = $('<div title="Export Data" style="visibility: hidden; cursor: pointer; float: left;"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>').appendTo(dn.defaults.io).click(function() {
+	this.exp.link = $('<div class="underlineOnHover" title="Export Data to GPS, GPX or KML" style="visibility: hidden; cursor: pointer; float: left;"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>').appendTo(dn.defaults.io).click(function() {
 		var exportables = that.exp.body.find('select');
 		exportables.empty();
 		exportables.append('<option value="a0">All Objects</option>');
@@ -430,14 +430,15 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 }
 
 org.sarsoft.widget.MarkupSaveAs = function(imap) {
-	var body = $('<div style="display: none"></div>').appendTo(imap.dataNavigator.defaults.iobody);
+	var bc = $('<div style="display: none; clear: both; padding-top: 5px"></div>').appendTo(imap.dataNavigator.defaults.iobody);
+	var body = $('<div style="clear: both; border-left: 1px solid red; padding-left: 5px; margin-left: 2px"></div>').appendTo(bc);
 	imap.dataNavigator.defaults.save.click(function() {
-		body.css('display', body.css('display') == "block" ? "none" : "block");
+		bc.css('display', bc.css('display') == "block" ? "none" : "block");
 	})
 	
 	if(org.sarsoft.username != null) {
 		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(body);
-		var saveAsName = jQuery('<input type="text" name="name"/>').appendTo(newform);
+		var saveAsName = jQuery('<input type="text" name="name" placeholder="Choose a map name"/>').appendTo(newform);
 			
 		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
 		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
@@ -478,11 +479,11 @@ org.sarsoft.widget.MarkupSaveAs = function(imap) {
 		body.append('Sign to save this map.  We\'ll keep track of it while you\'re gone.')
 		var login_yahoo = jQuery('<a href="#"><img style="border: none; vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(body));
 		login_yahoo.click(function() {
-			imap.registered["org.sarsoft.DataNavigator"].defaults.account.login('yahoo');			
+			imap.dataNavigator.defaults.account.login('yahoo');			
 		});
 		var login_google = jQuery('<a href="#"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(body));
 		login_google.click(function() {
-			imap.registered["org.sarsoft.DataNavigator"].defaults.account.login('google');			
+			imap.dataNavigator.defaults.account.login('google');			
 		});
 	}
 	

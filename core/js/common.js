@@ -20,10 +20,6 @@ org.sarsoft.async = function(fn) {
 	window.setTimeout(fn, 0);
 }
 
-org.sarsoft.underlineOnHover = function(element) {
-	return element.mouseover(function() { element.css('text-decoration', 'underline')}).mouseout(function() { element.css('text-decoration', 'none')});
-}
-
 org.sarsoft.setCookieProperty = function(cookie, prop, value) {
 	var obj = {}
 	if(YAHOO.util.Cookie.exists(cookie)) {
@@ -295,23 +291,24 @@ org.sarsoft.view.CreateSlider = function(container, width) {
 	return YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, width);
 }
 
-org.sarsoft.view.DropMenu = function() {
+org.sarsoft.view.DropMenu = function(scale) {
 	var that = this;
 	this.groups = {}
 	this.values = {}
+	this.scale = scale || 100;
 	if(org.sarsoft.touch) {
 		this.mobile = true;
 		this.container = jQuery('<select></select>');
 	} else {
 		this.container = jQuery('<span style="display: inline-block; border: 1px solid #CCCCCC; color: black"></span>');
 		this.holder = jQuery('<span style="position: relative; z-index: 2000; vertical-align: text-top"></span>').appendTo(this.container);
-		this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold"></span>').appendTo(this.container).hover(function() { that.select.addClass("yuimenuitem-selected") }, function() { that.select.removeClass("yuimenuitem-selected")});
+		this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold; font-size: ' + this.scale + '%"></span>').appendTo(this.container).hover(function() { that.select.addClass("yuimenuitem-selected") }, function() { that.select.removeClass("yuimenuitem-selected")});
 		this.label = jQuery('<span style="padding-left: 10px"></span>').appendTo(this.select);
 		this.dd = jQuery('<span style="float: right">&darr;</span>').appendTo(this.select);
 		var id = "DropMenu_" + org.sarsoft.view.DropMenu._idx++;
-		this.menu = jQuery('<div class="yui-module yui-overlay yuimenu" style="position: absolute; visibility: hidden; left: 0; top: 1.5em"></div>').appendTo(this.holder);
+		this.menu = jQuery('<div class="yui-module yui-overlay yuimenu" style="position: absolute; left: 0; top: 1.5em;"></div>').appendTo(this.holder);
 		this.bd = jQuery('<div class="bd"></div>').appendTo(this.menu);
-		this.ul = jQuery('<ul class="first-of-type"></ul>').appendTo(this.bd);
+		this.ul = jQuery('<ul class="first-of-type cs" style="max-height: 150px; overflow-y: auto"></ul>').appendTo(this.bd);
 		this.select.click(function() {
 			if(that.menu.css('visibility')=='visible') {
 				that.hide();
@@ -331,7 +328,7 @@ org.sarsoft.view.DropMenu = function() {
 
 org.sarsoft.view.DropMenu._idx = 0;
 
-org.sarsoft.view.DropMenu.prototype.addItem = function(text, value, group) {
+org.sarsoft.view.DropMenu.prototype.addItem = function(text, value, group, title) {
 	var that = this;
 	if(this.value == null) this.value = value;
 	
@@ -345,7 +342,8 @@ org.sarsoft.view.DropMenu.prototype.addItem = function(text, value, group) {
 	var a = jQuery('<a href="javascript:void{}" class="yuimenuitemlabel" style="cursor: pointer; font-weight: bold; padding-left: 10px">' + text + '</a>').appendTo(li);
 	a.hover(function() { li.addClass("yuimenuitem-selected") }, function() { li.removeClass("yuimenuitem-selected")});
 	a.click(function() { that.val(value); that.change(); that.hide()});
-
+	if(title != null) a.attr("title", title);
+	
 	if(group != null) {
 		this.addGroup(group);
 		this.groups[group].slice(-1)[0].after(li);
@@ -359,7 +357,10 @@ org.sarsoft.view.DropMenu.prototype.addItem = function(text, value, group) {
 		}
 	}
 	
-	this.container.css('width', this.ul.width() + "px");
+	if(this.scale > 100) this.menu.css('min-width', "0px")
+	var size = Math.ceil(this.menu.width()*(this.scale/100)) + "px";
+	this.container.css('width', size);
+	if(this.scale > 100) this.menu.css('min-width', size)
 }
 
 org.sarsoft.view.DropMenu.prototype.addGroup = function(text) {
@@ -372,11 +373,15 @@ org.sarsoft.view.DropMenu.prototype.addGroup = function(text) {
 }
 
 org.sarsoft.view.DropMenu.prototype.show = function() {
-	this.menu.css('visibility', 'visible');
+	var available = $(document.body).height() - (this.select.position().top + this.select.height() + 20);
+	this.ul.css({'max-height': available + "px"});
+	this.menu.css({'top': '1.5em'});
+	this.menu.css({'visibility': 'visible'});
 }
 
 org.sarsoft.view.DropMenu.prototype.hide = function() {
 	this.menu.css('visibility', 'hidden');
+	this.ul.css({'max-height': "150px"});
 }
 
 org.sarsoft.view.DropMenu.prototype.empty = function() {
@@ -410,6 +415,62 @@ org.sarsoft.view.DropMenu.prototype.change = function(fn) {
 	if(this.listener != null) this.listener(this.value);
 	this._hold = false;
 }
+
+
+org.sarsoft.view.DropSelect = function(text, css) {
+	var that = this;
+	this.text = text;
+	this.css = css || {};
+	this.container = jQuery('<span style="display: inline-block;"></span>');
+	this.holder = jQuery('<span style="position: relative; z-index: 2000; vertical-align: text-top"></span>').appendTo(this.container);
+	this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold; padding-left: 10px; padding-right: 10px"></span>').html(text).css(css).appendTo(this.container);
+	var id = "DropMenu_" + org.sarsoft.view.DropMenu._idx++;
+	this.menu = jQuery('<div class="yui-module yui-overlay yuimenu" style="position: absolute; display: none; left: 0; top: 1.5em; visibility: visible"></div>').appendTo(this.holder);
+	this.bd = jQuery('<div class="bd"></div>').appendTo(this.menu);
+	this.ul = jQuery('<ul class="first-of-type"></ul>').appendTo(this.bd);
+	this.select.click(function() {
+		if(that.menu.css('display')=='block') {
+			that.hide();
+		} else {
+			that.show();
+		}
+	});
+	this.bd.mouseout(function() {
+		if(that.timer != null) clearTimeout(that.timer);
+		that.timer = setTimeout(function() {that.hide()}, 300);
+	});
+	this.bd.mouseover(function() {
+		if(that.timer != null) clearTimeout(that.timer);
+	});
+}
+
+org.sarsoft.view.DropSelect._idx = 0;
+
+org.sarsoft.view.DropSelect.prototype.addItem = function(text, handler) {
+	var that = this;
+	
+	var li = jQuery('<li class="yuimenuitem"></li>').appendTo(this.ul);
+	var a = jQuery('<a href="javascript:void{}" class="yuimenuitemlabel" style="cursor: pointer; font-weight: bold; padding-left: 10px">' + text + '</a>').css(this.css).appendTo(li);
+	a.hover(function() { li.addClass("yuimenuitem-selected") }, function() { li.removeClass("yuimenuitem-selected")});
+	a.click(function() { handler(); that.hide()});
+
+	this.container.css('width', Math.max(this.container.width(), this.ul.width()) + "px");
+	this.ul.css('min-width', this.container.css('width'));
+}
+
+org.sarsoft.view.DropSelect.prototype.show = function() {
+	if(this.select.position().top + this.select.height() + this.menu.height() + 20 > $(document.body).height()) {
+		this.menu.css({'top': '-' + this.menu.height() + "px"});
+	} else {
+		this.menu.css({'top': '1.5em'});
+	}
+	this.menu.css({'display': 'block'});
+}
+
+org.sarsoft.view.DropSelect.prototype.hide = function() {
+	this.menu.css('display', 'none');
+}
+
 
 org.sarsoft.view.ContextMenu = function() {
 	var id = "ContextMenu_" + org.sarsoft.view.ContextMenu._idx++;
@@ -482,7 +543,7 @@ org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
 	});
 		
 	this.content = jQuery('<div style="padding-top: 2px"></div>').appendTo(div);
-	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; margin-right: 5px; font-size: larger">&uarr;</span>').appendTo(this.content);
+	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; padding-right: 5px; padding-left: 5px; font-size: larger">&uarr;</span>').appendTo(this.content);
 	upArrow.click(function() {that.hide()});
 
 	this.trigger = trigger;

@@ -18,6 +18,10 @@ body, html {
 	height: 100%;
 }
 
+.underlineOnHover {
+	cursor: pointer;
+}
+
 .underlineOnHover:hover {
 	text-decoration: underline;
 }
@@ -29,6 +33,43 @@ body, html {
 .warning {
 	font-weight: bold;
 	color: red;
+}
+
+.cs::-webkit-scrollbar { width:12px }
+.cs::-webkit-scrollbar-thumb:vertical {
+	background-color: #E6E6E6;
+}
+.cs::-webkit-scrollbar-thumb:vertical:hover{background-color: #999999}
+
+.dnheader {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	margin: 0px;
+	font-weight: bold;
+	color: black;
+	position: relative;
+	text-transform: capitalize;
+	background-color: #E6E6E6;
+	background-image: -ms-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: -moz-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: -o-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #F0F0F0), color-stop(1, #DCDCDC));
+	background-image: -webkit-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: linear-gradient(to bottom, #F0F0F0 0%, #DCDCDC 100%);
+}
+
+body.yui-skin-sam .yui-panel .hd {
+	background-color: #E6E6E6;
+	background-image: -ms-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: -moz-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: -o-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #F0F0F0), color-stop(1, #DCDCDC));
+	background-image: -webkit-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
+	background-image: linear-gradient(to bottom, #F0F0F0 0%, #DCDCDC 100%);
+}
+
+body.yui-skin-sam .yui-panel .bd, body.yui-skin-sam .yui-panel .ft {
+	background-color: white;
 }
 
 div.item label, div.item span.label {
