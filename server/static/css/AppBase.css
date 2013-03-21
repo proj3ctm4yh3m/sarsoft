@@ -58,6 +58,48 @@ body, html {
 	background-image: linear-gradient(to bottom, #F0F0F0 0%, #DCDCDC 100%);
 }
 
+.dn-obj {
+	clear: both;
+	padding-top: 0.5em;
+}
+
+.dn-obj .dn-obj-left {
+	cursor: pointer;
+	color: black;
+	float: left;
+}
+
+.dn-obj .dn-obj-left img {
+	vertical-align: top;
+	padding-right: 0.5em;
+	height: 16px;
+	width: 16px;
+}
+
+.dn-obj .dn-obj-right {
+	float: right;
+}
+
+.dn-obj .dn-obj-icon {
+	cursor: pointer;
+	margin-right: 5px;
+}
+
+.dn-obj .dn-obj-icon img {
+	vertical-align: top;
+}
+
+.dn-obj .dn-obj-comments {
+	clear: both;
+	cursor: pointer;
+	padding-top: 1ex;
+	padding-bottom: 1ex
+}
+
+.dn-obj .dn-obj-left:hover {
+	text-decoration: underline;
+}
+
 body.yui-skin-sam .yui-panel .hd {
 	background-color: #E6E6E6;
 	background-image: -ms-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
