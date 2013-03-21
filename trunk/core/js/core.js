@@ -414,20 +414,27 @@ org.sarsoft.MapObjectController.prototype.DNAdd = function(i, object) {
 	var that = this;
 	if(this.dn == null) return;
 	
-	if(this.dn[i].lines[object.id] == null) this.dn[i].lines[object.id] = $('<div style="clear: both; padding-top: 0.5em"></div>').appendTo(this.dn[i].div);
-	this.dn[i].lines[object.id].html('<div style="float: left"></div><div style="float: right; margin-right: 5px"></div>');
+	if(this.dn[i].lines[object.id] == null) this.dn[i].lines[object.id] = $('<div class="dn-obj"></div>').appendTo(this.dn[i].div);
+	this.dn[i].lines[object.id].html('<div class="dn-obj-left"></div><div class="dn-obj-right"></div>');
 	
-	this.buildDN(i, object);
+	var line = this.DNGetLine(i, object, 0);
+	var fn = this.buildDN(i, object, line);
+	line.click(function() {
+		if(org.sarsoft.mobile) that.imap.dnToggle.hideDataNavigator();
+		fn();
+	});
 }
 
-org.sarsoft.MapObjectController.prototype.DNAddIcon = function(i, object, title, html) {
-	var icon = $('<span style="cursor: pointer; margin-right: 5px" title="' + title + '"></span>').html(html || '').appendTo(this.DNGetLine(i, object, 1));
-	icon.find('img').css('vertical-align', 'top');
-	return icon;
+org.sarsoft.MapObjectController.prototype.DNAddIcon = function(i, object, title, html, handler) {
+	$('<span class="dn-obj-icon" title="' + title + '"></span>').html(html || '').appendTo(this.DNGetLine(i, object, 1)).click(handler);
 }
 
 org.sarsoft.MapObjectController.prototype.DNAddComments = function(i, object, comments) {
-	$('<div></div>').append($('<div style="clear: both; border-left: 1px solid #945e3b; padding-left: 1ex"></div>').append(comments)).appendTo(this.DNGetLine(i, object));
+	var that = this;
+	var line = that.DNGetLine(i, object, 0);
+	$('<div class="dn-obj-comments"></div>').append(comments).appendTo(this.DNGetLine(i, object)).click(function() {
+		line.click();
+	}).hover(function() { line.css('text-decoration', 'underline') }, function() { line.css('text-decoration', '') });
 }
 
 org.sarsoft.MapObjectController.prototype.DNGetLine = function(i, object, child) {
@@ -697,26 +704,13 @@ org.sarsoft.controller.CustomLayerController.prototype.show = function(i, gr) {
 	org.sarsoft.controller.CustomLayerController.refreshLayers(this.imap, gr);
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, gr) {
+org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, gr, line) {
 	var that = this;
 
-	var line = this.DNGetLine(i, gr, 0);
-	line.append('<img style="vertical-align: middle; padding-right: 0.5em; height: 16px; width: 16px" src="' + gr.url + '"/>');
-	var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(gr.name) + '</span>';
-	jQuery(s).appendTo(line).click(function() {
-		var config = that.imap.getConfig();
-		var alias = "_gr" + gr.id;
-		if(config.layers.indexOf(alias) < 0) {
-			config.layers.push(alias);
-			config.opacity.push(1);
-		} else {
-			config.opacity[config.layers.indexOf(alias)] = 1;
-		}
-		that.imap.setConfig(config);
-	});
-	
+	line.append('<img src="' + gr.url + '"/>');
+	line.append(org.sarsoft.htmlescape(gr.name));
 	if(org.sarsoft.writeable) {	
-		this.DNAddIcon(i, gr, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
+		this.DNAddIcon(i, gr, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>'), function() {
 			var config = that.imap.getConfig();
 			if(config.overlay == "_gr" + gr.id) {
 				config.overlay = null;
@@ -730,6 +724,19 @@ org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, gr)
 			that.del(function() { that.removeGR(gr.id); that.dao[0].del(gr.id); });
 		});
 	}
+
+	return function() {
+		var config = that.imap.getConfig();
+		var alias = "_gr" + gr.id;
+		if(config.layers.indexOf(alias) < 0) {
+			config.layers.push(alias);
+			config.opacity.push(1);
+		} else {
+			config.opacity[config.layers.indexOf(alias)] = 1;
+		}
+		that.imap.setConfig(config);
+	}
+	
 }
 
 org.sarsoft.controller.CustomLayerController.prototype.removeGR = function(id) {

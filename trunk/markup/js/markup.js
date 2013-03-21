@@ -777,56 +777,49 @@ org.sarsoft.controller.MarkupMapController.prototype.getShapeIdFromWay = functio
 	}
 }
 
-org.sarsoft.controller.MarkupMapController.prototype.buildDN = function(i, object) {
+org.sarsoft.controller.MarkupMapController.prototype.buildDN = function(i, object, line) {
 	var that = this;
-	
-	var line = this.DNGetLine(i, object, 0);
-	
+
+	line.append((object.label || "").length == 0 ? '<span style="color: #CCCCCC">N/A</span>' : org.sarsoft.htmlescape(object.label));
+	if((object.comments || "").length > 0) this.DNAddComments(i, object, object.comments);
+
 	if(i == 0) {
-		line.append('<img style="vertical-align: top; padding-right: 0.5em; height: 16px; width: 16px" src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(object.url) + '"/>');
-		var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(object.label) + '</span>';
-		if(object.label == null || object.label.length == 0) s = '<span style="cursor: pointer; font-weight: bold; color: #CCCCCC">N/A</span>'
-		jQuery(s).appendTo(line).click(function() {
-			if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
-			that.imap.map.setCenter(new google.maps.LatLng(object.position.lat, object.position.lng));
-		});
+		line.prepend('<img src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(object.url) + '"/>');
 		
 		if(org.sarsoft.writeable) {
-			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
+			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', function() {
 				that.markerDlg.show(object, null, true);
 				that.markerDlg.live = true;
 				that.editMarkerPosition(object);
 			});
-			this.DNAddIcon(i, object, "Delete", '-').css({'font-weight': 'bold', color: 'red'}).click(function() {
+			this.DNAddIcon(i, object, "Delete", '<span style="font-weight: bold; color: red">-</span>', function() {
 				that.del(function() { that.removeMarker(object.id); that.dao[0].del(object.id); });
 			});
 		}
-		
+		return function() {
+			that.imap.map.setCenter(new google.maps.LatLng(object.position.lat, object.position.lng));
+		}
 	} else {
-		line.append(org.sarsoft.controller.MarkupMapController.getIconForShape(object));
-		var s = '<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + org.sarsoft.htmlescape(object.label) + '</span>';
-		if(object.label == null || object.label.length == 0) s = '<span style="cursor: pointer; font-weight: bold; color: #CCCCCC">N/A</span>'
+		line.prepend(org.sarsoft.controller.MarkupMapController.getIconForShape(object));
 
-		jQuery(s).appendTo(line).click(function() {
-			if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
-			that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(object.way.boundingBox[0].lat, object.way.boundingBox[0].lng), new google.maps.LatLng(object.way.boundingBox[1].lat, object.way.boundingBox[1].lng)));
-		});
-		
-		this.DNAddIcon(i, object, "Elevation Profile", '<img src="' + org.sarsoft.imgPrefix + '/profile.png"/>').click(function() {
+		this.DNAddIcon(i, object, "Elevation Profile", '<img src="' + org.sarsoft.imgPrefix + '/profile.png"/>', function() {
 			that.profileShape(object);
 		});
 		
 		if(org.sarsoft.writeable) {
-			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>').click(function() {
+			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', function() {
 				 that.shapeDlg.show(object, null, true); that.shapeDlg.live = true; that.editShape(object);
 			});
-			this.DNAddIcon(i, object, "Delete", '-').css({'font-weight': 'bold', color: 'red'}).click(function() {
+			this.DNAddIcon(i, object, "Delete", '<span style="font-weight: bold; color: red">-</span>', function() {
 				that.del(function() { that.removeShape(object.id); that.dao[1].del(object.id); });
 			});
 		}
+
+		return function() {
+			that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(object.way.boundingBox[0].lat, object.way.boundingBox[0].lng), new google.maps.LatLng(object.way.boundingBox[1].lat, object.way.boundingBox[1].lng)));
+		}
 	}
 	
-	if(object.comments != null && object.comments.length > 0) this.DNAddComments(i, object, object.comments);
 }
 
 org.sarsoft.controller.MarkupMapController.getRealURLForMarker = function(url) {

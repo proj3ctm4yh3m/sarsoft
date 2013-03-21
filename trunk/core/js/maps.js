@@ -2348,7 +2348,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		map._overlaycontrol.div.prependTo(this.container.right);
 		
 		this.dataNavigator = options.dn ? new options.dn(this) : new org.sarsoft.DataNavigator(this);
-		var dntc = new org.sarsoft.DataNavigatorToggleControl(this);		
+		this.dnToggle = new org.sarsoft.DataNavigatorToggleControl(this);		
 	}
 
 	this.loadBrowserSettings();
