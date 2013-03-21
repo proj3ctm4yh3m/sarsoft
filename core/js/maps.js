@@ -337,7 +337,7 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 				i--;
 				continue;
 			}
-			that.baseOverlayControls[i].dm.container.css('width', that.baseOverlayControls[i].dm.ul.width() + "px");
+			that.baseOverlayControls[i].dm.checkContainerWidth();
 		}
 	}
 	
@@ -349,6 +349,7 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 org.sarsoft.MapOverlayControl.prototype.addOverlayControl = function() {
 	var that = this;
 	var control = {}
+
 	control.dm = new org.sarsoft.view.DropMenu();
 	control.input = jQuery('<input style="margin-left: 5px" size="2" value="0"></input>');
 
@@ -372,10 +373,10 @@ org.sarsoft.MapOverlayControl.prototype.addOverlayControl = function() {
 	$('<div style="cursor: pointer; float: left; font-weight: bold; color: red; width: 16px; text-align: center; padding-top: 7px">X</div>').prependTo(control.div).click(function() {
 		control.remove();
 	});
-	
+
 	this.resetDM(control.dm, false);
 
-	control.dm.container.css('width', control.dm.ul.width() + "px");
+	control.dm.checkContainerWidth();
 	
 	control.remove = function() {
 		control.div.remove();
@@ -580,7 +581,7 @@ org.sarsoft.MapOverlayControl.prototype.updateMap = function(base, layers, opaci
 	
 	if(this._updating) return;
 	this._updating = true;
-	
+
 	// Change the actual layers
 	this.manager.updateMap(base, layers, opacity, alphas);
 
@@ -1043,7 +1044,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 	this.showborder = false;
 	this.imap = imap;
 	if(imap != null) {
-		var div = $('<div></div>').appendTo(imap.dataNavigator.defaults.settings);
+		var div = $('<div></div>').appendTo(imap.dataNavigator != null ? imap.dataNavigator.defaults.settings : $('<div></div>'));
 		var line = $('<div></div>').appendTo(div);
 		this.cb = $('<input style="float: left" type="checkbox"/>').prependTo(line).change(function() { that.setValue(that.cb[0].checked) });
 		var line = $('<div style="float: left" title="Univeral Transverse Mercator grid.  One grid unit = 1 meter.">Show UTM Grid</div>').appendTo(line);
@@ -1537,7 +1538,7 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 	this.imap = imap;
 	this.map = imap.map;
 	imap.register("org.sarsoft.DataNavigatorToggleControl", this);
-	this.offset = 200;
+	this.offset = 220;
 	this.mobile = org.sarsoft.mobile;
 	this.state = !this.mobile;
 	
@@ -1561,20 +1562,20 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 			var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"))
 			if(config.datanavstate != null) {
 				this.state = config.datanavstate;
-				this.offset = config.datanavoffset || 200;
+				this.offset = config.datanavoffset || 220;
 			}
 		}
 
 		this.dragbar = jQuery('<div style="visibility: hidden; top: 0; left: 0; position: absolute; z-index: 2000; height: 100%; width: 8px; background-color: black; opacity: 0.4; filter: alpha(opacity=40)"></div>').appendTo(this.imap.container.top);
 
 		this.minmax.bind('drag', function(evt) {
-			if(that.state) that.dragbar.css({visibility : 'visible', left : Math.max(evt.offsetX - 8, 200) + "px"});
+			if(that.state) that.dragbar.css({visibility : 'visible', left : Math.max(evt.offsetX - 8, 220) + "px"});
 		});
 		
 		this.minmax.bind('dragend', function(evt) {
 			if(that.state) {
 				that.dragbar.css({visibility: 'hidden', left: '0px'});
-				that.offset = Math.max(evt.offsetX, 200);
+				that.offset = Math.max(evt.offsetX, 220);
 				that.showDataNavigator();
 			}
 		});
@@ -1670,7 +1671,7 @@ org.sarsoft.PositionInfoControl = function(imap, container) {
 		var imgholder = $('<div style="position: absolute; right: 0; top; 0; width: 16px"><img style="position: absolute; right: 0; top: 0" src="' + org.sarsoft.imgPrefix + '/left.png"/></div>').appendTo(div);
 		this.display = jQuery('<div style="text-align: right; background-color: white; padding-top: 3px; font-weight: bold; white-space: nowrap"></div>').appendTo(div);
 				
-		this.minmax = $(imgholder.children()[0]).css('cursor', 'pointer').attr("title", "click to show coordinates").click(function() {
+		this.minmax = $(imgholder.children()[0]).css({'cursor': 'pointer', 'display': 'none'}).attr("title", "click to show coordinates").click(function() {
 			that.setValue(that._restoreto);
 			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", that.value);			
 		});
@@ -1848,11 +1849,11 @@ org.sarsoft.MapFindWidget = function(imap) {
 	
 	imap.register("org.sarsoft.MapFindWidget", this);
 
-	this.container = jQuery('<span style="white-space: nowrap; color: black; margin-left: 3px"></span>').append(this.find);
-	this.f1 = $('<span class="underlineOnHover" style="font-size: 110%"><img src="' + org.sarsoft.imgPrefix + '/find.png" style="vertical-align: text-top; margin-right: 3px"/>Find</span>').appendTo(this.container).attr("title", "Center the Map on a Coordinate or Named Place").click(function() {
+	this.container = jQuery('<span style="white-space: nowrap; color: black"></span>').append(this.find);
+	this.f1 = $('<span class="underlineOnHover" style="margin-left: 3px; font-size: 110%"><img src="' + org.sarsoft.imgPrefix + '/find.png" style="vertical-align: text-top; margin-right: 3px"/>Find</span>').appendTo(this.container).attr("title", "Center the Map on a Coordinate or Named Place").click(function() {
 		that.setState(!that.state);
 	});
-	this.f2 = $('<span></span>').appendTo(this.container);
+	this.f2 = $('<span style="margin-left: 3px"></span>').appendTo(this.container);
 	this.f2.append($('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: text-top; margin-right: 3px"/>').click(function() {
 		that.setState(!that.state);
 	}));
@@ -2336,7 +2337,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 
 		this.container.top.addClass("printnooffset");
 		if(org.sarsoft.touch) {
-			this.container.left.css({position : "absolute", display : "none"});
+			this.container.left.css({position : "absolute", display : "none", height: "100%"});
 			this.container.right.css({position : "relative", width : "100%", height: "100%"});
 		} else {
 			this.container.top.css({height : "100%"});
@@ -2349,7 +2350,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		this.dataNavigator = options.dn ? new options.dn(this) : new org.sarsoft.DataNavigator(this);
 		var dntc = new org.sarsoft.DataNavigatorToggleControl(this);		
 	}
-		
+
 	this.loadBrowserSettings();
 	this.mapMessageControl = new org.sarsoft.MapMessageControl(this.map);
 	this._mapInfoControl = new org.sarsoft.MapInfoControl(this.map);
@@ -2372,7 +2373,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options.standardControls || options.UTM) {
 		var ugc = new org.sarsoft.UTMGridControl(this);
 	}
-	
+
 	$(map.getDiv()).addClass("printnotransform");
 }
 
@@ -2982,7 +2983,6 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	
 	if(!readonce) {
 		imap.register("org.sarsoft.MapURLHashWidget", this);
-	
 		if(!org.sarsoft.mobile && imap.dataNavigator != null && imap.dataNavigator.defaults.settings != null) {
 			this.cb = $('<input type="checkbox"/>').prependTo($('<div title="The page URL will update to reflect the map center and layers, but not unsaved data.">Update URL on Map Drag</div>').appendTo(imap.dataNavigator.defaults.settings)).change(function() {
 				that.track = that.cb[0].checked;
@@ -2999,7 +2999,9 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 			if(!that.ignorehash) that.saveMap();
 		});
 	}
+
 	this.checkhashupdate();
+
 	if(!readonce) {
 		window.setInterval(function() {that.checkhashupdate()}, 500);
 	}
@@ -3100,7 +3102,7 @@ org.sarsoft.MapURLHashWidget.prototype.checkhashupdate = function() {
 org.sarsoft.MapURLHashWidget.prototype.setConfig = function(config) {
 	if(config.MapURLHashWidget == null) return;
 	this.track = config.MapURLHashWidget.track;
-	this.cb[0].checked = this.track
+	if(this.cb != null) this.cb[0].checked = this.track
 }
 
 org.sarsoft.MapURLHashWidget.prototype.getConfig = function(config) {

@@ -13,7 +13,12 @@ if(typeof org.sarsoft.preload == "undefined") org.sarsoft.preload = new Object()
 
 org.sarsoft.touch = (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/) != null);
 org.sarsoft.mobile = org.sarsoft.touch && $(window).width() < 600;
-org.sarsoft.iframe = (!window==top);
+try {
+	org.sarsoft.iframe = !(window==top);
+} catch (e) {
+	org.sarsoft.iframe = true;
+}
+
 org.sarsoft.writeable = (org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.tenantid == null)
 
 org.sarsoft.async = function(fn) {
@@ -303,7 +308,7 @@ org.sarsoft.view.DropMenu = function(scale) {
 		this.container = jQuery('<span style="display: inline-block; border: 1px solid #CCCCCC; color: black"></span>');
 		this.holder = jQuery('<span style="position: relative; z-index: 2000; vertical-align: text-top"></span>').appendTo(this.container);
 		this.select = jQuery('<span style="display: inline-block; width: 100%; cursor: pointer; font-weight: bold; font-size: ' + this.scale + '%"></span>').appendTo(this.container).hover(function() { that.select.addClass("yuimenuitem-selected") }, function() { that.select.removeClass("yuimenuitem-selected")});
-		this.label = jQuery('<span style="padding-left: 10px"></span>').appendTo(this.select);
+		this.label = jQuery('<span style="padding-left: 10px">&nbsp;</span>').appendTo(this.select);
 		this.dd = jQuery('<span style="float: right">&darr;</span>').appendTo(this.select);
 		var id = "DropMenu_" + org.sarsoft.view.DropMenu._idx++;
 		this.menu = jQuery('<div class="yui-module yui-overlay yuimenu" style="position: absolute; left: 0; top: 1.5em;"></div>').appendTo(this.holder);
@@ -370,6 +375,10 @@ org.sarsoft.view.DropMenu.prototype.addGroup = function(text) {
 	var a = jQuery('<a href="javascript:void{}" class="yuimenuitemlabel" style="font-weight: bold; padding-left: 10px">' + text + '</a>').appendTo(li);
 	this.container.css('width', this.ul.width() + "px");
 	this.groups[text] = [li];
+}
+
+org.sarsoft.view.DropMenu.prototype.checkContainerWidth = function() {
+	if(this.ul != null) this.container.css('width', this.ul.width() + "px");	
 }
 
 org.sarsoft.view.DropMenu.prototype.show = function() {
@@ -454,8 +463,10 @@ org.sarsoft.view.DropSelect.prototype.addItem = function(text, handler) {
 	a.hover(function() { li.addClass("yuimenuitem-selected") }, function() { li.removeClass("yuimenuitem-selected")});
 	a.click(function() { handler(); that.hide()});
 
-	this.container.css('width', Math.max(this.container.width(), this.ul.width()) + "px");
-	this.ul.css('min-width', this.container.css('width'));
+	if(this.container.width() > 0) {
+		this.container.css('width', Math.max(this.container.width(), this.ul.width()) + "px");
+		this.ul.css('min-width', this.container.css('width'));
+	}
 }
 
 org.sarsoft.view.DropSelect.prototype.show = function() {
