@@ -35,18 +35,51 @@ body, html {
 	color: red;
 }
 
+.floatingButton {
+	float: left;
+	font-weight: bold;
+	cursor: pointer;
+	font-weight: bold;
+	margin-right: 10px;
+}
+
+.floatingButton:hover {
+	text-decoration: underline;
+}
+
+.floatingButton img {
+	vertical-align: text-bottom;
+	margin-right: 2px;
+	width: 16px;
+	height: 16px;
+}
+
 .cs::-webkit-scrollbar { width:12px }
 .cs::-webkit-scrollbar-thumb:vertical {
 	background-color: #E6E6E6;
 }
 .cs::-webkit-scrollbar-thumb:vertical:hover{background-color: #999999}
 
-.dnheader {
+.dntree {
+	clear: both;
+	margin-bottom: 10px;
+}
+
+.dntree-header {
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	width: 100%;
+	font-weight: bold;
+	cursor: pointer;
+	color: black;
+}
+
+.dntree.l1 > .dntree-header {
 	padding-top: 3px;
 	padding-bottom: 3px;
 	margin: 0px;
 	font-weight: bold;
-	color: black;
 	position: relative;
 	background-color: #E6E6E6;
 	background-image: -ms-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
@@ -55,6 +88,45 @@ body, html {
 	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #F0F0F0), color-stop(1, #DCDCDC));
 	background-image: -webkit-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
 	background-image: linear-gradient(to bottom, #F0F0F0 0%, #DCDCDC 100%);
+}
+
+.dntree.l1 > .dntree-header img {
+	vertical-align: text-bottom;
+	margin-right: 2px;
+}
+
+.dntree.l2 > .dntree-header {
+	font-size: 120%;
+	border-top: 1px solid #CCCCCC;
+}
+
+.dntree-header .dntool {
+	float: right;
+	cursor: pointer;
+	font-weight: normal;
+	padding-right: 3px;
+	padding-top: 1px;
+	font-size: 83%;
+}
+
+.dntree-header .dntool:hover {
+	text-decoration: underline;
+}
+
+.dntree-header .dntool img {
+	vertical-align: text-bottom;
+	margin-right: 2px;
+	width: 14px;
+	height: 14px;
+}
+
+.dntree-body {
+	padding-left: 0px;
+	padding-top: 5px;
+}
+
+.dntree.l1 > .dntree-body {
+	padding-left: 2px;
 }
 
 .dn-obj {
@@ -68,11 +140,16 @@ body, html {
 	float: left;
 }
 
-.dn-obj .dn-obj-left img {
-	vertical-align: top;
-	padding-right: 0.5em;
-	height: 16px;
+.dn-obj .dn-obj-left > div {
+	display: inline-block;
 	width: 16px;
+	margin-right: 4px;
+}
+
+.dn-obj .dn-obj-left img {
+	vertical-align: text-top;
+	max-height: 16px;
+	max-width: 16px;
 }
 
 .dn-obj .dn-obj-right {

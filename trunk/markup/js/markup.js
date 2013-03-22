@@ -288,7 +288,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 		this.imp = new Object();
 		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
 		this.imp.body = this.imp.dlg.bd.children().first();
-		this.imp.link = $('<div class="underlineOnHover" title="Import Data From a GPS or GPX File" style="cursor: pointer; float: left; margin-right: 10px"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>').appendTo(dn.defaults.io).click(function() {
+		this.imp.link = $('<div class="floatingButton" title="Import Data From a GPS or GPX File"><img src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>').appendTo(dn.defaults.io).click(function() {
 			that.imp.comms.clear();
 			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
 			that.imp.gpx.form.css('display', 'none');
@@ -353,7 +353,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	this.exp = new Object();
 	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
 	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
-	this.exp.link = $('<div class="underlineOnHover" title="Export Data to GPS, GPX or KML" style="visibility: hidden; cursor: pointer; float: left;"><img style="vertical-align: text-bottom; margin-right: 2px; width: 16px; height: 16px" src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>').appendTo(dn.defaults.io).click(function() {
+	this.exp.link = $('<div class="floatingButton" style="margin-right: 0px" title="Export Data to GPS, GPX or KML" style="display: none"><img src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>').appendTo(dn.defaults.io).click(function() {
 		var exportables = that.exp.body.find('select');
 		exportables.empty();
 		exportables.append('<option value="a0">All Objects</option>');
@@ -666,7 +666,7 @@ org.sarsoft.controller.MarkupMapController.prototype.checkForObjects = function(
 		this.imap.dataNavigator.setDraftMode(mkeys > 0 || skeys > 0);
 	}
 	
-	this.markupio.exp.link.css('visibility', (mkeys > 0 || skeys > 0) ? 'visible' : 'hidden');
+	this.markupio.exp.link.css('display', (mkeys > 0 || skeys > 0) ? 'block' : 'none');
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.saveShape = function(shape, handler) {
@@ -788,15 +788,15 @@ org.sarsoft.controller.MarkupMapController.prototype.buildDN = function(i, objec
 	if((object.comments || "").length > 0) this.DNAddComments(i, object, object.comments);
 
 	if(i == 0) {
-		line.prepend('<img src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(object.url) + '"/>');
+		line.prepend('<div><img src="' + org.sarsoft.controller.MarkupMapController.getRealURLForMarker(object.url) + '"/></div>');
 		
 		if(org.sarsoft.writeable) {
-			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', function() {
+			this.DNAddIconEdit(i, object, function() {
 				that.markerDlg.show(object, null, true);
 				that.markerDlg.live = true;
 				that.editMarkerPosition(object);
 			});
-			this.DNAddIcon(i, object, "Delete", '<span style="font-weight: bold; color: red">-</span>', function() {
+			this.DNAddIconDelete(i, object, function() {
 				that.del(function() { that.removeMarker(object.id); that.dao[0].del(object.id); });
 			});
 		}
@@ -811,10 +811,10 @@ org.sarsoft.controller.MarkupMapController.prototype.buildDN = function(i, objec
 		});
 		
 		if(org.sarsoft.writeable) {
-			this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', function() {
+			this.DNAddIconEdit(i, object, function() {
 				 that.shapeDlg.show(object, null, true); that.shapeDlg.live = true; that.editShape(object);
 			});
-			this.DNAddIcon(i, object, "Delete", '<span style="font-weight: bold; color: red">-</span>', function() {
+			this.DNAddIconDelete(i, object, function() {
 				that.del(function() { that.removeShape(object.id); that.dao[1].del(object.id); });
 			});
 		}
@@ -842,12 +842,12 @@ org.sarsoft.controller.MarkupMapController.getRealURLForMarker = function(url) {
 
 org.sarsoft.controller.MarkupMapController.getIconForShape = function(shape) {
 	if(shape.way.polygon) {
-		var div = jQuery('<div style="float: left; height: 0.6em; width: 1.5em; margin-right: 0.5em"></div>');
+		var div = jQuery('<div style="height: 0.6em;"></div>');
 		div.css({"border-top": shape.weight + 'px solid ' + shape.color, "border-bottom": shape.weight + 'px solid ' + shape.color});
 		jQuery('<div style="width: 100%; height: 100%"></div>').appendTo(div).css({"background-color": shape.color, filter: "alpha(opacity=" + shape.fill + ")", opacity : shape.fill/100});
 		return div;
 	} else {
-		return jQuery('<div style="float: left; height: 0.5em; width: 1.5em; margin-right: 0.5em"></div>').css("border-bottom", shape.weight + "px solid " + shape.color);			
+		return jQuery('<div style="height: 0.5ex"></div>').css("border-top", shape.weight + "px solid " + shape.color);			
 	}
 }
 

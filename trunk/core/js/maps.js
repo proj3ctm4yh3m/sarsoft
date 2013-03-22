@@ -451,7 +451,8 @@ org.sarsoft.MapOverlayControl.prototype.addAlphaType = function(alias) {
 	var name = config.name;
 	if(config.template.indexOf("{V}") > 0) {
 		for(var i = 0; i < org.sarsoft.EnhancedGMap.configuredLayers.length; i++) {
-			if(org.sarsoft.EnhancedGMap.configuredLayers[i].alias == alias) name = org.sarsoft.EnhancedGMap.configuredLayers[i].name;
+			var layer = org.sarsoft.EnhancedGMap.configuredLayers[i];
+			if(layer.alias == alias && (layer.name || "").length > 0) name = layer.name;
 		}
 	}
 	
@@ -1489,14 +1490,11 @@ org.sarsoft.DNTree = function(container, label) {
 	this.container = container;
 	this.lock = false;
 	
-	this.block = jQuery('<div></div>').appendTo(container);
-	this.header = jQuery('<div style="cursor: pointer; white-space: nowrap; overflow: hidden; width: 100%">' + label + '</div>').appendTo(this.block);
-	this.body = jQuery('<div></div>').appendTo(this.block);
+	this.block = jQuery('<div class="dntree"></div>').appendTo(container);
+	this.header = jQuery('<div class="dntree-header">' + label + '</div>').appendTo(this.block);
+	this.body = jQuery('<div class="dntree-body"></div>').appendTo(this.block);
 	$('<div style="clear: both"></div>').appendTo(this.block);
 
-	this.header.css({"font-weight": "bold", cursor: "pointer"});
-	this.body.css('padding-left', '10px');
-	
 	this.header.click(function() {
 		if(that.lock) return;
 		if(that.body.css('display')=='none') {
@@ -1511,7 +1509,7 @@ org.sarsoft.DNTree = function(container, label) {
 
 org.sarsoft.DNTree.prototype.getTool = function() {
 	if(this.tool != null) return this.tool;
-	return this.tool = $('<div style="float: right; cursor: pointer; font-weight: normal; padding-right: 3px">Save</div>').css('display', this.body.css('display')).prependTo(this.header);
+	return this.tool = $('<div class="dntool">Save</div>').css('display', this.body.css('display')).prependTo(this.header);
 }
 
 org.sarsoft.DataNavigator = function(imap) {
@@ -1520,8 +1518,8 @@ org.sarsoft.DataNavigator = function(imap) {
 	if(imap == null) return;
 	imap.register("org.sarsoft.DataNavigator", this);
 
-	this.left = $('<div style="width: 100%; padding-bottom: 2em"></div>').appendTo($('<div style="width: 100%; height: 100%; overflow-y: auto" class="cs"></div>').appendTo(imap.container.left));	
-	$('<div style="height: 1em; width: 90%; background-color: white; position: absolute; bottom: 0px; font-size: 120%; font-weight: bold; z-index: 100; padding-bottom: 10px; padding-left: 2px"><a style="color: red" href="/about.html" target="_blank">About ' + org.sarsoft.version + '</a></div>').appendTo(imap.container.left);
+	this.left = $('<div style="width: 100%; padding-bottom: 1.5em"></div>').appendTo($('<div style="width: 100%; height: 100%; overflow-y: auto" class="cs"></div>').appendTo(imap.container.left));	
+	$('<div style="width: 100%; background-color: white; position: absolute; bottom: 0px; font-size: 120%; font-weight: bold; z-index: 100; padding-bottom: 2px; padding-top: 2px"><a style="padding-left: 2px; color: red" href="/about.html" target="_blank">About ' + org.sarsoft.version + '</a></div>').appendTo(imap.container.left);
 	imap.container.left.css('overflow-y', 'hidden');
 	
 	this.defaults = { body : this.left }
@@ -1529,8 +1527,7 @@ org.sarsoft.DataNavigator = function(imap) {
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
 	var tree = new org.sarsoft.DNTree(this.defaults.body, title);
-	tree.header.css({"font-size": "120%", "font-weight": "bold", "color": "black", "border-top": "1px solid #CCCCCC"});
-	tree.block.css("clear", "both");
+	tree.block.addClass('l2');
 	return tree;
 }
 
@@ -1540,6 +1537,7 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 	this.map = imap.map;
 	imap.register("org.sarsoft.DataNavigatorToggleControl", this);
 	this.offset = 220;
+	this.min_offset = 200;
 	this.mobile = org.sarsoft.mobile;
 	this.state = !this.mobile;
 	
@@ -1563,20 +1561,20 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 			var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"))
 			if(config.datanavstate != null) {
 				this.state = config.datanavstate;
-				this.offset = config.datanavoffset || 220;
+				this.offset = config.datanavoffset || this.offset;
 			}
 		}
 
 		this.dragbar = jQuery('<div style="visibility: hidden; top: 0; left: 0; position: absolute; z-index: 2000; height: 100%; width: 8px; background-color: black; opacity: 0.4; filter: alpha(opacity=40)"></div>').appendTo(this.imap.container.top);
 
 		this.minmax.bind('drag', function(evt) {
-			if(that.state) that.dragbar.css({visibility : 'visible', left : Math.max(evt.offsetX - 8, 220) + "px"});
+			if(that.state) that.dragbar.css({visibility : 'visible', left : Math.max(evt.offsetX - 8, that.min_offset) + "px"});
 		});
 		
 		this.minmax.bind('dragend', function(evt) {
 			if(that.state) {
 				that.dragbar.css({visibility: 'hidden', left: '0px'});
-				that.offset = Math.max(evt.offsetX, 220);
+				that.offset = Math.max(evt.offsetX, that.min_offset);
 				that.showDataNavigator();
 			}
 		});
@@ -1827,7 +1825,7 @@ org.sarsoft.MapSizeWidget = function(imap) {
 	this.print_options = new org.sarsoft.view.MenuDropdown('<span class="underlineOnHover" style="font-size: 110%; color: black" title="Print This Page or Make a PDF"><img style="vertical-align: text-top; margin-right: 3px" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>Print</span>', 'left: 0; width: 100%', imap.map._overlaycontrol.div);
 
 	jQuery('<div style="margin-top: 1em"></div>').appendTo(this.print_options.div);
-	jQuery('<span style="cursor: pointer; color: #5a8ed7; font-weight: bold; margin-right: 1ex">&rarr; Print From Your Browser</span>').prependTo(jQuery('<div style="margin-top: 1ex">Works best with Google Chrome.  Create borderless prints with any combination of page sizes and map layers.</div>').appendTo(this.print_options.div)).click(function() {
+	jQuery('<span class="underlineOnHover" style="color: #5a8ed7; font-weight: bold; margin-right: 1ex">&rarr; Print From Your Browser</span>').prependTo(jQuery('<div style="margin-top: 1ex">Works best with Google Chrome.  Create borderless prints with any combination of page sizes and map layers.</div>').appendTo(this.print_options.div)).click(function() {
 		if(div.css('display')=='none') {
 			if(imap.registered["org.sarsoft.view.MapDialog"] != null) imap.registered["org.sarsoft.view.MapDialog"].hide();
 			div.css('display', 'block');
@@ -3146,11 +3144,10 @@ org.sarsoft.widget.MapLayers = function(imap) {
 	var dn = imap.registered["org.sarsoft.DataNavigator"];
 	this.tree = dn.addDataType("Layers");
 	if(org.sarsoft.tenantid != null) this.tree.body.css('display', 'none');
-	this.tree.body.css({'padding-left': '0px', 'padding-top': '5px'});
-	this.tree.block.css({'margin-bottom': '10px'}).attr("title", "These are just examples of what " + org.sarsoft.version + " can do.  Click the red +0 or +1 in the top right for more.");
+	this.tree.block.attr("title", "These are examples of what " + org.sarsoft.version + " can do.  Click the red +0 or +1 in the top right for more.");
 
 	this.availableLayers = $('<div style="float: right; cursor: pointer; font-weight: normal;"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Customize</div>').insertBefore(imap.map._overlaycontrol.addLayer);
-	this.tree.getTool().addClass('underlineOnHover').css({'font-size': '83%', 'padding-top': '1px'}).html('<img style="vertical-align: text-bottom; margin-right: 2px; width: 14px; height: 14px" src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML').
+	this.tree.getTool().html('<img src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML').
 		attr("title", "Export Map Layers to Google Earth").click(function(evt) { evt.stopPropagation(); window.open("/kmz.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap), '_blank'); })
 	
 	if(org.sarsoft.EnhancedGMap.sampleMapTypes != null) {
@@ -3161,7 +3158,7 @@ org.sarsoft.widget.MapLayers = function(imap) {
 			var name = samples[i].split(':')[0];
 			var cfg = samples[i].split(':')[1];
 			var devnull = function(c) {
-				$('<div style="margin-bottom: 3px; margin-top: 3px; font-style: normal; color: black; cursor: pointer">&rarr; ' + name + '</div>').appendTo(that.sampleMaps).click(function() {
+				$('<span style="cursor: pointer">&rarr; ' + name + '</span>').appendTo($('<div style="margin-top: 3px;"></div>').appendTo(that.sampleMaps)).click(function() {
 				imap.setConfig(org.sarsoft.MapURLHashWidget.parseConfigStr(c));});
 			}(cfg);
 		}
@@ -3264,7 +3261,7 @@ org.sarsoft.widget.MapLayers = function(imap) {
 
 org.sarsoft.widget.Account = function(imap, container, acctlink) {
 	
-	this.maps = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: black; cursor: pointer"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>Your Maps</div>').appendTo(container);
+	this.maps = jQuery('<div class="underlineOnHover"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>Your Maps</div>').appendTo(container);
 	
 	var bn = jQuery('<div></div>');
 	var accountpane = new org.sarsoft.view.MapRightPane(imap, bn);
@@ -3383,7 +3380,7 @@ org.sarsoft.widget.NoAccount = function(imap, container) {
 	login_google.click(function() {
 		that.login('google');
 	});
-	container.append(jQuery('<div style="padding-top: 5px"></div>').append(form_yahoo)).append(
+	container.append(jQuery('<div></div>').append(form_yahoo)).append(
 			jQuery('<div style="white-space: nowrap; padding-top: 5px"></div>').append(form_google));
 }
 
