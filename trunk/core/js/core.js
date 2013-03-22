@@ -43,7 +43,7 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	var that = this;
 	org.sarsoft.DataNavigator.call(this, imap);
 
-	this.account = this._getHeader(org.sarsoft.username == null ? "Not Signed In" : org.sarsoft.username, "account.png");
+	this.account = this.addHeader(org.sarsoft.username == null ? "Not Signed In" : org.sarsoft.username, "account.png");
 	this.account.block.css('margin-bottom', '5px');
 	if(org.sarsoft.username != null) {
 	  this.defaults.account = new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
@@ -51,7 +51,7 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	  this.defaults.account = new org.sarsoft.widget.NoAccount(imap, this.account.body);
 	}
 
-	this.tenant = this._getHeader(org.sarsoft.tenantname || "Unsaved Map", "favicon.png");
+	this.tenant = this.addHeader(org.sarsoft.tenantname || "Unsaved Map", "favicon.png");
 	this.defaults.io = $('<div style="font-weight: bold"></div>').appendTo(this.tenant.body);
 	this.defaults.iobody = $('<div></div>').appendTo(this.tenant.body);
 	$('<div style="clear: both; padding-bottom: 5px">').appendTo(this.tenant.body);
@@ -99,14 +99,6 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 }
 
 org.sarsoft.StructuredDataNavigator.prototype = new org.sarsoft.DataNavigator();
-
-org.sarsoft.StructuredDataNavigator.prototype._getHeader = function(text, icon) {
-	var tree = new org.sarsoft.DNTree(this.left, text);
-	tree.lock = true;
-	tree.block.addClass('l1');
-	tree.header.prepend(jQuery('<img src="' + org.sarsoft.imgPrefix + '/' + icon + '"/>'));
-	return tree;
-}
 
 org.sarsoft.StructuredDataNavigator.prototype.setDraftMode = function(draft) {
 	this.defaults.save.css('display', draft ? 'block' : 'none');
@@ -667,13 +659,21 @@ org.sarsoft.GeoRefDAO.prototype.offlineLoad = function(georef) {
 org.sarsoft.DemShadingDlg = function(imap, handler) {
 	var that = this;
 	this.imap = imap;
+
+	var table = $('<table><tbody><tr><td style="padding-right: 5px; vertical-align: top">Name</td><td><input type="text"/></td><td rowspan="2" style="width: 60%; vertical-align: top">' + 
+			'Each line should have a set of conditions, a space, and then an RGB hex color code.  Conditions include s for slope, a for aspect, and e for elevation.' + 
+			'  For more information, see <a href="http://caltopo.blogspot.com/2013/02/custom-dem-shading.html" target="_new">this blog post</a>.' + 
+			' <table style="margin-top: 5px"><tbody><tr><td>s15-30 FF0000</td><td>Shade all slopes between 15 and 30 degrees red</td></tr>' +
+			' <tr><td>e1000-3000 FF0000-0000FF</td><td>Red-blue gradient for elevations between 1k meters and 8k meters</td></tr>' + 
+			' <tr><td>s30-45a270-90e6000f-14000f FF8000</td><td>Color north facing slopes 30-45&deg; steep and &gt; 6k\' orange</td></tr></tbody></table>' + 
+			+ '</td></tr></tbody></table>');
 	
-	var div = $('<div></div>');
-	this.name = $('<input type="text"/>').appendTo($('<div>Name:</div>').appendTo(div));
-	this.ta = jQuery('<textarea style="width: 80%; height: 5em"></textarea>').appendTo(div);
-	div.append('<div><a href="http://caltopo.blogspot.com/2013/02/custom-dem-shading.html" target="_new">documentation</a></div>');
+	$('<tr><td style="padding-right: 5px; vertical-align: top">Shading</td><td><textarea style="width: 95%; height: 6em"></textarea></td></tr>').appendTo(table.children()[0]);
 	
-	this.dlg = new org.sarsoft.view.MapDialog(imap, "Custom DEM Shading", div, "Save", "Cancel", function() {
+	this.name = table.find('input');
+	this.ta = table.find('textarea');
+	
+	this.dlg = new org.sarsoft.view.MapDialog(imap, "Custom DEM Shading", table, "Save", "Cancel", function() {
 		var cfg = that.ta.val() || "";
 		cfg = cfg.trim().replace(/\n/g, 'p').replace(/ /g, 'c');
 		handler({name: that.name.val(), alias: "sc_" + cfg});

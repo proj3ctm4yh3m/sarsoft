@@ -1531,6 +1531,20 @@ org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
 	return tree;
 }
 
+org.sarsoft.DataNavigator.prototype.addHeader = function(title, icon) {
+	var tree = new org.sarsoft.DNTree(this.left, title);
+	tree.lock = true;
+	tree.block.addClass('l1');
+	tree.header.prepend(jQuery('<img src="' + org.sarsoft.imgPrefix + '/' + icon + '"/>'));
+	
+	tree.addClose = function(title, handler) {
+		$('<div style="float: right; color: red; cursor: pointer; font-size: 140%; position: absolute; top: 0; right: 2px; font-weight: normal">X</div>').prependTo(tree.header).attr("title", title)
+		.click(handler).hover(function(evt) { $(evt.target).css('font-weight', 'bold') }, function(evt) { $(evt.target).css('font-weight', 'normal')});
+	}
+
+	return tree;
+}
+
 org.sarsoft.DataNavigatorToggleControl = function(imap) {
 	var that = this;
 	this.imap = imap;
