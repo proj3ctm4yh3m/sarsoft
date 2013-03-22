@@ -48,7 +48,6 @@ body, html {
 	font-weight: bold;
 	color: black;
 	position: relative;
-	text-transform: capitalize;
 	background-color: #E6E6E6;
 	background-image: -ms-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);
 	background-image: -moz-linear-gradient(top, #F0F0F0 0%, #DCDCDC 100%);

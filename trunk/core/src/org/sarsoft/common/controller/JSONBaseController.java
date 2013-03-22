@@ -23,6 +23,7 @@ import net.sf.json.xml.XMLSerializer;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.dao.GenericHibernateDAO;
+import org.sarsoft.common.model.ConfiguredLayer;
 import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapSource;
@@ -148,6 +149,10 @@ public abstract class JSONBaseController {
 					", x1: " + image.getX1() + ", y1: " + image.getY1() + ", x2: " + image.getX2() + ", y2: " + image.getY2() + ", lat1: " + image.getLat1() + ", lng1: " + image.getLng1() +
 					", lat2: " + image.getLat2() + ", lng2: " + image.getLng2() + ", " + "url: \"" + image.getUrl() + "\"}";
 				first = false;
+			}
+			header = header + "];\n\norg.sarsoft.EnhancedGMap.configuredLayers = [\n";
+			for(ConfiguredLayer layer : dao.loadAll(ConfiguredLayer.class)) {
+				header = header + ((first) ? "" : ",") + "{name: \"" + layer.getName() + "\", alias: \"" + layer.getAlias() + "\"}";
 			}
 			header = header + "];\n\norg.sarsoft.EnhancedGMap.visibleMapTypes = [\n";
 			first = true;

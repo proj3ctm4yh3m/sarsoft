@@ -63,9 +63,14 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	
 	var div = $('<div style="padding-top: 5px; padding-bottom: 10px; clear: both; font-size: 120%; color: green"></div>').appendTo(this.tenant.body).css('display', org.sarsoft.writeable ? 'block' : 'none');
 	
-	this.addlink = new org.sarsoft.view.DropSelect("+ Add Object To Map", {color: "green", "font-weight": "normal"});
-	this.addlink.container.appendTo(div);
+	this.addobjlink = new org.sarsoft.view.DropSelect("+ Add New Object", {color: "green", "font-weight": "normal"});
+	this.addobjlink.container.appendTo(div);
 	
+	$('<div style="margin-top: 10px"></div>').appendTo(div);
+
+	this.addlayerlink = new org.sarsoft.view.DropSelect("+ Add New Layer", {color: "green", "font-weight": "normal"});
+	this.addlayerlink.container.appendTo(div);
+
 	var settings = this.addDataType("Settings");
 	settings.body.css({'padding-left': '0px', 'padding-top': '5px'});
 	settings.block.css({'margin-bottom': '10px'});
@@ -111,9 +116,12 @@ org.sarsoft.StructuredDataNavigator.prototype.setDraftMode = function(draft) {
 	this.defaults.share.css('display', draft ? 'none' : 'block');
 }
 
-org.sarsoft.StructuredDataNavigator.prototype.addNewOption = function(text, handler) {
-//	this.addmenu.addItem(new YAHOO.widget.MenuItem(text, { onclick: { fn: handler}}));
-	this.addlink.addItem(text, handler);
+org.sarsoft.StructuredDataNavigator.prototype.addNewOption = function(idx, text, handler) {
+	if(idx == 0) {
+		this.addobjlink.addItem(text, handler);
+	} else {
+		this.addlayerlink.addItem(text, handler);
+	}
 }
 
 org.sarsoft.AdjustableBox = function(imap, sw, ne) {
@@ -328,7 +336,7 @@ org.sarsoft.MapObjectController = function(imap, types, background_load) {
 	for(var i = 0; i < this.types.length; i++) {
 		var type = this.types[i];
 		if(org.sarsoft.preload[type.name] != null) this.dao[i].rehydrate(org.sarsoft.preload[type.name]);
-		new function(idx) {
+ 		new function(idx) {
 			that.dao[idx].loadAll(function(objects) {
 				if(objects.length > 0 && that.tree != null) that.tree[idx].body.css('display', 'block');
 				that.refresh(idx, objects);
@@ -356,9 +364,9 @@ org.sarsoft.MapObjectController.prototype.buildTree = function(i) {
 	});
 }
 
-org.sarsoft.MapObjectController.prototype.buildAddButton = function(i, text, handler) {
+org.sarsoft.MapObjectController.prototype.buildAddButton = function(idx, text, handler) {
 	var that = this;
-	this.imap.dataNavigator.addNewOption("Add " + text, function() {
+	this.imap.dataNavigator.addNewOption(idx, "Add " + text, function() {
 		var center = that.imap.map.getCenter();
 		handler(that.imap.projection.fromLatLngToContainerPixel(center));
 	});
@@ -378,7 +386,7 @@ org.sarsoft.MapObjectController.prototype.dehydrate = function() {
 }
 
 org.sarsoft.MapObjectController.prototype.rehydrate = function(state) {
-	if(this.types.length == 1) {
+	if(this.types.length == 1 || state.length >= 0) {
 		this.dao[0].rehydrate(state);
 	} else {
 		for(var i = 0; i < this.types.length; i++) {
@@ -631,6 +639,7 @@ org.sarsoft.GeoRefImageDlg.prototype.write = function(gr) {
 }
 
 org.sarsoft.GeoRefImageDlg.prototype.show = function(gr) {
+	this.id = null;
 	this.dlg.show();
 	this.write(gr);
 }
@@ -650,15 +659,68 @@ org.sarsoft.GeoRefDAO.prototype.offlineLoad = function(georef) {
 	this.setObj(georef.id, georef);
 }
 
+org.sarsoft.DemShadingDlg = function(imap, handler) {
+	var that = this;
+	this.imap = imap;
+	
+	var div = $('<div></div>');
+	this.name = $('<input type="text"/>').appendTo($('<div>Name:</div>').appendTo(div));
+	this.ta = jQuery('<textarea style="width: 80%; height: 5em"></textarea>').appendTo(div);
+	div.append('<div><a href="http://caltopo.blogspot.com/2013/02/custom-dem-shading.html" target="_new">documentation</a></div>');
+	
+	this.dlg = new org.sarsoft.view.MapDialog(imap, "Custom DEM Shading", div, "Save", "Cancel", function() {
+		var cfg = that.ta.val() || "";
+		cfg = cfg.trim().replace(/\n/g, 'p').replace(/ /g, 'c');
+		handler({name: that.name.val(), alias: "sc_" + cfg});
+	});
+
+}
+
+org.sarsoft.DemShadingDlg.prototype.write = function(dem) {
+	if(dem == null) {
+		this.name.val('');
+		this.ta.val('');
+	} else {
+		this.name.val(dem.name);
+		this.ta.val(dem.alias ? dem.alias.split("_")[1].replace(/p/g, '\n').replace(/c/g, ' ') : "");
+	}
+}
+
+org.sarsoft.DemShadingDlg.prototype.show = function(dem) {
+	this.id = null;
+	this.dlg.show();
+	this.write(dem);
+}
+
+org.sarsoft.ConfigurableLayerDAO = function(errorHandler, baseURL) {
+	if(typeof baseURL == "undefined") baseURL = "/rest/cfglayer";
+	this.baseURL = baseURL;
+	this.errorHandler = errorHandler;
+	this.nextId = 0;
+}
+
+org.sarsoft.ConfigurableLayerDAO.prototype = new org.sarsoft.BaseDAO(true);
+
+org.sarsoft.ConfigurableLayerDAO.prototype.offlineLoad = function(cfg) {
+	this.sanitize(cfg);
+	cfg.id = this.objs.length;
+	this.setObj(cfg.id, cfg);
+}
+
 org.sarsoft.controller.CustomLayerController = function(imap) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, [{name: "georefs", dao: org.sarsoft.GeoRefDAO, label: "Custom Layers"}]);
+	org.sarsoft.MapObjectController.call(this, imap, [{name: "georefs", dao: org.sarsoft.GeoRefDAO, label: "Geospatial Images"}, {name: "cfglayers", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"}]);
 	this.imap.register("org.sarsoft.controller.CustomLayerController", this);
+	this.tree[1].block.insertBefore(this.tree[0].block);
 	this.dn[0].cb.css('display', 'none');
+	this.dn[1].cb.css('display', 'none');
 	
 	if(this.dataNavigator != null) {
 		if(org.sarsoft.writeable) {
-			this.buildAddButton(0, "Custom Layer", function(point) {
+			this.buildAddButton(1, "DEM Shading", function(point) {
+				that.demDlg.show(null, point);
+			});
+			this.buildAddButton(1, "Geospatial Image", function(point) {
 				that.georefDlg.show(null, point);
 			});
 		}
@@ -669,78 +731,138 @@ org.sarsoft.controller.CustomLayerController = function(imap) {
 		that.georefDlg.id = null;
 		if(gr.id == null) {
 			that.dao[0].create(function(obj) {
-				org.sarsoft.controller.CustomLayerController.refreshLayers(that.imap, obj);
+				that.refreshLayers();
 				that.show(0, obj);
 			}, gr);
 		} else {
 			that.dao[0].save(gr.id, gr, function(obj) {
-				org.sarsoft.controller.CustomLayerController.refreshLayers(that.imap, obj);
+				that.refreshLayers();
 				that.show(0, obj);
 			});
 		}		
+	});
+	
+	this.demDlg = new org.sarsoft.DemShadingDlg(imap, function(dem) {
+		dem.id = that.demDlg.id;
+		that.demDlg.id = null;
+		if(dem.id == null) {
+			that.dao[1].create(function(obj) {
+				that.refreshLayers();
+				that.show(1, obj);
+				that.addToMap(1, obj);
+			}, dem);
+		} else {
+			that.dao[1].save(dem.id, dem, function(obj) {
+				that.refreshLayers();
+				that.addToMap(1, obj);
+				that.show(1, obj);
+			});
+		}
 	});
 	
 }
 
 org.sarsoft.controller.CustomLayerController.prototype = new org.sarsoft.MapObjectController();
 
-org.sarsoft.controller.CustomLayerController.refreshLayers = function(imap, gr) {
-	var updated = false;
-	var grlist = org.sarsoft.EnhancedGMap.geoRefImages;
-	for(var i = 0; i < grlist.length; i++) {
-		if(grlist[i].id == gr.id) {
-			grlist[i] = gr;
-			updated = true;
-		}
-	}
-	if(!updated) grlist.push(gr);
+org.sarsoft.controller.CustomLayerController.prototype.refreshLayers = function() {
+	org.sarsoft.EnhancedGMap.geoRefImages = this.dao[0].objs.filter(function(o) { return o != null });
+	org.sarsoft.EnhancedGMap.configuredLayers = this.dao[1].objs.filter(function(o) { return o != null });
 	var config = imap.getConfig();
 	imap.map._overlaycontrol.resetMapTypes();
 	imap.setConfig(config);
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.show = function(i, gr) {
-	this.helpShow(i, gr);
-	org.sarsoft.controller.CustomLayerController.refreshLayers(this.imap, gr);
+org.sarsoft.controller.CustomLayerController.prototype.rehydrate = function(state) {
+	org.sarsoft.MapObjectController.prototype.rehydrate.call(this, state);
+	if(this.dao[0].objs.length > 0 || this.dao[1].objs.length > 0) this.refreshLayers();
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, gr, line) {
+
+org.sarsoft.controller.CustomLayerController.prototype.removeFromMap = function(i, obj) {
+	if(i == 1) {
+		var config = imap.getConfig();
+		if(config.alphas == null) return;
+		if(config.alphas.indexOf(obj.alias) >= 0) {
+			config.alphas.splice(config.alphas.indexOf(obj.alias), 1);
+			imap.setConfig(config);
+		}
+	}
+}
+
+org.sarsoft.controller.CustomLayerController.prototype.addToMap = function(i, obj) {
+	if(i == 1) {
+		var config = imap.getConfig();
+		if(config.alphas == null) config.alphas = [];
+		if(config.alphas.indexOf(obj.alias) == -1) {
+			config.alphas.push(obj.alias);
+			imap.setConfig(config);
+		}
+	}
+}
+
+org.sarsoft.controller.CustomLayerController.prototype.show = function(i, obj) {
+	this.helpShow(i, obj);
+}
+
+org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, obj, line) {
 	var that = this;
 
-	line.append('<img src="' + gr.url + '"/>');
-	line.append(org.sarsoft.htmlescape(gr.name));
-	if(org.sarsoft.writeable) {	
-		this.DNAddIcon(i, gr, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>'), function() {
-			var config = that.imap.getConfig();
-			if(config.overlay == "_gr" + gr.id) {
-				config.overlay = null;
-				config.opacity = 0;
-				that.imap.setConfig(config);
-			}
-			that.georefDlg.show(gr);
-			that.georefDlg.id = gr.id;
-		});
-		this.DNAddIcon(i, gr, "Delete", '-').css({'font-weight': 'bold', color: 'red'}).click(function() {
-			that.del(function() { that.removeGR(gr.id); that.dao[0].del(gr.id); });
-		});
-	}
-
-	return function() {
-		var config = that.imap.getConfig();
-		var alias = "_gr" + gr.id;
-		if(config.layers.indexOf(alias) < 0) {
-			config.layers.push(alias);
-			config.opacity.push(1);
-		} else {
-			config.opacity[config.layers.indexOf(alias)] = 1;
+	line.append((obj.name || "").length == 0 ? '<span style="color: #CCCCCC">N/A</span>' : org.sarsoft.htmlescape(obj.name));
+	if(i == 0) {
+		line.prepend('<img src="' + obj.url + '"/>');
+		if(org.sarsoft.writeable) {	
+			this.DNAddIcon(i, obj, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', function() {
+				var config = that.imap.getConfig();
+				if(config.overlay == "_gr" + obj.id) {
+					config.overlay = null;
+					config.opacity = 0;
+					that.imap.setConfig(config);
+				}
+				that.georefDlg.show(obj);
+				that.georefDlg.id = obj.id;
+			});
+			this.DNAddIcon(i, obj, "Delete", '<span style="font-weight: bold; color: red">-</span>', function() {
+				that.del(function() { that.remove(i, obj.id); that.dao[0].del(obj.id); });
+			});
 		}
-		that.imap.setConfig(config);
+
+		return function() {
+			var config = that.imap.getConfig();
+			var alias = "_gr" + obj.id;
+			if(config.layers.indexOf(alias) < 0) {
+				config.layers.push(alias);
+				config.opacity.push(1);
+			} else {
+				config.opacity[config.layers.indexOf(alias)] = 1;
+			}
+			that.imap.setConfig(config);
+		}
+	} else {
+		if(org.sarsoft.writeable) {	
+			this.DNAddIcon(i, obj, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', function() {
+				that.removeFromMap(i, obj);
+				that.demDlg.show(obj);
+				that.demDlg.id = obj.id;
+			});
+			this.DNAddIcon(i, obj, "Delete", '<span style="font-weight: bold; color: red">-</span>', function() {
+				that.del(function() { that.removeFromMap(i, obj); that.remove(i, obj.id); that.dao[1].del(obj.id, function() { that.refreshLayers(); }); });
+			});
+		}
+		
+		return function() {
+			var config = that.imap.getConfig();
+			if(config.alphas == null) config.alphas = [];
+			if(config.alphas.indexOf(obj.alias) < 0) {
+				config.alphas.push(obj.alias);
+			}
+			that.imap.setConfig(config);
+		}
 	}
 	
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.removeGR = function(id) {
-	this.helpRemove(0, id);
+org.sarsoft.controller.CustomLayerController.prototype.remove = function(i, id) {
+	this.helpRemove(i, id);
 }
 
 org.sarsoft.PrintBoxController = function(imap, div) {

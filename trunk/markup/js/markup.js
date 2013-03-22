@@ -446,6 +446,7 @@ org.sarsoft.widget.MarkupSaveAs = function(imap) {
 		var shapes = jQuery('<input type="hidden" name="shapes"/>').appendTo(newform);
 		var markers = jQuery('<input type="hidden" name="markers"/>').appendTo(newform);
 		var georefs = jQuery('<input type="hidden" name="georefs"/>').appendTo(newform);
+		var cfglayers = jQuery('<input type="hidden" name="cfglayers"/>').appendTo(newform);
 
 		jQuery('<button>Save</button>').appendTo(body).click(function(evt) {
 			var name = saveAsName.val();
@@ -461,7 +462,10 @@ org.sarsoft.widget.MarkupSaveAs = function(imap) {
 			}
 			shapes.val(YAHOO.lang.JSON.stringify(markupController.dao[1].objs));
 			markers.val(YAHOO.lang.JSON.stringify(markupController.dao[0].objs));
-			if(imap.registered["org.sarsoft.controller.CustomLayerController"] != null) georefs.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao[0].objs));
+			if(imap.registered["org.sarsoft.controller.CustomLayerController"] != null) {
+				georefs.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao[0].objs));
+				cfglayers.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao[1].objs));
+			}
 			var center = imap.map.getCenter();
 			newlat.val(center.lat());
 			newlng.val(center.lng());
@@ -476,7 +480,7 @@ org.sarsoft.widget.MarkupSaveAs = function(imap) {
 			newform.submit()
 		});
 	} else {
-		body.append('Sign to save this map.  We\'ll keep track of it while you\'re gone.')
+		body.append('Sign in to save this map.  We\'ll keep track of it while you\'re gone.')
 		var login_yahoo = jQuery('<a href="#"><img style="border: none; vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').appendTo(jQuery('<div style="padding-top: 5px"></div>').appendTo(body));
 		login_yahoo.click(function() {
 			imap.dataNavigator.defaults.account.login('yahoo');			
@@ -504,11 +508,11 @@ org.sarsoft.controller.MarkupMapController = function(imap, background_load) {
 			that.markerDlg.show({url: "#FF0000"}, point);
 		});
 		
-		this.buildAddButton(1, "Line", function(point) {
+		this.buildAddButton(0, "Line", function(point) {
 			that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, point);
 		});
 
-		this.buildAddButton(1, "Polygon", function(point) {
+		this.buildAddButton(0, "Polygon", function(point) {
 		    that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, point);
 		});
 	}

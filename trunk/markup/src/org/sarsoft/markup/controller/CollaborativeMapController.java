@@ -21,6 +21,7 @@ import org.sarsoft.common.controller.ImageryController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.common.model.ConfiguredLayer;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.model.Tenant;
@@ -199,6 +200,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			model.addAttribute("markers", this.toJSON(dao.loadAll(Marker.class)));
 			model.addAttribute("shapes", this.toJSON(dao.loadAll(Shape.class)));
 			model.addAttribute("georefs", this.toJSON(dao.loadAll(GeoRef.class)));
+			model.addAttribute("cfglayers", this.toJSON(dao.loadAll(ConfiguredLayer.class)));
 			Map<String, String> map = new HashMap<String, String>();
 			map.put("value", tenant.getMapConfig());
 			model.addAttribute("mapConfig", this.toJSON(map));
@@ -259,6 +261,13 @@ public class CollaborativeMapController extends JSONBaseController {
 				int size = georefs.size();
 				for(int i = 0; i < size; i++) {
 					imageryController.create((JSONObject) georefs.get(i));
+				}
+			}
+			if(request.getParameter("cfglayers") != null) {
+				JSONArray layers = (JSONArray) JSONSerializer.toJSON(request.getParameter("cfglayers"));
+				int size = layers.size();
+				for(int i = 0; i < size; i++) {
+					imageryController.createCfgLayer((JSONObject) layers.get(i));
 				}
 			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
