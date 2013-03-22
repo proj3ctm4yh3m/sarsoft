@@ -6,6 +6,30 @@ for(p in o) if(Object.prototype.hasOwnProperty.call(o,p)) ret.push(p);
 return ret;
 }
 
+if (!Array.prototype.filter)
+{
+  Array.prototype.filter = function(fun /*, thisp*/)
+  {
+    var len = this.length;
+    if (typeof fun != "function")
+      throw new TypeError();
+
+    var res = new Array();
+    var thisp = arguments[1];
+    for (var i = 0; i < len; i++)
+    {
+      if (i in this)
+      {
+        var val = this[i]; // in case fun mutates this
+        if (fun.call(thisp, val, i, this))
+          res.push(val);
+      }
+    }
+
+    return res;
+  };
+}
+
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
@@ -167,12 +191,13 @@ org.sarsoft.BaseDAO.prototype.save = function(id, obj, handler) {
 	}
 }
 
-org.sarsoft.BaseDAO.prototype.del = function(id) {
+org.sarsoft.BaseDAO.prototype.del = function(id, handler) {
 	var that = this;
 	if(this.offline) {
 		delete this.objs[id];
+		if(handler != null) handler();
 	} else {
-		this._doPost("/" + id + ".do", function() { delete that.objs[id] }, new Object(), "action=delete");
+		this._doPost("/" + id + ".do", function() { delete that.objs[id]; if(handler != null) handler() }, new Object(), "action=delete");
 	}
 }
 

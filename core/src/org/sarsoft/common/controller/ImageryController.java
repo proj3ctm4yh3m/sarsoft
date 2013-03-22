@@ -33,6 +33,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Action;
+import org.sarsoft.common.model.ConfiguredLayer;
 import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.util.RuntimeProperties;
@@ -488,6 +489,51 @@ public class ImageryController extends JSONBaseController {
 		image.flush();
 	}
 
+	@RequestMapping(value="/rest/cfglayer", method=RequestMethod.GET)
+	public String getConfiguredLayers(Model model) {
+		return json(model, dao.loadAll(ConfiguredLayer.class));
+	}
+	
+	public ConfiguredLayer createCfgLayer(JSONObject json) {
+		ConfiguredLayer layer = ConfiguredLayer.createFromJSON(json);
+		List<ConfiguredLayer> layers = dao.loadAll(ConfiguredLayer.class);
+		long maxId = 0L;
+		for(ConfiguredLayer obj : layers) {
+			maxId = Math.max(maxId, obj.getId());
+		}
+		layer.setId(layers.size() == 0 ? 0 : maxId+1);
+		dao.save(layer);
+		return layer;
+	}
+
+	
+	@RequestMapping(value="/rest/cfglayer", method = RequestMethod.POST)
+	public String createCfgLayer(JSONForm params, Model model, HttpServletRequest request) {
+		return json(model, createCfgLayer(parseObject(params)));
+	}
+	
+	@RequestMapping(value="/rest/cfglayer/{id}", method=RequestMethod.GET)
+	public String getCfgLayer(Model model, @PathVariable("id") long id) {
+		return json(model, dao.load(ConfiguredLayer.class, id));
+	}
+	
+	@RequestMapping(value="/rest/cfglayer/{id}", method = RequestMethod.POST)
+	public String updateCfgLayer(@PathVariable("id") long id, Model model, JSONForm params, HttpServletRequest request) {
+		ConfiguredLayer layer = dao.load(ConfiguredLayer.class, id);
+		ConfiguredLayer updated = ConfiguredLayer.createFromJSON(parseObject(params));
+		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
+		switch(action) {
+		case UPDATE :
+			layer.setName(updated.getName());
+			layer.setAlias(updated.getAlias());
+			dao.save(layer);
+			break;
+		case DELETE :
+			dao.delete(layer);
+		}
+		return json(model, layer);
+	}
+
 	@RequestMapping(value="/rest/georef", method=RequestMethod.GET)
 	public String getGeoRefs(Model model) {
 		return json(model, dao.loadAll(GeoRef.class));
@@ -540,7 +586,7 @@ public class ImageryController extends JSONBaseController {
 		}
 		return json(model, georef);
 	}
-
+	
 	@RequestMapping(value="/resource/imagery/wms")
 	public String getWMS(Model model, HttpServletRequest request, HttpServletResponse response, @RequestParam("REQUEST") String req) {
 		if("GetCapabilities".equals(req)) {
