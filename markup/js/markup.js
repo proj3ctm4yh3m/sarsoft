@@ -28,7 +28,7 @@ org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
 	obj.weight=1*obj.weight;
 	obj.fill=1*obj.fill;
 	if(this.offline && obj.way != null) {
-		if(obj.way.id == null | obj.way.id == 0) {
+		if(obj.way.id == null) {
 			obj.way.id = this.nextId++;
 		} else {
 			this.nextId = Math.max(obj.way.id+1, this.nextId); 
@@ -95,7 +95,7 @@ org.sarsoft.MarkerDAO.prototype = new org.sarsoft.BaseDAO(true);
 
 org.sarsoft.MarkerDAO.prototype.sanitize = function(obj) {
 	if(this.offline && obj.position != null) {
-		if(obj.position.id == null || obj.position.id == 0) {
+		if(obj.position.id == null) {
 			obj.position.id = this.nextId++;
 		} else {
 			this.nextId = Math.max(obj.position.id+1, this.nextId);
