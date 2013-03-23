@@ -487,7 +487,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, background_load) {
 	org.sarsoft.MapObjectController.call(this, imap, [{name: "markers", dao : org.sarsoft.MarkerDAO, label: "Markers"}, {name: "shapes", dao: org.sarsoft.ShapeDAO, label: "Shapes"}], background_load);	
 	this.imap.register("org.sarsoft.controller.MarkupMapController", this);
 	
-	if(org.sarsoft.writeable) { // TODO make this work with non-markup objects like assignments
+	if(org.sarsoft.writeable && !background_load) { // TODO make this work with non-markup objects like assignments
 		if(org.sarsoft.tenantid == null) {
 			this.saveAs = new org.sarsoft.widget.MarkupSaveAs(imap);
 		}
