@@ -246,11 +246,12 @@ org.sarsoft.widget.MapAction.prototype.toggle = function(name) {
 }
 
 org.sarsoft.widget.MapAction.prototype.addAction = function(name, link, body) {
+	var that = this;
 	this.links[name] = link.appendTo(this.container.children()[0]).addClass('floatingButton');
 	if(body != null) {
 		this.bodies[name] = body.appendTo(this.container.children()[1]).css({'display': 'none', 'clear': 'both', 'padding-top': '5px'});
 		this.links[name].click(function() {
-			that.goggle(name);
+			that.toggle(name);
 		});
 	}
 }
@@ -1201,8 +1202,8 @@ org.sarsoft.DemShadingDlg = function(imap, handler) {
 			'Each line should have a set of conditions, a space, and then an RGB hex color code.  Conditions include s for slope, a for aspect, and e for elevation.' + 
 			'  For more information, see <a href="http://caltopo.blogspot.com/2013/02/custom-dem-shading.html" target="_new">this blog post</a>.' + 
 			' <table style="margin-top: 5px"><tbody><tr><td>s15-30 FF0000</td><td>Shade all slopes between 15 and 30 degrees red</td></tr>' +
-			' <tr><td>e1000-3000 FF0000-0000FF</td><td>Red-blue gradient for elevations between 1k meters and 8k meters</td></tr>' + 
-			' <tr><td>s30-45a270-90e6000f-14000f FF8000</td><td>Color north facing slopes 30-45&deg; steep and &gt; 6k\' orange</td></tr></tbody></table>' + 
+			' <tr><td>e1000-3000 FF0000-0000FF</td><td>Red-blue gradient for elevations between 1k meters and 3k meters</td></tr>' + 
+			' <tr><td>s30-45a270-90e6000f-14000f FF8000</td><td>Color north facing slopes 30-45&deg; steep and above 6,000\' orange</td></tr></tbody></table>' + 
 			+ '</td></tr></tbody></table>');
 	
 	$('<tr><td style="padding-right: 5px; vertical-align: top">Shading</td><td><textarea style="width: 95%; height: 6em"></textarea></td></tr>').appendTo(table.children()[0]);
@@ -1210,7 +1211,7 @@ org.sarsoft.DemShadingDlg = function(imap, handler) {
 	this.name = table.find('input');
 	this.ta = table.find('textarea');
 	
-	this.dlg = new org.sarsoft.view.MapDialog(imap, "Custom DEM Shading", table, "Save", "Cancel", function() {
+	this.dlg = new org.sarsoft.view.MapDialog(imap, "Digital Elevation Model Shading", table, "Save", "Cancel", function() {
 		var cfg = that.ta.val() || "";
 		cfg = cfg.trim().replace(/\n/g, 'p').replace(/ /g, 'c');
 		handler({name: that.name.val(), alias: "sc_" + cfg});

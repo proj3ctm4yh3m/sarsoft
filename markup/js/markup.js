@@ -428,8 +428,7 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 }
 
 org.sarsoft.widget.MarkupSaveAs = function(imap) {
-	var bc = imap.dn.action;
-	var body = $('<div style="clear: both; border-left: 1px solid red; padding-left: 5px; margin-left: 2px"></div>').appendTo(bc);
+	var body = $('<div style="clear: both; border-left: 1px solid red; padding-left: 5px; margin-left: 2px"></div>').appendTo(imap.controls.action.bodies['save']);
 	
 	if(org.sarsoft.username != null) {
 		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(body);
