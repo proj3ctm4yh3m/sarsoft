@@ -532,6 +532,73 @@ org.sarsoft.widget.Print = function(imap) {
 	
 }
 
+org.sarsoft.view.ScaleControl = function(map, container) {
+	var that = this;
+	this.map = map;
+	this.container = container;
+	this.state = true;
+	this.div = jQuery('<div style="position: relative"></div>').appendTo(jQuery('<div style="position: absolute; bottom: 2px; left: 26px; height: 2em; font-size: 10px; z-index: 1000"></div>').appendTo(container));
+	google.maps.event.addListener(map, "zoom_changed", function() { if(that.state) that.draw(); });
+	google.maps.event.addListener(map, "center_changed", function() { if(that.state) that.draw(); });
+}
+
+org.sarsoft.view.ScaleControl.prototype.draw = function() {
+	this.div.empty();
+	var bounds = this.map.getBounds();
+	var distance = google.maps.geometry.spherical.computeDistanceBetween(bounds.getNorthEast(), bounds.getSouthWest());
+	var mapdiv = $(map.getDiv());
+	var pxdistance = Math.sqrt(mapdiv.width()*mapdiv.width() + mapdiv.height()*mapdiv.height());
+	var mscale = (distance/1000)/pxdistance;
+	var iscale = mscale/1.609;
+	var width = 200;
+	var color = "#5a8ed7";
+	
+	this.div.empty();
+	
+	var interval = 1000;
+	while(width*mscale/interval < 3) {
+		if(interval%10 == 0) {
+			interval = interval/2;
+		} else {
+			interval = interval/5;
+		}
+	}
+	if(interval < 0.1) interval = 0.1;
+	for(var i = 0; i*interval/mscale < width; i++) {
+		var content = Math.round(i*interval*10)/10 + ((i+1)*interval/mscale < width ? "" : "km");
+		jQuery('<div style="position: absolute; border-left: 1px solid ' + color + '; padding-left: 2px; top: 0px; height: 1em; left: ' + Math.round(i*interval/mscale) + 'px">' + content + '</div>').appendTo(this.div);
+	}
+	var width = (Math.round((i-1)*interval/mscale)+1);
+
+	var interval = 1000;
+	while(width*iscale/interval < 3) {
+		if(interval%10 == 0) {
+			interval = interval/2;
+		} else {
+			interval = interval/5;
+		}
+	}
+	if(interval < 0.1) interval = 0.1;
+	for(var i = 0; i*interval/iscale < width; i++) {
+		var content = Math.round(i*interval*10)/10 + ((i+1)*interval/iscale < width ? "" : "mi");
+		jQuery('<div style="position: absolute; border-left: 1px solid ' + color + '; padding-left: 2px; top: 1em; height: 1em; left: ' + Math.round(i*interval/iscale) + 'px">' + content + '</div>').appendTo(this.div);
+	}
+	var width = Math.max(width, (Math.round((i-1)*interval/iscale)+1));
+	jQuery('<div style="position: absolute; margin-top: 1em; width: ' + width + 'px; border-bottom: 1px solid ' + color + '"></div>').appendTo(this.div);
+}
+
+org.sarsoft.view.ScaleControl.prototype.show = function() {
+	this.state = true;
+	this.div.css('display', 'block');
+	this.draw();
+}
+
+org.sarsoft.view.ScaleControl.prototype.hide = function() {
+	this.state = false;
+	this.div.css('display', 'none');
+}
+
+
 org.sarsoft.view.MapSizeForm = function(map, container) {
 	var that = this;
 	this.map = map;
@@ -760,183 +827,6 @@ org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
 	}
 }
 
-
-org.sarsoft.AdjustableBox = function(imap, sw, ne) {
-	var that = this;
-	if(imap == null) return;
-	this.imap = imap;
-	
-	this.g = new Array();
-	this.g.push(new google.maps.LatLng(sw.lat(), sw.lng()));
-	this.g.push(new google.maps.LatLng(ne.lat(), sw.lng()));
-	this.g.push(new google.maps.LatLng(ne.lat(), ne.lng()));
-	this.g.push(new google.maps.LatLng(sw.lat(), ne.lng()));
-
-	this.poly = new google.maps.Polygon({map: this.imap.map, path: this.g, strokeColor: "#FF0000", strokeOpacity: 1, strokeWeight: 2, fillOpacity: 0.1, fillColor: "#FF0000"});
-
-	this.m = new Array();
-
-	for(var i = 0; i < 4; i++) {
-		var corner = "sw";
-		if(i == 1) corner = "nw";
-		if(i == 2) corner = "ne";
-		if(i == 3) corner = "se";
-		var icon = org.sarsoft.MapUtil.createImage(24, org.sarsoft.imgPrefix + "/icons/arr-" + corner + ".png");
-		that.m[i] = new google.maps.Marker({icon: icon, position: that.g[i], map: this.imap.map, shape: icon.shape, draggable: true});
-		
-		google.maps.event.addListener(that.m[i], "drag", function(j) { return function() {that.update(j)}}(i));
-		google.maps.event.addListener(that.m[i], "dragend", function(j) { return function() {that.update(j)}}(i));
-	}
-	
-	var icon = org.sarsoft.MapUtil.createFlatCircleImage(12, "#FF0000");
-	that.m[5] = new google.maps.Marker({icon: icon, position: new google.maps.LatLng((this.g[0].lat() + this.g[1].lat()) / 2, (this.g[1].lng() + this.g[2].lng()) / 2), map: this.imap.map, shape: icon.shape, draggable: true});
-
-	google.maps.event.addListener(that.m[5], "drag", function() {that.update(5)});
-	google.maps.event.addListener(that.m[5], "dragend", function() {that.update(5)});
-
-}
-
-org.sarsoft.AdjustableBox.prototype.remove = function() {
-	if(this.poly != null) this.poly.setMap(null);
-	for(var i = 0; i <= 5; i++) {
-		if(this.m[i] != null) this.m[i].setMap(null);
-	}
-}
-
-org.sarsoft.AdjustableBox.prototype.update = function(corner) {
-	var p = this.m[corner].getPosition();
-	if(corner < 4) this.g[corner] = p;
-	if(corner == 0) {
-		this.g[1] = new google.maps.LatLng(this.g[1].lat(), p.lng());
-		this.g[3] = new google.maps.LatLng(p.lat(), this.g[3].lng());
-	} else if(corner == 1) {
-		this.g[0] = new google.maps.LatLng(this.g[0].lat(), p.lng());
-		this.g[2] = new google.maps.LatLng(p.lat(), this.g[2].lng());
-	} else if(corner == 2) {
-		this.g[3] = new google.maps.LatLng(this.g[3].lat(), p.lng());
-		this.g[1] = new google.maps.LatLng(p.lat(), this.g[1].lng());		
-	} else if(corner == 3) {
-		this.g[2] = new google.maps.LatLng(this.g[2].lat(), p.lng());
-		this.g[0] = new google.maps.LatLng(p.lat(), this.g[0].lng());
-	} else if(corner == 5) {
-		var dlat = (this.g[1].lat() - this.g[0].lat()) / 2;
-		var dlng = (this.g[2].lng() - this.g[1].lng()) / 2;
-		this.g[0] = new google.maps.LatLng(p.lat() - dlat, p.lng() - dlng);
-		this.g[1] = new google.maps.LatLng(p.lat() + dlat, p.lng() - dlng);
-		this.g[2] = new google.maps.LatLng(p.lat() + dlat, p.lng() + dlng);
-		this.g[3] = new google.maps.LatLng(p.lat() - dlat, p.lng() + dlng);
-	}
-	
-	this.check(corner);	
-	this.redraw();
-}
-
-org.sarsoft.AdjustableBox.prototype.redraw = function() {
-	this.poly.setPath(this.g);
-	for(var i = 0; i < 4; i++) {
-		this.m[i].setPosition(this.g[i]);
-	}
-	this.m[5].setPosition(new google.maps.LatLng((this.g[0].lat() + this.g[1].lat()) / 2, (this.g[1].lng() + this.g[2].lng()) / 2));
-	if(this.listener != null) this.listener();
-}
-
-org.sarsoft.AdjustablePrintBox = function(imap, sw, ne, aspect, scale) {
-	org.sarsoft.AdjustableBox.call(this, imap, sw, ne);
-	this.aspect = aspect;
-	this.scale = scale;	
-}
-
-org.sarsoft.AdjustablePrintBox.prototype = new org.sarsoft.AdjustableBox();
-
-org.sarsoft.AdjustablePrintBox.prototype.check = function(corner) {
-	if(this.scale != null) {
-		var scale = (google.maps.geometry.spherical.computeDistanceBetween(this.g[2], this.g[0]) * 39.3701) / Math.sqrt(this.in_h*this.in_h + this.in_w*this.in_w);
-		if(corner == 1 || corner == 2) {
-			var south = this.g[1].lat() - (this.g[1].lat() - this.g[0].lat())*(this.scale/scale);
-			this.g[0] = new google.maps.LatLng(south, this.g[0].lng());
-			this.g[3] = new google.maps.LatLng(south, this.g[3].lng());
-		} else {
-			var north = this.g[0].lat() + (this.g[1].lat() - this.g[0].lat())*(this.scale/scale);
-			this.g[1] = new google.maps.LatLng(north, this.g[1].lng());
-			this.g[2] = new google.maps.LatLng(north, this.g[2].lng());
-		}
-	}
-	if(this.aspect != null) {
-		var px_nw = this.imap.projection.fromLatLngToDivPixel(this.g[1]);
-		var px_sw = this.imap.projection.fromLatLngToDivPixel(this.g[0]);
-		var px_ne = this.imap.projection.fromLatLngToDivPixel(this.g[2]);
-		var width = px_ne.x - px_nw.x;
-		var height = px_sw.y - px_nw.y;
-		if(width/height != this.aspect) {
-			width = height * this.aspect;
-			if((corner <= 1 && this.scale == null) || (corner >= 2 && this.scale != null)) {
-				var west = this.imap.projection.fromDivPixelToLatLng(new google.maps.Point(px_ne.x - width, px_ne.y)).lng();
-				this.g[0] = new google.maps.LatLng(this.g[0].lat(), west);
-				this.g[1] = new google.maps.LatLng(this.g[1].lat(), west);
-			} else {
-				var east = this.imap.projection.fromDivPixelToLatLng(new google.maps.Point(px_nw.x + width, px_ne.y)).lng();
-				this.g[2] = new google.maps.LatLng(this.g[2].lat(), east);
-				this.g[3] = new google.maps.LatLng(this.g[3].lat(), east);
-			}
-			this.m[corner].setPosition(this.g[corner]);
-		}
-	}
-}
-
-org.sarsoft.AdjustableTileBox = function(imap, sw, ne, zoom, max) {
-	org.sarsoft.AdjustableBox.call(this, imap, sw, ne);
-	this.wm = new org.sarsoft.WebMercator();
-	this.zoom = zoom;
-	this.max = max;
-}
-
-org.sarsoft.AdjustableTileBox.prototype = new org.sarsoft.AdjustableBox();
-
-org.sarsoft.AdjustableTileBox.prototype.check = function(corner) {
-	// compute tile bounds based on zoom level
-	var m_sw = this.wm.latLngToMeters(this.g[0].lat(), this.g[0].lng());
-	var m_ne = this.wm.latLngToMeters(this.g[2].lat(), this.g[2].lng());
-	var t_sw = this.wm.metersToDecimalTile(m_sw[0], m_sw[1], this.zoom);
-	var t_ne = this.wm.metersToDecimalTile(m_ne[0], m_ne[1], this.zoom);
-	var t_w = Math.round(t_ne[0] - t_sw[0]);
-	var t_h = Math.round(t_ne[1] - t_sw[1]);
-
-	t_sw = [Math.round(t_sw[0]), Math.round(t_sw[1])];
-	if(corner == 5) {
-		t_ne = [t_sw[0] + t_w, t_sw[1] + t_h];
-	} else {
-		t_ne = [Math.round(t_ne[0]), Math.round(t_ne[1])];
-	}
-	if(t_sw[0] == t_ne[0]) t_ne[0] = t_ne[0]+1;
-	if(t_sw[1] == t_ne[1]) t_ne[1] = t_ne[1]+1;
-	
-	this.t_sw = t_sw;
-	this.t_ne = t_ne;
-		
-	var area = (t_ne[0] - t_sw[0])*(t_ne[1] - t_sw[1]);
-	this.area = area // TODO compensate for area
-	
-	if(corner == 0 || corner == 1 || corner == 5) {
-		var w = this.wm.tileLatLngBounds(t_sw[0], t_sw[1], this.zoom)[1]; // miny, minx, maxy, maxx
-		this.g[0] = new google.maps.LatLng(this.g[0].lat(), w);
-		this.g[1] = new google.maps.LatLng(this.g[1].lat(), w);
-	}
-	if(corner == 1 || corner == 2 || corner == 5) {
-		var n = this.wm.tileLatLngBounds(t_sw[0], t_ne[1], this.zoom)[0];
-		this.g[1] = new google.maps.LatLng(n, this.g[1].lng());
-		this.g[2] = new google.maps.LatLng(n, this.g[2].lng());
-	}
-	if(corner == 2 || corner == 3 || corner == 5) {
-		var e = this.wm.tileLatLngBounds(t_ne[0], t_ne[1], this.zoom)[1];
-		this.g[2] = new google.maps.LatLng(this.g[2].lat(), e);
-		this.g[3] = new google.maps.LatLng(this.g[3].lat(), e);
-	}
-	if(corner == 3 || corner == 0 || corner == 5) {
-		var s = this.wm.tileLatLngBounds(t_sw[0], t_sw[1], this.zoom)[0];
-		this.g[3] = new google.maps.LatLng(s, this.g[3].lng());
-		this.g[0] = new google.maps.LatLng(s, this.g[0].lng());
-	}
-}
 
 org.sarsoft.MapObjectController = function(imap, types, background_load) {
 	if(imap == null) return;
@@ -1516,155 +1406,6 @@ org.sarsoft.controller.CustomLayerController.prototype.remove = function(i, id) 
 	this.helpRemove(i, id);
 }
 
-org.sarsoft.PrintBoxController = function(imap, div) {
-	var that = this;
-	this.imap = imap;
-	this.div = div;
-	this.boxes = [];
-	this.lines = [];
-	this.dd_orientations = [];
-
-	imap.register("org.sarsoft.PrintBoxController", this);
-	
-	var line = jQuery('<div><span style="display: inline-block; min-width: 10ex">Page Size</span></div>').appendTo(div);
-	this.dd_size = jQuery('<select><option value="8.5x11">8.5x11</option><option>13x19</option></select>').appendTo(line);
-	this.dd_size.change(function() { that.updateBoxes() });
-	
-	var line = jQuery('<div><span style="display: inline-block; min-width: 10ex">Scale</span></div>').appendTo(div);
-	this.dd_scale = jQuery('<select><option value="0">Not Fixed</option><option value="24000">1:24,000</option><option value="25000">1:25,000</option><option value="50000">1:50,000</option><option value="62500">1:62,500</option><option value="63360">1:63,360</option></selet>').appendTo(line).change(function() {
-		that.updateBoxes();
-	});
-	
-	var line = jQuery('<div style="margin-top: 1em"></div>').appendTo(div);
-	this.dd_datum = jQuery('<select><option value="WGS84" selected="selected">WGS84</option><option value="NAD27">NAD27</option></select>').appendTo(jQuery('<div><span style="display: inline-block; min-width: 10ex">Datum</span></div>').appendTo(line));
-	this.cb_utm = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span>UTM Grid</span>').appendTo(jQuery('<div></div>').appendTo(line))).change(function() { that.updateBoxes(); });
-	this.cb_dd = jQuery('<input type="checkbox"/>').prependTo(jQuery('<span>Lat/Long Grid</span>').appendTo(jQuery('<div></div>').appendTo(line))).change(function() { that.updateBoxes(); });
-
-	var line = jQuery('<div style="padding-top: 1em"></div>').appendTo(div);
-	this.list = jQuery('<tbody></tbody>').appendTo(jQuery('<table border="0" style="margin-bottom: 0.5em"><thead><tr><th style="font-weight: bold; text-align: left">Page</th><th style="font-weight: bold; text-align: left; padding-left: 2ex">Scale</th><th style="font-weight: bold; text-align: left; padding-left: 2ex">Orientation</th></tr></thead></table>').appendTo(line));
-	var link_new = jQuery('<span style="color: green; cursor: pointer; font-size: 120%">+ Add Page</span>').appendTo(line).click(function() {
-		that.addBox();
-	});
-	var link_redraw = jQuery('<span style="margin-left: 40px; color: red; cursor: pointer; font-size: 120%">X Start Over</span>').appendTo(line).click(function() {
-		that.reset();
-	});
-
-}
-
-org.sarsoft.PrintBoxController.prototype.reset = function() {
-	for(var i = 0; i < this.boxes.length; i++) {
-		this.boxes[i].remove();
-	}
-	this.list.empty();
-	this.lines = [];
-	this.boxes = [];
-	
-	this.addBox();
-}
-
-org.sarsoft.PrintBoxController.prototype.addBox = function(box) {
-	var that = this;
-	var idx = this.boxes.length;
-	if(idx >= 15) {
-		alert("Sorry, there is a 15 page limit for this service");
-		return;
-	}
-	if(box == null) {
-		var bounds = this.imap.map.getBounds();
-		var y_off = (bounds.getNorthEast().lat() - bounds.getSouthWest().lat())/10;
-		var x_off = (bounds.getNorthEast().lng() - bounds.getSouthWest().lng())/10;
-		box = new org.sarsoft.AdjustablePrintBox(this.imap, new google.maps.LatLng(bounds.getSouthWest().lat() + y_off, bounds.getSouthWest().lng() + x_off), new google.maps.LatLng(bounds.getNorthEast().lat() - y_off, bounds.getNorthEast().lng() - x_off), 8.5/11);
-	}
-
-	this.lines[idx] = jQuery('<tr><td>' + (idx + 1) + '</td><td style="padding-left: 2ex"></td><td style="padding-left: 2ex"></td></tr>').appendTo(this.list);
-	this.dd_orientations[idx] = jQuery('<select><option value="p">Portrait</option><option value="l">Landscape</option></select>').appendTo(this.lines[idx].children()[2]).val(box.aspect < 1 ? "p" : "l");
-	this.dd_orientations[idx].change(function() { that.updateBoxes() });
-
-	this.boxes.push(box);
-	this.boxes[idx].listener = function() {
-		var scale = google.maps.geometry.spherical.computeDistanceBetween(that.boxes[idx].g[0], that.boxes[idx].g[1]) / (that.boxes[idx].in_h*0.0254);
-		$(that.lines[idx].children()[1]).html('1:' + Math.round(scale));
-	}
-	this.boxes[idx].m[5].set("title", "Page " + (idx+1));
-	this.boxes[idx].redraw();
-	this.updateBoxes();
-}
-
-org.sarsoft.PrintBoxController.prototype.updateBoxes = function() {
-	var size = this.dd_size.val();
-	var do_utm = (this.cb_utm.attr("checked")=="checked");
-	var do_dd = (this.cb_dd.attr("checked")=="checked");
-	var margin = 1;
-	if(do_utm || do_dd) margin = 1.25;
-	if(do_utm && do_dd) margin = 1.5;
-	for(var i = 0; i < this.boxes.length; i++) {
-		var adjbox = this.boxes[i];
-		if(adjbox != null) {
-			var landscape = ("l" == this.dd_orientations[i].val());
-			var w = 1*(landscape ? size.split("x")[1] : size.split("x")[0]);
-			var h = 1*(landscape ? size.split("x")[0] : size.split("x")[1]);
-			adjbox.in_w = w - margin;
-			adjbox.in_h = h - margin - 0.75;
-			adjbox.in_p_w = w;
-			adjbox.in_p_h = h;
-			adjbox.aspect = adjbox.in_w/adjbox.in_h;
-			var scale = this.dd_scale.val();
-			if(scale > 0) {
-				adjbox.scale = scale;
-				adjbox.update(1);
-			} else {
-				adjbox.scale = null;
-			}
-			adjbox.update(2);
-			adjbox.update(2); // need to call twice for proper scale and aspect after an orientation change
-		}
-	}
-}
-
-org.sarsoft.PrintBoxController.prototype.getURLState = function() {
-	var state = {}
-	state.size = this.dd_size.val();
-	state.scale = this.dd_scale.val();
-	state.grid_utm = (this.cb_utm.attr("checked")=="checked");
-	state.grid_dd = (this.cb_dd.attr("checked")=="checked");
-	state.datum = this.dd_datum.val();
-	state.boxes = [];
-	for(var i = 0; i < this.boxes.length; i++) {
-		var adjbox = this.boxes[i];
-		if(adjbox != null) {
-			state.boxes.push({s: adjbox.g[0].lat(), w: adjbox.g[0].lng(), n: adjbox.g[2].lat(), e: adjbox.g[2].lng(), aspect: adjbox.aspect});
-		}
-	}
-	return state;
-}
-
-org.sarsoft.PrintBoxController.prototype.setURLState = function(state) {
-	var that = this;
-	if(!imap.projection) {
-		window.setTimeout(function() {
-			that.setURLState(state);
-		}, 500);
-		return;
-	}
-	this.dd_size.val(state.size);
-	this.dd_scale.val(state.scale);
-	this.dd_datum.val(state.datum);
-	this.cb_utm[0].checked = state.grid_utm;
-	this.cb_dd[0].checked = state.grid_dd;
-	
-	for(var i = 0; i < this.boxes.length; i++) {
-		this.boxes[i].remove();
-	}
-	this.list.empty();
-	this.lines = [];
-	this.boxes = [];
-	
-	for(var i = 0; i < state.boxes.length; i++) {
-		var b = state.boxes[i];
-		this.addBox(new org.sarsoft.AdjustablePrintBox(this.imap, new google.maps.LatLng(b.s, b.w), new google.maps.LatLng(b.n, b.e), b.aspect));
-	}
-	this.updateBoxes();
-}
 
 org.sarsoft.DEMService = function() {
 }
