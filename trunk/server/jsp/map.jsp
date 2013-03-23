@@ -36,8 +36,6 @@ org.sarsoft.Loader.queue(function() {
 	dn.defaults.body = tc.body;
 	new org.sarsoft.widget.BrowserSettings(imap, tc.body);
 
-	dn.defaults.sharing = new org.sarsoft.widget.Sharing(imap, tc.body);
-	  
 	dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
 	
 	jQuery('<div style="float: right; color: red; cursor: pointer; font-size: 140%; position: absolute; top: 0; right: 2px; font-weight: normal">X</div>').prependTo(tc.header).click(function() {

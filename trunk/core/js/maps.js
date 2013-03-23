@@ -990,7 +990,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	this.datumControl = jQuery('<span style="padding-left: 3px"></span>').appendTo(imap._mapInfoControl.premsg);
 	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '.</span>').appendTo(this.datumControl);
 	
-	if(switchable && imap.dataNavigator != null) {
+	if(switchable) {
 		this.datumSwitcher = jQuery('<a class="underlineOnHover" title="Click to Change Datum" style="cursor: pointer"></a>').appendTo(this.datumControl).append(this.datumDisplay);
 		this.datumList = jQuery('<span style="display: none"><span style="margin-right: 10px">Set Datum:</span></span>').appendTo(this.datumControl);
 		
@@ -1046,7 +1046,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 	this.showborder = false;
 	this.imap = imap;
 	if(imap != null) {
-		var div = $('<div></div>').appendTo(imap.dataNavigator != null ? imap.dataNavigator.defaults.settings : $('<div></div>'));
+		var div = $('<div></div>').appendTo(imap.controls.settings);
 		var line = $('<div></div>').appendTo(div);
 		this.cb = $('<input style="float: left" type="checkbox"/>').prependTo(line).change(function() { that.setValue(that.cb[0].checked) });
 		var line = $('<div style="float: left" title="Univeral Transverse Mercator grid.  One grid unit = 1 meter.">Show UTM Grid</div>').appendTo(line);
@@ -1516,17 +1516,16 @@ org.sarsoft.DataNavigator = function(imap) {
 	var that = this;
 	this.imap = imap;
 	if(imap == null) return;
-	imap.register("org.sarsoft.DataNavigator", this);
 
 	this.left = $('<div style="width: 100%; padding-bottom: 1.5em"></div>').appendTo($('<div style="width: 100%; height: 100%; overflow-y: auto" class="cs"></div>').appendTo(imap.container.left));	
 	$('<div style="width: 100%; background-color: white; position: absolute; bottom: 0px; font-size: 120%; font-weight: bold; z-index: 100; padding-bottom: 2px; padding-top: 2px"><a style="padding-left: 2px; color: red" href="/about.html" target="_blank">About ' + org.sarsoft.version + '</a></div>').appendTo(imap.container.left);
 	imap.container.left.css('overflow-y', 'hidden');
 	
-	this.defaults = { body : this.left }
+	this.body = this.left;
 }
 
 org.sarsoft.DataNavigator.prototype.addDataType = function(title) {
-	var tree = new org.sarsoft.DNTree(this.defaults.body, title);
+	var tree = new org.sarsoft.DNTree(this.body, title);
 	tree.block.addClass('l2');
 	return tree;
 }
@@ -1549,7 +1548,6 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 	var that = this;
 	this.imap = imap;
 	this.map = imap.map;
-	imap.register("org.sarsoft.DataNavigatorToggleControl", this);
 	this.offset = 220;
 	this.min_offset = 200;
 	this.mobile = org.sarsoft.mobile;
@@ -1568,8 +1566,6 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 			that.hideDataNavigator();
 		});
 		closer.append('<div style="float: right">X</div>').append('<div style="float: left">X</div>').append('<div style="text-align: center">Close</div>');
-		var dn = imap.registered["org.sarsoft.DataNavigator"];
-		
 	} else {
 		if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
 			var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"))
@@ -1603,11 +1599,7 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 		}
 	});
 
-	if(this.imap.container != null) {
-		this.imap.container.right.append(this.minmax);
-	} else {
-		map.getDiv().appendChild(this.minmax[0]);
-	}
+	this.imap.container.right.append(this.minmax);
 
 	if(this.state) {
 		this.showDataNavigator();
@@ -1789,7 +1781,7 @@ org.sarsoft.MapLabelWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
 	this.label = "backlit";
-	var div = $('<div title="Applies to labeled map objects like markers and shapes">Show Labels</div>').appendTo(imap.dataNavigator.defaults.settings);
+	var div = $('<div title="Applies to labeled map objects like markers and shapes">Show Labels</div>').appendTo(imap.controls.settings);
 	this.cb1 = $('<input type="checkbox"/>').prependTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
 	this.cb2 = $('<input type="checkbox"/>').appendTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
 	div.append('as Opaque');
@@ -1910,211 +1902,6 @@ org.sarsoft.MapFindWidget.prototype.setState = function(state) {
 	}
  }
 
-org.sarsoft.view.BaseConfigWidget = function(imap, persist, message) {
-	var that = this;
-	this.hasConfig = false;
-	if(imap != null) {
-		this.imap = imap;
-		imap.register("org.sarsoft.view.BaseConfigWidget", this);
-		if(persist && imap.dataNavigator.defaults.settings.save != null) {
-			imap.dataNavigator.defaults.settings.save.css('display', 'block').click(function(evt) {
-				that.saveConfig(function() { alert('In addition to these settings, the following have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current and Available Layers\n - Datum\n');});
-				evt.stopPropagation();
-			});
-			
-		}
-		if(imap.dataNavigator != null && imap.dataNavigator.defaults.settings != null) { 
-			var container = imap.dataNavigator.defaults.settings;
-			this.sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(container)).change(function() {
-				imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
-			});
-			this.swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;" title="Use your mouse\'s scroll wheel to zoom in and out.">Enable Scroll Wheel Zoom</div>').appendTo(container)).change(function() {
-				imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
-			});
-				
-			var config = {}
-			if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
-				config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
-			}
-			this.swz[0].checked = (config.scrollwheelzoom == false ? false : true);
-			this.sb[0].checked = config.scalebar;
-			org.sarsoft.EnhancedGMap._overzoom = true;
-			imap.map._overlaymanager.checkMaxZoom();
-			if(config.position != null) {
-				org.sarsoft.async(function() { imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position) });
-			}
-			if(config.coordinates != null) {
-				org.sarsoft.EnhancedGMap._coordinates = config.coordinates;
-				if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
-				if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
-			}
-		}
-	}
-}
-
-org.sarsoft.view.BaseConfigWidget.prototype.saveBrowserSettings = function() {
-	if(this.sb != null)  {
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scalebar", this.sb[0].checked);
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scrollwheelzoom", this.swz[0].checked);
-	}
-}
-
-org.sarsoft.view.BaseConfigWidget.prototype._toConfigObj = function(config) {
-	if(config == null) config = {};
-	this.imap.getConfig(config);
-	for(var key in this.imap.registered) {
-		var val = this.imap.registered[key];
-		if(val != null && val.getConfig != null) {
-			val.getConfig(config);
-		}
-	}
-	return config;
-}
-
-org.sarsoft.view.BaseConfigWidget.prototype._fromConfigObj = function(config) {
-	this.imap.setConfig(config);
-	for(var key in this.imap.registered) {
-		var val = this.imap.registered[key];
-		if(val != null && val.setConfig != null) {
-			val.setConfig(config);
-		}
-	}
-}
-
-org.sarsoft.view.PersistedConfigWidget = function(imap, persist, saveCenter) {
-	org.sarsoft.view.BaseConfigWidget.call(this, imap, persist);
-	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
-	this.saveCenter = saveCenter;
-}
-
-org.sarsoft.view.PersistedConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
-
-org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) {
-	this.saveBrowserSettings();
-	var that = this;
-	this.hasConfig = true;
-
-	var layers = [];
-	
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(type.alias) >= 0) layers.push(type.alias);
-	}
-
-	this.tenantDAO.save("layers", { value: YAHOO.lang.JSON.stringify(layers.join(","))}, function() {
-
-		var saveHandler = function() {
-			if(that.saveCenter) {
-				var center = that.imap.map.getCenter();
-				that.tenantDAO.saveCenter({lat: center.lat(), lng: center.lng()}, handler != null ? handler : function() {});
-			} else if(handler != null) {
-				handler();
-			}
-		}
-
-		that.tenantDAO.load(function(cfg) {
-			var config = {};
-			if(cfg.value != null) {
-				config = YAHOO.lang.JSON.parse(cfg.value);
-			}
-			that._toConfigObj(config);
-			
-			that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)}, saveHandler);				
-		}, "mapConfig");
-	});
-
-}
-
-org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
-	var that = this;
-	var handler = function(cfg) {
-		var config = {};
-		if(cfg.value != null) {
-			config = YAHOO.lang.JSON.parse(cfg.value);
-			that.hasConfig = true;
-		}
-		if(typeof(overrides) != "undefined") for(var key in overrides) {
-			config[key] = overrides[key];
-		}
-		that._fromConfigObj(config);
-	}
-	if(org.sarsoft.preload.mapConfig != null) {
-		org.sarsoft.async(function() { handler(org.sarsoft.preload.mapConfig) });
-	} else {
-		this.tenantDAO.load(handler, "mapConfig");
-	}
-}
-
-
-org.sarsoft.view.CookieConfigWidget = function(imap, saveCenter) {
-	org.sarsoft.view.BaseConfigWidget.call(this, imap, true, "Save map settings for future page loads?");
-	this.saveCenter = saveCenter;
-}
-
-org.sarsoft.view.CookieConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
-
-org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function(handler) {
-	this.saveBrowserSettings();
-	var config = {};
-	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
-	if(config.base == null) config = {}; // keep mis-set cookies from screwing everything up
-	this._toConfigObj(config);
-	config.alphaOverlays = null;
-	config.overlay = null;
-	YAHOO.util.Cookie.set("org.sarsoft.mapConfig", YAHOO.lang.JSON.stringify(config));
-	if(this.saveCenter) {
-		var center = this.imap.map.getCenter();
-		var zoom = this.imap.map.getZoom();
-		YAHOO.util.Cookie.set("org.sarsoft.mapCenter", YAHOO.lang.JSON.stringify({center: {lat: center.lat(), lng: center.lng()}, zoom: zoom}));
-	}
-
-	var layers = [];
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(type.alias) >= 0) layers.push(type.alias);
-	}
-
-	YAHOO.util.Cookie.set("org.sarsoft.mapLayers", layers.join(","));
-	YAHOO.util.Cookie.set("org.sarsoft.updated", new Date().getTime());
-	if(handler != null) handler();
-}
-
-org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
-	if(YAHOO.util.Cookie.exists("org.sarsoft.mapLayers")) {
-		var layers = YAHOO.util.Cookie.get("org.sarsoft.mapLayers").split(",");
-		var date = YAHOO.util.Cookie.exists("org.sarsoft.updated") ? Math.round(YAHOO.util.Cookie.get("org.sarsoft.updated", Number)/(1000*60*60*24)) : 0;
-		org.sarsoft.EnhancedGMap.visibleMapTypes = [];
-		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-			var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-			if(type.date > date) {
-				org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.alias);
-			} else {
-				for(var j = 0; j < layers.length; j++) {
-					if(layers[j] == type.alias) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.alias);
-				}
-			}
-		}
-		var config = imap.getConfig();
-		imap.map._overlaycontrol.resetMapTypes();
-		if(!YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) imap.setConfig(config);
-	}
-	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) {
-		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
-		if(typeof(overrides) != "undefined") for(var key in overrides) {
-			config[key] = overrides[key];
-		}
-		this._fromConfigObj(config);
-	}
-	if(YAHOO.util.Cookie.exists("org.sarsoft.mapCenter")) {
-		var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapCenter"));
-		if(typeof(overrides) != "undefined") for(var key in overrides) {
-			config[key] = overrides[key];
-		}
-		this.imap.map.setCenter(new google.maps.LatLng(config.center.lat, config.center.lng));
-		this.imap.map.setZoom(config.zoom);
-	}
-}
-
 // Like a map dialog, but supports reading / writing an entity form
 org.sarsoft.view.MapEntityDialog = function(imap, title, entityform, handler, okButton) {
 	if(imap == null) return;
@@ -2219,7 +2006,7 @@ org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, s
 	this.dialog.hideEvent.subscribe(function() {
 		dlg.css('display', 'none');
 		that.bd.css('height', 'auto');
-		if(that.imap.container != null) that.imap.container.right.css('visibility', 'visible');
+		that.imap.container.right.css('visibility', 'visible');
 		that.imap.map.getDiv().style.height = that._originalContainerHeight;
 		google.maps.event.trigger(that.imap.map, 'resize');
 		delete that.imap.registered["org.sarsoft.view.MapDialog"];
@@ -2240,12 +2027,10 @@ org.sarsoft.view.MapDialog.prototype.show = function() {
 	if($.browser.mozilla) dlgHeight = dlgHeight + 1;
 	var height = (container.height() - dlgHeight);
 	if(!org.sarsoft.mobile) {
-		if(this.imap.container != null) {
-			container.css('height', height+"px");
-		}
+		container.css('height', height+"px");
 		this.dlg.css({left: (container.offset().left+1) + "px", top: height + "px"});
 	} else {
-		if(this.imap.container != null) this.imap.container.right.css('visibility', 'hidden');
+		this.imap.container.right.css('visibility', 'hidden');
 		this.bd.css('height', (container.height()-this.hd.outerHeight()-this.ft.outerHeight()-(this.bd.outerHeight()-this.bd.height())-2)+"px");
 	}
 	if(org.sarsoft.touch) this.dialog.focusFirstButton(); // prevent keyboard from popping up
@@ -2322,8 +2107,9 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.text = new Array();
 	this.markers = new Array();
 	this._handlers = new Object();
+	this.controls = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
-	this._contextMenu._vertex
+	this._contextMenu._vertex;
 	this._menuItems = [{ text: "Delete Vertex", applicable: function() {var g = that._contextMenu._gmapobj; return g != null && g.getEditable != null && g.getEditable() && that._contextMenu._vertex != null && (g.getPath().getLength() > 3 || (g.getPath().getLength() > 2 && g.getPaths == null)) }, handler: function(obj) { that._contextMenu._gmapobj.getPath().removeAt(that._contextMenu._vertex); } }];
 
 	this._menuItemsOverride = null;
@@ -2341,8 +2127,8 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		that.click(evt);
 	});	
 
+	this.container = new Object();
 	if(options.container != null) {
-		this.container = new Object();
 		this.container.top = $(options.container);
 		this.container.left = $(this.container.top.children()[0]);
 		this.container.right = $(this.container.top.children()[1]);
@@ -2359,10 +2145,12 @@ org.sarsoft.InteractiveMap = function(map, options) {
 		}
 		
 		map._overlaycontrol.div.prependTo(this.container.right);
-		
-		this.dataNavigator = options.dn ? new options.dn(this) : new org.sarsoft.DataNavigator(this);
-		this.dnToggle = new org.sarsoft.DataNavigatorToggleControl(this);		
+	} else {
+		this.container.top = this.container.left = this.container.right = this.container.canvas = $('<div></div>');
 	}
+	
+	this.dn = options.dn ? new options.dn(this) : new org.sarsoft.DataNavigator(this);
+	this.dn.toggle = new org.sarsoft.DataNavigatorToggleControl(this);
 
 	this.loadBrowserSettings();
 	this.mapMessageControl = new org.sarsoft.MapMessageControl(this.map);
@@ -2988,8 +2776,8 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	
 	if(!readonce) {
 		imap.register("org.sarsoft.MapURLHashWidget", this);
-		if(!org.sarsoft.mobile && imap.dataNavigator != null && imap.dataNavigator.defaults.settings != null) {
-			this.cb = $('<input type="checkbox"/>').prependTo($('<div title="The page URL will update to reflect the map center and layers, but not unsaved data.">Update URL on Map Drag</div>').appendTo(imap.dataNavigator.defaults.settings)).change(function() {
+		if(!org.sarsoft.mobile) {
+			this.cb = $('<input type="checkbox"/>').prependTo($('<div title="The page URL will update to reflect the map center and layers, but not unsaved data.">Update URL on Map Drag</div>').appendTo(imap.controls.settings)).change(function() {
 				that.track = that.cb[0].checked;
 				if(!that.track) {
 					window.location.hash="";
@@ -3036,11 +2824,6 @@ org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 
 org.sarsoft.MapURLHashWidget.prototype.saveMap = function() {
 	var hash = org.sarsoft.MapURLHashWidget.createConfigStr(this.imap);
-	if(imap.registered["org.sarsoft.DataNavigator"] != null && imap.registered["org.sarsoft.DataNavigator"].defaults.sharing != null) {
-		var url = "http://" + window.location.host + '/map.html#' + hash;
-		imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
-		'Embed it in a webpage or forum:<textarea rows="4" cols="60" style="vertical-align: text-top">&lt;iframe width="500px" height="500px" src="' + url + '"&gt;&lt;/iframe&gt;</textarea>');
-	}
 	if(this.track) {
 		this.ignorehash=true;
 		window.location.hash=hash;
@@ -3085,11 +2868,6 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 	if(config.base != null) this.imap.setConfig(config);
 	this.config = config;
 	this.ignorehash=false;
-	if(this.imap.registered["org.sarsoft.DataNavigator"] != null && this.imap.registered["org.sarsoft.DataNavigator"].defaults.sharing != null) {
-		var url = "http://" + window.location.host + '/map.html#' + hash;
-		this.imap.registered["org.sarsoft.DataNavigator"].defaults.sharing.settings.html('Share this map by giving people the following URL: <a style="word-wrap: break-word" href="' + url + '">' + url + '</a><br/><br/>' +
-		'Embed it in a webpage or forum:<textarea rows="4" cols="60" style="vertical-align: text-top">&lt;iframe width="500px" height="500px" src="' + url + '"&gt;&lt;/iframe&gt;</textarea>');
-	}
 	if(config.print != null && this.imap.registered["org.sarsoft.PrintBoxController"] != null) {
 		this.imap.registered["org.sarsoft.PrintBoxController"].setURLState(config.print);
 	}
@@ -3155,8 +2933,7 @@ if(typeof org.sarsoft.widget == "undefined") org.sarsoft.widget = new Object();
 org.sarsoft.widget.MapLayers = function(imap) {
 	var that = this;
 	
-	var dn = imap.registered["org.sarsoft.DataNavigator"];
-	this.tree = dn.addDataType("Layers");
+	this.tree = imap.dn.addDataType("Layers");
 	if(org.sarsoft.tenantid != null) this.tree.body.css('display', 'none');
 	this.tree.block.attr("title", "These are examples of what " + org.sarsoft.version + " can do.  Click the red +0 or +1 in the top right for more.");
 
@@ -3271,131 +3048,6 @@ org.sarsoft.widget.MapLayers = function(imap) {
 			}
 		});
 	}, 1000);	
-}
-
-org.sarsoft.widget.Account = function(imap, container, acctlink) {
-	
-	this.maps = jQuery('<div class="underlineOnHover"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/folder.png"/>Your Maps</div>').appendTo(container);
-	
-	var bn = jQuery('<div></div>');
-	var accountpane = new org.sarsoft.view.MapRightPane(imap, bn);
-	var header = jQuery('<div style="float: left; width: 90%; padding-bottom: 1em"></div>').appendTo(bn);
-	jQuery('<div style="font-size: 150%; font-weight: bold">Your Account</div>').appendTo(header);
-	
-	acctlink.click(function() {
-		if(accountpane.visible()) {
-			accountpane.hide();
-		} else {
-			accountpane.show();
-		}
-	});
-	
-	jQuery('<div style="clear: both"><a style="font-weight: bold; color: #5a8ed7" href="javascript:window.location=\'/app/logout?dest=/map.html#\' + org.sarsoft.MapURLHashWidget.createConfigStr(imap)">Logout of ' + org.sarsoft.version + '</a></div>').appendTo(bn);
-
-	var uname = jQuery('<b></b>').appendTo(jQuery('<div style="max-width: 500px; padding-top: 1em">Your email is <b>' + org.sarsoft.username + '</b>.  By default, your account name will show up ' +
-			'as a shortened version of your email.  You can choose a different username by entering it below or leave the box blank to ' +
-			'use the default name.<br/><br/>Your current username is </div>').appendTo(bn));
-	
-	var i = jQuery('<input type="text" size="15" name="alias" value="' + org.sarsoft.alias + '"/>=').appendTo(bn);
-	jQuery('<button>GO</button>').appendTo(bn).click(function() {
-		var dao = new org.sarsoft.BaseDAO();
-		dao.baseURL = "";
-		dao._doPost("/rest/account", { success : function(obj) {
-			i.val(obj.alias);
-			accountpane.hide();
-		}, failure: function(obj) {
-			i.val(obj.alias);
-			alert("Error updating username.");
-		}
-		}, {}, "alias=" + i.val());
-	});
-
-	var bn = jQuery('<div></div>');
-	var tenantpane = new org.sarsoft.view.MapRightPane(imap, bn);
-	var header = jQuery('<div style="float: left; width: 90%; padding-bottom: 1em"></div>').appendTo(bn);
-	jQuery('<div style="font-size: 150%; font-weight: bold">Your Maps</div>').appendTo(header);
-	var newmap = jQuery('<div style="clear: both; padding-top: 5px"></div>').appendTo(header);
-	
-
-	this.maps.click(function() {
-		if(tenantpane.visible()) {
-			tenantpane.hide();
-		} else {
-			tenantpane.show();
-		}
-	});
-		
-	var tenantDAO = new org.sarsoft.TenantDAO();
-	var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : true, sharing : true, actions : false});
-	yourTable.create(jQuery('<div class="growYUITable" style="clear: both"></div>').appendTo(bn)[0]);
-
-	// prioritize page loading
-	window.setTimeout(function() {
-		tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
-			yourTable.update(rows);
-		});
-	}, 1000);
-
-	var d = jQuery('<div></div>').appendTo(newmap);
-	var newform = jQuery('<form action="/map" method="post" id="createmapform" style="display: inline-block">Create a new map named: </form>').appendTo(d);
-	var newName = jQuery('<input type="text" name="name"/>').appendTo(newform);
-	
-	var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
-	var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
-	var mapcfg = jQuery('<input type="hidden" name="mapcfg"/>').appendTo(newform);
-
-	jQuery('<button>Create</button>').appendTo(d).click(function(evt) {
-		var name = newName.val();
-		if(name == null || name == "") {
-			alert('Please enter a name for this map.');
-			return;
-		}
-		var center = imap.map.getCenter();
-		newlat.val(center.lat());
-		newlng.val(center.lng());
-		var bcw = imap.registered["org.sarsoft.view.BaseConfigWidget"];
-		var cfg = {}
-		if(bcw != null) {
-			cfg = bcw._toConfigObj();
-		} else {
-			cfg = imap.getConfig();
-		}
-		mapcfg.val(YAHOO.lang.JSON.stringify(cfg));				
-		newform.submit();
-	});
-	
-}
-
-org.sarsoft.widget.NoAccount = function(imap, container) {
-	var that = this;
-	
-	this.login = function(provider) {
-		var clientState = new Object();
-		for(var key in imap.registered) {
-			if(imap.registered[key].dehydrate != null) clientState[key] = imap.registered[key].dehydrate();
-		}
-		if(org.sarsoft.tenantid == null) {
-			form_yahoo.append(jQuery('<input type="hidden" name="domain"/>').val(provider));
-			form_yahoo.append(jQuery('<input type="hidden" name="dest"/>').val(window.location));
-			form_yahoo.append(jQuery('<input type="hidden" name="clientState"/>').val(YAHOO.lang.JSON.stringify(clientState)));
-			form_yahoo.submit();
-		} else {
-			window.location='/app/openidrequest?domain=' + provider + '&dest=' + encodeURIComponent(window.location);
-		}
-	}
-
-	var form_yahoo = jQuery('<form action="/app/openidrequest" method="POST"></form>');
-	var login_yahoo = jQuery('<a href="#"><img style="border: none; vertical-align: middle" src="http://l.yimg.com/a/i/reg/openid/buttons/14.png"/></a>').appendTo(form_yahoo);
-	login_yahoo.click(function() {
-		that.login('yahoo');
-	});
-	var form_google = jQuery('<form action="/app/openidrequest" method="POST"></form>');
-	var login_google = jQuery('<a href="#"><span style="font-weight: bold; color: #1F47B2">Sign in through G<span style="color:#C61800">o</span><span style="color:#BC2900">o</span>g<span style="color:#1BA221">l</span><span style="color:#C61800">e</span></span></a>').appendTo(form_google);
-	login_google.click(function() {
-		that.login('google');
-	});
-	container.append(jQuery('<div></div>').append(form_yahoo)).append(
-			jQuery('<div style="white-space: nowrap; padding-top: 5px"></div>').append(form_google));
 }
 
 org.sarsoft.UTMEditForm = function() {	
