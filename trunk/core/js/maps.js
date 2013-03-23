@@ -12,10 +12,7 @@ org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 	if(config.type == "TILE"){
 		var template = config.template;
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: config.opacity == null ? 1 : config.opacity/100, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
-			if(zoom > config.maxresolution) {
-				template = '/resource/imagery/tilecache/' + config.name + '/{Z}/{X}/{Y}.png';
-			}
-			return template.replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
+			return (zoom > config.maxresolution ? '/resource/imagery/tilecache/' + config.name + '/{Z}/{X}/{Y}.png' : template).replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
 		}});
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
