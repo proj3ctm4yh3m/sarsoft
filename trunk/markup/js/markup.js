@@ -624,7 +624,7 @@ org.sarsoft.controller.MarkupMapController = function(imap, background_load) {
 		}
 	}
 
-	if(!org.sarsoft.iframe) this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
+	if(!org.sarsoft.iframe && !this.bgload) this.markupio = new org.sarsoft.view.MarkupIO(imap, this);
 
 }
 
