@@ -1706,7 +1706,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.rangerings = new Array();
 	this.text = new Array();
 	this.markers = new Array();
-	this.controls = new Object();
+	this.controls = { settings: $('<div></div>') }
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
 	this._contextMenu._vertex;

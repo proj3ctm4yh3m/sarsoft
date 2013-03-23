@@ -351,7 +351,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	this.exp = new Object();
 	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
 	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
-	imap.controls.action.links['export'].click(function() {
+	if(imap.controls.action) imap.controls.action.links['export'].click(function() {
 		var exportables = that.exp.body.find('select');
 		exportables.empty();
 		exportables.append('<option value="a0">All Objects</option>');
@@ -655,7 +655,7 @@ org.sarsoft.controller.MarkupMapController.prototype.checkForObjects = function(
 		this.imap.controls.action.setDraftMode(mkeys > 0 || skeys > 0);
 	}
 	
-	this.imap.controls.action.links["export"].css('display', (mkeys > 0 || skeys > 0) ? 'block' : 'none');
+	if(this.imap.controls.action) this.imap.controls.action.links["export"].css('display', (mkeys > 0 || skeys > 0) ? 'block' : 'none');
 }
 
 org.sarsoft.controller.MarkupMapController.prototype.saveShape = function(shape, handler) {
