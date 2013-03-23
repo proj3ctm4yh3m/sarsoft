@@ -2366,7 +2366,7 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	if(!readonce) {
 		imap.register("org.sarsoft.MapURLHashWidget", this);
 		if(!org.sarsoft.mobile) {
-			this.cb = $('<input type="checkbox"/>').prependTo($('<div title="The page URL will update to reflect the map center and layers, but not unsaved data.">Update URL on Map Drag</div>').appendTo(imap.controls.settings)).change(function() {
+			this.cb = $('<input type="checkbox"/>').prependTo($('<div title="The page URL will update to reflect the map center and layers, but not unsaved data.">Update URL on Map Move</div>').appendTo(imap.controls.settings)).change(function() {
 				that.track = that.cb[0].checked;
 				if(!that.track) {
 					window.location.hash="";
