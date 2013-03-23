@@ -6,11 +6,10 @@ import net.sf.json.JSONObject;
 
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
-import org.sarsoft.common.model.SarModelObject;
 
 @JSONAnnotatedEntity
 @Entity
-public class GeoRef extends SarModelObject {
+public class GeoRef extends MapObject {
 	
 	String name;
 	String url;
@@ -25,6 +24,24 @@ public class GeoRef extends SarModelObject {
 
 	public static GeoRef createFromJSON(JSONObject json) {
 		return (GeoRef) JSONObject.toBean(json, GeoRef.class);
+	}
+	
+	public void from(JSONObject json) {
+		GeoRef updated = createFromJSON(json);
+		from(updated);
+	}
+	
+	public void from(GeoRef updated) {
+		setName(updated.getName());
+		setUrl(updated.getUrl());
+		setX1(updated.getX1());
+		setX2(updated.getX2());
+		setY1(updated.getY1());
+		setY2(updated.getY2());
+		setLat1(updated.getLat1());
+		setLat2(updated.getLat2());
+		setLng1(updated.getLng1());
+		setLng2(updated.getLat2());
 	}
 
 	@JSONSerializable

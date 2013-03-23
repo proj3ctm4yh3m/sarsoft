@@ -151,6 +151,7 @@ public abstract class JSONBaseController {
 				first = false;
 			}
 			header = header + "];\n\norg.sarsoft.EnhancedGMap.configuredLayers = [\n";
+			first = true;
 			for(ConfiguredLayer layer : dao.loadAll(ConfiguredLayer.class)) {
 				header = header + ((first) ? "" : ",") + "{name: \"" + layer.getName() + "\", alias: \"" + layer.getAlias() + "\"}";
 			}
