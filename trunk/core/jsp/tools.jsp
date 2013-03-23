@@ -76,7 +76,7 @@ org.sarsoft.Loader.queue(function() {
 		$('#src' + type).css("display", "inline");
 	});
 
-	locform = new org.sarsoft.LocationEntryForm();
+	locform = new org.sarsoft.ThinLocationForm();
 	locform.create(document.getElementById('coords'));
 	
 	setPane('convert');

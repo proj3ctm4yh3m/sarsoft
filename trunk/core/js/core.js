@@ -292,9 +292,17 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	imap.controls.settings.save = settings.getTool().css({'display': 'none'}).html('<img src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save').attr("title", 'Save These and Other Map Settings for Future Visits');
 
 	new org.sarsoft.widget.MapLayers(imap, this.body);
-
 }
 
+org.sarsoft.StructuredDataNavigator.prototype = new org.sarsoft.DataNavigator();
+
+org.sarsoft.StructuredDataNavigator.prototype.addNewOption = function(idx, text, handler) {
+	if(idx == 0) {
+		this.addobjlink.addItem(text, handler);
+	} else {
+		this.addlayerlink.addItem(text, handler);
+	}
+}
 
 org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 	var that = this;
@@ -428,7 +436,6 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 	}
 }
 
-
 org.sarsoft.view.CookieConfigWidget = function(imap, saveCenter) {
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, true, "Save map settings for future page loads?");
 	this.saveCenter = saveCenter;
@@ -499,15 +506,260 @@ org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 }
 
 
-org.sarsoft.StructuredDataNavigator.prototype = new org.sarsoft.DataNavigator();
+org.sarsoft.widget.Print = function(imap) {
+	var that = this;
+	var div = jQuery('<div style="display: none; padding-left: 20px" class="noprint"></div>').prependTo($(imap.map.getDiv()).parent());
+	this.pageSizeForm = new org.sarsoft.view.MapSizeForm(imap.map, div);
+	this.print_options = new org.sarsoft.view.MenuDropdown('<span class="underlineOnHover" style="font-size: 110%; color: black" title="Print This Page or Make a PDF"><img style="vertical-align: text-top; margin-right: 3px" title="Print" src="' + org.sarsoft.imgPrefix + "/print.png"+ '"/>Print</span>', 'left: 0; width: 100%', imap.map._overlaycontrol.div);
 
-org.sarsoft.StructuredDataNavigator.prototype.addNewOption = function(idx, text, handler) {
-	if(idx == 0) {
-		this.addobjlink.addItem(text, handler);
+	jQuery('<div style="margin-top: 1em"></div>').appendTo(this.print_options.div);
+	jQuery('<span class="underlineOnHover" style="color: #5a8ed7; font-weight: bold; margin-right: 1ex">&rarr; Print From Your Browser</span>').prependTo(jQuery('<div style="margin-top: 1ex">Works best with Google Chrome.  Create borderless prints with any combination of page sizes and map layers.</div>').appendTo(this.print_options.div)).click(function() {
+		if(div.css('display')=='none') {
+			if(imap.registered["org.sarsoft.view.MapDialog"] != null) imap.registered["org.sarsoft.view.MapDialog"].hide();
+			div.css('display', 'block');
+			that.pageSizeForm.presetInput.val("letter");
+			that.pageSizeForm.updateToPreset();
+		} else {
+			div.css('display', 'none');
+			that.pageSizeForm.fullscreen();
+		}
+		that.print_options.hide();
+	});
+	
+	imap.addMenuItem(this.print_options.container, 30);
+	imap.addMenuItem($('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 20);
+	imap.addMenuItem($('<span>&nbsp;<span style="border-left: 1px dashed #CCCCCC">&nbsp;</span></span>')[0], 40);
+	
+}
+
+org.sarsoft.view.MapSizeForm = function(map, container) {
+	var that = this;
+	this.map = map;
+	this.container = container;
+	
+	this.presets = [{name: "letter", description: "8.5\"x11\"", width: "8.5in", height: "11in", margin: "0.25in"}, 
+	                {name: "legal", description: "8.5\"x14\"", width: "8.5in", height: "14in", margin: "0.25in"},
+	                {name: "A4", description: "A4", width: "21cm", height: "29.7cm", margin: "0.5cm"},
+	                {name: "1117", description: "11\"x17\"", width: "11in", height: "17in", margin: "0.25in"},
+	                {name: "1393", description: "13\"x19\"", width: "13in", height: "19in", margin: "0.25in"}
+	                ];
+
+	this.updateToPreset = function() {
+		var presetName = that.presetInput.val();
+		if(presetName == "Custom") {
+			that.widthInput.removeAttr("disabled");
+			that.heightInput.removeAttr("disabled");
+			that.marginInput.removeAttr("disabled");
+			that.cborientation.attr("disabled", "disabled");
+			that.cbmargin.attr("disabled", "disabled");
+			that.cborientation[0].checked=false;
+			that.cbmargin[0].checked=false;
+			that.preset.css('color', 'gray');
+			that.custom.css('color', 'black');
+			return;
+		}
+		that.preset.css('color', 'black');
+		that.custom.css('color', 'gray');
+		that.cbmargin.removeAttr("disabled");
+		that.cborientation.removeAttr("disabled");
+		that.widthInput.attr("disabled", "disabled");
+		that.heightInput.attr("disabled", "disabled");
+		that.marginInput.attr("disabled", "disabled");
+
+		for(var i = 0; i < that.presets.length; i++) {
+			var preset = that.presets[i];
+			if(presetName == preset.name) {
+				var width = preset.width;
+				var height = preset.height;
+				if(that.cborientation[0].checked) {
+					width = preset.height;
+					height = preset.width;
+				}
+				that.widthInput.val(width);
+				that.heightInput.val(height);
+				var margin = preset.margin;
+				if(that.cbmargin[0].checked) margin = "0";
+				that.marginInput.val(margin);
+				that.write();
+			}
+		}
+	}
+
+	var div = jQuery('<div></div>').appendTo(container);
+	var header = jQuery('<div style="font-size: 150%"></div>').appendTo(div);
+	this.printButton = jQuery('<button style="cursor; pointer">Print Map</button>').appendTo(header).click(function() {
+		window.print();
+	});
+	jQuery('<button style="margin-left: 20px; cursor: pointer">Cancel</button>').appendTo(header).click(function() {
+		container.css('display', 'none');
+		that.fullscreen();
+	});
+	this.header = header;
+	
+	div.append(document.createTextNode("Page Size: "));
+	this.presetInput = jQuery('<select><option value="Custom">Custom</option></select>').appendTo(div).change(this.updateToPreset);
+	for(var i = 0; i < this.presets.length; i++) {
+		jQuery('<option value="' + this.presets[i].name + '">' + this.presets[i].description + '</option>').appendTo(this.presetInput);
+	}
+
+	var div = jQuery('<span style="padding-left: 1ex"></span>').appendTo(div);
+	div.append(document.createTextNode("Width: "));
+	this.widthInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
+	div.append(document.createTextNode("   Height: "));
+	this.heightInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
+	div.append(document.createTextNode("   Margin: "));
+	if($.browser.mozilla) {
+		div.append(document.createTextNode(" Not Supported on Firefox."));
+		this.marginInput = jQuery('<input type="text" size="6"/>');
 	} else {
-		this.addlayerlink.addItem(text, handler);
+		this.marginInput = jQuery('<input type="text" size="6"/>').appendTo(div).change(function() {that.write()});
+	}
+	this.custom = div;
+		
+	var div = jQuery('<div style="padding-top: 5px"></div>').appendTo(container);
+	this.preset = jQuery('<span></span>').appendTo(div);
+	this.cborientation = jQuery('<input type="checkbox" style="margin-left: 5px"/>').appendTo(this.preset).change(this.updateToPreset);
+	this.preset.append('<span style="padding-right: 5px">Landscape</span>');
+	this.cbmargin = jQuery('<input style="margin-left: 5px" type="checkbox"/>').appendTo(this.preset).change(this.updateToPreset);
+	this.preset.append('<span>Borderless</span>');
+
+	this.cbborder = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
+	div.append('<span style="padding-right: 5px">Show Coordinates in Margin</span>');
+	this.cbscale = jQuery('<input style="margin-left: 5px" type="checkbox" checked="checked"/>').appendTo(div).change(function() {that.write();});
+	div.append('<span>Fit Preview To Screen</span>');	
+		
+	if($.browser.msie) {
+		jQuery('<div style="font-weight: bold; color: red">Printing is not supported on Internet Explorer and may not work properly.</div>').appendTo(container);
+	} else if($.browser.mozilla) {
+		jQuery('<div style="font-weight: bold; color: red">Remember to check the "Ignore Scaling and Shrink to Fit Page Width" option in Firefox\'s print menu.</div>').appendTo(container);
+	}
+	
+	this.scaleControl = new org.sarsoft.view.ScaleControl(map, map.getDiv());
+	this.scaleControl.hide();
+}
+
+org.sarsoft.view.MapSizeForm.prototype.fullscreen = function() {
+	var center = this.map.getCenter();
+
+	this.map.getDiv().style.width="100%";
+	this.map.getDiv().style.height="100%";
+	this.map.getDiv()._margin=0;
+	
+	$(this.map.getDiv()).css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
+	if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
+
+	var ugc = this.map._imap.registered["org.sarsoft.UTMGridControl"];
+	var mic = this.map._imap._mapInfoControl;
+
+	ugc.hidePrintBorder();
+	if(this.footer[0] != null) this.footer[0].remove();
+	if(this.footer[1] != null) this.footer[1].remove();
+	this.scaleControl.hide();
+	
+	if(mic != null) mic.ctrl.css('visibility', 'visible');
+	this.footer = null;
+	ugc.borders[3].div.css('height', '26px');
+
+	google.maps.event.trigger(this.map, 'resize');
+	this.map.setCenter(center);	
+}
+
+org.sarsoft.view.MapSizeForm.prototype.write = function() {
+	var center = this.map.getCenter();
+	var width = this.widthInput.val().replace(' ', '');
+	var height = this.heightInput.val().replace(' ', '');
+	var margin = this.marginInput.val().replace(' ', '')
+	var rule = this._getMarginRule();
+	
+	if(rule != null && width.indexOf("in") > 0 && height.indexOf("in") > 0) {
+		var nWidth = width.replace("in", "");
+		var nHeight = height.replace("in", "");
+		var nMargin = 0;
+		if(margin.indexOf("in") > 0) {
+			nMargin = margin.replace("in", "");
+		} else if(margin.indexOf("cm") > 0) {
+			nMargin = 2.54*margin.replace("cm", "");
+		}
+		width = (1*nWidth - nMargin*2) + "in";
+		height = (1*nHeight - nMargin*2) + "in";
+	}
+	
+	if(rule != null && width.indexOf("cm") > 0 && height.indexOf("cm") > 0) {
+		var nWidth = width.replace("cm", "");
+		var nHeight = height.replace("cm", "");
+		var nMargin = 0;
+		if(margin.indexOf("cm") > 0) {
+			nMargin = margin.replace("cm", "");
+		} else if(margin.indexOf("in") > 0) {
+			nMargin = margin.replace("in", "")/2.54;
+		}
+		width = (1*nWidth - nMargin*2) + "cm";
+		height = (1*nHeight - nMargin*2) + "cm";
+	}
+	
+	var container = $(map.getDiv());
+	container.css({width: width, height: height});
+	this.map.getDiv()._margin=margin;
+	
+	var ugc = map._imap.registered["org.sarsoft.UTMGridControl"];
+	var mdw = this.map._imap.registered["org.sarsoft.MapDatumWidget"];
+	var mic = this.map._imap._mapInfoControl;
+	if(this.cbborder[0].checked) {
+		if(this.footer == null) {
+			ugc.borders[3].div.css('height', '46px');
+			this.footer = [];
+			if(mdw != null) this.footer[0] = jQuery('<span style="padding-right: 5px">Datum:</span>').insertBefore(mdw.datumDisplay);
+			this.scaleControl.show();
+			if(mic != null) {
+				this.footer[1] = jQuery('<span style="padding-right: 5px">Printed from ' + org.sarsoft.version + '.</span>').insertBefore(mic.premsg);
+				mic.ctrl.css('visibility', 'hidden');
+			}
+		}
+		ugc.showPrintBorder();
+	} else {
+		if(this.footer != null) {
+			if(this.footer[0] != null) this.footer[0].remove();
+			if(this.footer[1] != null) this.footer[1].remove();
+			this.scaleControl.hide();
+			if(mic != null) mic.ctrl.css('visibility', 'visible');
+			this.footer = null;
+			ugc.borders[3].div.css('height', '26px');
+		}
+		ugc.hidePrintBorder();
+	}
+	
+	this.border=this.container.height()+30;
+	
+	var scale = Math.min((container.parent().width()-40)/container.width(), (container.parent().height()-(this.container.height()+30))/container.height());
+	
+	if(scale < 1 && this.cbscale[0].checked) {
+		var offset = (-50)*(1-scale);
+		var transform = 'translate(20px, 10px) translate(' + offset + '%, ' + offset + '%) scale(' + scale + ', ' + scale + ')';
+		container.css('-webkit-transform', transform).css('-moz-transform', transform).css('-ms-transform', transform);
+		var zscale = 1/scale;
+		var zoffset = (-50)*(1-zscale);
+		var ztransform = 'translate(' + zoffset + '%, ' + zoffset + '%) scale(' + zscale + ', ' + zscale + ')';
+		if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', ztransform).css('-moz-transform', ztransform).css('-ms-transform', ztransform);
+	} else {
+		container.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
+		if(this.map._zoomControl != null) this.map._zoomControl.css('-webkit-transform', 'none').css('-moz-transform', 'none').css('-ms-transform', 'none');
+	}
+	if(rule != null) rule.style.setProperty('margin', margin);
+	google.maps.event.trigger(this.map, 'resize');
+	this.map.setCenter(center);
+}
+
+org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
+	for(var i = 0; i < document.styleSheets.length; i++) {
+		var sheet = document.styleSheets[i];
+		var rules = sheet.cssRules;
+		if(rules == null) rules = sheet.rules;
+		for(var j = 0; j < rules.length; j++) {
+			if(rules[j].cssText != null && rules[j].cssText.indexOf("@page") >= 0 && rules[j].cssText.indexOf("margin") >= 0) return rules[j];
+		}
 	}
 }
+
 
 org.sarsoft.AdjustableBox = function(imap, sw, ne) {
 	var that = this;
