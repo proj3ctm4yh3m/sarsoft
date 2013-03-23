@@ -13,13 +13,14 @@ import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
+import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Waypoint;
 import org.springframework.web.util.HtmlUtils;
 
 @JSONAnnotatedEntity
 @Entity
-public class Marker extends SarModelObject implements IPreSave {
+public class Marker extends MapObject implements IPreSave {
 	
 	private Waypoint position;
 	private String label;
@@ -29,6 +30,22 @@ public class Marker extends SarModelObject implements IPreSave {
 
 	public static Marker createFromJSON(JSONObject json) {
 		return (Marker) JSONObject.toBean(json, Marker.class);
+	}
+	
+	public void from (JSONObject json) {
+		Marker updated = createFromJSON(json);
+		from(updated);
+	}
+
+	public void from(Marker updated) {
+		if(updated.getUrl() != null) {
+			setLabel(updated.getLabel());
+			setUrl(updated.getUrl());
+			setComments(updated.getComments());
+		}
+		if(updated.getPosition() != null) {
+			setPosition(updated.getPosition());
+		}
 	}
 
 	@ManyToOne

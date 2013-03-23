@@ -191,7 +191,7 @@ org.sarsoft.BaseDAO.prototype.save = function(id, obj, handler) {
 	}
 }
 
-org.sarsoft.BaseDAO.prototype.del = function(id, handler) {
+org.sarsoft.BaseDAO.prototype.del2 = function(id, handler) {
 	var that = this;
 	if(this.offline) {
 		delete this.objs[id];
@@ -201,7 +201,7 @@ org.sarsoft.BaseDAO.prototype.del = function(id, handler) {
 	}
 }
 
-org.sarsoft.BaseDAO.prototype.del2 = function(id, handler) {
+org.sarsoft.BaseDAO.prototype.del = function(id, handler) {
 	var that = this;
 	if(this.offline) {
 		delete this.objs[id];

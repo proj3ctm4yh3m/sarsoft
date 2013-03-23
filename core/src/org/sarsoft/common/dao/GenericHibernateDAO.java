@@ -15,6 +15,7 @@ import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.util.RuntimeProperties;
+import org.sarsoft.markup.model.Marker;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
@@ -41,6 +42,15 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 		}
 		return obj;
 	}
+	
+	public long generateID(Class<? extends SarModelObject> cls) {
+		List<? extends SarModelObject> objects = this.loadAll(cls);
+		long maxId = 0L;
+		for(SarModelObject obj : objects) {
+			maxId = Math.max(maxId, obj.getId());
+		}
+		return maxId+1;
+	}	
 
 	@SuppressWarnings("unchecked")
 	public <T> T loadByPk(final Class <T> T, final long pk) {

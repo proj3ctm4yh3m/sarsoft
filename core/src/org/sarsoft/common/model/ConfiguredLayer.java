@@ -6,17 +6,26 @@ import net.sf.json.JSONObject;
 
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
-import org.sarsoft.common.model.SarModelObject;
 
 @JSONAnnotatedEntity
 @Entity
-public class ConfiguredLayer extends SarModelObject {
+public class ConfiguredLayer extends MapObject {
 	
 	String name;
 	String alias;
 
 	public static ConfiguredLayer createFromJSON(JSONObject json) {
 		return (ConfiguredLayer) JSONObject.toBean(json, ConfiguredLayer.class);
+	}
+	
+	public void from(JSONObject json) {
+		ConfiguredLayer updated = createFromJSON(json);
+		from(updated);
+	}
+	
+	public void from(ConfiguredLayer updated) {
+		setName(updated.getName());
+		setAlias(updated.getAlias());
 	}
 
 	@JSONSerializable

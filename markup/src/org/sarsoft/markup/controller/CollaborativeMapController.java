@@ -17,6 +17,8 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.controller.AdminController;
+import org.sarsoft.common.controller.ConfiguredLayerController;
+import org.sarsoft.common.controller.GeoRefController;
 import org.sarsoft.common.controller.ImageryController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
@@ -64,6 +66,12 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	@Autowired
 	ImageryController imageryController;
+	
+	@Autowired
+	GeoRefController georefController;
+	
+	@Autowired
+	ConfiguredLayerController cfglayerController;
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> searchClassHints = new HashMap<String, Class>();
@@ -260,14 +268,14 @@ public class CollaborativeMapController extends JSONBaseController {
 				JSONArray georefs = (JSONArray) JSONSerializer.toJSON(request.getParameter("georefs"));
 				int size = georefs.size();
 				for(int i = 0; i < size; i++) {
-					imageryController.create((JSONObject) georefs.get(i));
+					georefController.create((JSONObject) georefs.get(i));
 				}
 			}
 			if(request.getParameter("cfglayers") != null) {
 				JSONArray layers = (JSONArray) JSONSerializer.toJSON(request.getParameter("cfglayers"));
 				int size = layers.size();
 				for(int i = 0; i < size; i++) {
-					imageryController.createCfgLayer((JSONObject) layers.get(i));
+					cfglayerController.create((JSONObject) layers.get(i));
 				}
 			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
@@ -301,8 +309,8 @@ public class CollaborativeMapController extends JSONBaseController {
 		shape.setWay(way);
 		shape.setLabel((String) mapobj.get("name"));
 		String desc = (String) mapobj.get("desc");
-		shape.setWeight(2);
-		shape.setFill(0);
+		shape.setWeight(2f);
+		shape.setFill(0f);
 		shape.setColor("#FF0000");
 
 		Map<String, String> attrs = (Map<String, String>) SearchAssignmentGPXHelper.decodeAttrs(desc);

@@ -3,6 +3,7 @@ package org.sarsoft.markup.model;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Entity;
@@ -16,14 +17,13 @@ import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
-import org.sarsoft.common.model.SarModelObject;
+import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
-import org.sarsoft.common.model.WayType;
-import org.springframework.web.util.HtmlUtils;
+import org.sarsoft.common.model.Waypoint;
 
 @JSONAnnotatedEntity
 @Entity
-public class Shape extends SarModelObject implements IPreSave {
+public class Shape extends MapObject implements IPreSave {
 
 	private Way way;
 	private String color;
@@ -47,6 +47,26 @@ public class Shape extends SarModelObject implements IPreSave {
 	public static Shape createFromJSON(JSONObject json) {
 		return (Shape) JSONObject.toBean(json, Shape.class, classHints);
 	}
+	
+	public void from (JSONObject json) {
+		Shape updated = createFromJSON(json);
+		from(updated);
+	}
+	
+	public void from(Shape updated) {
+		if(updated.getWeight() != null) {
+			setColor(updated.getColor());
+			setFill(updated.getFill());
+			setWeight(updated.getWeight());
+			setComments(updated.getComments());
+			setLabel(updated.getLabel());
+		}
+		if(updated.getWay() != null) {
+			List<Waypoint> waypoints = getWay().getWaypoints();
+			waypoints.removeAll(waypoints);
+			waypoints.addAll(updated.getWay().getWaypoints());
+		}
+	}
 
 	@ManyToOne
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
@@ -69,20 +89,20 @@ public class Shape extends SarModelObject implements IPreSave {
 	}
 	
 	@JSONSerializable
-	public float getWeight() {
+	public Float getWeight() {
 		return weight;
 	}
 	
-	public void setWeight(float weight) {
+	public void setWeight(Float weight) {
 		this.weight = weight;
 	}
 	
 	@JSONSerializable
-	public float getFill() {
+	public Float getFill() {
 		return fill;
 	}
 	
-	public void setFill(float fill) {
+	public void setFill(Float fill) {
 		this.fill = fill;
 	}
 	
