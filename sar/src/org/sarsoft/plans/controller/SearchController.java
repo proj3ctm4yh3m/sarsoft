@@ -227,10 +227,10 @@ public class SearchController extends JSONBaseController {
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=" + RuntimeProperties.getTenant() + ".gpx");
-			return gpx(model, SearchAssignmentGPXHelper.gpxifySearch(dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant()), dao), "Search");
+			return gpx(model, SearchAssignmentGPXHelper.gpxifySearch(dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant()), dao));
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=" + RuntimeProperties.getTenant() + ".kml");
-			return kml(model, assignments, "SearchAssignments");
+			return kml(model, assignments);
 		default :
 			return json(model, assignments);
 		}

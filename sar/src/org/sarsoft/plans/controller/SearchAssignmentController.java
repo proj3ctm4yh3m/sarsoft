@@ -267,10 +267,10 @@ public class SearchAssignmentController extends JSONBaseController {
 			if(search.getLkp() != null) m.put("lkp", search.getLkp());
 			if(search.getPls() != null) m.put("pls", search.getPls());
 			if(search.getCP() != null) m.put("cp", search.getCP());
-			return gpx(model, m, "SearchAssignment");
+			return gpx(model, m);
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=searchassignment" + assignment.getId() + ".kml");
-			return kml(model, assignment, "SearchAssignment");
+			return kml(model, assignment);
 		default :
 			return json(model, assignment);
 		}

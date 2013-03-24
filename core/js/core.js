@@ -1,15 +1,57 @@
+org.sarsoft.widget.SaveAs = function(imap) {
+	var body = $('<div style="clear: both; border-left: 1px solid red; padding-left: 5px; margin-left: 2px"></div>').appendTo(imap.controls.action.bodies['save']);
+	
+	if(org.sarsoft.username != null) {
+		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(body);
+		var saveAsName = jQuery('<input type="text" name="name" placeholder="Choose a map name"/>').appendTo(newform);
+			
+		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
+		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
+		var mapcfg = jQuery('<input type="hidden" name="mapcfg"/>').appendTo(newform);
+		var clientstate = jQuery('<input type="hidden" name="state"/>').appendTo(newform);
+
+		jQuery('<button>Save</button>').appendTo(body).click(function(evt) {
+			var name = saveAsName.val();
+			if(name == null || name == "") {
+				alert('Please enter a name for this map.');
+				return;
+			}
+			clientstate.val(YAHOO.lang.JSON.stringify(org.sarsoft.widget.SaveAs.getClientState()));
+			var center = imap.map.getCenter();
+			newlat.val(center.lat());
+			newlng.val(center.lng());
+			var bcw = imap.registered["org.sarsoft.view.BaseConfigWidget"];
+			var cfg = {}
+			if(bcw != null) {
+				cfg = bcw._toConfigObj();
+			} else {
+				cfg = imap.getConfig();
+			}
+			mapcfg.val(YAHOO.lang.JSON.stringify(cfg));
+			newform.submit()
+		});
+	} else {
+		body.append('Sign in to save this map.  We\'ll keep track of it while you\'re gone.')
+		
+		new org.sarsoft.widget.Login(body, imap.registered);
+	}
+}
+
+org.sarsoft.widget.SaveAs.getClientState = function() {
+	var state = new Object();
+	for(var key in imap.datamanager) {
+		state[key] = imap.datamanager[key].dehydrate();
+	}
+	return state;
+}
+
 org.sarsoft.widget.Login = function(container, controllers) {
 	
 	var login = function(provider) {
-		var clientState = new Object();
-		controllers = controllers || new Object();
-		for(var key in controllers) {
-			if(controllers[key].dehydrate != null) clientState[key] = controllers[key].dehydrate();
-		}
 		if(org.sarsoft.tenantid == null) {
 			form_yahoo.append(jQuery('<input type="hidden" name="domain"/>').val(provider));
 			form_yahoo.append(jQuery('<input type="hidden" name="dest"/>').val(window.location));
-			form_yahoo.append(jQuery('<input type="hidden" name="clientState"/>').val(YAHOO.lang.JSON.stringify(clientState)));
+			form_yahoo.append(jQuery('<input type="hidden" name="state"/>').val(YAHOO.lang.JSON.stringify(org.sarsoft.widget.SaveAs.getClientState())));
 			form_yahoo.submit();
 		} else {
 			window.location='/app/openidrequest?domain=' + provider + '&dest=' + encodeURIComponent(window.location);
@@ -871,6 +913,7 @@ org.sarsoft.MapObjectController = function(imap, types, background_load) {
 			});
 		}(i);
 		this.dao[i].mark();
+		imap.datamanager[type.name] = this.dao[i];
 	}
 }
 
@@ -1252,7 +1295,7 @@ org.sarsoft.ConfigurableLayerDAO.prototype.offlineLoad = function(cfg) {
 
 org.sarsoft.controller.CustomLayerController = function(imap) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, [{name: "georefs", dao: org.sarsoft.GeoRefDAO, label: "Geospatial Images"}, {name: "cfglayers", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"}]);
+	org.sarsoft.MapObjectController.call(this, imap, [{name: "GeoRef", dao: org.sarsoft.GeoRefDAO, label: "Geospatial Images"}, {name: "ConfiguredLayer", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"}]);
 	this.imap.register("org.sarsoft.controller.CustomLayerController", this);
 	this.tree[1].block.insertBefore(this.tree[0].block);
 	this.dn[0].cb.css('display', 'none');

@@ -84,6 +84,17 @@ org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handle
 	}
 }
 
+org.sarsoft.ShapeDAO.prototype.dehydrate = function() {
+	for(var i = 0; i < this.objs.length; i++) {
+		if(this.objs[i] != null) {
+			delete this.objs[i].way.displayMessage;
+			delete this.objs[i].updated;
+		}
+	}
+	
+	return org.sarsoft.BaseDAO.prototype.dehydrate.call(this);
+}
+
 org.sarsoft.MarkerDAO = function(errorHandler, baseURL) {
 	if(typeof baseURL == "undefined") baseURL = "/rest/marker";
 	this.baseURL = baseURL;
@@ -293,16 +304,16 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 			that.imp.dlg.swap();
 		});
 		
-		var hastyHandler = function(data) {
-			for(var i = 0; i < data.shapes.length; i++) {
-				var shape = data.shapes[i];
+		var hastyHandler = function(data) { // TODO generalize
+			for(var i = 0; i < data.Shape.length; i++) {
+				var shape = data.Shape[i];
 				shape.id = null;
 				shape.way.id = null;
 				that.controller.dao[1].offlineLoad(shape);
 				that.controller.show(1, shape);
 			}
-			for(var i = 0; i < data.markers.length; i++) {
-				var marker = data.markers[i];
+			for(var i = 0; i < data.Marker.length; i++) {
+				var marker = data.Marker[i];
 				marker.id = null;
 				marker.position.id = null;
 				that.controller.dao[0].offlineLoad(marker);
@@ -349,7 +360,7 @@ org.sarsoft.view.MarkupIO = function(imap, controller) {
 	}
 	
 	this.exp = new Object();
-	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="shapes"/><input type="hidden" name="markers"/></form>').appendTo(document.body);
+	this.exp.form = jQuery('<form style="display: none" action="/hastymap" method="POST"><input type="hidden" name="format"/><input type="hidden" name="state"/></form>').appendTo(document.body);
 	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
 	if(imap.controls.action) imap.controls.action.links['export'].click(function() {
 		var exportables = that.exp.body.find('select');
@@ -399,16 +410,15 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 	var url = "";
 	if(type == "a") {
 		url = window.location.href+"&format=" + format;
-		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify(this.controller.dao[0].objs));
-		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify(this.controller.dao[1].objs));
-	} else if(type == "m") {
+		this.exp.form.find('[name="state"]').val(YAHOO.lang.JSON.stringify(org.sarsoft.widget.SaveAs.getClientState()));
+	} else if(type == "m") { // TODO individual item hasty export broken
 		url = "/rest/marker/" + id + "?format=" + format;
-		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify([]));
-		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify([this.controller.objects[1][id]]));
+//		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify([]));
+//		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify([this.controller.objects[1][id]]));
 	} else {
 		url = "/rest/shape/" + id + "?format=" + format;
-		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify([this.controller.objects[0][id]]));
-		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify([]));
+//		this.exp.form.find('[name="markers"]').val(YAHOO.lang.JSON.stringify([this.controller.objects[0][id]]));
+//		this.exp.form.find('[name="shapes"]').val(YAHOO.lang.JSON.stringify([]));
 	}
 	
 	if(org.sarsoft.tenantid != null) {
@@ -427,69 +437,15 @@ org.sarsoft.view.MarkupIO.prototype.doexport = function(format) {
 	}
 }
 
-org.sarsoft.widget.MarkupSaveAs = function(imap) {
-	var body = $('<div style="clear: both; border-left: 1px solid red; padding-left: 5px; margin-left: 2px"></div>').appendTo(imap.controls.action.bodies['save']);
-	
-	if(org.sarsoft.username != null) {
-		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(body);
-		var saveAsName = jQuery('<input type="text" name="name" placeholder="Choose a map name"/>').appendTo(newform);
-			
-		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
-		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
-		var mapcfg = jQuery('<input type="hidden" name="mapcfg"/>').appendTo(newform);
-		var shapes = jQuery('<input type="hidden" name="shapes"/>').appendTo(newform);
-		var markers = jQuery('<input type="hidden" name="markers"/>').appendTo(newform);
-		var georefs = jQuery('<input type="hidden" name="georefs"/>').appendTo(newform);
-		var cfglayers = jQuery('<input type="hidden" name="cfglayers"/>').appendTo(newform);
-
-		jQuery('<button>Save</button>').appendTo(body).click(function(evt) {
-			var name = saveAsName.val();
-			if(name == null || name == "") {
-				alert('Please enter a name for this map.');
-				return;
-			}
-			for(var i = 0; i < markupController.dao[1].objs.length; i++) {
-				if(markupController.dao[1].objs[i] != null) {
-					delete markupController.dao[1].objs[i].way.displayMessage;
-					delete markupController.dao[1].objs[i].updated;
-				}
-			}
-			shapes.val(YAHOO.lang.JSON.stringify(markupController.dao[1].objs));
-			markers.val(YAHOO.lang.JSON.stringify(markupController.dao[0].objs));
-			if(imap.registered["org.sarsoft.controller.CustomLayerController"] != null) {
-				georefs.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao[0].objs));
-				cfglayers.val(YAHOO.lang.JSON.stringify(imap.registered["org.sarsoft.controller.CustomLayerController"].dao[1].objs));
-			}
-			var center = imap.map.getCenter();
-			newlat.val(center.lat());
-			newlng.val(center.lng());
-			var bcw = imap.registered["org.sarsoft.view.BaseConfigWidget"];
-			var cfg = {}
-			if(bcw != null) {
-				cfg = bcw._toConfigObj();
-			} else {
-				cfg = imap.getConfig();
-			}
-			mapcfg.val(YAHOO.lang.JSON.stringify(cfg));
-			newform.submit()
-		});
-	} else {
-		body.append('Sign in to save this map.  We\'ll keep track of it while you\'re gone.')
-		
-		new org.sarsoft.widget.Login(body, imap.registered);
-	}
-	
-}
-
 
 org.sarsoft.controller.MarkupMapController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, [{name: "markers", dao : org.sarsoft.MarkerDAO, label: "Markers"}, {name: "shapes", dao: org.sarsoft.ShapeDAO, label: "Shapes"}], background_load);	
+	org.sarsoft.MapObjectController.call(this, imap, [{name: "Marker", dao : org.sarsoft.MarkerDAO, label: "Markers"}, {name: "Shape", dao: org.sarsoft.ShapeDAO, label: "Shapes"}], background_load);	
 	this.imap.register("org.sarsoft.controller.MarkupMapController", this);
 	
 	if(org.sarsoft.writeable && !background_load) { // TODO make this work with non-markup objects like assignments
 		if(org.sarsoft.tenantid == null) {
-			this.saveAs = new org.sarsoft.widget.MarkupSaveAs(imap);
+			this.saveAs = new org.sarsoft.widget.SaveAs(imap);
 		}
 		
 		this.buildAddButton(0, "Marker", function(point) {

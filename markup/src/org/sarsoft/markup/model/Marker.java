@@ -1,26 +1,25 @@
 package org.sarsoft.markup.model;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.persistence.Entity;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
 
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
-import org.sarsoft.common.model.MapObject;
-import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Waypoint;
-import org.springframework.web.util.HtmlUtils;
 
 @JSONAnnotatedEntity
 @Entity
-public class Marker extends MapObject implements IPreSave {
+public class Marker extends GeoMapObject implements IPreSave {
 	
 	private Waypoint position;
 	private String label;
@@ -28,12 +27,27 @@ public class Marker extends MapObject implements IPreSave {
 	private String url;
 	private Date updated;
 
-	public static Marker createFromJSON(JSONObject json) {
+	public static Marker fromJSON(JSONObject json) {
 		return (Marker) JSONObject.toBean(json, Marker.class);
 	}
 	
-	public void from (JSONObject json) {
-		Marker updated = createFromJSON(json);
+	public static Marker fromGPX(JSONObject gpx) {
+		String type = gpx.getString("type");
+		if(!"waypoint".equals(type)) return null;
+
+		Marker marker = new Marker();
+		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
+		
+		marker.setPosition(Waypoint.createFromJSON((JSONObject) gpx.get("position")));
+
+		marker.setUrl(attrs.containsKey("url") ? attrs.get("url") : "#FF0000");
+		marker.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
+
+		return marker;
+	}
+	
+	public void from(JSONObject json) {
+		Marker updated = fromJSON(json);
 		from(updated);
 	}
 
@@ -46,6 +60,22 @@ public class Marker extends MapObject implements IPreSave {
 		if(updated.getPosition() != null) {
 			setPosition(updated.getPosition());
 		}
+	}
+	
+	public JSONObject toGPX() {
+		JSONObject jobj = new JSONObject();
+		jobj.put("type", "waypoint");
+		jobj.put("name", getLabel());
+		jobj.put("icon", getUrl());
+		jobj.put("position", json(getPosition()));
+		
+		Map<String, String> attrs = new HashMap<String, String>();
+		attrs.put("url", getUrl());
+		attrs.put("comments", getComments());
+		
+		jobj.put("desc", encodeGPXAttrs(attrs));
+		
+		return jobj;
 	}
 
 	@ManyToOne

@@ -203,7 +203,7 @@ public class AdminController extends JSONBaseController {
 			if(dest != null && dest.length() > 0) {
 				request.getSession(true).setAttribute("login_dest", dest);
 			}
-			String clientState = request.getParameter("clientState");
+			String clientState = request.getParameter("state");
 			if(clientState != null && clientState.length() > 0) {
 				request.getSession(true).setAttribute("client_state", clientState);
 			}

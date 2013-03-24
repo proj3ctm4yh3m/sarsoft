@@ -8,8 +8,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.sarsoft.common.controller.GeoMapObjectController;
 import org.sarsoft.common.controller.JSONForm;
-import org.sarsoft.common.controller.MapObjectController;
 import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
@@ -22,24 +22,29 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping("/rest/shape")
-public class ShapeController extends MapObjectController {
+public class ShapeController extends GeoMapObjectController {
 
 	public ShapeController() {
 		super(Shape.class);
 	}
 	
-	public Shape create(JSONObject json) {
-		Shape shape = Shape.createFromJSON(json);
-		shape.setId(dao.generateID(Shape.class));
-		dao.save(shape);
-		return shape;
+	public Shape make(JSONObject json) {
+		return Shape.fromJSON(json);
 	}
 	
-	public String getLabel(MapObject object) {
-		Shape shape = (Shape) object;
-		return (shape.getLabel() == null ? Long.toString(shape.getId()) : shape.getLabel());
+	public JSONObject toGPX(MapObject obj) {
+		return ((Shape) obj).toGPX();
 	}
 
+	public MapObject fromGPX(JSONObject obj) {
+		return Shape.fromGPX(obj);
+	}
+
+	public String getLabel(MapObject object) {
+		Shape shape = (Shape) object;
+		return (shape.getLabel() != null && shape.getLabel().length() > 0) ? shape.getLabel() : Long.toString(shape.getId());
+	}
+	
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	@RequestMapping(value="/{id}/way", method = RequestMethod.POST)
 	public String updateWay(JSONForm params, @PathVariable("id") long id, Model model, HttpServletRequest request) {
@@ -69,5 +74,5 @@ public class ShapeController extends MapObjectController {
 		shape.getWay().setPrecision(precision);
 		return json(model, shape.getWay());
 	}
-	
+
 }
