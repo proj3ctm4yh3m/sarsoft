@@ -1,27 +1,17 @@
 package org.sarsoft.common.controller;
 
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import net.sf.json.JSON;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
-import org.apache.log4j.Logger;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ConfiguredLayer;
 import org.sarsoft.common.model.GeoRef;
@@ -58,15 +48,6 @@ public abstract class JSONBaseController {
 	@Value("${sarsoft.map.viewer}")
 	String mapViewer = "google";
 	
-	@Autowired
-	protected IServerController serverController;
-	
-	private Logger logger = Logger.getLogger(JSONBaseController.class);
-
-	public void setDao(GenericHibernateDAO dao) {
-		this.dao = dao;
-	}
-
 	protected boolean isHosted() {
 		if(inHostedMode == null) {
 			inHostedMode = "true".equalsIgnoreCase(hosted);
@@ -79,8 +60,8 @@ public abstract class JSONBaseController {
 		return RuntimeProperties.getProperty(name);
 	}
 
-	protected List<String> getVisibleMapSources(boolean checkTenant) {
-		if(checkTenant && RuntimeProperties.getTenant() != null) {
+	protected List<String> getVisibleMapSources() {
+		if(RuntimeProperties.getTenant() != null) {
 			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
 			if(tenant.getLayers() != null) {
 				String[] layers = tenant.getLayers().split(",");
@@ -99,44 +80,7 @@ public abstract class JSONBaseController {
 		return RuntimeProperties.getVisibleMapSources();
 	}
 
-	private byte[] sha1(String str) {
-		try {
-			MessageDigest d = MessageDigest.getInstance("SHA-1");
-			d.reset();
-			d.update(str.getBytes());
-			return d.digest();
-		} catch (NoSuchAlgorithmException e) {
-			return null;
-		}
-	}
-	
-	protected String hash32(String str) {
-		if(str == null) return null;
-		byte[] bytes = sha1(str);
-		if(bytes == null) return str;
-		StringBuffer sb = new StringBuffer();
-		for(byte b : bytes) {
-			int i = b & 0xFF;
-			if(i < 32) sb.append("0");
-			sb.append(Integer.toString(i, 32));
-		}
-		return sb.toString().toUpperCase();
-	}
-	
-	protected String hash(String password) {
-		if(password == null) return null;
-		StringBuffer sb = new StringBuffer();
-		byte[] bytes = sha1(password);
-		if(bytes == null) return password;
-		for(byte b : bytes) {
-			int i = b & 0xFF;
-			if(i < 16) sb.append("0");
-			sb.append(Integer.toHexString(i));
-		}
-		return sb.toString().toUpperCase();
-	}
-
-	protected String getCommonHeader(boolean checkTenant) {
+	protected String getCommonHeader() {
 		if(this.header != null) {
 			String header = "<script>" + preheader;
 	
@@ -157,7 +101,7 @@ public abstract class JSONBaseController {
 			}
 			header = header + "];\n\norg.sarsoft.EnhancedGMap.visibleMapTypes = [\n";
 			first = true;
-			for(String source : getVisibleMapSources(checkTenant)) {
+			for(String source : getVisibleMapSources()) {
 				header = header + ((first) ? "" : ",") + "\"" + source + "\"";
 				first = false;
 			}
@@ -168,7 +112,7 @@ public abstract class JSONBaseController {
 			String datum = "WGS84";
 			if(getProperty("sarsoft.map.datum") != null) datum = getProperty("sarsoft.map.datum");
 			
-			if(checkTenant && RuntimeProperties.getTenant() != null) {
+			if(RuntimeProperties.getTenant() != null) {
 				Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
 				if(tenant.getDatum() != null) datum = tenant.getDatum();
 			}
@@ -257,7 +201,6 @@ public abstract class JSONBaseController {
 				header = "<script type=\"text/javascript\" src=\"http://yui.yahooapis.com/combo?2.9.0/build/yahoo-dom-event/yahoo-dom-event.js&2.9.0/build/connection/connection-min.js&2.9.0/build/dragdrop/dragdrop-min.js&2.9.0/build/container/container-min.js&2.9.0/build/cookie/cookie-min.js&2.9.0/build/datasource/datasource-min.js&2.9.0/build/element/element-min.js&2.9.0/build/datatable/datatable-min.js&2.9.0/build/json/json-min.js&2.9.0/build/menu/menu-min.js&2.9.0/build/slider/slider-min.js&2.9.0/build/tabview/tabview-min.js\"></script>\n" +
 				"<script src=\"http://code.jquery.com/jquery-1.6.4.js\"></script>\n";
 			}
-			header = header + serverController.getHeader();
 			header = header +
 				"<!--[if gte IE 9]>\n" +
 				"<style type=\"text/css\">\n" +
@@ -268,7 +211,28 @@ public abstract class JSONBaseController {
 				"<![endif]-->\n";
 			this.header = header;
 		}
-		return getCommonHeader(checkTenant);
+		return getCommonHeader();
+	}
+	
+	private void prep(Model model) {
+		model.addAttribute("hosted", isHosted());
+		model.addAttribute("version", getProperty("sarsoft.version"));
+		model.addAttribute("head", getCommonHeader());
+		model.addAttribute("mapSources", RuntimeProperties.getMapSources());
+	}
+		
+	protected String bounce(Model model) {
+		if(!model.asMap().containsKey("targetDest")) return "redirect:/map.html";
+
+		prep(model);
+		return "Pages.Paswword";
+	}
+
+	protected String app(Model model, String view) {
+		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
+
+		prep(model);
+		return view;
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -283,129 +247,31 @@ public abstract class JSONBaseController {
 			return JSONAnnotatedPropertyFilter.fromObject(obj);
 		}		
 	}
-
-	private void addJsonToModel(Model model, Object obj) {
-		if(obj == null) return;
-		model.addAttribute("json", toJSON(obj));
-	}
 	
 	protected String jsonframe(Model model, Object obj) {
-		addJsonToModel(model, obj);
+		if(obj != null) model.addAttribute("json", toJSON(obj));
 		return "/jsonframe";
 	}
 
 	protected String json(Model model, Object obj) {
-		addJsonToModel(model, obj);
+		if(obj != null) model.addAttribute("json", toJSON(obj));
 		return "/json";
 	}
 
-	protected String bounce(Model model) {
-		String dest = serverController.bounce(model);
-		if(dest != null && dest.startsWith("redirect:")) return dest;
-
-		model.addAttribute("hosted", isHosted());
-		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByPk(Tenant.class, RuntimeProperties.getTenant()));
-		model.addAttribute("head", getCommonHeader(false));
-		model.addAttribute("version", getProperty("sarsoft.version"));
-
-		return dest;
-	}
-
-	protected String splash(Model model) {
-		String view = serverController.splash(model);
-		if(view.startsWith("redirect")) return view;
-		return app(model, view);
-	}
-	
-	protected String app(Model model, String view) {
-		model.addAttribute("mapSources", RuntimeProperties.getMapSources());
-		model.addAttribute("geoRefImages", dao.loadAll(GeoRef.class));
-		model.addAttribute("hosted", isHosted());
-		model.addAttribute("userPermissionLevel", RuntimeProperties.getUserPermission());
-		model.addAttribute("version", getProperty("sarsoft.version"));
-		String username = RuntimeProperties.getUsername();
-		model.addAttribute("username", username);
-		if(username != null)
-			model.addAttribute("account", dao.getByPk(UserAccount.class, username));
-		model.addAttribute("head", getCommonHeader(serverController.isTenantRestrictedPage(view)));
-		// bounce users from pages that only make sense with tenants
-		if(RuntimeProperties.getTenant() == null && serverController.isTenantRestrictedPage(view)) {
-			return bounce(model);
-		}
-		// bounce users from listing pages unless they're logged in
-		if(isHosted() && username == null && serverController.isLoginRestrictedPage(view)) return bounce(model);
-		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
-		return view;
-	}
-
-	protected Object parse(JSONForm json) {
-		return JSONSerializer.toJSON(json.getJson());
-	}
-
-	protected JSONObject parseObject(JSONForm json) {
-		return (JSONObject) parse(json);
-	}
-
-	protected Object parseGPXFile(HttpServletRequest request, String file) {
-		return parseGPXFile(request, file, "/xsl/gpx/gpx2way.xsl");
-	}
-
-	protected Object parseGPXFile(HttpServletRequest request, String file, String template) {
-		return parseGPXInternal(request.getSession().getServletContext(), file, template);
-	}
-
-	protected Object parseGPXJson(HttpServletRequest request, String json) {
-		return parseGPXJson(request, json, "/xsl/gpx/gpx2way.xsl");
-	}
-
-	protected Object parseGPXJson(HttpServletRequest request, String json, String template) {
-		JSONObject obj = (JSONObject) JSONSerializer.toJSON(json);
-		String gpx = (String) obj.get("gpx");
-		return parseGPXInternal(request.getSession().getServletContext(), gpx, template);
-	}
-
-	protected Object parseGPXInternal(ServletContext sc, String gpx, String template) {
-		try {
-			TransformerFactory factory = TransformerFactory.newInstance();
-			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream(template)));
-			StringWriter writer = new StringWriter();
-			if(gpx != null && gpx.indexOf("<?xml") > 0 && gpx.indexOf("<?xml") < 10) gpx = gpx.substring(gpx.indexOf("<?xml"));
-			gpx = gpx.replaceAll("\u0004", "");
-			transformer.transform(new StreamSource(new StringReader(gpx)), new StreamResult(writer));
-			String xml = writer.toString();
-			XMLSerializer serializer = new XMLSerializer();
-			serializer.setRemoveNamespacePrefixFromElements(true);
-			serializer.removeNamespace("gpx");
-			JSON json = serializer.read(xml);
-			return json;
-		} catch (Exception e) {
-			logger.error("Exception in parseGPXInternal", e);
-			return JSONSerializer.toJSON("[]");
-		}
-	}
-
-	private void processModelForXML(Model model, Object obj) {
-		JSON json = null;
-		if(obj instanceof List) {
-			json = JSONAnnotatedPropertyFilter.fromArray(obj);
-		} else if(obj instanceof Set) {
-			json = JSONAnnotatedPropertyFilter.fromArray(obj);
-		} else {
-			json = JSONAnnotatedPropertyFilter.fromObject(obj);
-		}
-		String xml = new XMLSerializer().write(json);
+	private void prepXML(Model model, Object obj) {
+		String xml = new XMLSerializer().write(toJSON(obj));
 		xml = xml.replaceFirst("<o>", "<o xmlns=\"json\">");
 		xml = xml.replaceFirst("<a>", "<a xmlns=\"json\">");
 		model.addAttribute("xml", new StringReader(xml));
 	}
 	
 	protected String gpx(Model model, Object obj) {
-		processModelForXML(model, obj);
+		prepXML(model, obj);
 		return "/xsl/gpx/togpx";
 	}
 
 	protected String kml(Model model, Object obj) {
-		processModelForXML(model, obj);
+		prepXML(model, obj);
 		return "/xsl/kml/tokml";
 	}
 

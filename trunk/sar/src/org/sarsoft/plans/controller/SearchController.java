@@ -19,6 +19,7 @@ import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.GPX;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.controller.OpsController;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
@@ -143,7 +144,7 @@ public class SearchController extends JSONBaseController {
 	protected Waypoint getSearchWpt(JSONForm params) {
 		Map<String, Class> classHints = new HashMap<String, Class>();
 		classHints.put("value", Waypoint.class);
-		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class, classHints);
+		Map m = (Map) JSONObject.toBean(params.JSON(), HashMap.class, classHints);
 		return (Waypoint) m.get("value");
 	}
 
@@ -202,14 +203,10 @@ public class SearchController extends JSONBaseController {
 		Object obj;
 		switch(format) {
 		case GPX :
-			if(params.getFile() != null) {
-				obj = parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2search.xsl");
-			} else {
-				obj = parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2search.xsl");
-			}
+			obj = GPX.parse(context, params);
 			break;
 		default :
-			obj = parseObject(params);
+			obj = params.JSON();
 		}
 
 		SearchAssignmentGPXHelper.updateSearch((JSONObject) obj, dao);

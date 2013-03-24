@@ -1,12 +1,10 @@
 package org.sarsoft.markup.controller;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -17,31 +15,17 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.controller.AdminController;
-import org.sarsoft.common.controller.ConfiguredLayerController;
 import org.sarsoft.common.controller.DataManager;
-import org.sarsoft.common.controller.GeoRefController;
 import org.sarsoft.common.controller.ImageryController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.controller.JSONForm;
-import org.sarsoft.common.model.Action;
-import org.sarsoft.common.model.ClientState;
-import org.sarsoft.common.model.ConfiguredLayer;
 import org.sarsoft.common.model.Format;
-import org.sarsoft.common.model.GeoRef;
-import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Tenant;
-import org.sarsoft.common.model.Way;
-import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.GPX;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.CollaborativeMap;
-import org.sarsoft.markup.model.Marker;
-import org.sarsoft.markup.model.MarkupLatitudeComparator;
-import org.sarsoft.markup.model.Shape;
-import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.controller.SearchController;
-import org.sarsoft.plans.model.Search;
-import org.sarsoft.plans.model.SearchAssignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -184,15 +168,15 @@ public class CollaborativeMapController extends JSONBaseController {
 	@RequestMapping(value = "/rest/tenant/center", method = RequestMethod.POST)
 	public String setDefaultCenter(Model model, JSONForm params, HttpServletRequest request) {
 		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
-		Waypoint center = Waypoint.createFromJSON(parseObject(params));
+		Waypoint center = Waypoint.createFromJSON(params.JSON());
 		map.setDefaultCenter(center);
 		dao.save(map);
 		return json(model, map.getDefaultCenter());
 	}
 	
 	@RequestMapping(value="/map/restgpxupload", method = RequestMethod.POST)
-	public String restGpxUpload(JSONForm params, Model model, HttpServletRequest request) {
-		gpxUpload(params, model, request);
+	public String restGpxUpload(JSONForm params, Model model) {
+		gpxUpload(params, model);
 		return json(model, new Object());
 	}
 	
@@ -200,12 +184,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	@SuppressWarnings({ "rawtypes", "unchecked"})
 	@RequestMapping(value="/hastyupload")
 	public String hastyImport(Model model, JSONForm params, HttpServletRequest request) {
-		JSONArray jarray = null;
-		if(params.getFile() != null) {
-			jarray = (JSONArray) parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2shapes.xsl");
-		} else {
-			jarray = (JSONArray) parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2shapes.xsl");
-		}
+		JSONArray jarray = GPX.parse(context, params);
 
 		if("frame".equals(request.getParameter("responseType"))) {
 			return jsonframe(model, manager.toJSON(manager.fromGPX(jarray)));
@@ -216,14 +195,9 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	
 	@RequestMapping(value="/map/gpxupload", method = RequestMethod.POST)
-	public String gpxUpload(JSONForm params, Model model, HttpServletRequest request) {
+	public String gpxUpload(JSONForm params, Model mode) {
 
-		JSONArray jarray = null;
-		if(params.getFile() != null) {
-			jarray = (JSONArray) parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2shapes.xsl");
-		} else {
-			jarray = (JSONArray) parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2shapes.xsl");
-		}
+		JSONArray jarray = GPX.parse(context, params);
 		
 		manager.toDB(manager.fromGPX(jarray));
 
