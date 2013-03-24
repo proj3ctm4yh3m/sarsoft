@@ -1,5 +1,7 @@
 package org.sarsoft.common.controller;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,11 +47,43 @@ public class AdminController extends JSONBaseController {
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
 	
-	@RequestMapping(value="/", method = RequestMethod.GET)
-	public String getHomePage(Model model) {
-		return splash(model);
+	private byte[] sha1(String str) {
+		try {
+			MessageDigest d = MessageDigest.getInstance("SHA-1");
+			d.reset();
+			d.update(str.getBytes());
+			return d.digest();
+		} catch (NoSuchAlgorithmException e) {
+			return null;
+		}
 	}
-
+	
+	protected String hash32(String str) {
+		if(str == null) return null;
+		byte[] bytes = sha1(str);
+		if(bytes == null) return str;
+		StringBuffer sb = new StringBuffer();
+		for(byte b : bytes) {
+			int i = b & 0xFF;
+			if(i < 32) sb.append("0");
+			sb.append(Integer.toString(i, 32));
+		}
+		return sb.toString().toUpperCase();
+	}
+	
+	public String hash(String password) {
+		if(password == null) return null;
+		StringBuffer sb = new StringBuffer();
+		byte[] bytes = sha1(password);
+		if(bytes == null) return password;
+		for(byte b : bytes) {
+			int i = b & 0xFF;
+			if(i < 16) sb.append("0");
+			sb.append(Integer.toHexString(i));
+		}
+		return sb.toString().toUpperCase();
+	}	
+	
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value="/rest/tenant/shared", method = RequestMethod.GET)
 	public String getSharedTenants(Model model, @RequestParam(value="key", required=false) String keyword, @RequestParam(value="user", required=false) String user) {
@@ -320,7 +354,7 @@ public class AdminController extends JSONBaseController {
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/rest/tenant/mapConfig", method = RequestMethod.POST)
 	public String setSearchProperty(Model model, JSONForm params) {
-		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
+		Map m = (Map) JSONObject.toBean(params.JSON(), HashMap.class);
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		tenant.setMapConfig((String) m.get("value"));
 		tenant.setCfgUpdated(System.currentTimeMillis());
@@ -331,7 +365,7 @@ public class AdminController extends JSONBaseController {
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value="/rest/tenant/layers", method = RequestMethod.POST)
 	public String setMapLayers(Model model, JSONForm params) {
-		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class);
+		Map m = (Map) JSONObject.toBean(params.JSON(), HashMap.class);
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		tenant.setLayers((String) m.get("value"));
 		tenant.setCfgUpdated(System.currentTimeMillis());

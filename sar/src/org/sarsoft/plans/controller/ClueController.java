@@ -92,7 +92,7 @@ public class ClueController extends JSONBaseController {
 	@RequestMapping(value="/rest/clue", method = RequestMethod.POST)
 	public String createRestClue(Model model, JSONForm params) {
 
-		JSONObject obj = parseObject(params);
+		JSONObject obj = params.JSON();
 		JSONObject pos = obj.getJSONObject("position");
 		
 		Waypoint waypoint = null;
@@ -130,7 +130,7 @@ public class ClueController extends JSONBaseController {
 		}
 
 		
-		Clue updated = Clue.createFromJSON(parseObject(params));
+		Clue updated = Clue.createFromJSON(params.JSON());
 		
 		clue.setDescription(updated.getDescription());
 		clue.setSummary(updated.getSummary());
@@ -139,7 +139,7 @@ public class ClueController extends JSONBaseController {
 		
 		Long aid = null;
 		try {
-			aid = parseObject(params).getLong("assignmentId");
+			aid = params.JSON().getLong("assignmentId");
 		} catch (Exception e) {/* null aid will throw a JSONException */}
 
 		if((clue.getAssignment() != null && aid != clue.getAssignment().getId())) {
@@ -171,7 +171,7 @@ public class ClueController extends JSONBaseController {
 	public String restUpdateClueLocation(Model model, @PathVariable("clueid") long clueid, JSONForm params) {
 		Map<String, Class> classHints = new HashMap<String, Class>();
 		classHints.put("position", Waypoint.class);
-		Map m = (Map) JSONObject.toBean(parseObject(params), HashMap.class, classHints);
+		Map m = (Map) JSONObject.toBean(params.JSON(), HashMap.class, classHints);
 		Waypoint position = (Waypoint) m.get("position");
 
 		Clue clue = dao.load(Clue.class, clueid);

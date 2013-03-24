@@ -21,8 +21,6 @@ public abstract class MapObjectController extends JSONBaseController {
 
 	private Class<? extends MapObject> c;
 
-	private Logger logger = Logger.getLogger(MapObjectController.class);
-
 	public MapObjectController(Class<? extends MapObject> cls) {
 		this.c = cls;
 	}
@@ -46,7 +44,7 @@ public abstract class MapObjectController extends JSONBaseController {
 	
 	@RequestMapping(value="", method = RequestMethod.POST)
 	public String create(Model model, JSONForm params) {
-		MapObject obj = make(parseObject(params));
+		MapObject obj = make(params.JSON());
 		persist(obj);
 		return json(model, obj);
 	}
@@ -54,7 +52,7 @@ public abstract class MapObjectController extends JSONBaseController {
 	@RequestMapping(value="/{id}", method = RequestMethod.POST)
 	public String update(Model model, JSONForm params, @PathVariable("id") long id) {
 		MapObject obj = dao.load(c, id);
-		obj.from(parseObject(params));
+		obj.from(params.JSON());
 		dao.save(obj);
 		return json(model, obj);
 	}

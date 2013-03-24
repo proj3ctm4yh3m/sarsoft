@@ -1,5 +1,8 @@
 package org.sarsoft.common.controller;
 
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+
 public class JSONForm {
 
 	private String json;
@@ -20,5 +23,9 @@ public class JSONForm {
 	public String getFile() {
 		return file;
 	}
-	
+
+	public JSONObject JSON() {
+		return (JSONObject)  JSONSerializer.toJSON(json);
+	}
+
 }

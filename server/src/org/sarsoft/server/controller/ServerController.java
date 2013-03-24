@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
-import org.sarsoft.common.controller.IServerController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.Tenant;
@@ -20,7 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 
 @Controller
-public class ServerController implements IServerController {
+public class ServerController {
 
 	protected String welcomeHTML;
 
@@ -46,14 +45,6 @@ public class ServerController implements IServerController {
 		"<link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/AppBase.css\"/>\n";
 	}
 	
-	public boolean isTenantRestrictedPage(String view) {
-		return !("/map".equals(view) || "Pages.Searches".equals(view) || "Pages.Tools".equals(view) || "Pages.Splash".equals(view) || "Pages.Find".equals(view));
-	}
-
-	public boolean isLoginRestrictedPage(String view) {
-		return ("Pages.Searches".equals(view));
-	}
-
 	public String bounce(Model model) {
 		boolean isHosted = "true".equalsIgnoreCase(hosted);
 		String user = RuntimeProperties.getUsername();

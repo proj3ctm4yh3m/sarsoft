@@ -24,6 +24,7 @@ import org.sarsoft.common.model.MapConfig;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.GPX;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.OperationalPeriod;
@@ -283,7 +284,7 @@ public class SearchAssignmentController extends JSONBaseController {
 
 	@RequestMapping(value="/rest/assignment", method = RequestMethod.POST)
 	public String createAssignment(JSONForm params, Model model, HttpServletRequest request) {
-		SearchAssignment assignment = SearchAssignment.createFromJSON(parseObject(params));
+		SearchAssignment assignment = SearchAssignment.createFromJSON(params.JSON());
 		if(assignment.getId() != null) {
 			SearchAssignment existing = dao.load(SearchAssignment.class, assignment.getId());
 			if(existing != null) assignment.setId(null);
@@ -344,7 +345,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			dao.delete(assignment);
 			return json(model, assignment);
 		case CREATE:
-			SearchAssignment updated = SearchAssignment.createFromJSON(parseObject(params));
+			SearchAssignment updated = SearchAssignment.createFromJSON(params.JSON());
 			if(updated.getDetails() != null) assignment.setDetails(updated.getDetails());
 			if(updated.getResourceType() != null) assignment.setResourceType(updated.getResourceType());
 			if(updated.getUnresponsivePOD() != null) assignment.setUnresponsivePOD(updated.getUnresponsivePOD());
@@ -392,14 +393,10 @@ public class SearchAssignmentController extends JSONBaseController {
 		Way[] ways;
 		switch(format) {
 		case GPX :
-			if(params.getFile() != null) {
-				ways = Way.createFromJSON((JSONArray) parseGPXFile(request, params.getFile()));
-			} else {
-				ways = Way.createFromJSON((JSONArray) parseGPXJson(request, params.getJson()));
-			}
+			ways = Way.createFromJSON((JSONArray) GPX.parse(context, params));
 			break;
 		default :
-			ways = new Way[] { Way.createFromJSON(parseObject(params)) };
+			ways = new Way[] { Way.createFromJSON(params.JSON()) };
 		}
 
 		for(Way way : ways) {
@@ -412,14 +409,10 @@ public class SearchAssignmentController extends JSONBaseController {
 		Waypoint[] waypoints;
 		switch(format) {
 		case GPX :
-			if(params.getFile() != null) {
-				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXFile(request, params.getFile(), "/xsl/gpx/gpx2waypoint.xsl"));
-			} else {
-				waypoints = Waypoint.createFromJSON((JSONArray) parseGPXJson(request, params.getJson(), "/xsl/gpx/gpx2waypoint.xsl"));
-			}
+			waypoints = Waypoint.createFromJSON((JSONArray) GPX.parse(context, params));
 			break;
 		default :
-			waypoints = new Waypoint[] { Waypoint.createFromJSON(parseObject(params)) };
+			waypoints = new Waypoint[] { Waypoint.createFromJSON(params.JSON()) };
 		}
 
 		for(Waypoint waypoint : waypoints) {
@@ -473,7 +466,7 @@ public class SearchAssignmentController extends JSONBaseController {
 	@RequestMapping(value = "/rest/assignment/{assignmentId}/mapConfig", method= RequestMethod.POST)
 	public String addMapconfig(JSONForm params, @PathVariable("assignmentId") long assignmentId, Model model) {
 		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentId);
-		MapConfig config = MapConfig.createFromJSON(parseObject(params));
+		MapConfig config = MapConfig.createFromJSON(params.JSON());
 		assignment.getMapConfigs().add(config);
 		dao.save(assignment);
 		return json(model, config);

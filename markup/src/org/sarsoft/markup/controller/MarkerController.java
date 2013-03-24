@@ -42,7 +42,7 @@ public class MarkerController extends GeoMapObjectController {
 	@RequestMapping(value="/{id}/position", method = RequestMethod.POST)
 	public String updatePosition(JSONForm params, Model model, @PathVariable("id") long id, HttpServletRequest request) {
 		Marker marker = dao.load(Marker.class, id);
-		marker.from(parseObject(params));
+		marker.from(params.JSON());
 		dao.save(marker);
 		return json(model, marker);
 	}

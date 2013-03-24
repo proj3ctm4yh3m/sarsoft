@@ -230,7 +230,7 @@ public class OpsController extends JSONBaseController {
 	
 	@RequestMapping(value="/rest/resource", method = RequestMethod.POST)
 	public String restCreateResource(Model model, HttpServletRequest request, JSONForm params) {
-		Resource resource = Resource.createFromJSON(parseObject(params));
+		Resource resource = Resource.createFromJSON(params.JSON());
 		createNewResource(resource);		
 		return json(model, resource);
 	}
@@ -323,7 +323,7 @@ public class OpsController extends JSONBaseController {
 	
 	@RequestMapping(value="/rest/resource/{resourceid}", method = RequestMethod.POST)
 	public String updateRestResource(Model model, @PathVariable("resourceid") long id, JSONForm params, HttpServletRequest request) {
-		Resource updated = Resource.createFromJSON(parseObject(params));
+		Resource updated = Resource.createFromJSON(params.JSON());
 		Resource resource = dao.load(Resource.class, id);
 
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action").toUpperCase()) == Action.DELETE) {			
