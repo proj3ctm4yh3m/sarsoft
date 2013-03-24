@@ -8,8 +8,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.common.model.Action;
-import org.sarsoft.common.model.Format;
+import org.sarsoft.plans.Action;
+import org.sarsoft.Format;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.SearchAssignment;

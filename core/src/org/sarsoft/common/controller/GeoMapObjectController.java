@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.sarsoft.common.model.Format;
+import org.sarsoft.Format;
 import org.sarsoft.common.model.MapObject;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;

@@ -11,8 +11,8 @@ import net.sf.json.JSONObject;
 
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.common.model.Action;
-import org.sarsoft.common.model.Format;
+import org.sarsoft.plans.Action;
+import org.sarsoft.Format;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.plans.model.Clue;

@@ -32,9 +32,6 @@ import net.sf.ehcache.Element;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
-import org.sarsoft.common.model.Action;
-import org.sarsoft.common.model.ConfiguredLayer;
-import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.util.WebMercator;
