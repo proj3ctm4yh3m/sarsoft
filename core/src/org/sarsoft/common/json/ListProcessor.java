@@ -1,8 +1,8 @@
-package org.sarsoft.common.model.json;
+package org.sarsoft.common.json;
 
 import java.util.List;
 
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import net.sf.json.JsonConfig;
 import net.sf.json.processors.JsonValueProcessor;
 

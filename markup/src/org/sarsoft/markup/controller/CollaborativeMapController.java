@@ -18,7 +18,7 @@ import org.sarsoft.common.controller.AdminController;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.ImageryController;
 import org.sarsoft.common.controller.JSONBaseController;
-import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Waypoint;

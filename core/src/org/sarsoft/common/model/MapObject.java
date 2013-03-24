@@ -1,5 +1,7 @@
 package org.sarsoft.common.model;
 
+import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
+
 import net.sf.json.JSONObject;
 
 public abstract class MapObject extends SarModelObject {

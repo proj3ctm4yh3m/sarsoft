@@ -9,7 +9,7 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.controller.GeoMapObjectController;
-import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;

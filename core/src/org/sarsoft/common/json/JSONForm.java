@@ -1,4 +1,4 @@
-package org.sarsoft.common.controller;
+package org.sarsoft.common.json;
 
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;

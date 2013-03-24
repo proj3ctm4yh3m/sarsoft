@@ -6,6 +6,8 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
 
+import org.sarsoft.common.json.JSONAnnotatedEntity;
+import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.util.Datum;
 
 import com.sun.xml.internal.rngom.parse.compact.ParseException;

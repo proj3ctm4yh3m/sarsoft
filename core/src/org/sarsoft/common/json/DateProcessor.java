@@ -1,4 +1,4 @@
-package org.sarsoft.common.model.json;
+package org.sarsoft.common.json;
 
 import java.util.Date;
 

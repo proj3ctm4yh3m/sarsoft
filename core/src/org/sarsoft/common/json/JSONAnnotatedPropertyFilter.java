@@ -1,11 +1,11 @@
-package org.sarsoft.common.model;
+package org.sarsoft.common.json;
 
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 
-import org.sarsoft.common.model.json.DateProcessor;
-import org.sarsoft.common.model.json.ListProcessor;
+import org.sarsoft.common.json.DateProcessor;
+import org.sarsoft.common.json.ListProcessor;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;

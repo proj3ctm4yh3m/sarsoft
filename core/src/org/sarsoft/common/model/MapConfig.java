@@ -2,6 +2,9 @@ package org.sarsoft.common.model;
 
 import javax.persistence.Entity;
 
+import org.sarsoft.common.json.JSONAnnotatedEntity;
+import org.sarsoft.common.json.JSONSerializable;
+
 import net.sf.json.JSONObject;
 
 @JSONAnnotatedEntity

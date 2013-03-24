@@ -6,8 +6,7 @@ import javax.persistence.ManyToOne;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
-import org.sarsoft.common.model.JSONAnnotatedEntity;
-import org.sarsoft.common.model.JSONSerializable;
+import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Waypoint;
 

@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sarsoft.common.controller.JSONBaseController;
-import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Action;
 import org.sarsoft.common.model.Format;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;

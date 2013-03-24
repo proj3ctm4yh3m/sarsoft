@@ -11,8 +11,8 @@ import javax.persistence.Transient;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
-import org.sarsoft.common.model.JSONAnnotatedEntity;
-import org.sarsoft.common.model.JSONSerializable;
+import org.sarsoft.common.json.JSONAnnotatedEntity;
+import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.plans.model.Clue;

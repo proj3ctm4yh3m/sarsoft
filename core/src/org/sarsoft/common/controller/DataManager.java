@@ -12,7 +12,7 @@ import net.sf.json.JSONObject;
 
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ClientState;
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

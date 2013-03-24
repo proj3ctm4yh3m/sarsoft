@@ -1,8 +1,6 @@
 package org.sarsoft.common.controller;
 
 import java.io.StringReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +13,7 @@ import net.sf.json.xml.XMLSerializer;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ConfiguredLayer;
 import org.sarsoft.common.model.GeoRef;
-import org.sarsoft.common.model.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
