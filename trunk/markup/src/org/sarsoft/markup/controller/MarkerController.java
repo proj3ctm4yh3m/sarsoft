@@ -5,7 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.controller.GeoMapObjectController;
-import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.MapObject;
 import org.sarsoft.markup.model.Marker;
 import org.springframework.stereotype.Controller;

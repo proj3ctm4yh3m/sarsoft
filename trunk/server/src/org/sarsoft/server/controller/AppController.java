@@ -6,8 +6,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.sarsoft.common.controller.AdminController;
 import org.sarsoft.common.controller.JSONBaseController;
-import org.sarsoft.common.controller.JSONForm;
+import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Tenant.Permission;
@@ -17,6 +18,7 @@ import org.sarsoft.markup.model.Marker;
 import org.sarsoft.markup.model.Shape;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Search;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +28,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class AppController extends JSONBaseController {
+	
+	@Autowired
+	AdminController adminController;
 
 	@RequestMapping(value="/rest/account", method = RequestMethod.GET)
 	public String getAccount(Model model) {
@@ -100,7 +105,7 @@ public class AppController extends JSONBaseController {
 			return json(model, new HashMap());
 		}
 
-		Tenant updated = CollaborativeMap.createFromJSON(parseObject(params));
+		Tenant updated = CollaborativeMap.createFromJSON(params.JSON());
 		if(updated.getAllUserPermission() == null) {
 			tenant.setDescription(updated.getDescription());
 			tenant.setComments(updated.getComments());
@@ -108,7 +113,7 @@ public class AppController extends JSONBaseController {
 			tenant.setShared(updated.getShared());
 			tenant.setAllUserPermission(updated.getAllUserPermission());
 			tenant.setPasswordProtectedUserPermission(updated.getPasswordProtectedUserPermission());
-			if(updated.getPassword() != null) tenant.setPassword(hash(updated.getPassword()));
+			if(updated.getPassword() != null) tenant.setPassword(adminController.hash(updated.getPassword()));
 		}
 
 		dao.save(tenant);

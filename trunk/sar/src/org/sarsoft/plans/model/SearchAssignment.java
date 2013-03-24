@@ -15,8 +15,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import org.sarsoft.common.model.IPreSave;
-import org.sarsoft.common.model.JSONAnnotatedEntity;
-import org.sarsoft.common.model.JSONSerializable;
+import org.sarsoft.common.json.JSONAnnotatedEntity;
+import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.MapConfig;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Way;

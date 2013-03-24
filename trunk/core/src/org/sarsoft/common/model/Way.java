@@ -21,6 +21,8 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.IndexColumn;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.sarsoft.common.json.JSONAnnotatedEntity;
+import org.sarsoft.common.json.JSONSerializable;
 
 @JSONAnnotatedEntity
 @Entity

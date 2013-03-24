@@ -9,6 +9,7 @@ import javax.persistence.InheritanceType;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.util.RuntimeProperties;
 
 @Entity

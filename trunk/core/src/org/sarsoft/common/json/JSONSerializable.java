@@ -1,4 +1,4 @@
-package org.sarsoft.common.model;
+package org.sarsoft.common.json;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

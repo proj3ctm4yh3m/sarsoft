@@ -4,8 +4,8 @@ import javax.persistence.Entity;
 
 import net.sf.json.JSONObject;
 
-import org.sarsoft.common.model.JSONAnnotatedEntity;
-import org.sarsoft.common.model.JSONSerializable;
+import org.sarsoft.common.json.JSONAnnotatedEntity;
+import org.sarsoft.common.json.JSONSerializable;
 
 @JSONAnnotatedEntity
 @Entity
