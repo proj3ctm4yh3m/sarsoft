@@ -14,16 +14,16 @@ import javax.persistence.Transient;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.JSONAnnotatedEntity;
 import org.sarsoft.common.model.JSONSerializable;
-import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 
 @JSONAnnotatedEntity
 @Entity
-public class Shape extends MapObject implements IPreSave {
+public class Shape extends GeoMapObject implements IPreSave {
 
 	private Way way;
 	private String color;
@@ -44,12 +44,32 @@ public class Shape extends MapObject implements IPreSave {
 		classHints = Collections.unmodifiableMap(m);
 	}
 
-	public static Shape createFromJSON(JSONObject json) {
+	public static Shape fromJSON(JSONObject json) {
 		return (Shape) JSONObject.toBean(json, Shape.class, classHints);
 	}
 	
-	public void from (JSONObject json) {
-		Shape updated = createFromJSON(json);
+	public static Shape fromGPX(JSONObject gpx) {
+		String type = gpx.getString("type");
+		if(!("route".equals(type) || "track".equals(type))) return null;
+
+		Shape shape = new Shape();
+		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
+		
+		shape.setLabel(gpx.getString("name"));
+		shape.setWay(Way.createFromJSON((JSONObject) gpx.get("way")));
+		List<Waypoint> wpts = shape.getWay().getWaypoints();
+		if(type == "route" && wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) shape.getWay().setPolygon(true);
+
+		shape.setColor(attrs.containsKey("color") ? attrs.get("color") : "#FF0000");
+		shape.setWeight(attrs.containsKey("weight") ? Float.parseFloat(attrs.get("weight")) : 2f);
+		shape.setFill(attrs.containsKey("fill") ? Float.parseFloat(attrs.get("fill")) : 0f);
+		shape.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
+
+		return shape;
+	}
+	
+	public void from(JSONObject json) {
+		Shape updated = fromJSON(json);
 		from(updated);
 	}
 	
@@ -66,6 +86,24 @@ public class Shape extends MapObject implements IPreSave {
 			waypoints.removeAll(waypoints);
 			waypoints.addAll(updated.getWay().getWaypoints());
 		}
+	}
+	
+	public JSONObject toGPX() {
+		JSONObject jobj = new JSONObject();
+		jobj.put("type", "route");
+		jobj.put("name", getLabel()); // TODO null labels
+		jobj.put("color", getColor());
+		jobj.put("weight", getWeight());
+		jobj.put("way", json(getWay()));
+		
+		Map<String, String> attrs = new HashMap<String, String>();
+		attrs.put("color", getColor());
+		attrs.put("weight", Float.toString(getWeight()));
+		attrs.put("fill", Float.toString(getFill()));
+		attrs.put("comments", getComments());
+		
+		jobj.put("desc", encodeGPXAttrs(attrs));		
+		return jobj;
 	}
 
 	@ManyToOne

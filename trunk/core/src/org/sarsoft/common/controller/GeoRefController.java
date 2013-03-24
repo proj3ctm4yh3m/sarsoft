@@ -15,16 +15,8 @@ public class GeoRefController extends MapObjectController {
 		super(GeoRef.class);
 	}
 
-	public GeoRef create(JSONObject json) {
-		GeoRef georef = GeoRef.createFromJSON(json);
-		georef.setId(dao.generateID(GeoRef.class));
-		dao.save(georef);
-		return georef;
+	public GeoRef make(JSONObject json) {
+		return GeoRef.createFromJSON(json);
 	}
 
-	public String getLabel(MapObject object) {
-		GeoRef georef = (GeoRef) object;
-		return (georef.getName() == null ? Long.toString(georef.getId()) : georef.getName());
-	}
-	
 }

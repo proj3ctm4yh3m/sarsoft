@@ -1711,6 +1711,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 
 	this._menuItemsOverride = null;
 	this.registered = new Object();
+	this.datamanager = new Object();
 	this._mapInfoMessages = new Object();
 	
 	if(typeof map == undefined) return;

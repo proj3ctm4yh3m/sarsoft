@@ -6,6 +6,8 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
+import net.sf.json.JSONObject;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.sarsoft.common.util.RuntimeProperties;
 
@@ -48,5 +50,5 @@ public abstract class SarModelObject {
 	public String getTenant() {
 		return tenant;
 	}
-
+	
 }

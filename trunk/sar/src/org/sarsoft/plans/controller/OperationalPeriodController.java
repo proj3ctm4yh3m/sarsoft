@@ -75,7 +75,7 @@ public class OperationalPeriodController extends JSONBaseController {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=search.gpx");
 			List<SearchAssignment> assignments = dao.loadAll(SearchAssignment.class);
-			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignmentList(assignments), "SearchAssignments");
+			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignmentList(assignments));
 		default :
 			return json(model, dao.loadAll(OperationalPeriod.class));
 		}
@@ -89,10 +89,10 @@ public class OperationalPeriodController extends JSONBaseController {
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=operationalperiod" + period.getId() + ".gpx");
-			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignmentList(period.getAssignments()), "SearchAssignments");
+			return gpx(model, SearchAssignmentGPXHelper.gpxifyAssignmentList(period.getAssignments()));
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=operationalperiod" + period.getId() + ".kml");
-			return kml(model, period.getAssignments(), "SearchAssignments");
+			return kml(model, period.getAssignments());
 		case CSV:
 			response.setHeader("Content-Disposition", "attachment; filename=operationalperiod" + period.getId() + ".csv");
 			model.addAttribute("assignments", period.getAssignments());

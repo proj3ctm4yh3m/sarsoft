@@ -78,7 +78,7 @@ public abstract class JSONBaseController {
 		if(!RuntimeProperties.isInitialized()) RuntimeProperties.initialize(context);
 		return RuntimeProperties.getProperty(name);
 	}
-	
+
 	protected List<String> getVisibleMapSources(boolean checkTenant) {
 		if(checkTenant && RuntimeProperties.getTenant() != null) {
 			Tenant tenant = dao.getByPk(Tenant.class, RuntimeProperties.getTenant());
@@ -384,7 +384,7 @@ public abstract class JSONBaseController {
 		}
 	}
 
-	private void processModelForXML(Model model, Object obj, String template) {
+	private void processModelForXML(Model model, Object obj) {
 		JSON json = null;
 		if(obj instanceof List) {
 			json = JSONAnnotatedPropertyFilter.fromArray(obj);
@@ -397,16 +397,15 @@ public abstract class JSONBaseController {
 		xml = xml.replaceFirst("<o>", "<o xmlns=\"json\">");
 		xml = xml.replaceFirst("<a>", "<a xmlns=\"json\">");
 		model.addAttribute("xml", new StringReader(xml));
-		model.addAttribute("template", template);
 	}
 	
-	protected String gpx(Model model, Object obj, String template) {
-		processModelForXML(model, obj, template);
+	protected String gpx(Model model, Object obj) {
+		processModelForXML(model, obj);
 		return "/xsl/gpx/togpx";
 	}
 
-	protected String kml(Model model, Object obj, String template) {
-		processModelForXML(model, obj, template);
+	protected String kml(Model model, Object obj) {
+		processModelForXML(model, obj);
 		return "/xsl/kml/tokml";
 	}
 

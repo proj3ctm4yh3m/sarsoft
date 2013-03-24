@@ -15,16 +15,8 @@ public class ConfiguredLayerController extends MapObjectController {
 		super(ConfiguredLayer.class);
 	}
 
-	public ConfiguredLayer create(JSONObject json) {
-		ConfiguredLayer layer = ConfiguredLayer.createFromJSON(json);
-		layer.setId(dao.generateID(ConfiguredLayer.class));
-		dao.save(layer);
-		return layer;
+	public ConfiguredLayer make(JSONObject json) {
+		return ConfiguredLayer.createFromJSON(json);
 	}
 
-	public String getLabel(MapObject object) {
-		ConfiguredLayer layer = (ConfiguredLayer) object;
-		return (layer.getName() == null ? Long.toString(layer.getId()) : layer.getName());
-	}
-	
 }
