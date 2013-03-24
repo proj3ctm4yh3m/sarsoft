@@ -10,7 +10,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.common.model.Format;
+import org.sarsoft.Format;
 import org.sarsoft.common.model.MapObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;

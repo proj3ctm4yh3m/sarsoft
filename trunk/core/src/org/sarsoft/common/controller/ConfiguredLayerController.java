@@ -3,7 +3,6 @@ package org.sarsoft.common.controller;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.model.ConfiguredLayer;
-import org.sarsoft.common.model.MapObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
