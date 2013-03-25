@@ -17,8 +17,20 @@ public class CollaborativeMap extends Tenant {
 
 	private Waypoint defaultCenter;
 
-	public static Tenant createFromJSON(JSONObject json) {
-		return (Tenant) JSONObject.toBean(json, CollaborativeMap.class, classHints);
+	public CollaborativeMap() {
+	}
+	
+	public CollaborativeMap(JSONObject json) {
+		from(json);
+	}
+	
+	public void from(JSONObject json) {
+		from((CollaborativeMap) JSONObject.toBean(json, CollaborativeMap.class, classHints));
+	}
+	
+	public void from(CollaborativeMap updated) {
+		setDefaultCenter(updated.getDefaultCenter());
+		super.from(updated);
 	}
 
 	@ManyToOne

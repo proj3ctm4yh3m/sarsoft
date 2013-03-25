@@ -22,13 +22,15 @@ public class GeoRef extends MapObject {
 	double lat2;
 	double lng2;
 
-	public static GeoRef createFromJSON(JSONObject json) {
-		return (GeoRef) JSONObject.toBean(json, GeoRef.class);
+	public GeoRef(){
+	}
+	
+	public GeoRef(JSONObject json) {
+		from(json);
 	}
 	
 	public void from(JSONObject json) {
-		GeoRef updated = createFromJSON(json);
-		from(updated);
+		from((GeoRef) JSONObject.toBean(json, GeoRef.class));
 	}
 	
 	public void from(GeoRef updated) {
@@ -41,7 +43,7 @@ public class GeoRef extends MapObject {
 		setLat1(updated.getLat1());
 		setLat2(updated.getLat2());
 		setLng1(updated.getLng1());
-		setLng2(updated.getLat2());
+		setLng2(updated.getLng2());
 	}
 
 	@JSONSerializable

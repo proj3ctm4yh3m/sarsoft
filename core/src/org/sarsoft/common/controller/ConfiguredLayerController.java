@@ -15,7 +15,7 @@ public class ConfiguredLayerController extends MapObjectController {
 	}
 
 	public ConfiguredLayer make(JSONObject json) {
-		return ConfiguredLayer.createFromJSON(json);
+		return new ConfiguredLayer(json);
 	}
 
 }

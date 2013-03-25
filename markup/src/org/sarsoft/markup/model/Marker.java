@@ -27,8 +27,28 @@ public class Marker extends GeoMapObject implements IPreSave {
 	private String url;
 	private Date updated;
 
-	public static Marker fromJSON(JSONObject json) {
-		return (Marker) JSONObject.toBean(json, Marker.class);
+	public Marker() {
+	}
+	
+	public Marker(JSONObject json) {
+		from(json);
+	}
+	
+	public void from(JSONObject json) {
+		from((Marker) JSONObject.toBean(json, Marker.class));
+	}
+	
+	public void from(Marker updated) {
+		if(updated.getUrl() != null) {
+			setLabel(updated.getLabel());
+			setUrl(updated.getUrl());
+			setComments(updated.getComments());
+		}
+		if(updated.getPosition() != null) {
+			if(position == null) position = new Waypoint();
+			getPosition().setLat(updated.getPosition().getLat());
+			getPosition().setLng(updated.getPosition().getLng());
+		}
 	}
 	
 	public static Marker fromGPX(JSONObject gpx) {
@@ -38,29 +58,12 @@ public class Marker extends GeoMapObject implements IPreSave {
 		Marker marker = new Marker();
 		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
 		
-		marker.setPosition(Waypoint.createFromJSON((JSONObject) gpx.get("position")));
+		marker.setPosition(new Waypoint((JSONObject) gpx.get("position")));
 
 		marker.setUrl(attrs.containsKey("url") ? attrs.get("url") : "#FF0000");
 		marker.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
 
 		return marker;
-	}
-	
-	public void from(JSONObject json) {
-		Marker updated = fromJSON(json);
-		from(updated);
-	}
-
-	public void from(Marker updated) {
-		if(updated.getUrl() != null) {
-			setLabel(updated.getLabel());
-			setUrl(updated.getUrl());
-			setComments(updated.getComments());
-		}
-		if(updated.getPosition() != null) {
-			getPosition().setLat(updated.getPosition().getLat());
-			getPosition().setLng(updated.getPosition().getLng());
-		}
 	}
 	
 	public JSONObject toGPX() {

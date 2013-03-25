@@ -31,10 +31,6 @@ public class MapSource {
 	private String description;
 	private int date;
 
-	public static MapSource createFromJSON(JSONObject json) {
-		return (MapSource) JSONObject.toBean(json, MapSource.class);
-	}
-
 	@Id
 	@JSONSerializable
 	public String getName() {

@@ -16,7 +16,7 @@ public class GeoRefController extends MapObjectController {
 	}
 
 	public GeoRef make(JSONObject json) {
-		return GeoRef.createFromJSON(json);
+		return new GeoRef(json);
 	}
 
 }

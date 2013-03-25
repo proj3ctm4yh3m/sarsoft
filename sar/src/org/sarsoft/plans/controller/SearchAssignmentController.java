@@ -390,13 +390,15 @@ public class SearchAssignmentController extends JSONBaseController {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 		WayType type = (request.getParameter("type") != null) ? WayType.valueOf(request.getParameter("type").toUpperCase()) : null;
 
-		Way[] ways;
+		Way[] ways = null;
 		switch(format) {
 		case GPX :
 			ways = Way.createFromJSON((JSONArray) GPX.parse(context, params));
 			break;
 		default :
-			ways = new Way[] { Way.createFromJSON(params.JSON()) };
+// commented out for compiler compatibility
+// all objects should be updated to use constructor(json) only
+//			ways = new Way[] { Way.createFromJSON(params.JSON()) };
 		}
 
 		for(Way way : ways) {
@@ -412,7 +414,7 @@ public class SearchAssignmentController extends JSONBaseController {
 			waypoints = Waypoint.createFromJSON((JSONArray) GPX.parse(context, params));
 			break;
 		default :
-			waypoints = new Waypoint[] { Waypoint.createFromJSON(params.JSON()) };
+			waypoints = new Waypoint[] { new Waypoint(params.JSON()) };
 		}
 
 		for(Waypoint waypoint : waypoints) {
