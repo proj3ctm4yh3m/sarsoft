@@ -28,6 +28,8 @@ public class RequestPropertyFilter implements Filter {
 
 		String tid = request.getParameter("tid");
 		if(tid != null && !tid.equalsIgnoreCase(name)) {
+			name = null;
+			permission = null;
 			@SuppressWarnings("unchecked")
 			Map<String, Permission> authedTenants = (Map<String, Permission>) ((HttpServletRequest) request).getSession().getAttribute("authedTenants");
 			if(authedTenants != null) {

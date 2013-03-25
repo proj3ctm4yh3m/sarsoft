@@ -16,7 +16,7 @@ org.sarsoft.widget.SaveAs = function(imap) {
 				alert('Please enter a name for this map.');
 				return;
 			}
-			clientstate.val(YAHOO.lang.JSON.stringify(org.sarsoft.widget.SaveAs.getClientState()));
+			clientstate.val(YAHOO.lang.JSON.stringify(imap.datamanager.get()));
 			var center = imap.map.getCenter();
 			newlat.val(center.lat());
 			newlng.val(center.lng());
@@ -33,25 +33,17 @@ org.sarsoft.widget.SaveAs = function(imap) {
 	} else {
 		body.append('Sign in to save this map.  We\'ll keep track of it while you\'re gone.')
 		
-		new org.sarsoft.widget.Login(body, imap.registered);
+		new org.sarsoft.widget.Login(imap, body);
 	}
 }
 
-org.sarsoft.widget.SaveAs.getClientState = function() {
-	var state = new Object();
-	for(var key in imap.datamanager) {
-		state[key] = imap.datamanager[key].dehydrate();
-	}
-	return state;
-}
-
-org.sarsoft.widget.Login = function(container, controllers) {
+org.sarsoft.widget.Login = function(imap, container) {
 	
 	var login = function(provider) {
 		if(org.sarsoft.tenantid == null) {
 			form_yahoo.append(jQuery('<input type="hidden" name="domain"/>').val(provider));
 			form_yahoo.append(jQuery('<input type="hidden" name="dest"/>').val(window.location));
-			form_yahoo.append(jQuery('<input type="hidden" name="state"/>').val(YAHOO.lang.JSON.stringify(org.sarsoft.widget.SaveAs.getClientState())));
+			form_yahoo.append(jQuery('<input type="hidden" name="state"/>').val(YAHOO.lang.JSON.stringify(imap.datamanager.get())));
 			form_yahoo.submit();
 		} else {
 			window.location='/app/openidrequest?domain=' + provider + '&dest=' + encodeURIComponent(window.location);
@@ -251,8 +243,139 @@ org.sarsoft.widget.TenantSharing = function(imap, page) {
 
 org.sarsoft.widget.TenantSharing.prototype = new org.sarsoft.widget.BaseSharing();
 
+org.sarsoft.widget.IO = function(imap) {
+	var that = this;
+	this.imap = imap;
+	
+	if(org.sarsoft.writeable) {
+		this.imp = new Object();
+		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
+		this.imp.body = this.imp.dlg.bd.children().first();
+		imap.controls.action.links['import'].click(function() {
+			that.imp.comms.clear();
+			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
+			that.imp.gpx.form.css('display', 'none');
+			that.imp.dlg.swap();
+		});
+		
+		$('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.imp.body).append(
+				$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').click(function() {
+					that.imp.header.css('visibility', 'inherit');
+					that.imp.comms.init(false, "/rest/in", "", function(data) { that.processImportedData(data) } );
+				}));
+
+		this.imp.gpx = new Object();
+		this.imp.gpx.form = $('<form style="float: left; display: none; padding-left: 10px" name="gpsform" action="/rest/in?tid=' + org.sarsoft.tenantid + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/>Please choose a file to import:<br/></form>');
+		this.imp.gpx.file = $('<input type="file" name="file" style="margin-top: 10px;"/>').appendTo(this.imp.gpx.form);
+		this.imp.gpx.file.change(function() {
+			if(that.bgframe == null)  {
+				that.bgframe = jQuery('<iframe name="IOFrame" id="IOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
+				that.bgform = jQuery('<form style="display: none" name="gpsform" action="/rest/in" target="IOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
+			}
+			jsonFrameCallback = function(data) { that.processImportedData(data) };
+			_bgframe = that.bgframe;
+			that.imp.gpx.file.appendTo(that.bgform);
+			that.bgform.attr("action", "/rest/in?tid=" + org.sarsoft.tenantid || '');
+			that.bgform.submit();
+		});
+		$('<div style="cursor: pointer; float: left"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>').click(function() {
+			that.imp.gpx.form.css('display', 'block');
+		}).prependTo($('<div style="float: left"></div').append(this.imp.gpx.form).appendTo($('<div style="display: inline-block"></div>').appendTo(this.imp.body)));
+		
+		this.imp.header = $('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(this.imp.body);
+		this.imp.comms = new org.sarsoft.GPSComms(this.imp.header);
+
+	}
+	
+	this.exp = new Object();
+	this.exp.dlg = new org.sarsoft.view.MapDialog(imap, "Export Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">Export <select></select> to:</div></div>'), null, "Done", function() {});
+	if(imap.controls.action) imap.controls.action.links['export'].click(function() {
+		var exportables = that.exp.body.find('select');
+		exportables.empty();
+		exportables.append('<option value="0">All Objects</option>');
+		
+		for(var name in imap.datamanager.controllers) {
+			var controller = imap.datamanager.controllers[name];
+			if(controller.type.geo) {
+				for(var i = 0; i < controller.dao.objs.length; i++) {
+					var obj = controller.dao.objs[i];
+					if(obj != null && (obj.label || "").length > 0) exportables.append('<option value="' + name + '_' + obj.id + '">' + obj.label + '</option>');
+				}
+			}
+		}
+
+		that.exp.comms.clear();
+		that.exp.dlg.swap(); 
+		});
+	this.exp.body = this.exp.dlg.bd.children().first();
+
+	$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto; width:" src="' + org.sarsoft.imgPrefix + '/gps64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body)).click(function() {
+		that.exp.header.css('visibility', 'inherit');
+		that.doexport("GPS");
+	});
+
+	$('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body).append($('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/gpx64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">GPX File</div></div>').click(function () {
+		that.doexport("GPX");
+	}));
+
+	$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + org.sarsoft.imgPrefix + '/kml64.png"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">Google Earth</div></div>').appendTo(jQuery('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.exp.body)).click(function() {
+		that.doexport("KML");
+	});
+
+	this.exp.header = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(this.exp.body);
+	this.exp.comms = new org.sarsoft.GPSComms(this.exp.header);
+}
+
+org.sarsoft.widget.IO.prototype.processImportedData = function(data) {
+	var that = this;
+	for(var name in imap.datamanager.controllers) {
+		var controller = imap.datamanager.controllers[name];
+		if(data[name]) {
+			for(var i = 0; i < data[name].length; i++) {
+				controller.dao.offlineLoad(data[name][i]);
+			}
+		}
+	}
+	that.imp.dlg.hide();
+}
+
+org.sarsoft.widget.IO.prototype.doexport = function(format) {
+	var val = this.exp.body.find('select').val();
+	var type, id = null;
+	if(val != 0) {
+		type = val.split("_")[0];
+		id = Number(val.split("_")[1]);
+	}
+	
+	var gps = false;
+	if(format == "GPS") {
+		gps = true;
+		format = "GPX";
+	}
+
+	if(org.sarsoft.tenantid && type == null) {
+		var url = window.location.href + "&format=" + format;
+		if(gps) {
+			this.exp.comms.init(true, url, "");
+		} else {
+			window.location = url;
+		}
+	} else {
+		if(!this.exp.form ) this.exp.form = $('<form style="display: none" action="/rest/out" method="POST"><input type="hidden" name="tid"/><input type="hidden" name="format"/><input type="hidden" name="state"/></form>').appendTo(document.body);		
+		this.exp.form.find('[name="state"]').val(YAHOO.lang.JSON.stringify(this.imap.datamanager.get(type, id)));
+		this.exp.form.find('[name="format"]').val(format);
+		this.exp.form.find('[name="tid"]').val(org.sarsoft.tenantid || '');
+		if(gps) {
+			this.expcomms.init(true, this.exp.form, "");
+		} else {
+			this.exp.form.submit();
+		}
+	}
+}
+
 org.sarsoft.widget.MapAction = function(container) {
 	var that = this;
+	this.draft = new Object();
 
 	this.saved = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>').appendTo(container);
 	org.sarsoft.BaseDAO.addListener(function(success) {
@@ -298,7 +421,11 @@ org.sarsoft.widget.MapAction.prototype.addAction = function(name, link, body) {
 	}
 }
 
-org.sarsoft.widget.MapAction.prototype.setDraftMode = function(draft) {
+org.sarsoft.widget.MapAction.prototype.setDraftMode = function(name, draft) {
+	this.draft[name] = draft;
+	draft = false;
+	for(var key in this.draft) draft = draft || this.draft[key];
+	if(org.sarsoft.tenantid != null) draft = false;
 	this.links.save.css('display', draft ? 'block' : 'none');
 	this.links.share.css('display', draft ? 'none' : 'block');
 }
@@ -313,13 +440,15 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	if(org.sarsoft.username != null) {
 	    new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
 	} else {
-		new org.sarsoft.widget.Login(this.account.body, imap.registered);
+		new org.sarsoft.widget.Login(imap, this.account.body);
 	}
 
 	this.tenant = this.addHeader(org.sarsoft.tenantname || "Unsaved Map", "favicon.png");	
 	imap.controls.action = new org.sarsoft.widget.MapAction(this.tenant.body);
-	this.body = $('<div></div>').appendTo(this.tenant.body);
+	org.sarsoft.widget.SaveAs(imap);
 	
+	this.body = $('<div></div>').appendTo(this.tenant.body);
+
 	var div = $('<div style="padding-top: 10px; clear: both; font-size: 120%; color: green"></div>').appendTo(this.tenant.body).css('display', org.sarsoft.writeable ? 'block' : 'none');
 	
 	this.addobjlink = new org.sarsoft.view.DropSelect("+ Add New Object", {color: "green", "font-weight": "normal"});
@@ -333,6 +462,8 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	var settings = this.addDataType("Settings");
 	imap.controls.settings = settings.body;
 	imap.controls.settings.save = settings.getTool().css({'display': 'none'}).html('<img src="' + org.sarsoft.imgPrefix + '/save.png" style="cursor: pointer; vertical-align: middle"/>Save').attr("title", 'Save These and Other Map Settings for Future Visits');
+
+	if(!org.sarsoft.iframe && !this.bgload) new org.sarsoft.widget.IO(imap);
 
 	new org.sarsoft.widget.MapLayers(imap, this.body);
 }
@@ -446,7 +577,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) 
 			}
 		}
 
-		that.tenantDAO.load(function(cfg) {
+		that.tenantDAO.load("mapConfig", function(cfg) {
 			var config = {};
 			if(cfg.value != null) {
 				config = YAHOO.lang.JSON.parse(cfg.value);
@@ -454,7 +585,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) 
 			that._toConfigObj(config);
 			
 			that.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(config)}, saveHandler);				
-		}, "mapConfig");
+		});
 	});
 
 }
@@ -475,7 +606,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 	if(org.sarsoft.preload.mapConfig != null) {
 		org.sarsoft.async(function() { handler(org.sarsoft.preload.mapConfig) });
 	} else {
-		this.tenantDAO.load(handler, "mapConfig");
+		this.tenantDAO.load("mapConfig", handler);
 	}
 }
 
@@ -871,11 +1002,119 @@ org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
 }
 
 
-org.sarsoft.MapObjectController = function(imap, types, background_load) {
+org.sarsoft.view.MapObjectEntityDialog = function(imap, title, entityform) {
+	var that = this;
+	org.sarsoft.view.MapEntityDialog.call(this, imap, title, entityform, function(obj) { that.ok(obj) }, "OK");
+	
+	this.dialog.dialog.hideEvent.subscribe(function() {
+		if(that.hasGeoInfo) that.discardGeoInfo();
+		if(that.live) that.live = false;
+	});
+}
+
+org.sarsoft.view.MapObjectEntityDialog.prototype = new org.sarsoft.view.MapEntityDialog();
+
+org.sarsoft.view.MapObjectEntityDialog.prototype.ok = function(obj) {
+	var that = this;
+	if(this.object.id == null) {
+		this.create(obj);
+	} else if(this.hasGeoInfo) {
+		this.saveGeoInfo(obj, function() { that.saveData(obj); });
+		this.hasGeoInfo = false;
+	} else {
+		this.saveData(obj);
+	}
+}
+
+// override these stubs
+org.sarsoft.view.MapObjectEntityDialog.prototype.discardGeoInfo = function() { }
+org.sarsoft.view.MapObjectEntityDialog.prototype.saveGeoInfo = function(obj) { }
+org.sarsoft.view.MapObjectEntityDialog.prototype.saveData = function(obj) { }
+org.sarsoft.view.MapObjectEntityDialog.prototype.create = function(obj) { }
+
+org.sarsoft.view.MapObjectEntityDialog.prototype.show = function(obj, point, hasGeoInfo) {
+	this.object = obj;
+	this.point = point;
+	this.hasGeoInfo = hasGeoInfo;
+	org.sarsoft.view.MapEntityDialog.prototype.show.call(this, obj);
+}
+
+org.sarsoft.MapObjectDN = function(imap, label) {
+	var that = this;
+	this.imap = imap;
+	this.tree = imap.dn.addDataType(label);
+	this.tree.block.css({'display': 'none', 'margin-bottom': '10px'});
+	this.tree.body.css('padding-top', '5px');
+	this.div = $('<div></div>').appendTo(this.tree.body);
+	this.lines = new Object();
+	this.visible = true;
+	
+	this.cb = $('<input type="checkbox"' + (this.visible ? ' checked="checked"' : '') + '/>').prependTo(this.tree.header).click(function(evt) {
+		that.setObjectsVisible(that.dn.cb[0].checked);
+		$(that).trigger('visibilitychanged');
+		evt.stopPropagation();
+	});	
+}
+
+org.sarsoft.MapObjectDN.prototype.setObjectsVisible = function(visible) {
+	this.visible = visible;
+	this.tree.body.css('display', visible ? 'block' : 'none');
+	this.tree.lock = !visible;
+}
+
+org.sarsoft.MapObjectDN.prototype.setDNVisible = function(visible) {
+	this.tree.block.css('display', visible ? 'block' : 'none');
+}
+
+org.sarsoft.MapObjectDN.prototype.add = function(id, name, fn) {
+	var that = this;
+	
+	if(this.lines[id] == null) this.lines[id] = $('<div class="dn-obj"></div>').appendTo(this.div);
+	this.lines[id].html('<div class="dn-obj-left"></div><div class="dn-obj-right"></div>');
+	
+	return this.get(id, 0).click(function() {
+		if(org.sarsoft.mobile) that.imap.dn.hideDataNavigator();
+		fn();
+	}).append((name || "").length == 0 ? '<span style="color: #CCCCCC">N/A</span>' : org.sarsoft.htmlescape(name))
+}
+
+org.sarsoft.MapObjectDN.prototype.get = function(id, child) {
+	var line = this.lines[id];
+	return (child == null) ? line : $(line.children()[child]);
+}
+
+org.sarsoft.MapObjectDN.prototype.remove = function(id) {
+	if(this.lines[id] == null) return;
+	this.lines[id].remove();
+	this.lines[id] = null;
+}
+
+org.sarsoft.MapObjectDN.prototype.addIcon = function(id, title, html, handler) {
+	$('<span class="dn-obj-icon" title="' + title + '"></span>').html(html || '').appendTo(this.get(id, 1)).click(handler);
+}
+
+org.sarsoft.MapObjectDN.prototype.addIconEdit = function(id, handler) {
+	this.addIcon(id, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', handler);
+}
+
+org.sarsoft.MapObjectDN.prototype.addIconDelete = function(id, handler) {
+	this.addIcon(id, "Edit", '<span style="font-weight: bold; color: red">-</span>', handler);
+}
+
+org.sarsoft.MapObjectDN.prototype.addComments = function(id, comments) {
+	var that = this;
+	var line = this.get(id, 0);
+	$('<div class="dn-obj-comments"></div>').append(comments).appendTo(this.get(id)).click(function() {
+		line.click();
+	}).hover(function() { line.css('text-decoration', 'underline') }, function() { line.css('text-decoration', '') });
+}
+
+
+org.sarsoft.MapObjectController = function(imap, type, background_load) {
 	if(imap == null) return;
 	var that = this;
 	this.imap = imap;
-	this.types = types;
+	this.type = type;
 	this.bgload = background_load;
 
 	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", $('<div>Delete - Are You Sure?</div>'), "Delete", "Cancel", function() {
@@ -883,55 +1122,32 @@ org.sarsoft.MapObjectController = function(imap, types, background_load) {
 			that.dchandler = null;
 		});
 
-	this.dao = [];
-	this.objects = [];
-	this.attrs = [];
-	this.visible = [];
-
+	this.dao = new type.dao(function () { that.imap.message("Server Communication Error"); });
+	this.attrs = new Object();
+	this.visible = true;
 	if(!this.bgload) {
-		this.dn = [];		
-		this.tree = [];
+		this.dn = new org.sarsoft.MapObjectDN(imap, type.label);
+		$(this.dn).bind('visibilitychanged', function() { that.handleSetupChange(); });
 	}
-	for(var i = 0; i < this.types.length; i++) {
-		var type = this.types[i];
-		this.dao[i] = new type.dao(function () { that.imap.message("Server Communication Error"); });
-		this.objects[i] = new Object();
-		this.attrs[i] = new Object();
-		this.visible[i] = true;
-		if(this.dn != null) this.dn[i] = new Object();
-		if(this.tree != null) this.buildTree(i);
-	}
-		
-	for(var i = 0; i < this.types.length; i++) {
-		var type = this.types[i];
-		if(org.sarsoft.preload[type.name] != null) this.dao[i].rehydrate(org.sarsoft.preload[type.name]);
- 		new function(idx) {
-			that.dao[idx].loadAll(function(objects) {
-				if(objects.length > 0 && that.tree != null) that.tree[idx].body.css('display', 'block');
-				that.refresh(idx, objects);
-				that.growmap(idx, objects);
-			});
-		}(i);
-		this.dao[i].mark();
-		imap.datamanager[type.name] = this.dao[i];
-	}
+	
+	$(this.dao).bind('create', function(e, obj) { that.show(obj) });
+	$(this.dao).bind('save', function(e, obj) { that.show(obj) });
+	$(this.dao).bind('load', function(e, obj) { if(!that.attr(obj, "inedit")) that.show(obj) });
+	$(this.dao).bind('loadall', function(e, obj) { that.growmap(obj) });
+	$(this.dao).bind('delete', function(e, obj) { that.remove(obj) });
+	
+	if(org.sarsoft.preload[type.name] != null) this.dao.rehydrate(org.sarsoft.preload[type.name]);
+	this.dao.loadAll();
+	this.dao.mark();
+	imap.datamanager.register(type.name, this);
 }
 
-org.sarsoft.MapObjectController.prototype.buildTree = function(i) {
-	var that = this;
-	var tree = this.tree[i] = this.imap.dn.addDataType(this.types[i].label);
-	tree.block.css({'display': 'none', 'margin-bottom': '10px'});
-	tree.body.css('padding-top', '5px');
-	this.dn[i].div = $('<div></div>').appendTo(tree.body);
-	this.dn[i].lines = new Object();
-	this.dn[i].cb = $('<input type="checkbox"' + (that.visible[i] ? ' checked="checked"' : '') + '/>').prependTo(tree.header).click(function(evt) {
-		var val = that.dn[i].cb[0].checked;
-		that.visible[i] = val;
-		tree.body.css('display', val ? 'block' : 'none');
-		tree.lock = !val;
-		evt.stopPropagation();
-		that.handleSetupChange(i);
-	});
+org.sarsoft.MapObjectController.prototype.id = function(obj) {
+	return (typeof obj == "object") ? obj.id : obj;
+}
+
+org.sarsoft.MapObjectController.prototype.obj = function(obj) {
+	return (typeof obj == "object") ? obj : this.dao.getObj(obj);
 }
 
 org.sarsoft.MapObjectController.prototype.buildAddButton = function(idx, text, handler) {
@@ -942,117 +1158,35 @@ org.sarsoft.MapObjectController.prototype.buildAddButton = function(idx, text, h
 	});
 }
 
-org.sarsoft.MapObjectController.prototype.growmap = function(i, objects) {
+org.sarsoft.MapObjectController.prototype.growmap = function(object) {
 	// override this stub
 }
 
-org.sarsoft.MapObjectController.prototype.dehydrate = function() {
-	if(this.types.length == 1) return this.dao[0].dehydrate();
-	var state = new Object();
-	for(var i = 0; i < this.types.length; i++) {
-		state[this.types[i].name] = this.dao[i].dehydrate();
+org.sarsoft.MapObjectController.prototype.attr = function(id, key, value) {
+	if(id == null) return null;
+	id = this.id(id);
+	if(value != null) {
+		if(typeof this.attrs[id] == "undefined") this.attrs[id] = new Object();
+		this.attrs[id][key] = value;
 	}
-	return state;
-}
-
-org.sarsoft.MapObjectController.prototype.rehydrate = function(state) {
-	if(this.types.length == 1 || state.length >= 0) {
-		this.dao[0].rehydrate(state);
-	} else {
-		for(var i = 0; i < this.types.length; i++) {
-			this.dao[i].rehydrate(state[this.types[i].name]);
-		}
-	}
-}
-
-org.sarsoft.MapObjectController.prototype.setAttr = function(i, object, key, value) {
-	if(object == null) return null;
-	if(typeof this.attrs[i][object.id] == "undefined") this.attrs[i][object.id] = new Object();
-	this.attrs[i][object.id][key] = value;
-}
-
-org.sarsoft.MapObjectController.prototype.getAttr = function(i, object, key) {
-	if(object == null || typeof this.attrs[i][object.id] == "undefined") return null;
-	return this.attrs[i][object.id][key];
+	return this.attrs[id] ? this.attrs[id][key] : null;
 }
 
 org.sarsoft.MapObjectController.prototype.timer = function() {
 	var that = this;
-	for(var i = 0; i < this.types.length; i++) {
-		new function(idx) {
-			this.dao[idx].loadSince(function(objects) {
-				that.refresh(idx, objects);
-			});
-		}(i);
-		this.dao[i].mark();
-	}
+	this.dao.loadSince();
+	this.dao.mark();
 }
 
-org.sarsoft.MapObjectController.prototype.DNAdd = function(i, object) {
-	var that = this;
-	if(this.dn == null) return;
-	
-	if(this.dn[i].lines[object.id] == null) this.dn[i].lines[object.id] = $('<div class="dn-obj"></div>').appendTo(this.dn[i].div);
-	this.dn[i].lines[object.id].html('<div class="dn-obj-left"></div><div class="dn-obj-right"></div>');
-	
-	var line = this.DNGetLine(i, object, 0);
-	var fn = this.buildDN(i, object, line);
-	line.click(function() {
-		if(org.sarsoft.mobile) that.imap.dn.hideDataNavigator();
-		fn();
-	});
+org.sarsoft.MapObjectController.prototype.remove = function(object) {
+	this.attr(object, "inedit", false);
+	if(this.dn != null) this.dn.remove(object.id);
+	this.checkForObjects();
 }
 
-org.sarsoft.MapObjectController.prototype.DNAddIcon = function(i, object, title, html, handler) {
-	$('<span class="dn-obj-icon" title="' + title + '"></span>').html(html || '').appendTo(this.DNGetLine(i, object, 1)).click(handler);
-}
-
-org.sarsoft.MapObjectController.prototype.DNAddIconEdit = function(i, object, handler) {
-	this.DNAddIcon(i, object, "Edit", '<img src="' + org.sarsoft.imgPrefix + '/edit.png"/>', handler);
-}
-
-org.sarsoft.MapObjectController.prototype.DNAddIconDelete = function(i, object, handler) {
-	this.DNAddIcon(i, object, "Edit", '<span style="font-weight: bold; color: red">-</span>', handler);
-}
-
-org.sarsoft.MapObjectController.prototype.DNAddComments = function(i, object, comments) {
-	var that = this;
-	var line = that.DNGetLine(i, object, 0);
-	$('<div class="dn-obj-comments"></div>').append(comments).appendTo(this.DNGetLine(i, object)).click(function() {
-		line.click();
-	}).hover(function() { line.css('text-decoration', 'underline') }, function() { line.css('text-decoration', '') });
-}
-
-org.sarsoft.MapObjectController.prototype.DNGetLine = function(i, object, child) {
-	var line = this.dn[i].lines[object.id];
-	return (child == null) ? line : $(line.children()[child]);
-}
-
-org.sarsoft.MapObjectController.prototype.buildDN = function(i, object) {
-	// override this stub
-}
-
-org.sarsoft.MapObjectController.prototype.helpRemove = function(i, id) {
-	this.setAttr(i, this.objects[i][id], "inedit", false);
-	if(this.dn != null && this.dn[i].lines[id] != null) {
-		this.dn[i].lines[id].remove();
-		this.dn[i].lines[id] = null;
-	}
-	delete this.objects[i][id];
-	this.checkForObjects(i);
-}
-
-org.sarsoft.MapObjectController.prototype.helpShow = function(i, object) {
-	this.objects[i][object.id] = object;
-	this.setAttr(i, object, "inedit", false);
-	if(!this.visible[i]) return;
-	this.DNAdd(i, object);
-	this.checkForObjects(i);
-}
-
-org.sarsoft.MapObjectController.prototype.show = function(i, object) {
-	// override this stub
-	this.helpShow(i, object);
+org.sarsoft.MapObjectController.prototype.show = function(object) {
+	this.attr(object, "inedit", false);
+	this.checkForObjects();
 }
 
 org.sarsoft.MapObjectController.prototype.del = function(handler) {
@@ -1060,21 +1194,14 @@ org.sarsoft.MapObjectController.prototype.del = function(handler) {
 	this.delconfirm.show();
 }
 
-org.sarsoft.MapObjectController.prototype.refresh = function(i, objects) {
-	var that = this;
-	for(var j = 0; j < objects.length; j++) {
-		if(!this.getAttr(i, objects[j], "inedit"))
-			this.show(i, objects[j]);
-	}
-}
-
-org.sarsoft.MapObjectController.prototype.handleSetupChange = function(i) {
+org.sarsoft.MapObjectController.prototype.handleSetupChange = function() {
 	// override this stub
 }
 
-org.sarsoft.MapObjectController.prototype.checkForObjects = function(i) {
-	var keys = Object.keys(this.objects[i]).length;
-	this.tree[i].block.css('display', keys > 0 ? 'block' : 'none');
+org.sarsoft.MapObjectController.prototype.checkForObjects = function() {
+	var check = Object.keys(this.dao.objs).length > 0;
+	if(this.type.geo) this.imap.controls.action.setDraftMode(this.type.name, check);
+	this.dn.setDNVisible(check);
 }
 
 org.sarsoft.GeoRefImageDlg = function(imap, handler) {
@@ -1237,6 +1364,82 @@ org.sarsoft.GeoRefDAO.prototype.offlineLoad = function(georef) {
 	this.setObj(georef.id, georef);
 }
 
+org.sarsoft.controller.GeoRefController = function(imap) {
+	var that = this;
+	org.sarsoft.MapObjectController.call(this, imap, {name: "GeoRef", dao: org.sarsoft.GeoRefDAO, label: "Geospatial Images"});
+	this.imap.register("org.sarsoft.controller.GeoRefController", this);
+	this.dn.cb.css('display', 'none');
+	
+	if(org.sarsoft.writeable) {
+		this.buildAddButton(1, "Geospatial Image", function(point) {
+			that.georefDlg.show(null, point);
+		});
+	}
+	
+	this.georefDlg = new org.sarsoft.GeoRefImageDlg(imap, function(gr) {
+		gr.id = that.georefDlg.id;
+		that.georefDlg.id = null;
+		if(gr.id == null) {
+			that.create(gr);
+		} else {
+			that.dao.save(gr.id, gr);
+		}		
+	});
+}
+
+org.sarsoft.controller.GeoRefController.prototype = new org.sarsoft.MapObjectController();
+
+org.sarsoft.controller.GeoRefController.prototype.refreshLayers = function() {
+	org.sarsoft.EnhancedGMap.geoRefImages = this.dao.objs.filter(function(o) { return o != null });
+	var config = this.imap.getConfig();
+	this.imap.map._overlaycontrol.resetMapTypes();
+	this.imap.setConfig(config);
+}
+
+
+org.sarsoft.controller.GeoRefController.prototype.show = function(object) {
+	var that = this;
+	
+	this.refreshLayers();
+	org.sarsoft.MapObjectController.prototype.show.call(this, object);
+	
+	var line = this.dn.add(object.id, object.name, function() {
+		var config = that.imap.getConfig();
+		var alias = "_gr" + object.id;
+		if(config.layers.indexOf(alias) < 0) {
+			config.layers.push(alias);
+			config.opacity.push(1);
+		} else {
+			config.opacity[config.layers.indexOf(alias)] = 1;
+		}
+		that.imap.setConfig(config);
+	});
+		
+	line.prepend('<div><img src="' + object.url + '"/></div>');
+	if(org.sarsoft.writeable) {	
+		this.dn.addIconEdit(object.id, function() {
+			var config = that.imap.getConfig();
+			if(config.overlay == "_gr" + object.id) {
+				config.overlay = null;
+				config.opacity = 0;
+				that.imap.setConfig(config);
+			}
+			that.georefDlg.show(object);
+			that.georefDlg.id = object.id;
+		});
+		this.dn.addIconDelete(object.id, function() {
+			that.del(function() { that.dao.del(object.id); });
+		});
+	}
+
+}
+
+org.sarsoft.controller.GeoRefController.prototype.remove = function(object) {
+	org.sarsoft.MapObjectController.prototype.remove.call(this, object);
+	this.refreshLayers();
+}
+
+
 org.sarsoft.DemShadingDlg = function(imap, handler) {
 	var that = this;
 	this.imap = imap;
@@ -1293,161 +1496,94 @@ org.sarsoft.ConfigurableLayerDAO.prototype.offlineLoad = function(cfg) {
 	this.setObj(cfg.id, cfg);
 }
 
-org.sarsoft.controller.CustomLayerController = function(imap) {
+org.sarsoft.controller.ConfiguredLayerController = function(imap) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, [{name: "GeoRef", dao: org.sarsoft.GeoRefDAO, label: "Geospatial Images"}, {name: "ConfiguredLayer", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"}]);
-	this.imap.register("org.sarsoft.controller.CustomLayerController", this);
-	this.tree[1].block.insertBefore(this.tree[0].block);
-	this.dn[0].cb.css('display', 'none');
-	this.dn[1].cb.css('display', 'none');
+	org.sarsoft.MapObjectController.call(this, imap, {name: "ConfiguredLayer", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"});
+	this.imap.register("org.sarsoft.controller.ConfiguredLayerController", this);
+	this.dn.cb.css('display', 'none');
 	
 	if(org.sarsoft.writeable) {
 		this.buildAddButton(1, "DEM Shading", function(point) {
 			that.demDlg.show(null, point);
 		});
-		this.buildAddButton(1, "Geospatial Image", function(point) {
-			that.georefDlg.show(null, point);
-		});
 	}
-	
-	this.georefDlg = new org.sarsoft.GeoRefImageDlg(imap, function(gr) {
-		gr.id = that.georefDlg.id;
-		that.georefDlg.id = null;
-		if(gr.id == null) {
-			that.dao[0].create(function(obj) {
-				that.refreshLayers();
-				that.show(0, obj);
-			}, gr);
-		} else {
-			that.dao[0].save(gr.id, gr, function(obj) {
-				that.refreshLayers();
-				that.show(0, obj);
-			});
-		}		
-	});
 	
 	this.demDlg = new org.sarsoft.DemShadingDlg(imap, function(dem) {
 		dem.id = that.demDlg.id;
 		that.demDlg.id = null;
 		if(dem.id == null) {
-			that.dao[1].create(function(obj) {
-				that.refreshLayers();
-				that.show(1, obj);
-				that.addToMap(1, obj);
-			}, dem);
+			that.dao.create(dem, function(obj) {
+				that.addToMap(obj);
+			});
 		} else {
-			that.dao[1].save(dem.id, dem, function(obj) {
-				that.refreshLayers();
-				that.addToMap(1, obj);
-				that.show(1, obj);
+			that.dao.save(dem.id, dem, function(obj) {
+				that.addToMap(obj);
 			});
 		}
 	});
 	
 }
 
-org.sarsoft.controller.CustomLayerController.prototype = new org.sarsoft.MapObjectController();
+org.sarsoft.controller.ConfiguredLayerController.prototype = new org.sarsoft.MapObjectController();
 
-org.sarsoft.controller.CustomLayerController.prototype.refreshLayers = function() {
-	org.sarsoft.EnhancedGMap.geoRefImages = this.dao[0].objs.filter(function(o) { return o != null });
-	org.sarsoft.EnhancedGMap.configuredLayers = this.dao[1].objs.filter(function(o) { return o != null });
+org.sarsoft.controller.ConfiguredLayerController.prototype.refreshLayers = function() {
+	org.sarsoft.EnhancedGMap.configuredLayers = this.dao.objs.filter(function(o) { return o != null });
 	var config = imap.getConfig();
 	imap.map._overlaycontrol.resetMapTypes();
 	imap.setConfig(config);
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.rehydrate = function(state) {
-	org.sarsoft.MapObjectController.prototype.rehydrate.call(this, state);
-	if(this.dao[0].objs.length > 0 || this.dao[1].objs.length > 0) this.refreshLayers();
-}
-
-
-org.sarsoft.controller.CustomLayerController.prototype.removeFromMap = function(i, obj) {
-	if(i == 1) {
-		var config = imap.getConfig();
-		if(config.alphas == null) return;
-		if(config.alphas.indexOf(obj.alias) >= 0) {
-			config.alphas.splice(config.alphas.indexOf(obj.alias), 1);
-			imap.setConfig(config);
-		}
+org.sarsoft.controller.ConfiguredLayerController.prototype.removeFromMap = function(obj) {
+	var config = imap.getConfig();
+	if(config.alphas == null) return;
+	if(config.alphas.indexOf(obj.alias) >= 0) {
+		config.alphas.splice(config.alphas.indexOf(obj.alias), 1);
+		imap.setConfig(config);
 	}
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.addToMap = function(i, obj) {
-	if(i == 1) {
-		var config = imap.getConfig();
-		if(config.alphas == null) config.alphas = [];
-		if(config.alphas.indexOf(obj.alias) == -1) {
-			config.alphas.push(obj.alias);
-			imap.setConfig(config);
-		}
+org.sarsoft.controller.ConfiguredLayerController.prototype.addToMap = function(obj) {
+	var config = imap.getConfig();
+	if(config.alphas == null) config.alphas = [];
+	if(config.alphas.indexOf(obj.alias) == -1) {
+		config.alphas.push(obj.alias);
+		imap.setConfig(config);
 	}
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.show = function(i, obj) {
-	this.helpShow(i, obj);
-}
-
-org.sarsoft.controller.CustomLayerController.prototype.buildDN = function(i, obj, line) {
+org.sarsoft.controller.ConfiguredLayerController.prototype.show = function(object) {
 	var that = this;
-
-	line.append((obj.name || "").length == 0 ? '<span style="color: #CCCCCC">N/A</span>' : org.sarsoft.htmlescape(obj.name));
-	if(i == 0) {
-		line.prepend('<div><img src="' + obj.url + '"/></div>');
-		if(org.sarsoft.writeable) {	
-			this.DNAddIconEdit(i, obj, function() {
-				var config = that.imap.getConfig();
-				if(config.overlay == "_gr" + obj.id) {
-					config.overlay = null;
-					config.opacity = 0;
-					that.imap.setConfig(config);
-				}
-				that.georefDlg.show(obj);
-				that.georefDlg.id = obj.id;
-			});
-			this.DNAddIconDelete(i, obj, function() {
-				that.del(function() { that.remove(i, obj.id); that.dao[0].del(obj.id); });
-			});
+	
+	this.refreshLayers();
+	org.sarsoft.MapObjectController.prototype.show.call(this, object);
+	
+	var line = this.dn.add(object.id, object.name, function() {
+		var config = that.imap.getConfig();
+		if(config.alphas == null) config.alphas = [];
+		if(config.alphas.indexOf(object.alias) < 0) {
+			config.alphas.push(object.alias);
 		}
-
-		return function() {
-			var config = that.imap.getConfig();
-			var alias = "_gr" + obj.id;
-			if(config.layers.indexOf(alias) < 0) {
-				config.layers.push(alias);
-				config.opacity.push(1);
-			} else {
-				config.opacity[config.layers.indexOf(alias)] = 1;
-			}
-			that.imap.setConfig(config);
-		}
-	} else {
-		line.prepend('<div></div>');
-		if(org.sarsoft.writeable) {	
-			this.DNAddIconEdit(i, obj, function() {
-				that.removeFromMap(i, obj);
-				that.demDlg.show(obj);
-				that.demDlg.id = obj.id;
-			});
-			this.DNAddIconDelete(i, obj, function() {
-				that.del(function() { that.removeFromMap(i, obj); that.remove(i, obj.id); that.dao[1].del(obj.id, function() { that.refreshLayers(); }); });
-			});
-		}
-		
-		return function() {
-			var config = that.imap.getConfig();
-			if(config.alphas == null) config.alphas = [];
-			if(config.alphas.indexOf(obj.alias) < 0) {
-				config.alphas.push(obj.alias);
-			}
-			that.imap.setConfig(config);
-		}
+		that.imap.setConfig(config);
+	});
+	
+	line.prepend('<div></div>');
+	if(org.sarsoft.writeable) {	
+		this.dn.addIconEdit(object.id, function() {
+			that.removeFromMap(object);
+			that.demDlg.show(object);
+			that.demDlg.id = object.id;
+		});
+		this.dn.addIconDelete(object.id, function() {
+			that.del(function() { that.dao.del(object.id); });
+		});
 	}
 	
 }
 
-org.sarsoft.controller.CustomLayerController.prototype.remove = function(i, id) {
-	this.helpRemove(i, id);
+org.sarsoft.controller.ConfiguredLayerController.prototype.remove = function(object) {
+	this.removeFromMap(object);
+	org.sarsoft.MapObjectController.prototype.remove.call(this, object);
+	this.refreshLayers();
 }
 
 

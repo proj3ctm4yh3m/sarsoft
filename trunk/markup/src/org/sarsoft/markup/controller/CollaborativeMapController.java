@@ -20,6 +20,7 @@ import org.sarsoft.common.controller.ImageryController;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.Format;
+import org.sarsoft.common.model.ClientState;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.GPX;
@@ -70,22 +71,6 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	
-	@RequestMapping(value="/hastymap")
-	public String hastyExport(Model model, @RequestParam("state") String clientstate, HttpServletRequest request, HttpServletResponse response) {		
-		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.GPX;
-		JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
-		switch(format) {
-		case GPX :
-			response.setHeader("Content-Disposition", "attachment; filename=export.gpx");
-			return gpx(model, manager.toGPX(manager.fromJSON(json)));
-		case KML :
-			response.setHeader("Content-Disposition", "attachment; filename=export.kml");
-			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
-			return kml(model, manager.toGPX(manager.fromJSON(json)));
-		}
-		return "";
-	}
-
 	@RequestMapping(value="/map", method = RequestMethod.GET)
 	public String get(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
 		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
@@ -174,33 +159,27 @@ public class CollaborativeMapController extends JSONBaseController {
 		return json(model, map.getDefaultCenter());
 	}
 	
-	@RequestMapping(value="/map/restgpxupload", method = RequestMethod.POST)
-	public String restGpxUpload(JSONForm params, Model model) {
-		gpxUpload(params, model);
-		return json(model, new Object());
-	}
-	
-
-	@SuppressWarnings({ "rawtypes", "unchecked"})
-	@RequestMapping(value="/hastyupload")
-	public String hastyImport(Model model, JSONForm params, HttpServletRequest request) {
-		JSONArray jarray = GPX.parse(context, params);
-
-		if("frame".equals(request.getParameter("responseType"))) {
-			return jsonframe(model, manager.toJSON(manager.fromGPX(jarray)));
-		} else {
-			return json(model, manager.toJSON(manager.fromGPX(jarray)));
+	@RequestMapping(value="/rest/out")
+	public String download(Model model, @RequestParam("state") String clientstate, HttpServletRequest request, HttpServletResponse response) {		
+		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.GPX;
+		JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
+		switch(format) {
+		case GPX :
+			response.setHeader("Content-Disposition", "attachment; filename=export.gpx");
+			return gpx(model, manager.toGPX(manager.fromJSON(json)));
+		case KML :
+			response.setHeader("Content-Disposition", "attachment; filename=export.kml");
+			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
+			return kml(model, manager.toGPX(manager.fromJSON(json)));
 		}
+		return "";
 	}
-	
-	
-	@RequestMapping(value="/map/gpxupload", method = RequestMethod.POST)
-	public String gpxUpload(JSONForm params, Model mode) {
-
-		JSONArray jarray = GPX.parse(context, params);
 		
-		manager.toDB(manager.fromGPX(jarray));
+	@RequestMapping(value="/rest/in", method = RequestMethod.POST)
+	public String upload(JSONForm params, Model model, HttpServletRequest request) {
+		ClientState state = manager.fromGPX(GPX.parse(context, params));
 
+		if(RuntimeProperties.getTenant() != null) {
 		/*
 		List ways = (List) m.get("shapes");
 		for(int i = 0; i < ways.size(); i++) {
@@ -252,6 +231,13 @@ public class CollaborativeMapController extends JSONBaseController {
 		}
 		if(request.getParameter("dest") != null && request.getParameter("dest").length() > 0) return "redirect:" + request.getParameter("dest");
 		*/
-		return "redirect:/map?id=" + RuntimeProperties.getTenant();
+			 manager.toDB(state);
+		}
+
+		if("frame".equals(request.getParameter("responseType"))) {
+			return jsonframe(model, manager.toJSON(state));
+		} else {
+			return json(model, manager.toJSON(state));
+		}
 	}
 }

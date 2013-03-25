@@ -1520,49 +1520,6 @@ org.sarsoft.view.MapEntityDialog.prototype.show = function(obj) {
 	this.dialog.show();
 }
 
-/*
- *  Extends the MapEntityDialog for objects with geospatial information.  3 states:
- *  1. New Object
- *  2. Edit data only
- *  3. Edit data and geospatial info
- */
-org.sarsoft.view.MapObjectEntityDialog = function(imap, title, entityform) {
-	var that = this;
-	org.sarsoft.view.MapEntityDialog.call(this, imap, title, entityform, function(obj) { that.ok(obj) }, "OK");
-	
-	this.dialog.dialog.hideEvent.subscribe(function() {
-		if(that.hasGeoInfo) that.discardGeoInfo();
-		if(that.live) that.live = false;
-	});
-}
-
-org.sarsoft.view.MapObjectEntityDialog.prototype = new org.sarsoft.view.MapEntityDialog();
-
-org.sarsoft.view.MapObjectEntityDialog.prototype.ok = function(obj) {
-	var that = this;
-	if(this.object.id == null) {
-		this.create(obj);
-	} else if(this.hasGeoInfo) {
-		this.saveGeoInfo(obj, function() { that.saveData(obj); });
-		this.hasGeoInfo = false;
-	} else {
-		this.saveData(obj);
-	}
-}
-
-// override these stubs
-org.sarsoft.view.MapObjectEntityDialog.prototype.discardGeoInfo = function() { }
-org.sarsoft.view.MapObjectEntityDialog.prototype.saveGeoInfo = function(obj) { }
-org.sarsoft.view.MapObjectEntityDialog.prototype.saveData = function(obj) { }
-org.sarsoft.view.MapObjectEntityDialog.prototype.create = function(obj) { }
-
-org.sarsoft.view.MapObjectEntityDialog.prototype.show = function(obj, point, hasGeoInfo) {
-	this.object = obj;
-	this.point = point;
-	this.hasGeoInfo = hasGeoInfo;
-	org.sarsoft.view.MapEntityDialog.prototype.show.call(this, obj);
-}
-
 org.sarsoft.view.MapDialog = function(imap, title, bodynode, yes, no, handler, style) {
 	var that = this;
 	this.imap = imap;
@@ -1704,6 +1661,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.text = new Array();
 	this.markers = new Array();
 	this.controls = { settings: $('<div></div>') }
+	this.datamanager = new org.sarsoft.DataManager(this); 
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
 	this._contextMenu._vertex;
@@ -1711,7 +1669,6 @@ org.sarsoft.InteractiveMap = function(map, options) {
 
 	this._menuItemsOverride = null;
 	this.registered = new Object();
-	this.datamanager = new Object();
 	this._mapInfoMessages = new Object();
 	
 	if(typeof map == undefined) return;
@@ -2402,8 +2359,14 @@ org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 		hash = hash + "&o=" + config.layers.join(",") + "&n=" + config.opacity.join(",");
 	}
 	if(config.alphas != null) hash = hash + "&a=" + config.alphas.join(",");
-	var clc = imap.registered["org.sarsoft.controller.CustomLayerController"];
-	if(clc != null && (clc.dao[0].objs.length > 0 || clc.dao[1].objs.length > 0)) hash = hash + "&cl=" + encodeURIComponent(YAHOO.lang.JSON.stringify(clc.dehydrate()));
+
+	var cl = {}
+	var geo = imap.registered["org.sarsoft.controller.GeoRefController"];
+	if(geo != null && (geo.dao.objs.length > 0)) cl.georefs = geo.dao.dehydrate();
+	var cfg = imap.registered["org.sarsoft.controller.ConfiguredLayerController"];
+	if(cfg != null && (cfg.dao.objs.length > 0)) cl.cfglayers = cfg.dao.dehydrate();
+	if(Object.keys(cl).length > 0) hash = hash + "&gr=" + encodeURIComponent(YAHOO.lang.JSON.stringify(cl));
+	
 	var pbc = imap.registered["org.sarsoft.PrintBoxController"];
 	if(pbc != null) hash = hash + "&print=" + encodeURIComponent(YAHOO.lang.JSON.stringify(pbc.getURLState()));
 	return hash;
@@ -2449,8 +2412,12 @@ org.sarsoft.MapURLHashWidget.prototype.loadMap = function() {
 	this.lasthash = window.location.hash;
 	var hash = this.lasthash.slice(1);
 	var config = org.sarsoft.MapURLHashWidget.parseConfigStr(hash, this.imap);
-	if(config.cl != null && this.imap.registered["org.sarsoft.controller.CustomLayerController"] != null) {
-		this.imap.registered["org.sarsoft.controller.CustomLayerController"].rehydrate(config.cl);
+	if(config.cl != null) {
+		var geo = imap.registered["org.sarsoft.controller.GeoRefController"];
+		if(geo != null && config.cl.georefs != null) geo.dao.rehydrate(config.cl.georefs);
+		if(geo != null && config.cl.length != null) geo.dao.rehydrate(config.cl);
+		var cfg = imap.registered["org.sarsoft.controller.ConfiguredLayerController"];
+		if(cfg != null && config.cl.cfglayers != null) cfg.dao.rehydrate(config.cl.cfglayers);
 	}
 	if(config.base != null) this.imap.setConfig(config);
 	this.config = config;

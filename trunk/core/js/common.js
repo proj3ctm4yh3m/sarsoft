@@ -74,6 +74,7 @@ org.sarsoft.htmlescape = function(str, newline) {
 org.sarsoft.BaseDAO = function(offline) {
 	this.objs = []
 	this.offline = offline && (org.sarsoft.tenantid == null);
+	this.listeners = [];
 }
 
 org.sarsoft.BaseDAO.addListener = function(fn) {
@@ -105,7 +106,7 @@ org.sarsoft.BaseDAO.prototype.sanitize = function(obj) {
 }
 
 org.sarsoft.BaseDAO.prototype.dehydrate = function() {
-	return this.objs;
+	return this.objs.filter(function(o) { return o != null});
 }
 
 org.sarsoft.BaseDAO.prototype.rehydrate = function(state) {
@@ -155,21 +156,30 @@ org.sarsoft.BaseDAO.prototype._doDelete = function(url, handler) {
 	var url = this.baseURL + url;
 	if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
 	YAHOO.util.Connect.asyncRequest('DELETE', url, { success : function(response) {
+			org.sarsoft.BaseDAO.trigger(true);
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
+			org.sarsoft.BaseDAO.trigger(false);
 			throw("AJAX ERROR getting from " + url + ": " + response.responseText);
 		}});
 }
 
-org.sarsoft.BaseDAO.prototype.create = function(handler, obj) {
+org.sarsoft.BaseDAO.prototype.create = function(obj, handler) {
 	var that = this;
 	obj = this.sanitize(obj);
 	if(this.offline) {
-		obj.id = this.objs.length;
-		this.setObj(obj.id, obj);
-		org.sarsoft.async(function() {handler(obj)});;
+		org.sarsoft.async(function() {
+			obj.id = that.objs.length;
+			that.setObj(obj.id, obj);
+			$(that).triggerHandler('create', obj);
+			if(handler) handler(obj);
+		});
 	} else {
-		this._doPost("/", function(r) { that.objs[r.id] = r; handler(r) }, obj);
+		this._doPost("/", function(r) {
+			that.setObj(r.id, r);
+			$(that).triggerHandler('create', obj);
+			if(handler) handler(obj);
+		}, obj);
 	}
 }
 
@@ -177,17 +187,25 @@ org.sarsoft.BaseDAO.prototype.save = function(id, obj, handler) {
 	var that = this;
 	obj = this.sanitize(obj);
 	if(this.offline) {
-		var mine = this.getObj(id);
-		if(mine == null) {
-			this.setObj(id, obj);
-		} else {
-			for(var k in obj) {
-				mine[k] = obj[k];
+		org.sarsoft.async(function() {
+			var mine = that.getObj(id);
+			if(mine == null) {
+				that.setObj(id, obj);
+				mine = obj;
+			} else {
+				for(var k in obj) {
+					mine[k] = obj[k];
+				}
 			}
-		}
-		if(handler != null) org.sarsoft.async(function() {handler(mine)});
+			$(that).triggerHandler('save', mine);
+			if(handler) handler(mine);
+		});
 	} else {
-		this._doPost("/" + id + ".do", function(r) {that.setObj(r.id, r); if(handler != null) handler(r);}, obj);
+		this._doPost("/" + id + ".do", function(r) {
+			that.setObj(r.id, r)
+			$(that).triggerHandler('save', r);
+			if(handler) handler(r)
+		}, obj);
 	}
 }
 
@@ -204,18 +222,35 @@ org.sarsoft.BaseDAO.prototype.del2 = function(id, handler) {
 org.sarsoft.BaseDAO.prototype.del = function(id, handler) {
 	var that = this;
 	if(this.offline) {
-		delete this.objs[id];
+		org.sarsoft.async(function() {
+			var obj = that.objs[id];
+			delete that.objs[id];
+			$(that).triggerHandler('delete', obj);
+			if(handler) handler(obj);
+		});
 	} else {
-		this._doDelete("/" + id + ".do", function() { delete that.objs[id]; if(handler != null) handler() } );
+		this._doDelete("/" + id + ".do", function(r) {
+			var obj = that.objs[id];
+			delete that.objs[id];
+			$(that).triggerHandler('delete', obj);
+			if(handler) handler(obj);
+		});
 	}
 }
 
-org.sarsoft.BaseDAO.prototype.load = function(handler, id) {
+org.sarsoft.BaseDAO.prototype.load = function(id, handler) {
 	var that = this;
 	if(this.offline) {
-		org.sarsoft.async(function() {handler(this.getObj(id))});
+		org.sarsoft.async(function() {
+			$(that).triggerHandler('load', that.getObj(id));
+			if(handler) handler(that.getObj(id));
+		});
 	} else {
-		this._doGet("/" + id + ".do", function(r) {that.setObj(r.id, r); handler(r) });
+		this._doGet("/" + id + ".do", function(r) {
+			that.setObj(r.id, r);
+			$(that).triggerHandler('load', r);
+			if(handler) handler(r);
+		});
 	}
 }
 
@@ -240,15 +275,13 @@ org.sarsoft.BaseDAO.prototype.mark = function() {
 
 org.sarsoft.BaseDAO.prototype.loadSince = function(handler) {
 	var that = this;
-	if(this.offline) {
-		handler([]);
-	} else {
-		// TODO update objects
+	if(!this.offline) {
 		this._doGet("/since/" + this._timestamp, function(r) {
 			for(var i = 0; i < r.length; i++) {
 				that.setObj(r[i].id, r[i]);
+				$(that).triggerHandler('load', r[i]);
+				if(handler) handler(r[i]);
 			}
-			if(handler != null) handler(r);
 		});
 	}
 }
@@ -257,18 +290,22 @@ org.sarsoft.BaseDAO.prototype.loadAll = function(handler) {
 	var that = this;
 	if(this.offline || this.preload) {
 		org.sarsoft.async(function() {
-			var r = []
 			for(var i = 0; i < that.objs.length; i++) {
-				if(that.getObj(i) != null) r.push(that.getObj(i));
+				if(that.getObj(i) != null) { // TODO pull NULLs when persisting state, then this isn't needed
+					if(handler) handler(that.getObj(i));
+					$(that).triggerHandler('load', that.getObj(i));
+					$(that).triggerHandler('loadall', that.getObj(i));
+				}
 			}
-			handler(r)
 		});
 	} else {
 		this._doGet("/", function(r) {
 			for(var i = 0; i < r.length; i++) {
+				if(handler) handler(r[i]);
 				that.setObj(r[i].id, r[i]);
+				$(that).triggerHandler('load', r[i]);
+				$(that).triggerHandler('loadall', r[i]);
 			}
-			handler(r);
 		});
 	}
 }
@@ -280,6 +317,41 @@ org.sarsoft.SearchDAO = function(errorHandler, baseURL) {
 }
 
 org.sarsoft.SearchDAO.prototype = new org.sarsoft.BaseDAO();
+
+org.sarsoft.DataManager = function() {
+	this.controllers = new Object();
+}
+
+org.sarsoft.DataManager.prototype.register = function(name, controller) {
+	this.controllers[name] = controller;
+}
+
+org.sarsoft.DataManager.prototype.get = function(type, id) {
+	var state = new Object();
+	if(type != null) {
+		state[type] = [this.controllers[type].dao.objs[id]];
+	} else {
+		for(var key in this.controllers) {
+			state[key] = this.controllers[key].dao.dehydrate();
+		}
+	}
+	return state;
+}
+
+org.sarsoft.DataManager.prototype.set = function(state) {
+	for(var key in state) {
+		var controller = this.controllers[key];
+		if(controller != null) controller.dao.rehydrate(state[key]);
+	}
+}
+
+org.sarsoft.DataManager.prototype.count = function() {
+	var count = 0;
+	for(var key in this.controllers) {
+		count = count + Object.keys(this.controllers[key].dao).length;
+	}
+	return count;
+}
 
 org.sarsoft.BrowserCheck = function() {
 	if(YAHOO.util.Cookie.get("sarsoftBrowserCheck") == "checked") return;

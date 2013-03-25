@@ -158,9 +158,9 @@ org.sarsoft.controller.ResourceLocationMapController = function(controller) {
 				that.showResource(r);
 			});
 		} else { 
-			that.resourceDAO.create(function(r) {
+			that.resourceDAO.create(updated, function(r) {
 				that.showResource(r);
-			}, updated);
+			});
 		}
 	}, "Save");
 	
