@@ -10,8 +10,6 @@ import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.util.Datum;
 
-import com.sun.xml.internal.rngom.parse.compact.ParseException;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -28,13 +26,11 @@ public class Waypoint extends SarModelObject {
     private static double UTMScaleFactor = 0.9996;    
     private static String[] zoneLetters = new String[] {"C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X"};
     
-    public static void main(String[] args) {
-    	
-        Waypoint wpt2 = new Waypoint(738000, 4352099, 10, Datum.NAD27);
-    	System.out.println(wpt2.getLat() + " " + wpt2.getLng());
-    }
-
 	public Waypoint() {
+	}
+	
+	public Waypoint(JSONObject json) {
+		from(json);
 	}
 	
 	public Waypoint(double lat, double lng, Datum datum) {
@@ -57,9 +53,17 @@ public class Waypoint extends SarModelObject {
 	public Waypoint(double easting, double northing, int zone) {
 		this(easting, northing, zone, Datum.WGS84);
 	}
-
-	public static Waypoint createFromJSON(JSONObject json) {
-		return (Waypoint) JSONObject.toBean(json, Waypoint.class);
+	
+	public void from(JSONObject json) {
+		from((Waypoint) JSONObject.toBean(json, Waypoint.class));
+	}
+	
+	public void from(Waypoint updated) {
+		setName(updated.getName());
+		setLat(updated.getLat());
+		setLng(updated.getLng());
+		setTime(updated.getTime());
+		datum = updated.getDatum();
 	}
 
 	public static Waypoint[] createFromJSON(JSONArray json) {

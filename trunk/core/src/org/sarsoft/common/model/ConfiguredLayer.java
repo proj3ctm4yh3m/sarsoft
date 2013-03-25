@@ -14,13 +14,15 @@ public class ConfiguredLayer extends MapObject {
 	String name;
 	String alias;
 
-	public static ConfiguredLayer createFromJSON(JSONObject json) {
-		return (ConfiguredLayer) JSONObject.toBean(json, ConfiguredLayer.class);
+	public ConfiguredLayer() {	
+	}
+	
+	public ConfiguredLayer(JSONObject json) {
+		from(json);
 	}
 	
 	public void from(JSONObject json) {
-		ConfiguredLayer updated = createFromJSON(json);
-		from(updated);
+		from((ConfiguredLayer) JSONObject.toBean(json, ConfiguredLayer.class));
 	}
 	
 	public void from(ConfiguredLayer updated) {

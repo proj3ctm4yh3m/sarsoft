@@ -177,8 +177,8 @@ org.sarsoft.BaseDAO.prototype.create = function(obj, handler) {
 	} else {
 		this._doPost("/", function(r) {
 			that.setObj(r.id, r);
-			$(that).triggerHandler('create', obj);
-			if(handler) handler(obj);
+			$(that).triggerHandler('create', r);
+			if(handler) handler(r);
 		}, obj);
 	}
 }
@@ -230,10 +230,9 @@ org.sarsoft.BaseDAO.prototype.del = function(id, handler) {
 		});
 	} else {
 		this._doDelete("/" + id + ".do", function(r) {
-			var obj = that.objs[id];
 			delete that.objs[id];
-			$(that).triggerHandler('delete', obj);
-			if(handler) handler(obj);
+			$(that).triggerHandler('delete', r);
+			if(handler) handler(r);
 		});
 	}
 }

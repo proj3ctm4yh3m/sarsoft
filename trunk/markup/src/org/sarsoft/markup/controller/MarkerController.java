@@ -23,7 +23,7 @@ public class MarkerController extends GeoMapObjectController {
 	}
 	
 	public Marker make(JSONObject json) {
-		return Marker.fromJSON(json);
+		return new Marker(json);
 	}
 
 	public JSONObject toGPX(MapObject obj) {

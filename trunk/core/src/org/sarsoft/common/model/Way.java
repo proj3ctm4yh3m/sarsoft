@@ -46,12 +46,31 @@ public class Way extends SarModelObject implements IPreSave {
 		classHints = Collections.unmodifiableMap(m);
 	}
 
-	public static Way createFromJSON(JSONObject json) {
-		return (Way) JSONObject.toBean(json, Way.class, classHints);
-	}
-
 	public static Way[] createFromJSON(JSONArray json) {
 		return (Way[]) JSONArray.toArray(json, Way.class, classHints);
+	}
+	
+	public Way() {	
+	}
+	
+	public Way(JSONObject json) {
+		from((Way) JSONObject.toBean(json, Way.class, classHints));
+	}
+
+	public void from(Way updated) {
+		if(waypoints == null) waypoints = new ArrayList<Waypoint>();
+		this.setPolygon(updated.isPolygon());
+		this.setName(updated.getName());
+		this.setType(updated.getType());
+		this.setUpdated(updated.getUpdated());
+		waypoints.removeAll(waypoints);
+		for(Waypoint from : updated.getWaypoints()) {
+			Waypoint wpt = new Waypoint();
+			wpt.setLat(from.getLat());
+			wpt.setLng(from.getLng());
+			wpt.setTime(from.getTime());
+			waypoints.add(wpt);
+		}
 	}
 
 	@JSONSerializable

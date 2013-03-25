@@ -14,10 +14,10 @@ import javax.persistence.Transient;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
-import org.sarsoft.common.model.GeoMapObject;
-import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
+import org.sarsoft.common.model.GeoMapObject;
+import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 
@@ -44,33 +44,15 @@ public class Shape extends GeoMapObject implements IPreSave {
 		classHints = Collections.unmodifiableMap(m);
 	}
 
-	public static Shape fromJSON(JSONObject json) {
-		return (Shape) JSONObject.toBean(json, Shape.class, classHints);
+	public Shape() {
 	}
 	
-	public static Shape fromGPX(JSONObject gpx) {
-		String type = gpx.getString("type");
-		if(!("route".equals(type) || "track".equals(type))) return null;
-
-		Shape shape = new Shape();
-		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
-		
-		shape.setLabel(gpx.getString("name"));
-		shape.setWay(Way.createFromJSON((JSONObject) gpx.get("way")));
-		List<Waypoint> wpts = shape.getWay().getWaypoints();
-		if(type == "route" && wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) shape.getWay().setPolygon(true);
-
-		shape.setColor(attrs.containsKey("color") ? attrs.get("color") : "#FF0000");
-		shape.setWeight(attrs.containsKey("weight") ? Float.parseFloat(attrs.get("weight")) : 2f);
-		shape.setFill(attrs.containsKey("fill") ? Float.parseFloat(attrs.get("fill")) : 0f);
-		shape.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
-
-		return shape;
+	public Shape(JSONObject json) {
+		from(json);
 	}
-	
+
 	public void from(JSONObject json) {
-		Shape updated = fromJSON(json);
-		from(updated);
+		this.from((Shape) JSONObject.toBean(json, Shape.class, classHints));
 	}
 	
 	public void from(Shape updated) {
@@ -82,9 +64,8 @@ public class Shape extends GeoMapObject implements IPreSave {
 			setLabel(updated.getLabel());
 		}
 		if(updated.getWay() != null) {
-			List<Waypoint> waypoints = getWay().getWaypoints();
-			waypoints.removeAll(waypoints);
-			waypoints.addAll(updated.getWay().getWaypoints());
+			if(way == null) way = new Way();
+			way.from(updated.getWay());
 		}
 	}
 	
@@ -105,7 +86,27 @@ public class Shape extends GeoMapObject implements IPreSave {
 		jobj.put("desc", encodeGPXAttrs(attrs));		
 		return jobj;
 	}
+	
+	public static Shape fromGPX(JSONObject gpx) {
+		String type = gpx.getString("type");
+		if(!("route".equals(type) || "track".equals(type))) return null;
 
+		Shape shape = new Shape();
+		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
+		
+		shape.setLabel(gpx.getString("name"));
+		shape.setWay(new Way((JSONObject) gpx.get("way")));
+		List<Waypoint> wpts = shape.getWay().getWaypoints();
+		if(type == "route" && wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) shape.getWay().setPolygon(true);
+
+		shape.setColor(attrs.containsKey("color") ? attrs.get("color") : "#FF0000");
+		shape.setWeight(attrs.containsKey("weight") ? Float.parseFloat(attrs.get("weight")) : 2f);
+		shape.setFill(attrs.containsKey("fill") ? Float.parseFloat(attrs.get("fill")) : 0f);
+		shape.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
+
+		return shape;
+	}
+	
 	@ManyToOne
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@JSONSerializable

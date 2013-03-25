@@ -153,7 +153,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	@RequestMapping(value = "/rest/tenant/center", method = RequestMethod.POST)
 	public String setDefaultCenter(Model model, JSONForm params, HttpServletRequest request) {
 		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
-		Waypoint center = Waypoint.createFromJSON(params.JSON());
+		Waypoint center = new Waypoint(params.JSON());
 		map.setDefaultCenter(center);
 		dao.save(map);
 		return json(model, map.getDefaultCenter());

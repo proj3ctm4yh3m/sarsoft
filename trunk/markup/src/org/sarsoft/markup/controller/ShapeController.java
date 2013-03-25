@@ -29,7 +29,7 @@ public class ShapeController extends GeoMapObjectController {
 	}
 	
 	public Shape make(JSONObject json) {
-		return Shape.fromJSON(json);
+		return new Shape(json);
 	}
 	
 	public JSONObject toGPX(MapObject obj) {
@@ -50,13 +50,9 @@ public class ShapeController extends GeoMapObjectController {
 	public String updateWay(JSONForm params, @PathVariable("id") long id, Model model, HttpServletRequest request) {
 		Shape shape = dao.load(Shape.class, id);
 		Way way = shape.getWay();
-		if(way == null) { // TODO is this ever necessary?
-			way = new Way();
-			shape.setWay(way);
-			dao.save(shape);
-		}
 		Shape updated = new Shape();
 		updated.setWay(new Way());
+		// TODO need to change how waypoints are updated to prevent pk injection
 		updated.getWay().setWaypoints((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
 		shape.from(updated);
 		dao.save(shape);

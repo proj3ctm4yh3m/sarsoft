@@ -375,7 +375,8 @@ org.sarsoft.widget.IO.prototype.doexport = function(format) {
 
 org.sarsoft.widget.MapAction = function(container) {
 	var that = this;
-	this.draft = new Object();
+	this.draftcheck = new Object();
+	this.draftmode = false;
 
 	this.saved = jQuery('<div style="display: none; color: #CCCCCC; font-style: italic">Map Not Modified</div>').appendTo(container);
 	org.sarsoft.BaseDAO.addListener(function(success) {
@@ -422,10 +423,10 @@ org.sarsoft.widget.MapAction.prototype.addAction = function(name, link, body) {
 }
 
 org.sarsoft.widget.MapAction.prototype.setDraftMode = function(name, draft) {
-	this.draft[name] = draft;
-	draft = false;
-	for(var key in this.draft) draft = draft || this.draft[key];
-	if(org.sarsoft.tenantid != null) draft = false;
+	this.draftcheck[name] = draft;
+	this.draftmode = false;
+	for(var key in this.draftcheck) this.draftmode = this.draftmode || this.draftcheck[key];
+	if(org.sarsoft.tenantid != null) this.draftmode = false;
 	this.links.save.css('display', draft ? 'block' : 'none');
 	this.links.share.css('display', draft ? 'none' : 'block');
 }
@@ -1042,7 +1043,7 @@ org.sarsoft.view.MapObjectEntityDialog.prototype.show = function(obj, point, has
 org.sarsoft.MapObjectDN = function(imap, label) {
 	var that = this;
 	this.imap = imap;
-	this.tree = imap.dn.addDataType(label);
+	this.tree = imap ? imap.dn.addDataType(label) : new org.sarsoft.DNTree($('<div></div>'), '');
 	this.tree.block.css({'display': 'none', 'margin-bottom': '10px'});
 	this.tree.body.css('padding-top', '5px');
 	this.div = $('<div></div>').appendTo(this.tree.body);
@@ -1125,10 +1126,8 @@ org.sarsoft.MapObjectController = function(imap, type, background_load) {
 	this.dao = new type.dao(function () { that.imap.message("Server Communication Error"); });
 	this.attrs = new Object();
 	this.visible = true;
-	if(!this.bgload) {
-		this.dn = new org.sarsoft.MapObjectDN(imap, type.label);
-		$(this.dn).bind('visibilitychanged', function() { that.handleSetupChange(); });
-	}
+	this.dn = new org.sarsoft.MapObjectDN(this.bgload ? null : imap, type.label);
+	$(this.dn).bind('visibilitychanged', function() { that.handleSetupChange(); });
 	
 	$(this.dao).bind('create', function(e, obj) { that.show(obj) });
 	$(this.dao).bind('save', function(e, obj) { that.show(obj) });
@@ -1200,7 +1199,7 @@ org.sarsoft.MapObjectController.prototype.handleSetupChange = function() {
 
 org.sarsoft.MapObjectController.prototype.checkForObjects = function() {
 	var check = Object.keys(this.dao.objs).length > 0;
-	if(this.type.geo) this.imap.controls.action.setDraftMode(this.type.name, check);
+	if(this.type.geo && this.imap.controls.action) this.imap.controls.action.setDraftMode(this.type.name, check);
 	this.dn.setDNVisible(check);
 }
 
@@ -1380,7 +1379,7 @@ org.sarsoft.controller.GeoRefController = function(imap) {
 		gr.id = that.georefDlg.id;
 		that.georefDlg.id = null;
 		if(gr.id == null) {
-			that.create(gr);
+			that.dao.create(gr);
 		} else {
 			that.dao.save(gr.id, gr);
 		}		

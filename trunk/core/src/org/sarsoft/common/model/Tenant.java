@@ -54,9 +54,28 @@ public abstract class Tenant {
 		m.put("passwordProtectedUserPermission", Permission.class);
 		classHints = Collections.unmodifiableMap(m);
 	}
-
-	public static Tenant createFromJSON(JSONObject json) {
-		return (Tenant) JSONObject.toBean(json, Tenant.class, classHints);
+	
+	public Tenant() {
+	}
+	
+	public Tenant(JSONObject json) {
+		from(json);
+	}
+	
+	public void from(JSONObject json) {
+		from((Tenant) JSONObject.toBean(json, Tenant.class, classHints));
+	}
+	
+	public void from(Tenant updated) {
+		setName(updated.getName());
+		setAllUserPermission(updated.getAllUserPermission());
+		setPasswordProtectedUserPermission(updated.getPasswordProtectedUserPermission());
+		setPassword(updated.getPassword());
+		setDescription(updated.getDescription());
+		setComments(updated.getComments());
+		setLayers(updated.getLayers());
+		setMapConfig(updated.getMapConfig());
+		setShared(updated.getShared());
 	}
 
 	public void setName(String name) {
