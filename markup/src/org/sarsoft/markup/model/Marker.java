@@ -58,7 +58,8 @@ public class Marker extends GeoMapObject implements IPreSave {
 			setComments(updated.getComments());
 		}
 		if(updated.getPosition() != null) {
-			setPosition(updated.getPosition());
+			getPosition().setLat(updated.getPosition().getLat());
+			getPosition().setLng(updated.getPosition().getLng());
 		}
 	}
 	

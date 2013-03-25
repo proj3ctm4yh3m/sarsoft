@@ -3,6 +3,7 @@ package org.sarsoft.common.controller;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -372,6 +373,19 @@ public class AdminController extends JSONBaseController {
 		tenant.setCfgUpdated(System.currentTimeMillis());
 		dao.save(tenant);
 		return json(model, tenant);
+	}
+
+	@RequestMapping(value="/tools.html", method = RequestMethod.GET)
+	public String showTools(Model model) {
+		return app(model, "Pages.Tools");
+	}
+	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value="/rest/timestamp", method = RequestMethod.GET)
+	public String getTimestamp(Model model) {
+		Map m = new HashMap();
+		m.put("timestamp", Long.toString(new Date().getTime()));
+		return json(model, m);
 	}
 
 }

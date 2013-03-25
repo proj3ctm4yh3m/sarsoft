@@ -745,14 +745,14 @@ org.sarsoft.controller.OperationalPeriodMapController = function(imap, operation
 				}
 			}
 		}
-		that.assignmentDAO.create(function(obj) {
+		that.assignmentDAO.create(assignment, function(obj) {
 			that.addAssignment(obj, function() {
 				if(!isClone) {
 					that.redraw(obj, function() {
 						that.save(obj);
 					});
 				}});
-		}, assignment);
+		});
 	});
 	
 	this.editAssignmentDlg = new org.sarsoft.view.MapEntityDialog(this.imap, "Edit Assignment", new org.sarsoft.view.SearchAssignmentForm(true), function(assignment) {
@@ -1291,9 +1291,9 @@ org.sarsoft.controller.ClueLocationMapController = function(imap) {
 		} else { 
 			var wpt = that.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(that.clueDlg.point.x, that.clueDlg.point.y));
 			updated.position = {lat: wpt.lat(), lng: wpt.lng()};
-			that.clueDAO.create(function(c) {
+			that.clueDAO.create(updated, function(c) {
 				that.showClue(c);
-			}, updated);
+			});
 		}
 	}, "Save");
 	
