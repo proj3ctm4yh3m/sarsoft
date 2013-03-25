@@ -105,7 +105,7 @@ public class AppController extends JSONBaseController {
 			return json(model, new HashMap());
 		}
 
-		Tenant updated = CollaborativeMap.createFromJSON(params.JSON());
+		Tenant updated = new CollaborativeMap(params.JSON());
 		if(updated.getAllUserPermission() == null) {
 			tenant.setDescription(updated.getDescription());
 			tenant.setComments(updated.getComments());
