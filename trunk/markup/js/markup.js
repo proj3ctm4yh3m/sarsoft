@@ -24,9 +24,11 @@ org.sarsoft.MarkerDAO.prototype.sanitize = function(obj) {
 }
 
 org.sarsoft.MarkerDAO.prototype.offlineLoad = function(marker) {
+	if(marker.position) marker.position.id = null;
 	this.sanitize(marker);
 	marker.id = this.objs.length;
 	this.setObj(marker.id, marker);
+	$(this).triggerHandler('load', marker);
 }
 
 org.sarsoft.MarkerDAO.prototype.updatePosition = function(id, position, handler) {
@@ -352,9 +354,11 @@ org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
 }
 
 org.sarsoft.ShapeDAO.prototype.offlineLoad = function(shape) {
+	if(shape.way) shape.way.id = null;
 	this.sanitize(shape);
 	shape.id = this.objs.length;
 	this.setObj(shape.id, shape);
+	$(this).triggerHandler('load', shape);
 }
 
 org.sarsoft.ShapeDAO.prototype.getWaypoints = function(handler, shape, precision) {
@@ -479,7 +483,7 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 		this.shapeDlg.discardGeoInfo = function() { that.discard(this.object); }
 		this.shapeDlg.saveGeoInfo = function(shape, callback) { that.save(this.object.id, callback); }
 		this.shapeDlg.saveData = function(shape) {
-			that.dao.save(shape.id, shape);
+			that.dao.save(this.object.id, shape);
 		}
 		this.shapeDlg.create = function(shape) {
 			shape.way = {polygon: this.object.way.polygon};

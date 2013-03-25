@@ -4,11 +4,11 @@
 <xsl:output method="xml" cdata-section-elements="cmt desc"/>
 <xsl:template match="/json:a">
 <gpx version="1.1" creator="SARSOFT">
-	<xsl:for-each select="json:e[json:type='route']">
-		<xsl:call-template name="route"/>
-	</xsl:for-each>
 	<xsl:for-each select="json:e[json:type='waypoint']">
 		<xsl:call-template name="waypoint"/>
+	</xsl:for-each>
+	<xsl:for-each select="json:e[json:type='route']">
+		<xsl:call-template name="route"/>
 	</xsl:for-each>
 </gpx>
 </xsl:template>

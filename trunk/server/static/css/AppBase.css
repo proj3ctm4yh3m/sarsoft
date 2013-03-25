@@ -75,6 +75,10 @@ body, html {
 	color: black;
 }
 
+.dntree-header input {
+	vertical-align: top;
+}
+
 .dntree.l1 > .dntree-header {
 	padding-top: 3px;
 	padding-bottom: 3px;
