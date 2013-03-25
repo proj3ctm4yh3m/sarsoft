@@ -251,7 +251,7 @@ org.sarsoft.widget.IO = function(imap) {
 		this.imp = new Object();
 		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
 		this.imp.body = this.imp.dlg.bd.children().first();
-		imap.controls.action.links['import'].click(function() {
+		imap.controls.action.links['import'].css('display', '').click(function() {
 			that.imp.comms.clear();
 			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
 			that.imp.gpx.form.css('display', 'none');
@@ -284,7 +284,6 @@ org.sarsoft.widget.IO = function(imap) {
 		
 		this.imp.header = $('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + org.sarsoft.imgPrefix + '/gps.png"/><b>GPS Console</b></div>').appendTo(this.imp.body);
 		this.imp.comms = new org.sarsoft.GPSComms(this.imp.header);
-
 	}
 	
 	this.exp = new Object();
@@ -366,7 +365,7 @@ org.sarsoft.widget.IO.prototype.doexport = function(format) {
 		this.exp.form.find('[name="format"]').val(format);
 		this.exp.form.find('[name="tid"]').val(org.sarsoft.tenantid || '');
 		if(gps) {
-			this.expcomms.init(true, this.exp.form, "");
+			this.exp.comms.init(true, this.exp.form, "");
 		} else {
 			this.exp.form.submit();
 		}
@@ -400,8 +399,8 @@ org.sarsoft.widget.MapAction = function(container) {
 
 	this.addAction('save', $('<div style="color: red; display: none" title="Save This to ' + org.sarsoft.version + '"><img src="' + org.sarsoft.imgPrefix + '/save.png"/>Save</div>'), $('<div></div>'));
 	this.addAction('share', $('<div title="Share via Email, or Embed in a Forum Post"><img src="' + org.sarsoft.imgPrefix + '/sharing.png"/>Share</div>'));	
-	this.addAction('import', $('<div title="Import Data From a GPS or GPX File"><img src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>'));
-	this.addAction('export', $('<div style="margin-right: 0px" title="Export Data to GPS, GPX or KML" style="display: none"><img src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>'));
+	this.addAction('import', $('<div style="display: none" title="Import Data From a GPS or GPX File"><img src="' + org.sarsoft.imgPrefix + '/up.png"/>Import</div>'));
+	this.addAction('export', $('<div style="display: none; margin-right: 0px" title="Export Data to GPS, GPX or KML" style="display: none"><img src="' + org.sarsoft.imgPrefix + '/down.png"/>Export</div>'));
 
 }
 
@@ -426,9 +425,10 @@ org.sarsoft.widget.MapAction.prototype.setDraftMode = function(name, draft) {
 	this.draftcheck[name] = draft;
 	this.draftmode = false;
 	for(var key in this.draftcheck) this.draftmode = this.draftmode || this.draftcheck[key];
+	this.links['export'].css('display', this.draftmode ? 'block' : 'none');
 	if(org.sarsoft.tenantid != null) this.draftmode = false;
-	this.links.save.css('display', draft ? 'block' : 'none');
-	this.links.share.css('display', draft ? 'none' : 'block');
+	this.links.save.css('display', this.draftmode ? 'block' : 'none');
+	this.links.share.css('display', this.draftmode ? 'none' : 'block');
 }
 
 org.sarsoft.StructuredDataNavigator = function(imap) {
@@ -527,6 +527,8 @@ org.sarsoft.view.BaseConfigWidget.prototype.saveBrowserSettings = function() {
 
 org.sarsoft.view.BaseConfigWidget.prototype._toConfigObj = function(config) {
 	if(config == null) config = {};
+	if(config.alphaOverlays) config.alphaOverlays = null;
+	if(config.overlay) config.overlay = null;
 	this.imap.getConfig(config);
 	for(var key in this.imap.registered) {
 		var val = this.imap.registered[key];
@@ -624,8 +626,6 @@ org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function(handler) {
 	if(YAHOO.util.Cookie.exists("org.sarsoft.mapConfig")) config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.mapConfig"));
 	if(config.base == null) config = {}; // keep mis-set cookies from screwing everything up
 	this._toConfigObj(config);
-	config.alphaOverlays = null;
-	config.overlay = null;
 	YAHOO.util.Cookie.set("org.sarsoft.mapConfig", YAHOO.lang.JSON.stringify(config));
 	if(this.saveCenter) {
 		var center = this.imap.map.getCenter();
@@ -1361,6 +1361,7 @@ org.sarsoft.GeoRefDAO.prototype.offlineLoad = function(georef) {
 	this.sanitize(georef);
 	georef.id = this.objs.length;
 	this.setObj(georef.id, georef);
+	$(this).triggerHandler('load', georef);
 }
 
 org.sarsoft.controller.GeoRefController = function(imap) {
@@ -1493,6 +1494,7 @@ org.sarsoft.ConfigurableLayerDAO.prototype.offlineLoad = function(cfg) {
 	this.sanitize(cfg);
 	cfg.id = this.objs.length;
 	this.setObj(cfg.id, cfg);
+	$(this).triggerHandler('load', cfg);
 }
 
 org.sarsoft.controller.ConfiguredLayerController = function(imap) {

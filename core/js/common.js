@@ -1190,7 +1190,6 @@ org.sarsoft.GPSComms.prototype.retry = function() {
 	if(this._write) {
 		  this.console("Retrieving GPS data from server . . .");
 		  var url = this._url;
-		  if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
 		  if(url.submit != null) {
 			  $.ajax({type: 'POST', cache: false, url: url.attr("action"), data: url.serialize(), dataType: 'text', success: function(msg) { 
 				  that.gpxstr = msg;
