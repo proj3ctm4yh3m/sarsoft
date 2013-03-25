@@ -109,7 +109,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	@RequestMapping(value="/map", method = RequestMethod.POST)
-	public String create(Model model, @RequestParam("state") String clientstate, HttpServletRequest request) {
+	public String create(Model model, @RequestParam(value="state", required=false) String clientstate, HttpServletRequest request) {
 		String val = adminController.createNewTenant(model, CollaborativeMap.class, request);
 		if(val == null) {
 			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
@@ -143,8 +143,10 @@ public class CollaborativeMapController extends JSONBaseController {
 				dao.save(map);
 			}
 			
-			JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
-			manager.toDB(manager.fromJSON(json));
+			if(clientstate != null) {
+				JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
+				manager.toDB(manager.fromJSON(json));
+			}
 			return "redirect:/map?id=" + RuntimeProperties.getTenant();
 		}
 		return val;
