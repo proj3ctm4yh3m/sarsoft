@@ -195,6 +195,10 @@ public class AdminController extends JSONBaseController {
 		if(!isHosted() && dao.getByAttr(Tenant.class, "name", name) != null) {
 			return setTenant(model, name, cls, request);
 		}
+		if(isHosted() && account == null) {
+			model.addAttribute("message", "You are no longer logged in");
+			return "/error";
+		}
 		Tenant tenant;
 		try {
 			tenant = cls.newInstance();
