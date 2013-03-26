@@ -9,11 +9,14 @@ import java.util.Set;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ClientState;
+import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapObject;
+import org.sarsoft.common.util.RuntimeProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -55,6 +58,11 @@ public class DataManager {
 		for(String type : getDataTypes()) {
 			state.add(type, (List<MapObject>) dao.loadAll(getController(type).getC()));
 		}
+		if(RuntimeProperties.getTenant() != null) {
+			Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+			state.setMapConfig(tenant.getMapConfig());
+			state.setMapLayers(tenant.getLayers());
+		}
 		return state;
 	}
 
@@ -73,6 +81,9 @@ public class DataManager {
 			}
 		}
 		
+		if(json.has("MapConfig")) state.setMapConfig(json.getJSONObject("MapConfig").toString());
+		if(json.has("MapLayers")) state.setMapLayers(json.getString("MapLayers"));
+		
 		return state;
 	}
 
@@ -81,6 +92,12 @@ public class DataManager {
 			for(MapObject object : state.get(type)) {
 				getController(type).persist(object);
 			}
+		}
+		if(state.getMapConfig() != null) {
+			Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+			tenant.setMapConfig(state.getMapConfig());
+			tenant.setLayers(state.getMapLayers());
+			dao.save(tenant);
 		}
 	}
 
@@ -91,6 +108,8 @@ public class DataManager {
 		for(String key : state.types()) {
 			m.put(key, state.get(key));
 		}
+		if(state.getMapConfig() != null) m.put("MapConfig", (JSONObject)  JSONSerializer.toJSON(state.getMapConfig()));
+		if(state.getMapLayers() != null) m.put("MapLayers", state.getMapConfig());
 		return JSONAnnotatedPropertyFilter.fromObject(m);
 	}
 		
@@ -99,7 +118,7 @@ public class DataManager {
 		JSONArray jarray = new JSONArray();
 		for(String type : state.types()) {
 			GeoMapObjectController controller = getGeoController(type);
-			for(MapObject object : state.get(type)) {
+			if(controller != null) for(MapObject object : state.get(type)) {
 				jarray.add(controller.toGPX(object));
 			}
 		}

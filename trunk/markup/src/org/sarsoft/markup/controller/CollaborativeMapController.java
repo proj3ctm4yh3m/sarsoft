@@ -101,9 +101,6 @@ public class CollaborativeMapController extends JSONBaseController {
 			return kml(model, manager.toGPX(manager.fromDB()));
 		default :
 			model.addAttribute("preload", manager.toJSON(manager.fromDB()));
-			Map<String, String> map = new HashMap<String, String>();
-			map.put("value", tenant.getMapConfig());
-			model.addAttribute("mapConfig", this.toJSON(map));
 			return app(model, "/collabmap");
 		}
 	}
@@ -119,26 +116,6 @@ public class CollaborativeMapController extends JSONBaseController {
 				if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
 					Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
 					map.setDefaultCenter(lkp);
-				}
-				Cookie[] cookies = request.getCookies();
-				if(cookies != null) for(Cookie cookie : cookies) {
-					if("org.sarsoft.mapConfig".equals(cookie.getName())) {
-						try {
-						map.setMapConfig(java.net.URLDecoder.decode(cookie.getValue(), "UTF-8"));
-						} catch (Exception e){
-							// if we can't properly decode the mapConfig, don't worry about it
-						}
-					}
-					if("org.sarsoft.mapLayers".equals(cookie.getName())) {
-						try {
-						map.setLayers(java.net.URLDecoder.decode(cookie.getValue(), "UTF-8"));
-						} catch (Exception e){
-							// if we can't properly decode the mapConfig, don't worry about it
-						}
-					}
-				}
-				if(request.getParameter("mapcfg") != null) {
-					map.setMapConfig(request.getParameter("mapcfg"));
 				}
 				dao.save(map);
 			}

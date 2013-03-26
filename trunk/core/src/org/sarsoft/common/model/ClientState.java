@@ -11,6 +11,8 @@ import edu.emory.mathcs.backport.java.util.Collections;
 
 public class ClientState {
 	
+	private String mapConfig;
+	private String mapLayers;
 	private Map<String, List<MapObject>> map = new HashMap<String, List<MapObject>>();
 	
 	public Set<String> types() {
@@ -34,6 +36,22 @@ public class ClientState {
 	@SuppressWarnings("unchecked")
 	public List<MapObject> get(String name) {
 		return (List <MapObject>) Collections.unmodifiableList(map.get(name));
+	}
+	
+	public void setMapConfig(String mapConfig) {
+		this.mapConfig = mapConfig;
+	}
+	
+	public String getMapConfig() {
+		return mapConfig;
+	}
+	
+	public void setMapLayers(String mapLayers) {
+		this.mapLayers = mapLayers;
+	}
+	
+	public String getMapLayers() {
+		return this.mapLayers;
 	}
 
 }
