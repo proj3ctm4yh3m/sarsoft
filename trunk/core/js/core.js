@@ -514,7 +514,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) 
 	this.saveBrowserSettings();
 	var that = this;
 
-	this.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(org.sarsoft.MapState.getConfig())}, function() {
+	this.tenantDAO.save("mapConfig", { value: YAHOO.lang.JSON.stringify(org.sarsoft.MapState.getConfig(imap))}, function() {
 		if(that.saveCenter) {
 			var center = that.imap.map.getCenter();
 			that.tenantDAO.saveCenter({lat: center.lat(), lng: center.lng()}, handler != null ? handler : function() {});
