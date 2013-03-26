@@ -32,7 +32,7 @@ public class JSONAnnotatedPropertyFilter implements PropertyFilter {
 		}
 		for(Method method : cls.getMethods()) {
 			if(method.getName().equalsIgnoreCase("get" + name) || method.getName().equalsIgnoreCase("is" + name)) {
-				if(method.isAnnotationPresent(JSONSerializable.class)) return false;
+				if(method.isAnnotationPresent(JSONSerializable.class)) return value == null;
 				return true;
 			}
 		}

@@ -363,17 +363,6 @@ public class AdminController extends JSONBaseController {
 		dao.save(tenant);
 		return json(model, tenant);
 	}
-	
-	@SuppressWarnings("rawtypes")
-	@RequestMapping(value="/rest/tenant/layers", method = RequestMethod.POST)
-	public String setMapLayers(Model model, JSONForm params) {
-		Map m = (Map) JSONObject.toBean(params.JSON(), HashMap.class);
-		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-		tenant.setLayers((String) m.get("value"));
-		tenant.setCfgUpdated(System.currentTimeMillis());
-		dao.save(tenant);
-		return json(model, tenant);
-	}
 
 	@RequestMapping(value="/tools.html", method = RequestMethod.GET)
 	public String showTools(Model model) {

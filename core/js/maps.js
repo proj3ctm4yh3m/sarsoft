@@ -1651,6 +1651,7 @@ org.sarsoft.ProjectionCaptureOverlay.prototype.draw = function() {
 	this.imap.projection = this.getProjection();
 }
 
+
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
 	this.map = map;
@@ -1661,10 +1662,10 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.text = new Array();
 	this.markers = new Array();
 	this.controls = { settings: $('<div></div>') }
-	this.datamanager = new org.sarsoft.DataManager(this); 
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
 	this._contextMenu._vertex;
+	this._nextID = 0;
 	this._menuItems = [{ text: "Delete Vertex", applicable: function() {var g = that._contextMenu._gmapobj; return g != null && g.getEditable != null && g.getEditable() && that._contextMenu._vertex != null && (g.getPath().getLength() > 3 || (g.getPath().getLength() > 2 && g.getPaths == null)) }, handler: function(obj) { that._contextMenu._gmapobj.getPath().removeAt(that._contextMenu._vertex); } }];
 
 	this._menuItemsOverride = null;
@@ -1720,6 +1721,14 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options.UTM) new org.sarsoft.UTMGridControl(this);
 
 	$(map.getDiv()).addClass("printnotransform");
+}
+
+org.sarsoft.InteractiveMap.prototype.checkID = function(obj) {
+	if(obj.id != null) {
+		this._nextID = Math.max(this._nextID, obj.id+1);
+	} else {
+		obj.id = this._nextID++;
+	}
 }
 
 org.sarsoft.InteractiveMap.prototype.click = function(evt, obj) {
@@ -1944,6 +1953,7 @@ org.sarsoft.InteractiveMap.prototype.unselect = function(obj) {
 }
 
 org.sarsoft.InteractiveMap.prototype.removeWay = function(way) {
+	this.checkID(way);
 	this.unselect(way);
 	var id = way.id;
 	if(typeof this.polys[id] != "undefined") {
@@ -1954,6 +1964,7 @@ org.sarsoft.InteractiveMap.prototype.removeWay = function(way) {
 
 
 org.sarsoft.InteractiveMap.prototype.addWay = function(way, config, label) {
+	this.checkID(way);
 	this.removeWay(way);
 	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config, label), config: config};
 }
@@ -2031,6 +2042,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 }
 
 org.sarsoft.InteractiveMap.prototype.removeWaypoint = function(waypoint) {
+	this.checkID(waypoint);
 	this.unselect(waypoint);
 	var id = waypoint.id;
 	if(typeof this.markers[id] != "undefined") {
@@ -2040,6 +2052,7 @@ org.sarsoft.InteractiveMap.prototype.removeWaypoint = function(waypoint) {
 }
 
 org.sarsoft.InteractiveMap.prototype.addWaypoint = function(waypoint, config, tooltip, label) {
+	this.checkID(waypoint);
 	this.removeWaypoint(waypoint);
 	this._addMarker(waypoint, config, tooltip, label);
 }
@@ -2581,7 +2594,7 @@ org.sarsoft.widget.MapLayers = function(imap) {
 			org.sarsoft.EnhancedGMap.visibleMapTypes = [];
 			for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
 				var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-				if(checkboxes[type.alias][0].checked==true) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.alias);
+				if(checkboxes[type.alias] && checkboxes[type.alias][0].checked) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.alias);
 			}
 			imap.map._overlaycontrol.resetMapTypes();
 			imap.setConfig(config);

@@ -4,32 +4,14 @@ if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Object();
 
 org.sarsoft.MarkerDAO = function(errorHandler, baseURL) {
+	org.sarsoft.MapObjectDAO.call(this, "Marker");
 	if(typeof baseURL == "undefined") baseURL = "/rest/marker";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
-	this.nextId = 0;
+	this.geo = true;
 }
 
-org.sarsoft.MarkerDAO.prototype = new org.sarsoft.BaseDAO(true);
-
-org.sarsoft.MarkerDAO.prototype.sanitize = function(obj) {
-	if(this.offline && obj.position != null) {
-		if(obj.position.id == null) {
-			obj.position.id = this.nextId++;
-		} else {
-			this.nextId = Math.max(obj.position.id+1, this.nextId);
-		}
-	}
-	return obj;
-}
-
-org.sarsoft.MarkerDAO.prototype.offlineLoad = function(marker) {
-	if(marker.position) marker.position.id = null;
-	this.sanitize(marker);
-	marker.id = this.objs.length;
-	this.setObj(marker.id, marker);
-	$(this).triggerHandler('load', marker);
-}
+org.sarsoft.MarkerDAO.prototype = new org.sarsoft.MapObjectDAO();
 
 org.sarsoft.MarkerDAO.prototype.updatePosition = function(id, position, handler) {
 	var that = this;
@@ -307,13 +289,14 @@ org.sarsoft.controller.MarkerController.prototype.handleSetupChange = function(i
 
 
 org.sarsoft.ShapeDAO = function(errorHandler, baseURL) {
+	org.sarsoft.MapObjectDAO.call(this, "Shape");
 	if(typeof baseURL == "undefined") baseURL = "/rest/shape";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
-	this.nextId = 0;
+	this.geo = true;
 }
 
-org.sarsoft.ShapeDAO.prototype = new org.sarsoft.BaseDAO(true);
+org.sarsoft.ShapeDAO.prototype = new org.sarsoft.MapObjectDAO();
 
 org.sarsoft.ShapeDAO.prototype.addBoundingBox = function(way) {
 	var bb = [{lat: 90, lng: 180}, {lat: -90, lng: -180}]
@@ -327,21 +310,14 @@ org.sarsoft.ShapeDAO.prototype.addBoundingBox = function(way) {
 	way.boundingBox=bb;
 }
 
-org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
-	obj.weight=1*obj.weight;
-	obj.fill=1*obj.fill;
-	if(this.offline && obj.way != null) {
-		if(obj.way.id == null) {
-			obj.way.id = this.nextId++;
-		} else {
-			this.nextId = Math.max(obj.way.id+1, this.nextId); 
-		}
-		obj.updated = new Date().getTime();
-		if(obj.way.zoomAdjustedWaypoints == null) obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
-		if(obj.way.waypoints == null) obj.way.waypoints = obj.way.zoomAdjustedWaypoints;
-		if(obj.way.boundingBox == null) {
-			this.addBoundingBox(obj.way);
-		}
+org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
+	obj = org.sarsoft.MapObjectDAO.prototype.validate.call(this, obj);
+
+	if(obj.updated == null) obj.updated = new Date().getTime();
+	if(obj.way.zoomAdjustedWaypoints == null) obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
+	if(obj.way.waypoints == null) obj.way.waypoints = obj.way.zoomAdjustedWaypoints;
+	if(obj.way.boundingBox == null) this.addBoundingBox(obj.way);
+	if(obj.formattedSize == null) {
 		if(obj.way.polygon) {
 			var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(obj.way.waypoints))/1000000;
 			obj.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
@@ -351,14 +327,6 @@ org.sarsoft.ShapeDAO.prototype.sanitize = function(obj) {
 		}
 	}
 	return obj;
-}
-
-org.sarsoft.ShapeDAO.prototype.offlineLoad = function(shape) {
-	if(shape.way) shape.way.id = null;
-	this.sanitize(shape);
-	shape.id = this.objs.length;
-	this.setObj(shape.id, shape);
-	$(this).triggerHandler('load', shape);
 }
 
 org.sarsoft.ShapeDAO.prototype.getWaypoints = function(handler, shape, precision) {
@@ -387,17 +355,6 @@ org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handle
 	} else {
 		this._doPost("/" + shape.id + "/way", function(r) { that.getObj(shape.id).way = r; if(handler != null) handler(r);}, waypoints);
 	}
-}
-
-org.sarsoft.ShapeDAO.prototype.dehydrate = function() {
-	for(var i = 0; i < this.objs.length; i++) {
-		if(this.objs[i] != null) {
-			delete this.objs[i].way.displayMessage;
-			delete this.objs[i].updated;
-		}
-	}
-	
-	return org.sarsoft.BaseDAO.prototype.dehydrate.call(this);
 }
 
 org.sarsoft.view.ShapeForm = function() {
@@ -440,7 +397,7 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
-	return {label : this.labelInput.val(), color : "#" + this.colorInput.val(), fill: this.fillInput.val(), weight: this.weightInput.val(), comments: this.comments.val()};
+	return {label : this.labelInput.val(), color : "#" + this.colorInput.val(), fill: Number(this.fillInput.val()), weight: Number(this.weightInput.val()), comments: this.comments.val()};
 }
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
