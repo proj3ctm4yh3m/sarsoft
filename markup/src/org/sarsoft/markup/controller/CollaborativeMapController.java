@@ -176,58 +176,8 @@ public class CollaborativeMapController extends JSONBaseController {
 		ClientState state = manager.fromGPX(GPX.parse(context, params));
 
 		if(RuntimeProperties.getTenant() != null) {
-		/*
-		List ways = (List) m.get("shapes");
-		for(int i = 0; i < ways.size(); i++) {
-			Map mapobj = (Map) ways.get(i);
-			Shape shape = reconstructShape(mapobj);
-			List<Shape> shapes = dao.loadAll(Shape.class);
-			long maxId = 0L;
-			for(Shape shp : shapes) {
-				maxId = Math.max(maxId, shp.getId());
-			}
-			shape.setId(maxId+1);
-
-			boolean exists = false;
-			shapes = dao.loadAll(Shape.class);
-			if(shapes != null) for(Shape similar : shapes) {
-				if(shape.getLabel() != null && similar.getLabel() != null && !similar.getLabel().toUpperCase().startsWith(shape.getLabel().toUpperCase())) continue;
-				if(Math.abs(similar.getWay().getDistance() - shape.getWay().getDistance()) > 0.02) continue;
-				List<Waypoint> a = similar.getWay().getWaypoints();
-				List<Waypoint> b = shape.getWay().getWaypoints();
-				if(a.size() != b.size()) continue;
-				boolean allmatch = true;
-				for(int j = 0; j < a.size(); j++) {
-					if(a.get(j).distanceFrom(b.get(j)) > 5) allmatch = false;
-				}
-				if(allmatch) exists = true;
-			}
-			if(!exists) dao.save(shape);
-		}
-		
-		List waypoints = (List) m.get("markers");
-		for(int i = 0; i < waypoints.size(); i++) {
-			Map mapobj = (Map) waypoints.get(i);
-			Marker marker = reconstructMarker(mapobj);
-			List<Marker> markers = dao.loadAll(Marker.class);
-			long maxId = 0L;
-			for(Marker mrk : markers) {
-				maxId = Math.max(maxId, mrk.getId());
-			}
-			marker.setId(maxId+1);
-			
-			boolean exists = false;
-			markers = dao.loadAll(Marker.class);
-			if(markers != null) for(Marker similar : markers) {
-				if(similar.getPosition().distanceFrom(marker.getPosition()) > 5) continue;
-				if(marker.getLabel() != null && similar.getLabel() != null && !similar.getLabel().toUpperCase().startsWith(marker.getLabel().toUpperCase())) continue;
-				exists = true;
-			}
-			if(!exists) dao.save(marker);
-		}
-		if(request.getParameter("dest") != null && request.getParameter("dest").length() > 0) return "redirect:" + request.getParameter("dest");
-		*/
-			 manager.toDB(state);
+			manager.dedupe(state, manager.fromDB());
+			manager.toDB(state);
 		}
 
 		if("frame".equals(request.getParameter("responseType"))) {

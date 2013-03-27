@@ -45,6 +45,7 @@ public class GenericHibernateDAO extends HibernateDaoSupport {
 	
 	public long generateID(Class<? extends SarModelObject> cls) {
 		List<? extends SarModelObject> objects = this.loadAll(cls);
+		if(objects == null || objects.size() == 0) return 0L;
 		long maxId = 0L;
 		for(SarModelObject obj : objects) {
 			maxId = Math.max(maxId, obj.getId());

@@ -33,6 +33,10 @@ public class ClientState {
 		}
 	}
 	
+	public void remove(String name, List<MapObject> remove) {
+		map.get(name).removeAll(remove);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public List<MapObject> get(String name) {
 		return (List <MapObject>) Collections.unmodifiableList(map.get(name));

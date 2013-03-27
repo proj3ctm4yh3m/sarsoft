@@ -148,4 +148,12 @@ public class DataManager {
 		
 		return state;
 	}
+	
+	public void dedupe(ClientState removeFrom, ClientState checkAgainst) {
+		for(String type : removeFrom.types()) {
+			GeoMapObjectController controller = getGeoController(type);
+			if(controller != null) removeFrom.remove(type, controller.dedupe(removeFrom.get(type), checkAgainst.get(type)));
+		}
+	}
+
 }
