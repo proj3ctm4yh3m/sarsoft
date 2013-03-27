@@ -83,6 +83,7 @@ public abstract class Tenant {
 	}
 
 	@Id
+	@JSONSerializable
 	public String getName() {
 		return name;
 	}
@@ -97,6 +98,7 @@ public abstract class Tenant {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+	@JSONSerializable
 	public String getDescription() {
 		return description;
 	}
@@ -110,10 +112,12 @@ public abstract class Tenant {
 		this.layers = layers;
 	}
 	@Lob
+	@JSONSerializable
 	public String getComments() {
 		return comments;
 	}
 	@Transient
+	@JSONSerializable
 	public String getPublicName() {
 		if(description != null) return description;
 		return name;
@@ -132,12 +136,12 @@ public abstract class Tenant {
 		this.mapConfig = mapConfig;
 	}
 
-	@JSONSerializable
 	@Lob
 	public String getMapConfig() {
 		return mapConfig;
 	}
 	
+	@JSONSerializable
 	public Permission getAllUserPermission() {
 		return allUserPermission;
 	}
@@ -146,6 +150,7 @@ public abstract class Tenant {
 		this.allUserPermission = allUserPermission;
 	}
 
+	@JSONSerializable
 	public Permission getPasswordProtectedUserPermission() {
 		return passwordProtectedUserPermission;
 	}
@@ -154,6 +159,7 @@ public abstract class Tenant {
 		this.passwordProtectedUserPermission = passwordProtectedUserPermission;
 	}
 	
+	@JSONSerializable
 	public Boolean getShared() {
 		return shared;
 	}
@@ -162,6 +168,7 @@ public abstract class Tenant {
 		this.shared = shared;
 	}
 	
+	@JSONSerializable
 	public Long getCfgUpdated() {
 		return cfgUpdated;
 	}

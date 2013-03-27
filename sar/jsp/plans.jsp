@@ -16,7 +16,7 @@ org.sarsoft.Loader.queue(function() {
   
   var dn = imap.registered["org.sarsoft.DataNavigator"];
 
-  var tc = new org.sarsoft.DNTree(imap.container.left, org.sarsoft.tenantname);
+  var tc = new org.sarsoft.DNTree(imap.container.left, sarsoft.tenant.name);
   tc._lock = true;
   tc.header.css({"text-transform": "capitalize", "margin": "0px", "padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
   tc.body.css('padding-left', '2px');
@@ -38,7 +38,7 @@ org.sarsoft.Loader.queue(function() {
   configWidget.loadConfig();
   searchIO = new org.sarsoft.view.SearchIO(imap, plansController, markupController);
   org.sarsoft.BrowserCheck();
-  setInterval("imap.timer()", org.sarsoft.map.refreshInterval);
+  setInterval("imap.timer()", sarsoft.refresh_interval);
 });
 }
 </script>

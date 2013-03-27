@@ -8,9 +8,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.json.JSONAnnotatedEntity;
+import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.util.RuntimeProperties;
 
 @Entity
+@JSONAnnotatedEntity
 public class UserAccount {
 
 	private String name;
@@ -35,12 +38,14 @@ public class UserAccount {
 	public void setTenants(Set<Tenant> tenants) {
 		this.tenants = tenants;
 	}
+	@JSONSerializable
 	public String getEmail() {
 		return email;
 	}
 	public void setEmail(String email) {
 		this.email = email;
 	}
+	@JSONSerializable
 	public String getAlias() {
 		return alias;
 	}
@@ -56,6 +61,7 @@ public class UserAccount {
 	}
 	
 	@Transient
+	@JSONSerializable
 	public String getHandle() {
 		if(alias != null) return alias;
 		String handle = email;

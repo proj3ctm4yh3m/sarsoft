@@ -108,6 +108,7 @@ public class MapSource {
 	public void setInfo(String info) {
 		this.info = info;
 	}
+	@JSONSerializable
 	public String getDescription() {
 		return description;
 	}

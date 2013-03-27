@@ -72,7 +72,9 @@ public class Shape extends GeoMapObject implements IPreSave {
 	public JSONObject toGPX() {
 		JSONObject jobj = new JSONObject();
 		jobj.put("type", "route");
-		jobj.put("name", getLabel()); // TODO null labels
+		String label = getLabel();
+		if(label == null || label.length() == 0) label = "-No Name";
+		jobj.put("name", label);
 		jobj.put("color", getColor());
 		jobj.put("weight", getWeight());
 		jobj.put("way", json(getWay()));
@@ -94,7 +96,9 @@ public class Shape extends GeoMapObject implements IPreSave {
 		Shape shape = new Shape();
 		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
 		
-		shape.setLabel(gpx.getString("name"));
+		String label = gpx.getString("name");
+		if(label != null && label.startsWith("-")) label = null;
+		shape.setLabel(label);
 		shape.setWay(new Way((JSONObject) gpx.get("way")));
 		List<Waypoint> wpts = shape.getWay().getWaypoints();
 		if(type == "route" && wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) shape.getWay().setPolygon(true);

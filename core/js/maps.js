@@ -4,15 +4,17 @@ if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Ob
 
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = new Object();
 org.sarsoft.EnhancedGMap._coordinates = "DD";
-
 org.sarsoft.EnhancedGMap.nativeAliases = {};
+
+sarsoft.map.layers_configured = sarsoft.map.layers_configured || [];
+sarsoft.map.layers_georef = sarsoft.map.layers_georef || [];
 
 org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 	var ts = config.tilesize ? config.tilesize : 256;
 	if(config.type == "TILE"){
 		var template = config.template;
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: config.opacity == null ? 1 : config.opacity/100, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
-			return (zoom > config.maxresolution ? '/resource/imagery/tilecache/' + config.name + '/{Z}/{X}/{Y}.png' : template).replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
+			return (zoom > config.maxresolution ? '/resource/imagery/tilecache/' + config.alias + '/{Z}/{X}/{Y}.png' : template).replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
 		}});
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
@@ -40,21 +42,12 @@ org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 }
 
 org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
-	if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf == null) {
-		org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf = function(elt) {
-			for(var i = 0; i < this.length; i++) {
-				if(this[i] == elt) return i;
-			}
-			return -1;
-		}
-	}
-
-	var map = new google.maps.Map(element, {mapTypeControl: false, streetViewControl: false});
+	var map = new google.maps.Map(element, {mapTypeControl: false, streetViewControl: false, maxZoom: null});
 	$(element).css({"z-index": 0, overflow: "hidden"});
 
 	var bkgset = false;
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		var config = sarsoft.map.layers[i];
 		if(config.type == "NATIVE") {
 			// default google layers are loaded asynchronously, not available yet
 			org.sarsoft.EnhancedGMap.nativeAliases[config.alias] = eval(config.template);
@@ -68,8 +61,8 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		}
 	}
 	
-	if(center == null) center = new google.maps.LatLng(org.sarsoft.map._default.lat, org.sarsoft.map._default.lng);
-	if(zoom == null) zoom = org.sarsoft.map._default.zoom;
+	if(center == null) center = new google.maps.LatLng(sarsoft.map.default_lat, sarsoft.map.default_lng);
+	if(zoom == null) zoom = sarsoft.map.default_zoom;
 	map.setCenter(center);
 	map.setZoom(zoom);
 	var manager = new org.sarsoft.MapOverlayManager(map);
@@ -115,8 +108,8 @@ org.sarsoft.MapOverlayManager.prototype.addCfgTypeIfNecessary = function(id) {
 	var parts = id.split("_");
 	
 	var cfg = null;
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		var config = sarsoft.map.layers[i];
 		if(config.alias == parts[0]) cfg = config;
 	}
 	
@@ -146,8 +139,8 @@ org.sarsoft.MapOverlayManager.prototype.removeOverlay = function(id) {
 
 org.sarsoft.MapOverlayManager.prototype.getConfigFromAlias = function(alias) {
 	if(alias.indexOf("_") > 0) alias = alias.split("_")[0];
-	for(i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var cfg = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+	for(i = 0; i < sarsoft.map.layers.length; i++) {
+		var cfg = sarsoft.map.layers[i];
 		if(cfg.alias == alias) {
 			return cfg;
 		}
@@ -224,22 +217,6 @@ org.sarsoft.MapOverlayManager.prototype.updateMap = function(base, layers, opaci
 		});
 	}
 	this.alphas = alphas;
-	
-	this.checkMaxZoom();
-}
-
-org.sarsoft.MapOverlayManager.prototype.checkMaxZoom = function() {
-	var baseType = this.map.mapTypes.get(this.map.getMapTypeId());
-	if(org.sarsoft.EnhancedGMap._overzoom || baseType == null || baseType.setOpacity == null) {
-		this.map.setOptions({maxZoom: null});
-	} else {
-		var z = baseType._maxZoom;
-		for(var i = 0; i < this.map.overlayMapTypes.getLength(); i++) {
-			var type = this.map.overlayMapTypes.getAt(i);
-			if(type != null && type._maxZoom != null) z = Math.min(z, type._maxZoom);
-		}
-		this.map.setOptions({maxZoom: z});
-	}
 }
 
 org.sarsoft.MapOverlayControl = function(map, manager) {
@@ -256,7 +233,7 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 	this.alphaOverlayPlus = $('<span style="font-size: 110%; color: red; cursor: pointer; padding-left: 3px; padding-right: 3px" title="Add More Layers to Map">+0</span>');
 	this.dd = new org.sarsoft.view.MenuDropdown(this.alphaOverlayPlus, 'width: 20em');
 
-	this.div = jQuery('<div style="color: #5a8ed7; background-color: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0" class="noprint"><img src="' + org.sarsoft.imgPrefix + '/blank.gif" style="vertical-align: middle; width: 1px; height: 1.7em"/></div>');
+	this.div = jQuery('<div style="color: #5a8ed7; background-color: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0" class="noprint"><img src="' + $.img('blank.gif') + '" style="vertical-align: middle; width: 1px; height: 1.7em"/></div>');
 	this.div.append(this.extras = document.createElement("span"), this.typeDM.container, this.dd.container);
 
 	this.baseOverlayContainer = jQuery('<div></div>').appendTo(this.dd.div);
@@ -359,15 +336,15 @@ org.sarsoft.MapOverlayControl.prototype.handleLayerChange = function() {
 
 org.sarsoft.MapOverlayControl.prototype.addAlphaType = function(alias) {
 	var that = this;
-	if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(alias) < 0) org.sarsoft.EnhancedGMap.visibleMapTypes.push(alias);
+	if(sarsoft.map.layers_visible.indexOf(alias) < 0) sarsoft.map.layers_visible.push(alias);
 	var idx = this.alphaOverlayBoxes.length;
 	this.alphaOverlayTypes[idx] = alias;
 	if(idx > 0) this.aDiv.append(document.createElement("br"));
 	var config = this.manager.getConfigFromAlias(alias);
 	var name = config.name;
 	if(config.template.indexOf("{V}") > 0) {
-		for(var i = 0; i < org.sarsoft.EnhancedGMap.configuredLayers.length; i++) {
-			var layer = org.sarsoft.EnhancedGMap.configuredLayers[i];
+		for(var i = 0; i < sarsoft.map.layers_configured.length; i++) {
+			var layer = sarsoft.map.layers_configured[i];
 			if(layer.alias == alias && (layer.name || "").length > 0) name = layer.name;
 		}
 	}
@@ -380,16 +357,16 @@ org.sarsoft.MapOverlayControl.prototype.addAlphaType = function(alias) {
 }
 
 org.sarsoft.MapOverlayControl.prototype.addBaseTypeIfNecessary = function(alias) {
-	if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(alias) >= 0) return;
+	if(sarsoft.map.layers_visible.indexOf(alias) >= 0) return;
 
 	var mycfg = null;
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		var config = sarsoft.map.layers[i];
 		if(config.alias == alias) mycfg = config;
 	}
 
 	if(mycfg == null) return;
-	org.sarsoft.EnhancedGMap.visibleMapTypes.push(alias);
+	sarsoft.map.layers_visible.push(alias);
 	
 	this.typeDM.addItem(mycfg.name, org.sarsoft.EnhancedGMap.nativeAliases[alias] || alias, this.grouping[alias], mycfg.description);
 	
@@ -402,9 +379,9 @@ org.sarsoft.MapOverlayControl.prototype.addBaseTypeIfNecessary = function(alias)
 
 org.sarsoft.MapOverlayControl.prototype.resetDM = function(dm, base) {
 	dm.empty();
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.alias) >= 0) {
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		var config = sarsoft.map.layers[i];
+		if(sarsoft.map.layers_visible.indexOf(config.alias) >= 0) {
 			if(!config.alphaOverlay && (config.type != "NATIVE" || base)) {
 				dm.addItem(config.name, org.sarsoft.EnhancedGMap.nativeAliases[config.alias] || config.alias, this.grouping[config.alias], config.description);
 			}
@@ -412,20 +389,21 @@ org.sarsoft.MapOverlayControl.prototype.resetDM = function(dm, base) {
 	}
 	
 	if(base) return;
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.geoRefImages.length; i++) {
-		var gr = org.sarsoft.EnhancedGMap.geoRefImages[i];
+	for(var i = 0; i < sarsoft.map.layers_georef.length; i++) {
+		var gr = sarsoft.map.layers_georef[i];
 		dm.addItem(gr.name, "_gr" + gr.id);
 	}
 }
 
-org.sarsoft.MapOverlayControl.prototype.resetMapTypes = function() {
+org.sarsoft.MapOverlayControl.prototype.resetMapTypes = function(maintain_config) {
 	this.alphaOverlayBoxes = new Array();
 	this.alphaOverlayTypes = new Array();
 	this.aDiv.empty()
 
+	if(maintain_config) var mapconfig = this.getConfig();
 	this.grouping = {};
-	if(org.sarsoft.EnhancedGMap.mapTypeGrouping != null) {
-		var groups = org.sarsoft.EnhancedGMap.mapTypeGrouping.split(';');
+	if(sarsoft.map.layers_grouping != null) {
+		var groups = sarsoft.map.layers_grouping.split(';');
 		for(i = 0; i < groups.length; i++) {
 			var name = groups[i].split('=')[0];
 			var types = groups[i].split('=')[1].split(',');
@@ -440,19 +418,19 @@ org.sarsoft.MapOverlayControl.prototype.resetMapTypes = function() {
 		this.resetDM(this.baseOverlayControls[i].dm, false);
 	}
 
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		var config = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-		if(org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(config.alias) >= 0) {
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		var config = sarsoft.map.layers[i];
+		if(sarsoft.map.layers_visible.indexOf(config.alias) >= 0) {
 			if(config.alphaOverlay && config.template.indexOf("{V}") < 0) this.addAlphaType(config.alias);
 		}
 	}
 	
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.configuredLayers.length; i++) {
-		this.addAlphaType(org.sarsoft.EnhancedGMap.configuredLayers[i].alias);
+	for(var i = 0; i < sarsoft.map.layers_configured.length; i++) {
+		this.addAlphaType(sarsoft.map.layers_configured[i].alias);
 	}
 
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.geoRefImages.length; i++) {
-		var gr = org.sarsoft.EnhancedGMap.geoRefImages[i];
+	for(var i = 0; i < sarsoft.map.layers_georef.length; i++) {
+		var gr = sarsoft.map.layers_georef[i];
 		var alias = "_gr" + gr.id;
 		this.manager.removeOverlay(alias);
 		this.manager.addType(alias, new org.sarsoft.GeoRefImageOverlay(null, gr.name, gr.url, new google.maps.Point(gr.x1, gr.y1), new google.maps.Point(gr.x2, gr.y2), new google.maps.LatLng(gr.lat1, gr.lng1), new google.maps.LatLng(gr.lat2, gr.lng2), 1));
@@ -460,6 +438,7 @@ org.sarsoft.MapOverlayControl.prototype.resetMapTypes = function() {
 	
 	this.hasAlphaOverlays = false;
 	this.updateMap(this.map.getMapTypeId(), [], []);
+	if(mapconfig) this.setConfig(mapconfig);
 }
 
 org.sarsoft.MapOverlayControl.prototype.appendInfoStr = function(str, name) {
@@ -467,6 +446,43 @@ org.sarsoft.MapOverlayControl.prototype.appendInfoStr = function(str, name) {
 	if(type && type._info && type._info.length > 0) return str + type._info + ". ";
 	return str;
 }
+
+org.sarsoft.MapOverlayControl.prototype.getConfig = function(config) {
+	if(config == null) config = new Object();
+	config.base = this.manager.base;
+	for(var key in org.sarsoft.EnhancedGMap.nativeAliases) {
+		if(org.sarsoft.EnhancedGMap.nativeAliases[key] == config.base) config.base = key;
+	}
+	config.layers = this.manager.layers.slice(0, this.manager.layers.length);
+	config.opacity = this.manager.opacity.slice(0, this.manager.layers.length);
+	var ao = this.manager.alphas.slice(0, this.manager.alphas.length);
+	if(ao.length > 0) {
+		for(var i = 0; i < ao.length; i++) {
+			var type = this.map.mapTypes.get(ao[i]);
+			if(type._cfgvalue != null) ao[i] = ao[i] + "_" + type._cfgvalue;
+		}
+	}
+	config.alphas = (ao.length > 0 ? ao : null);
+	return config;
+}
+
+org.sarsoft.MapOverlayControl.prototype.setConfig = function(config) {
+	if(config == null) return;
+	if(config.overlay != null && config.layers == null) {
+		config.layers = [config.overlay];
+		config.opacity = [config.opacity];
+	}
+	if(config.alphaOverlays != null && config.alphas == null) config.alphas = config.alphaOverlays.split(",");
+
+	if(config.alphas != null) {
+		for (var i = 0; i < config.alphas.length; i++) {
+			if(config.alphas[i] == "slp_s-11111111") config.alphas[i] = "sf";
+		}
+	}
+	if(config.base == null) return;
+	this.updateMap(config.base, config.layers, config.opacity, config.alphas);
+}
+
 
 org.sarsoft.MapOverlayControl.prototype.updateMap = function(base, layers, opacity, alphas) {
 	layers = (layers || []);
@@ -560,9 +576,6 @@ org.sarsoft.MapOverlayControl.prototype.updateMap = function(base, layers, opaci
 		this.map._imap.setMapInfo("org.sarsoft.MapOverlayControl", 0, null);
 	}
 
-	// set map zoom limits
-	this.manager.checkMaxZoom();
-	
 	this._updating = false;
 }
 
@@ -610,7 +623,7 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 	imap.register("org.sarsoft.MapDatumWidget", this);
 
 	this.datumControl = jQuery('<span style="padding-left: 3px"></span>').appendTo(imap._mapInfoControl.premsg);
-	this.datumDisplay = jQuery('<span>' + org.sarsoft.map.datum + '.</span>').appendTo(this.datumControl);
+	this.datumDisplay = jQuery('<span>' + sarsoft.map.datum + '.</span>').appendTo(this.datumControl);
 	
 	if(switchable) {
 		this.datumSwitcher = jQuery('<a class="underlineOnHover" title="Click to Change Datum" style="cursor: pointer"></a>').appendTo(this.datumControl).append(this.datumDisplay);
@@ -640,8 +653,8 @@ org.sarsoft.MapDatumWidget = function(imap, switchable) {
 }
 
 org.sarsoft.MapDatumWidget.prototype.setDatum = function(datum) {
-	org.sarsoft.map.datum = datum;
-	GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
+	sarsoft.map.datum = datum;
+	GeoUtil.datum = org.sarsoft.map.datums[sarsoft.map.datum];
 	this.datumDisplay.html(datum + '.');
 	this.imap.updateDatum();
 }
@@ -653,7 +666,7 @@ org.sarsoft.MapDatumWidget.prototype.setConfig = function(config) {
 
 org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 	if(config.MapDatumWidget == null) config.MapDatumWidget = new Object();
-	config.MapDatumWidget.datum = org.sarsoft.map.datum;
+	config.MapDatumWidget.datum = sarsoft.map.datum;
 	return config;
 }
 
@@ -1139,7 +1152,7 @@ org.sarsoft.DataNavigator = function(imap) {
 	if(imap == null) return;
 
 	this.left = $('<div style="width: 100%; padding-bottom: 1.5em"></div>').appendTo($('<div style="width: 100%; height: 100%; overflow-y: auto" class="cs"></div>').appendTo(imap.container.left));	
-	$('<div style="width: 100%; background-color: white; position: absolute; bottom: 0px; font-size: 120%; font-weight: bold; z-index: 100; padding-bottom: 2px; padding-top: 2px"><a style="padding-left: 2px; color: red" href="/about.html" target="_blank">About ' + org.sarsoft.version + '</a></div>').appendTo(imap.container.left);
+	$('<div style="width: 100%; background-color: white; position: absolute; bottom: 0px; font-size: 120%; font-weight: normal; z-index: 100; padding-bottom: 2px; padding-top: 2px"><a style="padding-left: 2px; color: red" href="/about.html" target="_blank">About ' + sarsoft.version + '</a></div>').appendTo(imap.container.left);
 	imap.container.left.css('overflow-y', 'hidden');
 	
 	this.body = this.left;
@@ -1155,7 +1168,7 @@ org.sarsoft.DataNavigator.prototype.addHeader = function(title, icon) {
 	var tree = new org.sarsoft.DNTree(this.left, title);
 	tree.lock = true;
 	tree.block.addClass('l1');
-	tree.header.prepend(jQuery('<img src="' + org.sarsoft.imgPrefix + '/' + icon + '"/>'));
+	tree.header.prepend(jQuery('<img src="' + $.img(icon) + '"/>'));
 	
 	tree.addClose = function(title, handler) {
 		$('<div style="float: right; color: red; cursor: pointer; font-size: 140%; position: absolute; top: 0; right: 2px; font-weight: normal">X</div>').prependTo(tree.header).attr("title", title)
@@ -1174,7 +1187,7 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 	this.mobile = org.sarsoft.mobile;
 	this.state = !this.mobile;
 	
-	this.minmax = jQuery('<img src="' + org.sarsoft.imgPrefix + '/draghandle.png" title="Show Left Bar" style="cursor: pointer; z-index: 1001; position: absolute; left: 0; top:' + Math.round($(this.imap.map.getDiv()).height()/2-24) + 'px" class="noprint"/>');
+	this.minmax = jQuery('<img src="' + $.img('draghandle.png') + '" title="Show Left Bar" style="cursor: pointer; z-index: 1001; position: absolute; left: 0; top:' + Math.round($(this.imap.map.getDiv()).height()/2-24) + 'px" class="noprint"/>');
 	$(window).resize(function() {
 		 var h = $(that.imap.map.getDiv()).height();
 		 if(h > 100) {
@@ -1292,9 +1305,9 @@ org.sarsoft.PositionInfoControl = function(imap, container) {
 		this.map = imap.map;
 		this._show = true;
 		
-		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 999; position: absolute" src="' + org.sarsoft.imgPrefix + '/crosshair.png"/>').appendTo(this.map.getDiv());
+		this.crosshair = jQuery('<img class="noprint" style="visibility: hidden; z-index: 999; position: absolute" src="' + $.img('crosshair.png') + '"/>').appendTo(this.map.getDiv());
 		var div = this.div = jQuery('<div style="position: absolute; right: 0; top: ' + imap.map._overlaycontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').prependTo(container || this.map.getDiv());
-		var imgholder = $('<div style="position: absolute; right: 0; top; 0; width: 16px"><img style="position: absolute; right: 0; top: 0" src="' + org.sarsoft.imgPrefix + '/left.png"/></div>').appendTo(div);
+		var imgholder = $('<div style="position: absolute; right: 0; top; 0; width: 16px"><img style="position: absolute; right: 0; top: 0" src="' + $.img('left.png') + '"/></div>').appendTo(div);
 		this.display = jQuery('<div style="text-align: right; background-color: white; padding-top: 3px; font-weight: bold; white-space: nowrap"></div>').appendTo(div);
 				
 		this.minmax = $(imgholder.children()[0]).css({'cursor': 'pointer', 'display': 'none'}).attr("title", "click to show coordinates").click(function() {
@@ -1452,11 +1465,11 @@ org.sarsoft.MapFindWidget = function(imap) {
 	imap.register("org.sarsoft.MapFindWidget", this);
 
 	this.container = jQuery('<span style="white-space: nowrap; color: black"></span>').append(this.find);
-	this.f1 = $('<span class="underlineOnHover" style="margin-left: 3px; font-size: 110%"><img src="' + org.sarsoft.imgPrefix + '/find.png" style="vertical-align: text-top; margin-right: 3px"/>Find</span>').appendTo(this.container).attr("title", "Center the Map on a Coordinate or Named Place").click(function() {
+	this.f1 = $('<span class="underlineOnHover" style="margin-left: 3px; font-size: 110%"><img src="' + $.img('find.png') + '" style="vertical-align: text-top; margin-right: 3px"/>Find</span>').appendTo(this.container).attr("title", "Center the Map on a Coordinate or Named Place").click(function() {
 		that.setState(!that.state);
 	});
 	this.f2 = $('<span style="margin-left: 3px"></span>').appendTo(this.container);
-	this.f2.append($('<img src="' + org.sarsoft.imgPrefix + '/find.png" style="cursor: pointer; vertical-align: text-top; margin-right: 3px"/>').click(function() {
+	this.f2.append($('<img src="' + $.img('find.png') + '" style="cursor: pointer; vertical-align: text-top; margin-right: 3px"/>').click(function() {
 		that.setState(!that.state);
 	}));
 
@@ -1471,7 +1484,7 @@ org.sarsoft.MapFindWidget = function(imap) {
 	});
 	
 	if(typeof(navigator.geolocation) != "undefined") {
-		this.mylocation = jQuery('<img src="' + org.sarsoft.imgPrefix + '/location.png" style="margin-left: 3px; cursor: pointer; vertical-align: middle" title="Go to Your Current Location"/>').appendTo(this.f2).click(function() {
+		this.mylocation = jQuery('<img src="' + $.img('location.png') + '" style="margin-left: 3px; cursor: pointer; vertical-align: middle" title="Go to Your Current Location"/>').appendTo(this.f2).click(function() {
 			navigator.geolocation.getCurrentPosition(function(pos) {
 				that.imap.setCenter(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude), 14);
 			}, function() { alert("Unable to determine your location.")});
@@ -1767,58 +1780,29 @@ org.sarsoft.InteractiveMap.prototype.updateDatum = function() {
 
 
 org.sarsoft.InteractiveMap.prototype.nameToAlias = function(name) {
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		if(name == org.sarsoft.EnhancedGMap.defaultMapTypes[i].name) return org.sarsoft.EnhancedGMap.defaultMapTypes[i].alias;
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		if(name == sarsoft.map.layers[i].name) return sarsoft.map.layers[i].alias;
 	}
 	return name;
 }
 
 org.sarsoft.InteractiveMap.prototype.aliasToName = function(alias) {
 	if(alias == null) return null;
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		if(alias == org.sarsoft.EnhancedGMap.defaultMapTypes[i].alias) return org.sarsoft.EnhancedGMap.defaultMapTypes[i].name;
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		if(alias == sarsoft.map.layers.alias) return sarsoft.map.layers[i].name;
 	}
-	for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-		if(alias.replace(/ \(.*\)/, "") == org.sarsoft.EnhancedGMap.defaultMapTypes[i].name.replace(/ \(.*\)/, "")) return org.sarsoft.EnhancedGMap.defaultMapTypes[i].name;
+	for(var i = 0; i < sarsoft.map.layers.length; i++) {
+		if(alias.replace(/ \(.*\)/, "") == sarsoft.map.layers[i].name.replace(/ \(.*\)/, "")) return sarsoft.map.layers[i].name;
 	}
 	return alias;
 }
 
 org.sarsoft.InteractiveMap.prototype.getConfig = function(config) {
-	if(config == null) config = new Object();
-	config.base = this.map._overlaymanager.base;
-	for(var key in org.sarsoft.EnhancedGMap.nativeAliases) {
-		if(org.sarsoft.EnhancedGMap.nativeAliases[key] == config.base) config.base = key;
-	}
-	var manager = this.map._overlaymanager;
-	config.layers = manager.layers.slice(0,manager.layers.length);
-	config.opacity = manager.opacity.slice(0, manager.layers.length);
-	var ao = manager.alphas.slice(0, manager.alphas.length);
-	if(ao.length > 0) {
-		for(var i = 0; i < ao.length; i++) {
-			var type = this.map.mapTypes.get(ao[i]);
-			if(type._cfgvalue != null) ao[i] = ao[i] + "_" + type._cfgvalue;
-		}
-	}
-	config.alphas = (ao.length > 0 ? ao : null);
-	return config;
+	return this.map._overlaycontrol.getConfig(config);
 }
 
 org.sarsoft.InteractiveMap.prototype.setConfig = function(config) {
-	if(config == null) return;
-	if(config.overlay != null && config.layers == null) {
-		config.layers = [config.overlay];
-		config.opacity = [config.opacity];
-	}
-	if(config.alphaOverlays != null && config.alphas == null) config.alphas = config.alphaOverlays.split(",");
-
-	if(config.alphas != null) {
-		for (var i = 0; i < config.alphas.length; i++) {
-			if(config.alphas[i] == "slp_s-11111111") config.alphas[i] = "sf";
-		}
-	}
-	if(config.base == null) return;
-	this.setMapLayers(config.base, config.layers, config.opacity, config.alphas);
+	this.map._overlaycontrol.setConfig(config);
 }
 
 org.sarsoft.InteractiveMap.prototype.setMapLayers = function(base, layers, opacity, alphas) {
@@ -2463,7 +2447,7 @@ org.sarsoft.MapInfoControl = function(map) {
 	this.minimized = false;
 	this.div = jQuery('<div style="position: absolute; right: 0; bottom: 0; z-index: 1000; white-space: nowrap"></div>').appendTo(map.getDiv());
 	this.ctrl = jQuery('<span style="background: white" class="noprint"></span>').appendTo(this.div);
-	this.min = jQuery('<img style="cursor: pointer; width: 12px; height: 12px" src="' + org.sarsoft.imgPrefix + '/right.png"/>').appendTo(this.ctrl);
+	this.min = jQuery('<img style="cursor: pointer; width: 12px; height: 12px" src="' + $.img('right.png') + '"/>').appendTo(this.ctrl);
 	this.min.click(function() {
 		that.minmax();
 	});
@@ -2480,13 +2464,13 @@ org.sarsoft.MapInfoControl.prototype.minmax = function() {
 		this.ctrl.css("padding-right", "0");
 		this.msg.css("display", "inline");
 		this.premsg.css("display", "inline");
-		this.min.attr("src", org.sarsoft.imgPrefix + "/right.png");
+		this.min.attr("src", $.img('right.png'));
 		this.minimized = false;
 	} else {
 		this.ctrl.css("padding-right", "1em");
 		this.premsg.css("display", "none");
 		this.msg.css("display", "none");
-		this.min.attr("src", org.sarsoft.imgPrefix + "/left.png");
+		this.min.attr("src", $.img('left.png'));
 		this.minimized = true;
 	}
 }
@@ -2501,17 +2485,17 @@ org.sarsoft.widget.MapLayers = function(imap) {
 	var that = this;
 	
 	this.tree = imap.dn.addDataType("Layers");
-	if(org.sarsoft.tenantid != null) this.tree.body.css('display', 'none');
-	this.tree.block.attr("title", "These are examples of what " + org.sarsoft.version + " can do.  Click the red +0 or +1 in the top right for more.");
+	if(sarsoft.tenant != null) this.tree.body.css('display', 'none');
+	this.tree.block.attr("title", "These are examples of what " + sarsoft.version + " can do.  Click the red +0 or +1 in the top right for more.");
 
-	this.availableLayers = $('<div style="float: right; cursor: pointer; font-weight: normal;"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/networkfolder.png"/>Customize</div>').insertBefore(imap.map._overlaycontrol.addLayer);
-	this.tree.getTool().html('<img src="' + org.sarsoft.imgPrefix + '/kml64.png"/>KML').
+	this.availableLayers = $('<div style="float: right; cursor: pointer; font-weight: normal;"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + $.img('networkfolder.png') + '"/>Customize</div>').insertBefore(imap.map._overlaycontrol.addLayer);
+	this.tree.getTool().html('<img src="' + $.img('kml64.png') + '"/>KML').
 		attr("title", "Export Map Layers to Google Earth").click(function(evt) { evt.stopPropagation(); window.open("/kmz.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap), '_blank'); })
 	
-	if(org.sarsoft.EnhancedGMap.sampleMapTypes != null) {
+	if(sarsoft.map.layers_sample != null) {
 		this.sampleMaps = $('<div></div>').appendTo(this.tree.body);
 		
-		var samples = org.sarsoft.EnhancedGMap.sampleMapTypes.split(';');
+		var samples = sarsoft.map.layers_sample.split(';');
 		for(var i = 0; i < samples.length; i++) {
 			var name = samples[i].split(':')[0];
 			var cfg = samples[i].split(':')[1];
@@ -2538,8 +2522,8 @@ org.sarsoft.widget.MapLayers = function(imap) {
 	// prioritize page loading
 	window.setTimeout(function() {
 		var grouping = {};
-		if(org.sarsoft.EnhancedGMap.mapTypeGrouping != null) {
-			var groups = org.sarsoft.EnhancedGMap.mapTypeGrouping.split(';');
+		if(sarsoft.map.layers_grouping != null) {
+			var groups = sarsoft.map.layers_grouping.split(';');
 			for(i = 0; i < groups.length; i++) {
 				var name = groups[i].split('=')[0];
 				var types = groups[i].split('=')[1].split(',');
@@ -2550,8 +2534,8 @@ org.sarsoft.widget.MapLayers = function(imap) {
 		}
 		var headers = {}
 		
-		for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-			var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
+		for(var i = 0; i < sarsoft.map.layers.length; i++) {
+			var type = sarsoft.map.layers[i];
 			if((type.template || "").indexOf("{V}") > 0) continue;
 			var div = jQuery('<div style="position: relative; float: left; cursor: pointer; width: 320px; margin-bottom: 10px; margin-right: 10px"></div>').appendTo(type.alphaOverlay ? aolayers : ungroupedbaselayers);
 			var bg = jQuery('<div style="position: absolute; z-index: -1; background-color: #5a8ed7; opacity: 0.2; width: 100%; height: 100%">&nbsp;</div>').appendTo(div);
@@ -2590,14 +2574,12 @@ org.sarsoft.widget.MapLayers = function(imap) {
 		}
 		var ok2 = jQuery('<button style="clear: both; font-size: 150%; margin-top: 1em">Save Changes</button>').appendTo(bn);
 		var okhandler = function() {
-			var config = imap.getConfig();
-			org.sarsoft.EnhancedGMap.visibleMapTypes = [];
-			for(var i = 0; i < org.sarsoft.EnhancedGMap.defaultMapTypes.length; i++) {
-				var type = org.sarsoft.EnhancedGMap.defaultMapTypes[i];
-				if(checkboxes[type.alias] && checkboxes[type.alias][0].checked) org.sarsoft.EnhancedGMap.visibleMapTypes.push(type.alias);
+			sarsoft.map.layers_visible = [];
+			for(var i = 0; i < sarsoft.map.layers.length; i++) {
+				var type = sarsoft.map.layers[i];
+				if(checkboxes[type.alias] && checkboxes[type.alias][0].checked) sarsoft.map.layers_visible.push(type.alias);
 			}
-			imap.map._overlaycontrol.resetMapTypes();
-			imap.setConfig(config);
+			imap.map._overlaycontrol.resetMapTypes(true);
 			layerpane.hide();
 		}
 		ok1.click(okhandler);
@@ -2608,7 +2590,7 @@ org.sarsoft.widget.MapLayers = function(imap) {
 				if(that.layerHandler != null) that.layerHandler();
 			} else {
 				for(var key in checkboxes) {
-					checkboxes[key][0].checked = (org.sarsoft.EnhancedGMap.visibleMapTypes.indexOf(key) >= 0) ? true : false;
+					checkboxes[key][0].checked = (sarsoft.map.layers_visible.indexOf(key) >= 0) ? true : false;
 					checkboxes[key].change();
 				}
 				layerpane.show();

@@ -30,6 +30,15 @@ if (!Array.prototype.filter)
   };
 }
 
+if (!Array.prototype.indexOf) {
+	Array.prototype.indexOf = function(elt) {
+		for(var i = 0; i < this.length; i++) {
+			if(this[i] == elt) return i;
+		}
+		return -1;
+	}
+}
+
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
@@ -43,10 +52,15 @@ try {
 	org.sarsoft.iframe = true;
 }
 
-org.sarsoft.writeable = (org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN" || org.sarsoft.tenantid == null)
+org.sarsoft.writeable = (sarsoft.permission == "WRITE" || sarsoft.permission == "ADMIN" || sarsoft.tenant == null)
 
 org.sarsoft.async = function(fn) {
 	window.setTimeout(fn, 0);
+}
+
+$.img = function(url) {
+	if(url.indexOf("/") != 0) url = "/" + url;
+	return sarsoft.imgprefix + url;
 }
 
 org.sarsoft.setCookieProperty = function(cookie, prop, value) {
@@ -89,7 +103,7 @@ org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 	var that = this;
 	postdata = "json=" + encodeURIComponent(YAHOO.lang.JSON.stringify(obj));
 	if(typeof poststr != "undefined") postdata += "&" + poststr;
-	if(org.sarsoft.tenantid != null) postdata += "&tid=" + encodeURIComponent(org.sarsoft.tenantid);
+	if(sarsoft.tenant != null) postdata += "&tid=" + encodeURIComponent(sarsoft.tenant.name);
 	YAHOO.util.Connect.resetDefaultHeaders();
 	YAHOO.util.Connect.setDefaultPostHeader(false);
 	YAHOO.util.Connect.initHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
@@ -109,7 +123,7 @@ org.sarsoft.BaseDAO.prototype._doPost = function(url, handler, obj, poststr) {
 org.sarsoft.BaseDAO.prototype._doGet = function(url, handler) {
 	var that = this;
 	var url = this.baseURL + url;
-	if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
+	if(sarsoft.tenant != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(sarsoft.tenant.name);
 	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
@@ -120,7 +134,7 @@ org.sarsoft.BaseDAO.prototype._doGet = function(url, handler) {
 org.sarsoft.BaseDAO.prototype._doDelete = function(url, handler) {
 	var that = this;
 	var url = this.baseURL + url;
-	if(org.sarsoft.tenantid != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(org.sarsoft.tenantid);
+	if(sarsoft.tenant != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(sarsoft.tenant.name);
 	YAHOO.util.Connect.asyncRequest('DELETE', url, { success : function(response) {
 			org.sarsoft.BaseDAO.trigger(true);
 			handler(YAHOO.lang.JSON.parse(response.responseText));
@@ -174,7 +188,7 @@ org.sarsoft.BaseDAO.prototype.load = function(id, handler) {
 org.sarsoft.BaseDAO.prototype.mark = function() {
 	var that = this;
 	var url = "/rest/timestamp";
-	if(org.sarsoft.tenantid != null) url = url + "?tid=" + encodeURIComponent(org.sarsoft.tenantid);
+	if(sarsoft.tenant != null) url = url + "?tid=" + encodeURIComponent(sarsoft.tenant.name);
 	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
 			that._timestamp = YAHOO.lang.JSON.parse(response.responseText).timestamp;
 		}, failure : function(response) {
@@ -217,10 +231,10 @@ org.sarsoft.BrowserCheck = function() {
 	if(YAHOO.util.Cookie.get("sarsoftBrowserCheck") == "checked") return;
 	if($.browser.msie && 1*$.browser.version < 9) {
 		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked", {path: "/"});
-		alert("Please be aware that " + org.sarsoft.version + " has some features that are incompatible with versions of Internet Explorer prior to IE 9.")
+		alert("Please be aware that " + sarsoft.version + " has some features that are incompatible with versions of Internet Explorer prior to IE 9.")
 	} else if($.browser.mozilla && 1*$.browser.version < 3.6) {
 		YAHOO.util.Cookie.set("sarsoftBrowserCheck", "checked", {path: "/"});
-		alert("Please be aware that " + org.sarsoft.version + " has some features that may be incompatible with older versions of Firefox");
+		alert("Please be aware that " + sarsoft.version + " has some features that may be incompatible with older versions of Firefox");
 	}
 }
 
@@ -398,6 +412,7 @@ org.sarsoft.view.DropSelect = function(text, css) {
 		if(that.menu.css('display')=='block') {
 			that.hide();
 		} else {
+			$(that).triggerHandler('show');
 			that.show();
 		}
 	});
@@ -785,6 +800,19 @@ org.sarsoft.TenantDAO.prototype.saveCenter = function(center, handler) {
 	this._doPost("/center", handler, center);
 }
 
+org.sarsoft.TenantDAO.prototype.saveConfig = function(state, handler) {
+	this._doPost("/config", handler, state);
+}
+
+org.sarsoft.TenantDAO.prototype.getConfig = function(handler) {
+	if(org.sarsoft.preload.MapConfig != null) {
+		return org.sarsoft.async(function() {
+			handler({ MapConfig: org.sarsoft.preload.MapConfig, MapLayers: org.sarsoft.preload.MapLayers });
+		});
+	}
+	this._doGet("/config", handler);
+}
+
 org.sarsoft.view.TenantList = function(container) {
 	this.block = jQuery('<div></div>').appendTo(container);
 }
@@ -793,7 +821,7 @@ org.sarsoft.view.TenantList.prototype.update = function(rows) {
 	for(var i = 0; i < rows.length; i++) {
 		var url = "map?id=" + rows[i].name
 		if(rows[i].type == "org.sarsoft.plans.model.Search") url = "search?id=" + rows[i].name;
-		jQuery('<div><a style="color: black; font-weight: bold; text-transform: capitalize" href="' + org.sarsoft.server + url + '">' + rows[i].publicName + '</a></div>').appendTo(this.block);
+		jQuery('<div><a style="color: black; font-weight: bold; text-transform: capitalize" href="' + sarsoft.server + url + '">' + rows[i].publicName + '</a></div>').appendTo(this.block);
 	}
 }
 
@@ -1041,10 +1069,10 @@ org.sarsoft.GPSComms.prototype.retry = function() {
 		}
 	}
 
-	var unlocked = this.control.unlock( [org.sarsoft.garmin.hostName,org.sarsoft.garmin.deviceKey] );
+	var unlocked = this.control.unlock( [sarsoft.garmin_hostname, sarsoft.garmin_devicekey] );
 	if(!unlocked) {
 		this.console('<span class="warning">Unable to unlock Garmin plugin.</span>');
-		if(org.sarsoft.garmin.deviceKey == "null") this.console("No garmin device key found for hostname " + org.sarsoft.garmin.hostName + ".  You man need to update this server's configuration.");
+		if(sarsoft.garmin_devicekey == "null") this.console("No garmin device key found for hostname " + sarsoft.garmin_hostname + ".  You man need to update this server's configuration.");
 		return;
 	}
 
@@ -1115,7 +1143,7 @@ function sarsoftInit() {
 	if(typeof YAHOO != "undefined" && typeof($) != "undefined") {
 		org.sarsoft.Loader.execute();
 	} else {
-		window.setTimeout(250, sarsoftInit);
+		window.setTimeout(sarsoftInit, 250);
 	}
 }
 sarsoftInit();

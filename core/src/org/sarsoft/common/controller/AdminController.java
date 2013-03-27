@@ -44,7 +44,7 @@ public class AdminController extends JSONBaseController {
 	@Autowired
 	@Qualifier("searchSessionFactory")
 	LocalSessionFactoryBean sessionFactory;
-
+	
 	private OIDConsumer consumer = null;
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
@@ -349,25 +349,6 @@ public class AdminController extends JSONBaseController {
 		return json(model, list);
 	}
 	
-	@RequestMapping(value ="/rest/tenant/mapConfig", method = RequestMethod.GET)
-	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {
-		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("value", tenant.getMapConfig());
-		return json(model, map);
-	}
-
-	@SuppressWarnings("rawtypes")
-	@RequestMapping(value = "/rest/tenant/mapConfig", method = RequestMethod.POST)
-	public String setSearchProperty(Model model, JSONForm params) {
-		Map m = (Map) JSONObject.toBean(params.JSON(), HashMap.class);
-		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-		tenant.setMapConfig((String) m.get("value"));
-		tenant.setCfgUpdated(System.currentTimeMillis());
-		dao.save(tenant);
-		return json(model, tenant);
-	}
-
 	@RequestMapping(value="/tools.html", method = RequestMethod.GET)
 	public String showTools(Model model) {
 		return app(model, "Pages.Tools");

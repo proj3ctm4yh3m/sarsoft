@@ -42,7 +42,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	
 	div = $('<div class="item" style="min-height: 22px"><label for="image" style="width: 80px">Image:</label></div>').appendTo(right);
 	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px;" valign="top"/>').appendTo(div);
-	jQuery('<img style="width: 20px; height: 20px; visibility: hidden" src="' + org.sarsoft.imgPrefix + '/blank.gif"/>').appendTo(div);
+	jQuery('<img style="width: 20px; height: 20px; visibility: hidden" src="' + $.img('blank.gif') + '"/>').appendTo(div);
 
 	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(right);
 	this.images = {circles : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"],
@@ -64,7 +64,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 					var swatch = jQuery('<img style="cursor: pointer; width: 16px; height: 16px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
 					swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["circles"][j].substr(1)); that.imageInput.trigger('change');}}());
 				} else {
-					var swatch = jQuery('<img style="cursor: pointer; width: 20px; height: 20px" src="' + org.sarsoft.imgPrefix + '/icons/' + url + '.png"/>').appendTo(ic2);
+					var swatch = jQuery('<img style="cursor: pointer; width: 20px; height: 20px" src="' + $.img('icons/' + url + '.png') + '"/>').appendTo(ic2);
 					swatch.click(function() { var j = i; var l = key; return function() {
 						that.imageInput.val(""); that.imageUrl = that.images[l][j]; that.handleChange();}}());
 				}
@@ -94,7 +94,7 @@ org.sarsoft.view.MarkerForm.prototype.handleChange = function() {
 		margin = "4px";
 		url = '/resource/imagery/icons/circle/' + url.substr(1) + '.png';
 	} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
-		url = org.sarsoft.imgPrefix + '/icons/' + url + '.png';
+		url = $.img('/icons/' + url + '.png');
 	}
 	this.imgSwatch.css("width", size);
 	this.imgSwatch.css("height", size);
@@ -159,7 +159,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 		
 		if(org.sarsoft.writeable && !this.bgload) {
 			this.imap.addContextMenuItems([
-			    {text : "New Marker", applicable : function(obj) { return obj == null && that.visible}, handler: function(data) { that.markerDlg.show({url: "#FF0000"}, data.point); }},
+			    {text : "New Marker", applicable : function(obj) { return obj == null && that.dn.visible}, handler: function(data) { that.markerDlg.show({url: "#FF0000"}, data.point); }},
 	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live; }, handler: function(data) { that.markerDlg.show(data.pc.marker) }},
 	    		{text : "Drag to New Location", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live;}, handler: function(data) { that.drag(data.pc.marker)}},
 	    		{text : "Delete Marker", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live;}, handler: function(data) { that.del(function() { that.dao.del(data.pc.marker.id);})}} ]);
@@ -225,7 +225,7 @@ org.sarsoft.controller.MarkerController.getRealURLForMarker = function(url) {
 		url = url.substring(1);
 		return "/resource/imagery/icons/circle/" + url + ".png"
 	} else if(url.indexOf('/') == -1 && url.indexOf('.') == -1) {
-		return org.sarsoft.imgPrefix + "/icons/" + url + ".png";
+		return $.img('icons/' + url + ".png");
 	} else {
 		return url;
 	}
@@ -255,7 +255,7 @@ org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 		});
 	}
 	
-	if(this.visible) {
+	if(this.dn.visible) {
 		var marker = object;
 		var config = new Object();	
 		var tooltip = org.sarsoft.htmlescape(marker.label);
@@ -267,7 +267,7 @@ org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 		} else if(marker.url.indexOf('#') == 0) {
 			config.color = marker.url;
 		} else if(marker.url.indexOf('/') == -1 && marker.url.indexOf('.') == -1) {
-			config.icon = org.sarsoft.MapUtil.createImage(20, org.sarsoft.imgPrefix + "/icons/" + marker.url + ".png");
+			config.icon = org.sarsoft.MapUtil.createImage(20, $.img('icons/' + marker.url + ".png"));
 		} else {
 			config.icon = org.sarsoft.MapUtil.createImage(20, marker.url);
 		}
@@ -276,7 +276,7 @@ org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 }
 
 org.sarsoft.controller.MarkerController.prototype.handleSetupChange = function(i) {
-	if(!this.visible) {
+	if(!this.dn.visible) {
 		for(var key in this.dao.objs) {
 			this.imap.removeWaypoint(this.dao.getObj([key]).position);
 		}
@@ -510,8 +510,8 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 		
 		if(org.sarsoft.writeable && !this.bgload) {
 			this.imap.addContextMenuItems([
-				{text : "New Line", applicable : function(obj) { return obj == null && that.visible}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, data.point); }},
-				{text : "New Polygon", applicable : function(obj) { return obj == null && that.visible}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, data.point); }},
+				{text : "New Line", applicable : function(obj) { return obj == null && that.dn.visible}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, data.point); }},
+				{text : "New Polygon", applicable : function(obj) { return obj == null && that.dn.visible}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, data.point); }},
 	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.shapeDlg.show(data.pc.shape, data.point) }},
 	    		{text : "Profile", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.profile(data.pc.shape);}},
 	    		{text: "Modify \u2192", precheck: pc, applicable: function(obj) { return obj.shape != null && !obj.inedit }, items:
@@ -643,7 +643,7 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	if((object.comments || "").length > 0) this.dn.addComments(object.id, object.comments);
 	line.prepend(org.sarsoft.controller.ShapeController.getIconForShape(object));
 
-	this.dn.addIcon(object.id, "Elevation Profile", '<img src="' + org.sarsoft.imgPrefix + '/profile.png"/>', function() {
+	this.dn.addIcon(object.id, "Elevation Profile", '<img src="' + $.img('profile.png') + '"/>', function() {
 		that.profile(object);
 	});
 	
@@ -656,14 +656,14 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 		});
 	}
 	
-	if(this.visible) {
+	if(this.dn.visible) {
 		this.imap.addWay(object.way, {clickable : (!org.sarsoft.iframe && (org.sarsoft.writeable || (object.comments != null && object.comments.length > 0))), fill: object.fill, color: object.color, weight: object.weight}, org.sarsoft.htmlescape(object.label));
 	}
 }
 
 
 org.sarsoft.controller.ShapeController.prototype.handleSetupChange = function() {
-	if(!this.visible) {
+	if(!this.dn.visible) {
 		for(var key in this.dao.objs) {
 			this.imap.removeWay(this.dao.getObj(key).way);
 		}
