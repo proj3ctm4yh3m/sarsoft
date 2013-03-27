@@ -136,7 +136,7 @@ org.sarsoft.BaseDAO.prototype._doDelete = function(url, handler) {
 	var url = this.baseURL + url;
 	if(sarsoft.tenant != null) url = url + (url.indexOf("?") < 0 ? "?tid=" : "&tid=") + encodeURIComponent(sarsoft.tenant.name);
 	YAHOO.util.Connect.asyncRequest('DELETE', url, { success : function(response) {
-			org.sarsoft.BaseDAO.trigger(true);
+			$(org.sarsoft.BaseDAO).triggerHandler('success');
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
 			org.sarsoft.BaseDAO.trigger(false);

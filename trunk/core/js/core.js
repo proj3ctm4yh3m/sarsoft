@@ -1063,7 +1063,7 @@ org.sarsoft.MapObjectDAO.prototype.rehydrate = function(state) {
 }
 
 org.sarsoft.MapObjectDAO.prototype.create = function(obj, handler) {
-	if(!this.offline) org.sarsoft.BaseDAO.prototype.create.call(this, obj, handler);
+	if(!this.offline) return org.sarsoft.BaseDAO.prototype.create.call(this, obj, handler);
 	
 	var that = this;
 	org.sarsoft.async(function() {
