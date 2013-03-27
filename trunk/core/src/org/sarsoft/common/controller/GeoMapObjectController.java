@@ -1,5 +1,7 @@
 package org.sarsoft.common.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -23,6 +25,7 @@ public abstract class GeoMapObjectController extends MapObjectController {
 	
 	public abstract JSONObject toGPX(MapObject obj);
 	public abstract MapObject fromGPX(JSONObject obj);
+	public abstract <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom, List<T> checkAgainst);
 	
 	@RequestMapping(value="/{id}", method = RequestMethod.GET)
 	public String get(Model model, @PathVariable("id") long id, HttpServletRequest request, HttpServletResponse response) {

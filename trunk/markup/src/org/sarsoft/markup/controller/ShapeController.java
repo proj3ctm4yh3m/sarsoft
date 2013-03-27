@@ -1,5 +1,6 @@
 package org.sarsoft.markup.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,6 +70,26 @@ public class ShapeController extends GeoMapObjectController {
 		}
 		shape.getWay().setPrecision(precision);
 		return json(model, shape.getWay());
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom, List<T> checkAgainst) {
+		List<MapObject> dupes = new ArrayList<MapObject>();
+
+		for(Shape against : (List<Shape>) checkAgainst) {
+			for(Shape check : (List<Shape>) removeFrom) {
+				if(check.getLabel() != null && against.getLabel() != null && !check.getLabel().toUpperCase().startsWith(against.getLabel().toUpperCase())) continue;
+				List<Waypoint> l1 = check.getWay().getWaypoints();
+				List<Waypoint> l2 = against.getWay().getWaypoints();
+				if(l1.size() != l2.size()) continue;
+				for(int i = 0; i < l1.size(); i++) {
+					if(l1.get(i).distanceFrom(l2.get(i)) > 5) continue;
+				}
+				if(!dupes.contains(check)) dupes.add(check);
+			}
+		}
+		
+		return dupes;
 	}
 
 }
