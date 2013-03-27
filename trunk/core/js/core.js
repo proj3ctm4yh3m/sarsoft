@@ -534,7 +534,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
 	var that = this;
 	this.tenantDAO.getConfig(function(state) {
-		var config = state.MapConfig;
+		var config = state.MapConfig || {};
 		if(typeof(overrides) != "undefined") for(var key in overrides) {
 			config[key] = overrides[key];
 		}
