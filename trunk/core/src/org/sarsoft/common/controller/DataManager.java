@@ -109,7 +109,11 @@ public class DataManager {
 		for(String key : state.types()) {
 			m.put(key, state.get(key));
 		}
-		if(state.getMapConfig() != null) m.put("MapConfig", (JSONObject)  JSONSerializer.toJSON(state.getMapConfig()));
+		try {
+			if(state.getMapConfig() != null) m.put("MapConfig", (JSONObject)  JSONSerializer.toJSON(state.getMapConfig()));
+		} catch (net.sf.json.JSONException e) {
+			// ignore invalid json stored on object
+		}
 		if(state.getMapLayers() != null) m.put("MapLayers", state.getMapLayers().split(","));
 		return JSONAnnotatedPropertyFilter.fromObject(m);
 	}
