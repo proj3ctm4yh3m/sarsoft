@@ -56,10 +56,12 @@ public class Marker extends GeoMapObject implements IPreSave {
 		if(!"waypoint".equals(type)) return null;
 
 		Marker marker = new Marker();
-		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
-		
+		String label = gpx.getString("name");
+		if(label != null && label.startsWith("-")) label = null;
+		marker.setLabel(label);
 		marker.setPosition(new Waypoint((JSONObject) gpx.get("position")));
 
+		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
 		marker.setUrl(attrs.containsKey("url") ? attrs.get("url") : "#FF0000");
 		marker.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
 
@@ -69,7 +71,9 @@ public class Marker extends GeoMapObject implements IPreSave {
 	public JSONObject toGPX() {
 		JSONObject jobj = new JSONObject();
 		jobj.put("type", "waypoint");
-		jobj.put("name", getLabel());
+		String label = getLabel();
+		if(label == null || label.length() == 0) label = "-No Name";
+		jobj.put("name", label);
 		jobj.put("icon", getUrl());
 		jobj.put("position", json(getPosition()));
 		

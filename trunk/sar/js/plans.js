@@ -1508,11 +1508,11 @@ org.sarsoft.view.SearchIO = function(imap, controller, mcontroller) {
 	gpxout.click(function() {
 		var val = that.exportables._selected;
 		if(val == null) {
-			window.location='/rest/search/?format=GPX&tid=' + org.sarsoft.tenantid;
+			window.location='/rest/search/?format=GPX&tid=' + (sarsoft.tenant ? sarsoft.tenant.name : '');
 		} else if(val.operationalPeridId != null) {
-			window.location="/rest/assignment/" + val.id + "?format=GPX&tid=" + org.sarsoft.tenantid;
+			window.location="/rest/assignment/" + val.id + "?format=GPX&tid=" + (sarsoft.tenant ? sarsoft.tenant.name : '');
 		} else if(val.url == null) {
-			window.location="/rest/assignment/" + val.id + "?format=GPX&tid=" + org.sarsoft.tenantid;
+			window.location="/rest/assignment/" + val.id + "?format=GPX&tid=" + (sarsoft.tenant ? sarsoft.tenant.name : '');
 		}
 	});
 

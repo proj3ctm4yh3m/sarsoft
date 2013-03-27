@@ -1,5 +1,6 @@
 package org.sarsoft.common.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,6 +14,7 @@ import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ClientState;
+import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapObject;
@@ -58,11 +60,9 @@ public class DataManager {
 		for(String type : getDataTypes()) {
 			state.add(type, (List<MapObject>) dao.loadAll(getController(type).getC()));
 		}
-		if(RuntimeProperties.getTenant() != null) {
-			Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-			state.setMapConfig(tenant.getMapConfig());
-			state.setMapLayers(tenant.getLayers());
-		}
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		state.setMapConfig(tenant.getMapConfig());
+		state.setMapLayers(tenant.getLayers());
 		return state;
 	}
 
@@ -82,7 +82,7 @@ public class DataManager {
 		}
 		
 		if(json.has("MapConfig")) state.setMapConfig(json.getJSONObject("MapConfig").toString());
-		if(json.has("MapLayers")) state.setMapLayers(json.getString("MapLayers"));
+		if(json.has("MapLayers")) state.setMapLayers(json.getJSONArray("MapLayers").join(","));
 		
 		return state;
 	}
@@ -97,6 +97,7 @@ public class DataManager {
 			Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 			tenant.setMapConfig(state.getMapConfig());
 			tenant.setLayers(state.getMapLayers());
+			tenant.setCfgUpdated(System.currentTimeMillis());
 			dao.save(tenant);
 		}
 	}
@@ -109,7 +110,7 @@ public class DataManager {
 			m.put(key, state.get(key));
 		}
 		if(state.getMapConfig() != null) m.put("MapConfig", (JSONObject)  JSONSerializer.toJSON(state.getMapConfig()));
-		if(state.getMapLayers() != null) m.put("MapLayers", state.getMapConfig());
+		if(state.getMapLayers() != null) m.put("MapLayers", state.getMapLayers().split(","));
 		return JSONAnnotatedPropertyFilter.fromObject(m);
 	}
 		

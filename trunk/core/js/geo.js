@@ -1,5 +1,11 @@
 if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
+if(typeof org.sarsoft.map == "undefined") org.sarsoft.map = new Object();
+
+org.sarsoft.map.datums = {
+	"NAD27 CONUS":{"a":6378206.4,"b":6356583.8,"f":0.0033900753040885176,"x":-8,"y":160,"z":176},
+	"WGS84":{"a":6378137,"b":6356752.314,"f":0.0033528106647474805,"x":0,"y":0,"z":0}
+}
 
 org.sarsoft.WebMercator = function() {
 	this.tilesize = 256;
@@ -187,7 +193,7 @@ GeoUtil.getEastBorder = function(zone) {
 	return GeoUtil.getWestBorder(zone + 1);
 }
 
-GeoUtil.datum = org.sarsoft.map.datums[org.sarsoft.map.datum];
+GeoUtil.datum = org.sarsoft.map.datums[sarsoft.map.datum];
 
 GeoUtil.toWGS84 = function(gll) {
 	var wgs84 = org.sarsoft.map.datums["WGS84"];

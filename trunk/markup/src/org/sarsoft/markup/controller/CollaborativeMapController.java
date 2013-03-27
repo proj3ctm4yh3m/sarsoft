@@ -4,13 +4,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -128,7 +125,27 @@ public class CollaborativeMapController extends JSONBaseController {
 		}
 		return val;
 	}
-	
+
+	@RequestMapping(value ="/rest/tenant/config", method = RequestMethod.GET)
+	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {
+		ClientState state = new ClientState();
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		state.setMapConfig(tenant.getMapConfig());
+		state.setMapLayers(tenant.getLayers());
+		return json(model, manager.toJSON(state));
+	}
+
+	@RequestMapping(value = "/rest/tenant/config", method = RequestMethod.POST)
+	public String setSearchProperty(Model model, JSONForm params) {
+		ClientState state = manager.fromJSON(params.JSON());
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		tenant.setMapConfig(state.getMapConfig());
+		tenant.setLayers(state.getMapLayers());
+		tenant.setCfgUpdated(System.currentTimeMillis());
+		dao.save(tenant);
+		return json(model, tenant);
+	}
+
 	@RequestMapping(value = "/rest/tenant/center", method = RequestMethod.POST)
 	public String setDefaultCenter(Model model, JSONForm params, HttpServletRequest request) {
 		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
