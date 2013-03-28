@@ -34,7 +34,7 @@ public class Way extends SarModelObject implements IPreSave {
 	private WayType type = WayType.ROUTE;
 	private List<Waypoint> waypoints;
 	private Date updated;
-	private int precision = 100;
+	private Integer precision;
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -71,6 +71,7 @@ public class Way extends SarModelObject implements IPreSave {
 			wpt.setTime(from.getTime());
 			waypoints.add(wpt);
 		}
+		this.setPrecision(updated.getPrecision());
 	}
 
 	@JSONSerializable
@@ -112,44 +113,43 @@ public class Way extends SarModelObject implements IPreSave {
 	public void setPolygon(boolean polygon) {
 		this.polygon = polygon;
 	}
+	
+	public Integer getPrecision() {
+		return precision;
+	}
 
+	private void setPrecision(Integer precision) {
+		this.precision = precision;
+	}
+
+	@JSONSerializable
 	@ManyToMany
 	@IndexColumn(name="wpt_idx")
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public List<Waypoint> getWaypoints() {
+		if(precision == null && waypoints.size() > 500) filter(waypoints.size() > 2000 ? 10 : 5);
 		return waypoints;
 	}
 	public void setWaypoints(List<Waypoint> waypoints) {
 		this.waypoints = waypoints;
 	}
 
-	@Transient
-	public void setPrecision(int precision) {
-		this.precision = precision;
+	public void filter(int epsilon) {
+		this.setPrecision(epsilon);
+		if(waypoints == null) return;	
+		List<Waypoint> filtered = filter(waypoints, epsilon);
+		waypoints.removeAll(waypoints);
+		waypoints.addAll(filtered);
+		System.out.println("Final Size: " + waypoints.size());
 	}
 
-	public static double distance(Waypoint p0, Waypoint p1, Waypoint p2) {
-		double dx = p2.getLng() - p1.getLng();
-		double dy = p2.getLat() - p1.getLat();
-		
-		if(dx != 0 || dy != 0) {
-			double x = p0.getLng() - p1.getLng();
-			double y = p0.getLat() - p1.getLat();
-			double k = dy/dx;
-			return Math.abs(k*x - y) / Math.sqrt(k*k + 1);
-		}
-		dx = p0.getLng()-p1.getLng();
-		dy = p0.getLat()-p1.getLat();
-		return Math.sqrt(dx*dx+dy*dy);
-	}
-	
-	public static List<Waypoint> douglasPeucker(List<Waypoint> points, double epsilon) {
+	private static List<Waypoint> filter(List<Waypoint> points, double epsilon) {
 		if(points.size() == 2) return points;
 		double dmax = 0;
 		int index = 0;
 		for(int i = 1; i < points.size() - 1; i++) {
-			double d = distance(points.get(i), points.get(0), points.get(points.size()-1));
+			double d = points.get(i).distanceToLine(points.get(0), points.get(points.size()-1));
 			if(d > dmax) {
 				index = i;
 				dmax = d;
@@ -158,8 +158,8 @@ public class Way extends SarModelObject implements IPreSave {
 		
 		List<Waypoint> results = new ArrayList<Waypoint>();
 		if(dmax >= epsilon) {
-			List<Waypoint> r1 = douglasPeucker(points.subList(0, index+1), epsilon);
-			List<Waypoint> r2 = douglasPeucker(points.subList(index, points.size()), epsilon);
+			List<Waypoint> r1 = filter(points.subList(0, index+1), epsilon);
+			List<Waypoint> r2 = filter(points.subList(index, points.size()), epsilon);
 			results.addAll(r1.subList(0, r1.size()-1));
 			results.addAll(r2);
 		} else {
@@ -167,13 +167,6 @@ public class Way extends SarModelObject implements IPreSave {
 			results.add(points.get(points.size()-1));
 		}
 		return results;
-	}
-	
-	@JSONSerializable
-	@Transient
-	public List<Waypoint> getZoomAdjustedWaypoints() {
-		if(precision == 0 || waypoints.size() < 100) return waypoints;
-		return douglasPeucker(waypoints, 0.00005);
 	}
 	
 	public String toString() {

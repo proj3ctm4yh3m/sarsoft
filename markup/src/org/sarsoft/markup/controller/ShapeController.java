@@ -68,7 +68,7 @@ public class ShapeController extends GeoMapObjectController {
 			precision = Integer.parseInt(request.getParameter("precision"));
 		} catch (Exception e) {
 		}
-		shape.getWay().setPrecision(precision);
+//		shape.getWay().setPrecision(precision);
 		return json(model, shape.getWay());
 	}
 	

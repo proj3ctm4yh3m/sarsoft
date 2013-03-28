@@ -314,8 +314,6 @@ org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
 	obj = org.sarsoft.MapObjectDAO.prototype.validate.call(this, obj);
 
 	if(obj.updated == null) obj.updated = new Date().getTime();
-	if(obj.way.zoomAdjustedWaypoints == null) obj.way.zoomAdjustedWaypoints = obj.way.waypoints;
-	if(obj.way.waypoints == null) obj.way.waypoints = obj.way.zoomAdjustedWaypoints;
 	if(obj.way.boundingBox == null) this.addBoundingBox(obj.way);
 	if(obj.formattedSize == null) {
 		if(obj.way.polygon) {
@@ -340,18 +338,19 @@ org.sarsoft.ShapeDAO.prototype.getWaypoints = function(handler, shape, precision
 org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handler) {
 	var that = this;
 	if(this.offline) {
-		var way = this.getObj(shape.id).way;
-		way.waypoints = waypoints;
-		way.zoomAdjustedWaypoints = waypoints;
-		this.addBoundingBox(way);
-		if(way.polygon) {
-			var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(way.waypoints))/1000000;
-			shape.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
-		} else {
-			var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(way.waypoints))/1000;
-			shape.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
-		}
-		if(handler != null) org.sarsoft.async(function() { handler(way) });
+		org.sarsoft.async(function() {
+			var way = that.getObj(shape.id).way;
+			way.waypoints = waypoints;
+			that.addBoundingBox(way);
+			if(way.polygon) {
+				var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(way.waypoints))/1000000;
+				shape.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
+			} else {
+				var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(way.waypoints))/1000;
+				shape.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
+			}
+			if(handler != null) handler(way);
+		});
 	} else {
 		this._doPost("/" + shape.id + "/way", function(r) { that.getObj(shape.id).way = r; if(handler != null) handler(r);}, waypoints);
 	}
@@ -449,7 +448,12 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 				that.redraw(obj, function() { that.save(obj, function() { that.show(obj);}); }, function() { that.dao.del(obj.id); });
 			});
 		}
-				
+		
+		this.sizewarning = $('<div style="font-weight: bold; color: red; display: none"></div>').prependTo(this.shapeDlg.body);
+		this.shapeDlg.dialog.dialog.hideEvent.subscribe(function() {
+			that.sizewarning.css('display', 'none');
+		});
+		
 		this.joinSelect = $('<select style="margin-left: 1ex"></select>');
 		this.joinDlg = new org.sarsoft.view.MapDialog(imap, "Join Lines?", $('<div>Join with another named line:</div>').append(this.joinSelect), "Join", "Cancel", function() {
 			var shape1 = that.joinDlg.object;
@@ -515,7 +519,7 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.shapeDlg.show(data.pc.shape, data.point) }},
 	    		{text : "Profile", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.profile(data.pc.shape);}},
 	    		{text: "Modify \u2192", precheck: pc, applicable: function(obj) { return obj.shape != null && !obj.inedit }, items:
-	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return true }, handler : function(data) { that.edit(data.pc.shape) }},
+	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.shape.way.waypoints.length <= 500 }, handler : function(data) { that.edit(data.pc.shape) }},
 		    		{text : "Split Here", precheck: pc2, applicable: function(obj) { return !obj.shape.way.polygon}, handler: function(data) { that.splitLineAt(data.pc.shape, that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
 		    		{text : "Join Lines", precheck: pc2, applicable: function(obj) { return !obj.shape.way.polygon}, handler: function(data) { that.joinDlg.show(data.pc.shape); }}]},
 	    		{text : "Save Changes", precheck: pc, applicable : function(obj) { return obj.shape != null && obj.inedit && !that.shapeDlg.live; }, handler: function(data) { that.save(data.pc.shape) }},
@@ -538,6 +542,10 @@ org.sarsoft.controller.ShapeController.prototype.growmap = function(object) {
 org.sarsoft.controller.ShapeController.prototype.save = function(shape, handler) {
 	var that = this;
 	shape = this.obj(shape);
+	if(!this.attr(shape, "inedit")) {
+		this.discard(shape);
+		return handler();
+	}
 	shape.way.waypoints = this.imap.save(shape.way.id);
 	this.dao.saveWaypoints(shape, shape.way.waypoints, function(obj) { shape.way = obj; that.show(shape); if(handler != null) handler();});
 	this.attr(shape, "inedit", false);
@@ -557,6 +565,10 @@ org.sarsoft.controller.ShapeController.prototype.redraw = function(shape, onEnd,
 
 org.sarsoft.controller.ShapeController.prototype.edit = function(shape) {
 	shape = this.obj(shape);
+	if(shape.way.waypoints.length > 500) {
+		alert("> 500 waypoints");
+		return;
+	}
 	this.imap.edit(shape.way.id);
 	this.attr(shape, "inedit", true);
 }
@@ -631,7 +643,6 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	this.imap.removeWay(object.way);
 
 	if(object.way == null) return;	
-	object.way.waypoints = object.way.zoomAdjustedWaypoints;
 	object.way.displayMessage = org.sarsoft.htmlescape(object.label) + " (" + object.formattedSize + ")";
 	
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
@@ -649,7 +660,13 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	
 	if(org.sarsoft.writeable) {
 		this.dn.addIconEdit(object.id, function() {
-			 that.shapeDlg.show(object, null, true); that.shapeDlg.live = true; that.edit(object);
+			 if(object.way.waypoints.length <= 500) {
+				 that.edit(object);
+			 } else {
+				 that.sizewarning.css('display', 'block').html('Vertex editing is not possible on shapes with more than 500 waypoints (this one has ' + object.way.waypoints.length + ').  Please split into multiple segments to edit vertices.');
+			 }
+			 that.shapeDlg.show(object, null, true);
+			 that.shapeDlg.live = true;
 		});
 		this.dn.addIconDelete(object.id, function() {
 			that.del(function() { that.dao.del(object.id); });

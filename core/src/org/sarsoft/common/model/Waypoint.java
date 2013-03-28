@@ -295,6 +295,44 @@ public class Waypoint extends SarModelObject {
         return MapXYToLatLon (x, y, cmeridian, datum);
     }
 
+    public double distanceToLine(Waypoint line1, Waypoint line2) {
+		double R = 6378137;
+
+    	double xp = getLng()*Math.PI/180;
+    	double yp = getLat()*Math.PI/180;
+		double x1 = line1.getLng()*Math.PI/180;
+    	double y1 = line1.getLat()*Math.PI/180;
+    	double x2 = line2.getLng()*Math.PI/180;
+    	double y2 = line2.getLat()*Math.PI/180;
+
+    	x1 = x1*Math.cos(yp);
+    	x2 = x2*Math.cos(yp);
+    	xp = xp*Math.cos(yp);
+    	
+    	x1 = x1*R;
+    	y1 = y1*R;
+    	x2 = x2*R;
+    	y2 = y2*R;
+    	xp = xp*R;
+    	yp = yp*R;
+
+		double dx = x2 - x1;
+		double dy = y2 - y1;
+		
+		if(dx == 0 && dy == 0) {
+			return Math.sqrt(Math.pow(xp-x1, 2)+Math.pow(yp-y1, 2));
+		} else if(dx == 0) {
+			return Math.abs(xp-x1);
+		} else if(dy == 0) {
+			return Math.abs(yp-y1);
+		} else {
+			double x = xp - x1;
+			double y = yp - y1;
+			double k = dy/dx;
+			return Math.abs(k*x - y) / Math.sqrt(k*k + 1);
+		}
+    }
+    
     public boolean equals(Object o) {
     	if(o instanceof Waypoint) {
     		Waypoint wpt = (Waypoint) o;

@@ -369,8 +369,8 @@ public class SearchAssignmentController extends JSONBaseController {
 		}
 		List<Way> ways = assignment.getWays();
 		for(Way way : ways) {
-			if(precision != 0)
-				way.setPrecision(precision);
+//			if(precision != 0)
+//				way.setPrecision(precision);
 		}
 		return json(model, ways);
 	}

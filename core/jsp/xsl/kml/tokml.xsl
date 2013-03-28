@@ -86,7 +86,7 @@
       <altitudeMode>clampToGround</altitudeMode>
       <tessellate>1</tessellate>
       <coordinates>
-      	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
+      	<xsl:for-each select="json:waypoints/json:e">
       	  <xsl:call-template name="WaypointToKml"/>
       	</xsl:for-each>
       </coordinates>
@@ -103,10 +103,10 @@
     	<outerBoundaryIs>
     	  <LinearRing>
     	    <coordinates>
-		      	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
+		      	<xsl:for-each select="json:waypoints/json:e">
 		      	  <xsl:call-template name="WaypointToKml"/>
 		      	</xsl:for-each>
-		      	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e[position()=1]">
+		      	<xsl:for-each select="json:waypoints/json:e[position()=1]">
 		      	  <xsl:call-template name="WaypointToKml"/>
 		      	</xsl:for-each>
     	    </coordinates>
