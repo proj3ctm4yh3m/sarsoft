@@ -40,11 +40,11 @@
 	<rte>
 		<name><xsl:value-of select="$name"/></name>
 		<desc><xsl:value-of select="$desc"/></desc>
-		<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
+		<xsl:for-each select="json:waypoints/json:e">
 			<xsl:call-template name="WaypointToRtept"/>
 		</xsl:for-each>
 		<xsl:if test="string(json:polygon)='true'">
-	      	<xsl:for-each select="json:zoomAdjustedWaypoints/json:e[position()=1]">
+	      	<xsl:for-each select="json:waypoints/json:e[position()=1]">
 			<xsl:call-template name="WaypointToRtept"/>
 	      	</xsl:for-each>
 		</xsl:if>
@@ -55,7 +55,7 @@
 		<name><xsl:value-of select="$name"/></name>
 		<xsl:if test="string-length($desc) &gt; 0"><desc><xsl:value-of select="$desc"/></desc></xsl:if>
 		<trkseg>
-		<xsl:for-each select="json:zoomAdjustedWaypoints/json:e">
+		<xsl:for-each select="json:waypoints/json:e">
 			<xsl:call-template name="WaypointToTrkpt"/>
 		</xsl:for-each>
 		</trkseg>

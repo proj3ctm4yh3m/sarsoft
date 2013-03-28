@@ -3,6 +3,12 @@
 <xsl:param name="template"/>
 <xsl:template match="/gpx:gpx | gpx0:gpx">
 <a>
+	<e class="object">
+		<type type="string">null</type>
+	</e>
+	<e class="object">
+		<type type="string">null</type>
+	</e>
 	<xsl:for-each select="gpx:trk | gpx0:trk">
 		<e class="object">
 		<xsl:call-template name="GpxToTrack"/>

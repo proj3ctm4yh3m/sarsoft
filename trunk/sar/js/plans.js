@@ -238,7 +238,6 @@ org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCal
 	this.assignmentDAO.getWays(function(ways) {
 		for(var i = 0; i < ways.length; i++) {
 			var way = ways[i];
-			way.waypoints = way.zoomAdjustedWaypoints;
 			that.fmap.addWay(way, (way.type == "ROUTE") ? config : trackConfig, (way.type == "ROUTE") ? null : way.name);
 		}
 	}, assignment, 10);

@@ -1067,7 +1067,7 @@ org.sarsoft.MapObjectDAO.prototype.create = function(obj, handler) {
 	
 	var that = this;
 	org.sarsoft.async(function() {
-		obj.id = that.objs.length;
+		that.validate(obj);
 		that.setObj(obj.id, obj);
 		$(that).triggerHandler('create', obj);
 		if(handler) handler(obj);
