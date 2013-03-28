@@ -51,11 +51,7 @@ public class ShapeController extends GeoMapObjectController {
 	public String updateWay(JSONForm params, @PathVariable("id") long id, Model model, HttpServletRequest request) {
 		Shape shape = dao.load(Shape.class, id);
 		Way way = shape.getWay();
-		Shape updated = new Shape();
-		updated.setWay(new Way());
-		// TODO need to change how waypoints are updated to prevent pk injection
-		updated.getWay().setWaypoints((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
-		shape.from(updated);
+		way.softCopy((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
 		dao.save(shape);
 		return json(model, way);
 	}
