@@ -34,7 +34,7 @@ public class Way extends SarModelObject implements IPreSave {
 	private WayType type = WayType.ROUTE;
 	private List<Waypoint> waypoints;
 	private Date updated;
-	private Integer precision;
+	private Integer accuracy;
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -71,7 +71,7 @@ public class Way extends SarModelObject implements IPreSave {
 			wpt.setTime(from.getTime());
 			waypoints.add(wpt);
 		}
-		this.setPrecision(updated.getPrecision());
+		this.setAccuracy(updated.getAccuracy());
 	}
 
 	@JSONSerializable
@@ -114,13 +114,12 @@ public class Way extends SarModelObject implements IPreSave {
 		this.polygon = polygon;
 	}
 	
-	@Transient
-	public Integer getPrecision() {
-		return precision;
+	public Integer getAccuracy() {
+		return accuracy;
 	}
 
-	private void setPrecision(Integer precision) {
-		this.precision = precision;
+	private void setAccuracy(Integer accuracy) {
+		this.accuracy = accuracy;
 	}
 
 	@JSONSerializable
@@ -129,7 +128,7 @@ public class Way extends SarModelObject implements IPreSave {
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public List<Waypoint> getWaypoints() {
-		if(precision == null && waypoints.size() > 500) filter(waypoints.size() > 2000 ? 10 : 5);
+		if(accuracy == null && waypoints.size() > 500) filter(waypoints.size() > 2000 ? 10 : 5);
 		return waypoints;
 	}
 	public void setWaypoints(List<Waypoint> waypoints) {
@@ -137,12 +136,11 @@ public class Way extends SarModelObject implements IPreSave {
 	}
 
 	public void filter(int epsilon) {
-		this.setPrecision(epsilon);
+		this.setAccuracy(epsilon);
 		if(waypoints == null) return;	
 		List<Waypoint> filtered = filter(waypoints, epsilon);
 		waypoints.removeAll(waypoints);
 		waypoints.addAll(filtered);
-		System.out.println("Final Size: " + waypoints.size());
 	}
 
 	private static List<Waypoint> filter(List<Waypoint> points, double epsilon) {
