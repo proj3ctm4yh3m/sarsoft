@@ -64,12 +64,14 @@ public class Way extends SarModelObject implements IPreSave {
 		this.setType(updated.getType());
 		this.setUpdated(updated.getUpdated());
 		waypoints.removeAll(waypoints);
-		for(Waypoint from : updated.getWaypoints()) {
-			Waypoint wpt = new Waypoint();
-			wpt.setLat(from.getLat());
-			wpt.setLng(from.getLng());
-			wpt.setTime(from.getTime());
-			waypoints.add(wpt);
+		if(updated.getWaypoints() != null) {
+			for(Waypoint from : updated.getWaypoints()) {
+				Waypoint wpt = new Waypoint();
+				wpt.setLat(from.getLat());
+				wpt.setLng(from.getLng());
+				wpt.setTime(from.getTime());
+				waypoints.add(wpt);
+			}
 		}
 		this.setAccuracy(updated.getAccuracy());
 	}
@@ -128,11 +130,27 @@ public class Way extends SarModelObject implements IPreSave {
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public List<Waypoint> getWaypoints() {
+		if(waypoints == null) return null;
 		if(accuracy == null && waypoints.size() > 500) filter(waypoints.size() > 2000 ? 10 : 5);
 		return waypoints;
 	}
 	public void setWaypoints(List<Waypoint> waypoints) {
 		this.waypoints = waypoints;
+	}
+	
+	public void softCopy(List<Waypoint> waypoints) {
+		if(this.waypoints == null) this.waypoints = new ArrayList<Waypoint>();
+		while(this.waypoints.size() > waypoints.size()) {
+			this.waypoints.remove(this.waypoints.size()-1);
+		}
+		for(int i = 0; i < waypoints.size(); i++) {
+			Waypoint wpt = waypoints.get(i);
+			if(this.waypoints.size()-1 < i) {
+				this.waypoints.add(new Waypoint());
+			}
+			this.waypoints.get(i).setLat(wpt.getLat());
+			this.waypoints.get(i).setLng(wpt.getLng());
+		}
 	}
 
 	public void filter(int epsilon) {
