@@ -114,6 +114,7 @@ public class Way extends SarModelObject implements IPreSave {
 		this.polygon = polygon;
 	}
 	
+	@Transient
 	public Integer getPrecision() {
 		return precision;
 	}
