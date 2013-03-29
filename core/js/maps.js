@@ -1312,45 +1312,11 @@ org.sarsoft.PositionInfoControl = function(imap, container) {
 				
 		this.minmax = $(imgholder.children()[0]).css({'cursor': 'pointer', 'display': 'none'}).attr("title", "click to show coordinates").click(function() {
 			that.setValue(that._restoreto);
-			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", that.value);			
 		});
 		this.display.css('cursor', 'pointer').attr("title", "Click to Hide, Right-Click to Configure").click(function(evt) {
 			that.setValue(org.sarsoft.PositionInfoControl.NONE);
-			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", that.value);
-		}).bind("contextmenu", function(evt) {
-			that.contextMenu.show({}, null, {x: evt.pageX, y: evt.pageY});
-			evt.stopPropagation();
-			return false;
 		});
 
-		var fn = function(obj) { return obj == null}
-		
-		var fn_p = function(val) {
-			that.setValue(val);
-			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", imap.registered["org.sarsoft.PositionInfoControl"].value);			
-		}
-		
-		var fn_c = function(val) {
-			org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "coordinates", val);
-			org.sarsoft.EnhancedGMap._coordinates = val;
-			if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
-			that.update(imap.map.getCenter());
-		}
-		
-		var items = 
-			[{text : "Show Coordinates \u2192", applicable: fn, items:
-				[{ text : "At Cursor Position", applicable: fn, handler: function() { fn_p(org.sarsoft.PositionInfoControl.CURSOR) }},
-				 { text : "At Map Center", applicable: fn, handler: function() { fn_p(org.sarsoft.PositionInfoControl.CENTER) }}
-					]},
-			 {text : "Show Lat/Lng In \u2192", applicable: fn, items:
-				[{ text : "Decimal Degrees", applicable: fn, handler: function() { fn_c("DD") }},
-				 { text : "Degrees Minutes", applicable: fn, handler: function() { fn_c("DMH") }},
-				 { text : "Degrees Minutes Seconds", applicable: fn, handler: function() { fn_c("DMS") }}
-				]}];
-		
-		this.contextMenu = new org.sarsoft.view.ContextMenu();
-		this.contextMenu.setItems(items);
-				
 		this.centerCrosshair();
 		
 		google.maps.event.addListener(imap.map, "mousemove", function(evt) {
@@ -1385,7 +1351,7 @@ org.sarsoft.PositionInfoControl.prototype.update = function(gll) {
 	if(this.imap != null && this.imap.registered["org.sarsoft.UTMGridControl"] != null) {
 		if(org.sarsoft.EnhancedGMap._coordinates == "DD") {
 			message = message + GeoUtil.formatDD(datumll.lat()) + ", " + GeoUtil.formatDD(datumll.lng());
-		} else if(org.sarsoft.EnhancedGMap._coordinates == "DDMMHH") {
+		} else if(org.sarsoft.EnhancedGMap._coordinates == "DMH") {
 			message = message + GeoUtil.formatDDMMHH(datumll.lat()) + ", " + GeoUtil.formatDDMMHH(datumll.lng());
 		} else {
 			message = message + GeoUtil.formatDDMMSS(datumll.lat()) + ", " + GeoUtil.formatDDMMSS(datumll.lng());
