@@ -2,14 +2,7 @@ org.sarsoft.widget.SaveAs = function(imap) {
 	var body = $('<div style="clear: both; border-left: 1px solid red; padding-left: 5px; margin-left: 2px"></div>').appendTo(imap.controls.action.bodies['save']);
 	
 	if(sarsoft.account != null) {
-		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(body);
-		var saveAsName = jQuery('<input type="text" name="name" placeholder="Choose a map name"/>').appendTo(newform);
-			
-		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
-		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
-		var clientstate = jQuery('<input type="hidden" name="state"/>').appendTo(newform);
-
-		jQuery('<button>Save</button>').appendTo(body).click(function(evt) {
+		var handler = function(submit) {
 			var name = saveAsName.val();
 			if(name == null || name == "") {
 				alert('Please enter a name for this map.');
@@ -19,7 +12,21 @@ org.sarsoft.widget.SaveAs = function(imap) {
 			var center = imap.map.getCenter();
 			newlat.val(center.lat());
 			newlng.val(center.lng());
-			newform.submit()
+			if(submit) newform.submit()
+		}
+		
+		var newform = jQuery('<form action="/map" method="post" id="savemapform">').appendTo(body);
+
+		var saveAsName = jQuery('<input type="text" name="name" placeholder="Choose a map name"/>').appendTo(newform).keydown(function(e) {
+			if(e.keyCode == 13) handler(true);
+		});
+			
+		var newlat = jQuery('<input type="hidden" name="lat"/>').appendTo(newform);
+		var newlng = jQuery('<input type="hidden" name="lng"/>').appendTo(newform);
+		var clientstate = jQuery('<input type="hidden" name="state"/>').appendTo(newform);
+
+		jQuery('<button>Save</button>').appendTo(body).click(function(evt) {
+			handler(true);
 		});
 	} else {
 		body.append('Sign in to save this map.  We\'ll keep track of it while you\'re gone.')
@@ -448,18 +455,19 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	$(this.addlayerlink).bind('show', function() { that.addobjlink.hide() });
 
 	var settings = this.addDataType("Settings");
+	settings.block.css('margin-bottom', '5px');
 	imap.controls.settings = $('<div></div>').appendTo(settings.body);
-	imap.controls.settings.more = $('<div style="padding-top: 5px"></div>').appendTo(settings.body).append($('<span style="color: #5a8ed7; cursor: pointer">Show More</span>').click(function() {
+	imap.controls.settings.more = $('<div style="padding-top: 5px"></div>').appendTo(settings.body).append($('<span style="color: #666666; cursor: pointer">Show More</span>').click(function() {
 		imap.controls.settings.more.css('display', 'none');
 		imap.controls.settings.less.css('display', 'block');
-		imap.controls.settings.browser.css('display', 'block');
+		imap.controls.settings_browser.css('display', 'block');
 	}));
-	imap.controls.settings.browser = $('<div style="display: none"></div>').appendTo(settings.body);
+	imap.controls.settings_browser = $('<div style="display: none"></div>').appendTo(settings.body);
 	imap.controls.settings.save = settings.getTool().css({'display': 'none'}).html('<img src="' + $.img('save.png') + '" style="cursor: pointer; vertical-align: middle"/>Save').attr("title", 'Save These and Other Map Settings for Future Visits');
-	imap.controls.settings.less = $('<div style="padding-top: 5px; display: none"></div>').appendTo(settings.body).append($('<span style="color: #5a8ed7; cursor: pointer">Show Less</span>').click(function() {
+	imap.controls.settings.less = $('<div style="padding-top: 5px; display: none"></div>').appendTo(settings.body).append($('<span style="color: #666666; cursor: pointer">Show Less</span>').click(function() {
 		imap.controls.settings.more.css('display', 'block');
 		imap.controls.settings.less.css('display', 'none');
-		imap.controls.settings.browser.css('display', 'none');
+		imap.controls.settings_browser.css('display', 'none');
 	}));
 	
 	if(!org.sarsoft.iframe && !this.bgload) new org.sarsoft.widget.IO(imap);
@@ -488,7 +496,7 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 			});
 			
 		}
-		var container = imap.controls.settings.browser;
+		var container = imap.controls.settings_browser;
 		this.sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(container)).change(function() {
 			imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
 		});
@@ -513,7 +521,7 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 		this.swz[0].checked = (config.scrollwheelzoom == false ? false : true);
 		this.sb[0].checked = config.scalebar;
 		if(config.position != null) {
-			org.sarsoft.async(function() { imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position) });
+			org.sarsoft.async(function() { if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].setValue(config.position) });
 			that.position.val(config.position);
 		}
 		if(config.coordinates != null) {
@@ -564,7 +572,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 			config[key] = overrides[key];
 		}
 		org.sarsoft.MapState.setConfig(that.imap, config);
-		if(state.MapLayers != null) org.sarsoft.MapState.setLayers(that.imap, state.MapLayers, (sarsoft.tenant.cfgUpdated || 0) / (1000*60*60*24));
+		if(state.MapLayers != null) org.sarsoft.MapState.setLayers(that.imap, state.MapLayers, (sarsoft.tenant ? (sarsoft.tenant.cfgUpdated || 0) : 0) / (1000*60*60*24));
 	})
 }
 

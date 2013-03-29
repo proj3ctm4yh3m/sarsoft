@@ -115,8 +115,8 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 		this.imageInput.val("");
 	}
 	this.comments.val(obj.comments);
-	if(obj.updated != null) {
-		this.specsDiv.html("Last updated on " + new Date(1*obj.updated).toDateString());
+	if(obj.lastUpdated != null) {
+		this.specsDiv.html("Last updated on " + new Date(1*obj.lastUpdated).toDateString());
 	} else {
 		this.specsDiv.html("");
 	}
@@ -313,7 +313,7 @@ org.sarsoft.ShapeDAO.prototype.addBoundingBox = function(way) {
 org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
 	obj = org.sarsoft.MapObjectDAO.prototype.validate.call(this, obj);
 
-	if(obj.updated == null) obj.updated = new Date().getTime();
+	if(obj.lastUpdated == null) obj.lastUpdated = new Date().getTime();
 	if(obj.way.boundingBox == null) this.addBoundingBox(obj.way);
 	if(obj.formattedSize == null) {
 		if(obj.way.polygon) {
@@ -408,7 +408,7 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.comments.val(obj.comments);
 	if(obj.way != null) this.fillDiv.css("display", (obj.way.polygon ? "block" : "none"));
 	if(obj.formattedSize != null) {
-		this.specsDiv.html("Size is " + obj.formattedSize + "<br/>" + "Last updated on " + new Date(1*obj.updated).toDateString());
+		this.specsDiv.html("Size is " + obj.formattedSize + "<br/>" + "Last updated on " + new Date(1*obj.lastUpdated).toDateString());
 	} else {
 		this.specsDiv.html("");
 	}
@@ -643,7 +643,6 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	this.imap.removeWay(object.way);
 
 	if(object.way == null) return;	
-	object.way.displayMessage = org.sarsoft.htmlescape(object.label) + " (" + object.formattedSize + ")";
 	
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
 
@@ -674,7 +673,7 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	}
 	
 	if(this.dn.visible) {
-		this.imap.addWay(object.way, {clickable : (!org.sarsoft.iframe && (org.sarsoft.writeable || (object.comments != null && object.comments.length > 0))), fill: object.fill, color: object.color, weight: object.weight}, org.sarsoft.htmlescape(object.label));
+		this.imap.addWay(object.way, {displayMessage: org.sarsoft.htmlescape(object.label) + " (" + object.formattedSize + ")", clickable : (!org.sarsoft.iframe && (org.sarsoft.writeable || (object.comments != null && object.comments.length > 0))), fill: object.fill, color: object.color, weight: object.weight}, org.sarsoft.htmlescape(object.label));
 	}
 }
 

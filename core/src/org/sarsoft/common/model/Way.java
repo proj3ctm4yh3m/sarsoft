@@ -91,14 +91,13 @@ public class Way extends SarModelObject implements IPreSave {
 		this.name = name;
 	}
 
-	@JSONSerializable
 	public Date getUpdated() {
 		return updated;
 	}
 	public void setUpdated(Date updated) {
 		this.updated = updated;
 	}
-
+		
 	@JSONSerializable
 	public WayType getType() {
 		return type;
