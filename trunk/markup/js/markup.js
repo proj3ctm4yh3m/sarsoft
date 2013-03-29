@@ -49,7 +49,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	        arrows : ["arr-sw","arr-w","arr-nw","arr-n","arr-ne","arr-e","arr-se","arr-s"],
 			npsactivities : ["nps-ski","nps-xc","nps-skate","nps-climbing","nps-scramble","nps-caving","nps-diving","nps-canoe","nps-roadbike","nps-dirtbike","nps-4wd","nps-snowmobile","nps-camera"],
 	        npssymbols : ["nps-parking","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-fire","nps-shower","nps-anchor","nps-rockfall","nps-slip","nps-shelter","nps-picnic","nps-water"],
-	        activities : ["skiing","xc","walking","snowshoe","climbing","spelunking","windsurf","snorkel","hunting","mountainbike","bike","motorbike","car","snowmobile","camera"],
+	        activities : ["skiing","xc","walking","snowshoe","climbing","spelunking","windsurf","snorkel","hunting","mountainbike","bike","motorbike","car","snowmobile","camera","circle","target"],
 	        symbols : ["cp","clue","warning","crossbones","antenna","avy1","binoculars","fire","flag","plus","rescue","tent","waterfall","wetland","harbor","rocks","shelter","picnic","drinkingwater"]}
 	this.icDivs = {};
 	
@@ -64,7 +64,12 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 					var swatch = jQuery('<img style="cursor: pointer; width: 16px; height: 16px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
 					swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["circles"][j].substr(1)); that.imageInput.trigger('change');}}());
 				} else {
-					var swatch = jQuery('<img style="cursor: pointer; width: 20px; height: 20px" src="' + $.img('icons/' + url + '.png') + '"/>').appendTo(ic2);
+					var icon = sarsoft.map.icons[url];
+					if(icon) {
+						var swatch = $('<img src="' + $.img('blank.gif') + '" style="cursor: pointer; width: 20px; height: 20px; background-image: url(' + $.img('icons/sprite.png') + '); background-position: -' + (icon.offset*20) + 'px 0px"></div>').appendTo(ic2);
+					} else {
+						var swatch = jQuery('<img style="cursor: pointer; width: 20px; height: 20px" src="' + $.img('icons/' + url + '.png') + '"/>').appendTo(ic2);
+					}
 					swatch.click(function() { var j = i; var l = key; return function() {
 						that.imageInput.val(""); that.imageUrl = that.images[l][j]; that.handleChange();}}());
 				}
@@ -86,7 +91,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 
 org.sarsoft.view.MarkerForm.prototype.handleChange = function() {
 	var url = this.imageUrl;
-	if(url == null) url = "";
+	if(url == null) url = "#FF0000";
 	var size = "20px";
 	var margin = "0px";
 	if(url.indexOf('#') == 0) {
@@ -267,7 +272,7 @@ org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 		} else if(marker.url.indexOf('#') == 0) {
 			config.color = marker.url;
 		} else if(marker.url.indexOf('/') == -1 && marker.url.indexOf('.') == -1) {
-			config.icon = org.sarsoft.MapUtil.createImage(20, $.img('icons/' + marker.url + ".png"));
+			config.icon = org.sarsoft.MapUtil.createIcon(marker.url);
 		} else {
 			config.icon = org.sarsoft.MapUtil.createImage(20, marker.url);
 		}

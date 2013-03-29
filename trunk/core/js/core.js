@@ -1906,7 +1906,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	svg = svg + '</svg>';
 	svg = jQuery(svg).appendTo(jQuery('<div style="background-color: white; position: relative; height: ' + this.height + 'px"></div>').appendTo(this.div));
 	
-	var icon =org.sarsoft.MapUtil.createFlatCircleImage(12, color);
+	var icon =org.sarsoft.MapUtil.createFlatCircleImage(color);
 	this.marker = new google.maps.Marker({icon: icon, position: series[0].location, map: map, shape: icon.shape });
 	this.trace = jQuery('<div style="position: absolute; left: 0; top: 0px; width: 1px; border-left: 1px solid black; height: ' + this.height + 'px"></div>').appendTo(svg.parent());
 	

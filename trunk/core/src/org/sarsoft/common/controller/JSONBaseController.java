@@ -16,6 +16,7 @@ import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ConfiguredLayer;
 import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
+import org.sarsoft.common.model.Icon;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
@@ -89,6 +90,7 @@ public abstract class JSONBaseController {
 
 			map.put("layers_visible", RuntimeProperties.getVisibleMapSources());
 			map.put("datum", "WGS84");
+			map.put("icons", Icon.byname);
 		}
 		
 		Map<String, Object> m = new HashMap<String, Object>();

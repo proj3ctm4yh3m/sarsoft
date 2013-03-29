@@ -687,14 +687,6 @@ google.maps.Polyline.prototype.getPath = function() {
 	return new google.maps.MVCArray(path);
 }
 
-google.maps.MarkerImage = function(url, size, origin, anchor, scaledSize) {
-	this.url = url;
-	this.size = size;
-	this.origin = origin;
-	this.anchor = anchor;
-	this.scaledSize = scaledSize;
-}
-
 google.maps.Marker = function(opts) {
 	this.position = opts.position;
 	this.icon = opts.icon;
