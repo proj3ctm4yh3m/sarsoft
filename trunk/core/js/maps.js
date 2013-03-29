@@ -1640,7 +1640,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.rangerings = new Array();
 	this.text = new Array();
 	this.markers = new Array();
-	this.controls = { settings: $('<div></div>') }
+	this.controls = { settings: $('<div></div>'), settings_browser: $('<div></div>') }
 	this._handlers = new Object();
 	this._contextMenu = new org.sarsoft.view.ContextMenu();
 	this._contextMenu._vertex;
@@ -1847,10 +1847,10 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 	poly.label = labelOverlay;
 	google.maps.event.addListener(poly, "mouseover", function() {
 		if(config.clickable) that.select(way);
-		if(way.displayMessage == null) {
+		if(config.displayMessage == null) {
 			that._infomessage(way.name);
 		} else {
-			that._infomessage(way.displayMessage);
+			that._infomessage(config.displayMessage);
 		}
 	});
 	google.maps.event.addListener(poly, "mousemove", function(evt) {
@@ -1965,10 +1965,10 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 		google.maps.event.addListener(marker, "dragend", function() { config.drag(marker.getPosition())});
 	}
 	google.maps.event.addListener(marker, "mouseover", function() {
-		if(waypoint.displayMessage == null) {
+		if(config.displayMessage == null) {
 			that._infomessage(label);
 		} else {
-			that._infomessage(waypoint.displayMessage);
+			that._infomessage(config.displayMessage);
 		}
 	});
 	marker.id = waypoint.id;

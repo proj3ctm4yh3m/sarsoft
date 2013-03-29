@@ -158,12 +158,22 @@ public class Shape extends GeoMapObject implements IPreSave {
 		this.label = label;
 	}
 	
-	@JSONSerializable
 	public Date getUpdated() {
 		return updated;
 	}
 	public void setUpdated(Date updated) {
 		this.updated = updated;
+	}
+	
+	@JSONSerializable
+	@Transient
+	public Long getLastUpdated() {
+		if(updated == null) return null;
+		return updated.getTime();
+	}
+	
+	public void setLastUpdated(Long time) {
+		setUpdated(new Date(time));
 	}
 	
 	public void setComments(String comments) {
@@ -189,6 +199,10 @@ public class Shape extends GeoMapObject implements IPreSave {
 			double distance = way.getDistance();
 			return distance + " km / " + (((double) Math.round(distance*62.137))/100) + " mi";
 		}
+	}
+	
+	public void setFormattedSize(String size) {
+		// just here to make JSON-lib happy
 	}
 
 }
