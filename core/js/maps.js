@@ -1954,7 +1954,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	var that = this;
 	var id = waypoint.id;
 	var gll = new google.maps.LatLng(waypoint.lat, waypoint.lng);
-	var icon = (config.icon) ? config.icon : org.sarsoft.MapUtil.createFlatCircleImage(12, config.color);
+	var icon = (config.icon) ? config.icon : org.sarsoft.MapUtil.createFlatCircleImage(config.color);
 	var tt = tooltip;
 	if(typeof tt == "undefined") tt = waypoint.name;
 	tt = tt +  "  (" + GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(new google.maps.LatLng(waypoint.lat, waypoint.lng))).toString() + ")";
@@ -1973,7 +1973,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	});
 	marker.id = waypoint.id;
 	if(label != null && config.drag == null) {
-		labelOverlay = new Label(this.map, gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", new google.maps.Size(icon.size.width*0.5, icon.size.height*-0.5));
+		labelOverlay = new Label(this.map, gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", icon.anchor ? new google.maps.Size(icon.size.width-icon.anchor.x, -1*icon.anchor.y) : new google.maps.Size(icon.size.width*0.5, icon.size.height*-0.5));
 		marker.label = labelOverlay;
 	}
 	if(config.clickable)  {
@@ -2890,15 +2890,28 @@ org.sarsoft.GeoRefImageOverlay.prototype.draw = function() {
 
 org.sarsoft.MapUtil = new Object();
 
+org.sarsoft.MapUtil.createIcon = function(url) {
+	if(sarsoft.map.icons[url]) {
+		var icon = sarsoft.map.icons[url];
+		var sprite_count = 71;
+		var target_size = 20;
+		return { anchor : new google.maps.Point(icon.anchor[0]*target_size, icon.anchor[1]*target_size),
+				scaledSize: new google.maps.Size(sprite_count*target_size, target_size),
+				origin: new google.maps.Point(icon.offset*target_size, 0),
+				size: new google.maps.Size(target_size, target_size), 
+				url: $.img('icons/sprite.png') }
+	}
+	return createImage(20, url);
+}
 org.sarsoft.MapUtil.createImage = function(size, url) {
-  return new google.maps.MarkerImage(url, new google.maps.Size(size, size), null, new google.maps.Point(size/2, size/2));
+  return { anchor: new google.maps.Point(size/2, size/2), size: new google.maps.Size(size, size), url: url }
 }
 
-org.sarsoft.MapUtil.createFlatCircleImage = function (size, color) {
+org.sarsoft.MapUtil.createFlatCircleImage = function (color) {
   if(color.indexOf('#') == 0) color = color.substring(1);
   var url = "/resource/imagery/icons/circle/" + color + ".png";
-  var img = new google.maps.MarkerImage(url, new google.maps.Size(size, size), null, new google.maps.Point(size/2, size/2));
-  img.shape = { type: "circle", coords: [5, 5, 6]}
+  var img = { url: url, size: new google.maps.Size(12, 12), anchor: new google.maps.Point(6, 6) }
+  img.shape = { type: "circle", coords: [5, 5, 6] }
   return img;
 }
 
