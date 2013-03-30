@@ -12,6 +12,7 @@ import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Tenant.Permission;
+import org.sarsoft.common.util.Hash;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.CollaborativeMap;
 import org.sarsoft.markup.model.Marker;
@@ -113,7 +114,7 @@ public class AppController extends JSONBaseController {
 			tenant.setShared(updated.getShared());
 			tenant.setAllUserPermission(updated.getAllUserPermission());
 			tenant.setPasswordProtectedUserPermission(updated.getPasswordProtectedUserPermission());
-			if(updated.getPassword() != null) tenant.setPassword(adminController.hash(updated.getPassword()));
+			if(updated.getPassword() != null) tenant.setPassword(Hash.hash(updated.getPassword()));
 		}
 
 		dao.save(tenant);
