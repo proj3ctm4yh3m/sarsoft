@@ -83,8 +83,8 @@ public class SearchController extends JSONBaseController {
 
 	@RequestMapping(value="search", method = RequestMethod.GET)
 	public String setAppDataSchema(Model model, @RequestParam(value="id", required=false) String name, HttpServletRequest request, HttpServletResponse response) {
-		if(name == null) return bounce(model);
-		String val = adminController.setTenant(model, name, Search.class, request);
+		if(name == null) return "error";
+		String val = adminController.setTenant(name, Search.class, request);
 		opsController.checkLocators();
 		if(val != null) return val;
 		return homePage(model);
@@ -92,7 +92,7 @@ public class SearchController extends JSONBaseController {
 	
 	@RequestMapping(value="/search", method = RequestMethod.POST)
 	public String createNewAppDataSchema(Model model, HttpServletRequest request) {
-		String val = adminController.createNewTenant(model, Search.class, request);
+		String val = adminController.createNewTenant(Search.class, request);
 		if(val == null) {
 			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
 			if(search != null) {
@@ -113,7 +113,8 @@ public class SearchController extends JSONBaseController {
 			}
 			return "redirect:/search?id=" + RuntimeProperties.getTenant();
 		}
-		return val;
+// TODO		error(val);
+		return "";
 	}
 
 	@RequestMapping(value = "/rest/search/lkp", method = RequestMethod.GET)
