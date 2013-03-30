@@ -16,10 +16,12 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.openid4java.discovery.Identifier;
+import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.model.UserAccount;
+import org.sarsoft.common.util.Hash;
 import org.sarsoft.common.util.OIDConsumer;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,103 +51,9 @@ public class AdminController extends JSONBaseController {
 	
 	private Logger logger = Logger.getLogger(AdminController.class);
 	
-	private byte[] sha1(String str) {
-		try {
-			MessageDigest d = MessageDigest.getInstance("SHA-1");
-			d.reset();
-			d.update(str.getBytes());
-			return d.digest();
-		} catch (NoSuchAlgorithmException e) {
-			return null;
-		}
-	}
-	
-	protected String hash32(String str) {
-		if(str == null) return null;
-		byte[] bytes = sha1(str);
-		if(bytes == null) return str;
-		StringBuffer sb = new StringBuffer();
-		for(byte b : bytes) {
-			int i = b & 0xFF;
-			if(i < 32) sb.append("0");
-			sb.append(Integer.toString(i, 32));
-		}
-		return sb.toString().toUpperCase();
-	}
-	
-	public String hash(String password) {
-		if(password == null) return null;
-		StringBuffer sb = new StringBuffer();
-		byte[] bytes = sha1(password);
-		if(bytes == null) return password;
-		for(byte b : bytes) {
-			int i = b & 0xFF;
-			if(i < 16) sb.append("0");
-			sb.append(Integer.toHexString(i));
-		}
-		return sb.toString().toUpperCase();
-	}	
-	
-	@SuppressWarnings("rawtypes")
-	@RequestMapping(value="/rest/tenant/shared", method = RequestMethod.GET)
-	public String getSharedTenants(Model model, @RequestParam(value="key", required=false) String keyword, @RequestParam(value="user", required=false) String user) {
-		List<Tenant> tenants = null;
-		if(keyword != null) {
-			tenants = dao.getSharedTenants(keyword, null);
-		} else if(user != null) {
-			tenants = dao.getSharedTenants(null, user);
-		} else {
-			tenants = dao.getSharedTenants(null, null);
-		}
-
-		List<Map> list = new ArrayList<Map>();
-		for(Tenant tenant : tenants) {
-			list.add(jsonifyTenant(tenant, tenant.getClass().getName()));
-		}
-		return json(model, list);	
-	}
-
-	public String setTenant(Model model, String name, Class<? extends Tenant> cls, HttpServletRequest request) {
-		Tenant tenant = dao.getByAttr(cls, "name", name);
-		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-		if(tenant == null) {
-			model.addAttribute("message", cls.getName() + " not found.");
-			return "error";
-		}
-
-		Permission permission = Permission.NONE;
-		if(tenant.getAccount() == null) permission = Permission.ADMIN;
-		else if(account != null && account.getAdmin() != null && account.getAdmin()) permission = Permission.ADMIN;
-		else if(account != null && tenant.getAccount().getName().equals(account.getName())) permission = Permission.ADMIN;
-		else if(request.getSession(true).getAttribute("cachedPassword") == null) permission = tenant.getAllUserPermission();
-		else {
-			String password = (String) request.getSession(true).getAttribute("cachedPassword");
-			request.getSession(true).removeAttribute("cachedPassword");
-			if(!tenant.getPassword().equals(password)) {
-				model.addAttribute("message", "Wrong Password.");
-				return "error";
-			}
-			permission = tenant.getPasswordProtectedUserPermission();			
-		}
-		if(permission == Permission.NONE) {
-			if(tenant.getPassword() != null && tenant.getPassword().length() > 0) {
-				String target = request.getRequestURI();
-				if(request.getParameter("id") != null) try {
-					target = target + "?id=" + java.net.URLEncoder.encode(request.getParameter("id"), "ISO-8859-1");
-				} catch (Exception e) {}
-				if(request.getParameter("dest") != null) try {
-					target = target + "?dest=" + java.net.URLEncoder.encode(request.getParameter("dest"), "ISO-8859-1");
-				} catch (Exception e) {}
-				model.addAttribute("targetDest", target);
-			}
-			return "error";
-		}
-		
-		HttpSession session = request.getSession(true);
-		
-		session.setAttribute("tenantid", name);
-		RuntimeProperties.setTenant(name);
-		
+	private void initPermissions(HttpSession session, String tenant, Permission permission) {
+		session.setAttribute("tenantid", tenant);
+		RuntimeProperties.setTenant(tenant);
 		session.setAttribute("userPermission", permission);
 		RuntimeProperties.setUserPermission(permission);
 
@@ -158,54 +66,79 @@ public class AdminController extends JSONBaseController {
 		@SuppressWarnings("unchecked")
 		Map<String, Permission> authedTenants = (Map<String, Permission>) session.getAttribute("authedTenants");
 		synchronized(authedTenants) {
-			authedTenants.put(name, permission);
+			authedTenants.put(tenant, permission);
+		}
+	}
+		
+	@SuppressWarnings("rawtypes")
+	public String setTenant(String name, Class<? extends Tenant> cls, HttpServletRequest request) {
+		Tenant tenant = dao.getByAttr(cls, "name", name);
+		if(tenant == null) return "Map " + name + " not found";
+
+		Permission permission = Permission.NONE;
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(tenant.getAccount() == null) {
+			permission = Permission.READ;
+		} else {
+			if(account != null && account.getAdmin() != null && account.getAdmin()) permission = Permission.ADMIN;
+			else if(account != null && tenant.getAccount().getName().equals(account.getName())) permission = Permission.ADMIN;
+			else {
+				String password = (String) request.getSession(true).getAttribute("password");
+				if(password == null) {
+					permission = tenant.getAllUserPermission();
+				} else {
+					request.getSession(true).removeAttribute("password");
+					if(!tenant.getPassword().equals(password)) return "Wrong Password";
+					permission = tenant.getPasswordProtectedUserPermission();			
+				}
+			}
 		}
 
-		String dest = request.getParameter("dest");
-		if(dest != null && dest.length() > 0) return "redirect:" + dest;
+		if(permission == Permission.NONE) {
+			return "You are not authorized to view this page";
+		}
+		
+		initPermissions(request.getSession(true), name, permission);
 		return null;
 	}
 	
 	@RequestMapping(value="/cachepassword", method = RequestMethod.POST)
 	public String cachePassword(Model model, @RequestParam("password") String password, @RequestParam("dest") String dest, HttpServletRequest request) {
-		request.getSession(true).setAttribute("cachedPassword", hash(password));
+		request.getSession(true).setAttribute("password", Hash.hash(password));
 		return "redirect:" + dest;
 	}
 
 	@RequestMapping(value="/password", method = RequestMethod.POST)
 	public String password(Model model, @RequestParam("password") String password, @RequestParam("dest") String dest, HttpServletRequest request) {
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
-		password = hash(password);
-		if(tenant.getPassword() == null || !tenant.getPassword().equals(password)) {
-			model.addAttribute("message", "Wrong Password.");
-			return "error";
-		}
-		Permission permission = tenant.getPasswordProtectedUserPermission();			
-		request.getSession().setAttribute("userPermission", permission);
-		RuntimeProperties.setUserPermission(permission);
+		password = Hash.hash(password);
+		if(tenant.getPassword() == null || !tenant.getPassword().equals(password)) return error(model, "Wrong Password");
 		
+		initPermissions(request.getSession(true), RuntimeProperties.getTenant(), tenant.getPasswordProtectedUserPermission());
+
 		return "redirect:" + dest;
 	}
 
-	public String createNewTenant(Model model, Class<? extends Tenant> cls, HttpServletRequest request) {
+	public String createNewTenant(Class<? extends Tenant> cls, HttpServletRequest request) {
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
 		if(user != null) account = dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
 		if(!isHosted() && dao.getByAttr(Tenant.class, "name", name) != null) {
-			return setTenant(model, name, cls, request);
+			String error = setTenant(name, cls, request);
+			if(error != null) return error;
+			return null;
 		}
 		if(isHosted() && account == null) {
-			model.addAttribute("message", "You are no longer logged in");
-			return "/error";
+			return "You do not appear to be logged in";
 		}
 		Tenant tenant;
 		try {
 			tenant = cls.newInstance();
 		} catch (InstantiationException e) {
-			return bounce(model);
+			return "Something really bad happened.  Please contact the server administrator.";
 		} catch (IllegalAccessException e) {
-			return bounce(model);
+			return "Something really bad happened.  Please contact the server administrator.";
 		}
 		tenant.setName(name);
 		tenant.setDescription(name);
@@ -217,7 +150,7 @@ public class AdminController extends JSONBaseController {
 			int i = 0;
 			while(obj != null) {
 				i++;
-				tenantname = hash32(user + name + System.nanoTime() + i).substring(0,4);
+				tenantname = Hash.hash32(user + name + System.nanoTime() + i).substring(0,4);
 				obj = dao.getByPk(Tenant.class, tenantname);
 			}
 			tenant.setName(tenantname);
@@ -227,11 +160,7 @@ public class AdminController extends JSONBaseController {
 
 		dao.superSave(tenant);
 
-		request.getSession().setAttribute("tenantid", tenant.getName());
-		RuntimeProperties.setTenant(tenant.getName());
-
-		request.getSession().setAttribute("userPermission", Permission.ADMIN);
-		RuntimeProperties.setUserPermission(Permission.ADMIN);
+		initPermissions(request.getSession(true), tenant.getName(), Permission.ADMIN);
 
 		return null;
 	}
@@ -286,7 +215,7 @@ public class AdminController extends JSONBaseController {
 			return "redirect:/map.html";
 		} catch (Exception e) {
 			logger.error("Exception encountered handling OpenID response", e);
-			return "error";
+			return error(model, "There was a problem handling your OpenID login");
 		}
 	}
 
@@ -302,58 +231,26 @@ public class AdminController extends JSONBaseController {
 
 		String dest = request.getParameter("dest");
 		if(dest != null && dest.length() > 0) return "redirect:" + dest;
-		return bounce(model);
+		return "redirect:/map.html";
 	}
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Map jsonifyTenant(Tenant tenant, String type) {
-		Map m = new HashMap();
-		m.put("publicName", tenant.getPublicName());
-		m.put("name", tenant.getName());
-		if(tenant.getComments() != null) {
-			m.put("comments", HtmlUtils.htmlEscape(tenant.getComments()));
-		} else {
-			m.put("comments", "");
-		}
-		m.put("allPerm", tenant.getAllUserPermission());
-		m.put("passwordPerm", tenant.getPasswordProtectedUserPermission());
-		if(type != null) m.put("type", type);
-		String owner = "N/A";
-		if(tenant.getAccount() != null) {
-			owner = tenant.getAccount().getName().equals(RuntimeProperties.getUsername()) ? "You" : tenant.getAccount().getHandle();
-		}
-		m.put("owner", owner);
-		return m;
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@RequestMapping(value="/rest/tenant/", method = RequestMethod.GET)
-	public String getTenantList(Model model, @RequestParam(value="className", required=false) String className) {
-		List<Tenant> tenants = new ArrayList<Tenant>();
-		String user = RuntimeProperties.getUsername();
-		UserAccount account = null;
-		if(user != null) account = dao.getByPk(UserAccount.class, user);
-		if(isHosted()) {
-			if(account != null) {
-				if(account.getTenants() != null) tenants.addAll(account.getTenants());
-			}
-		} else {
-			tenants = dao.getAllTenants();
-		}
-		List<Map> list = new ArrayList<Map>();
-		for(Tenant tenant : tenants) {
-			if(className == null || className.equals(tenant.getClass().getName())) {
-				list.add(jsonifyTenant(tenant, className));
+
+	@RequestMapping(value="/rest/account", method = RequestMethod.POST)
+	public String updateAccount(Model model, @RequestParam(value="alias", required=false) String alias) {
+		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		if(alias != null && alias.length() == 0) alias = null;
+		if(alias != null && !alias.equalsIgnoreCase(account.getAlias())) {
+			alias = alias.trim().replaceAll("\\s+", " ");
+			alias = alias.replaceAll("[^a-zA-Z0-9_ ]", "");
+			Object obj = dao.getByCaselessAttr(UserAccount.class, "alias", alias);
+			if(obj == null) {
+				account.setAlias(alias);
+				dao.superSave(account);
 			}
 		}
-		return json(model, list);
+		account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
+		return json(model, account);
 	}
-	
-	@RequestMapping(value="/tools.html", method = RequestMethod.GET)
-	public String showTools(Model model) {
-		return app(model, "Pages.Tools");
-	}
-	
+		
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/rest/timestamp", method = RequestMethod.GET)
 	public String getTimestamp(Model model) {

@@ -3,7 +3,7 @@
 <xsl:param name="template"/>
 <xsl:output method="xml" cdata-section-elements="cmt desc"/>
 <xsl:template match="/json:a">
-<gpx version="1.1" creator="SARSOFT">
+<gpx version="1.1" creator="CALTOPO">
 	<xsl:for-each select="json:e[json:type='waypoint']">
 		<xsl:call-template name="waypoint"/>
 	</xsl:for-each>

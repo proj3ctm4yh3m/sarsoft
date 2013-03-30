@@ -471,10 +471,11 @@ public class ImageryController extends JSONBaseController {
 		
 		BufferedImage image = new BufferedImage(12, 12, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D graphics = (Graphics2D) image.getGraphics();
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		graphics.setBackground(new Color(255, 255, 255, 0));
 		graphics.setColor(new Color(r, g, b));
 		graphics.clearRect(0, 0, 12, 12);
-		graphics.fillOval(2, 2, 10, 10);
+		graphics.fillOval(1, 1, 10, 10);
 		graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
 		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		try {
