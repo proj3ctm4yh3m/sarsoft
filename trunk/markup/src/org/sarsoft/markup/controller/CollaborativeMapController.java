@@ -1,7 +1,9 @@
 package org.sarsoft.markup.controller;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -19,16 +21,21 @@ import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.Format;
 import org.sarsoft.common.model.ClientState;
 import org.sarsoft.common.model.Tenant;
+import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.util.GPX;
+import org.sarsoft.common.util.Hash;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.markup.model.CollaborativeMap;
-import org.sarsoft.plans.controller.SearchController;
+import org.sarsoft.markup.model.Marker;
+import org.sarsoft.markup.model.Shape;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -40,9 +47,6 @@ public class CollaborativeMapController extends JSONBaseController {
 	@Autowired
 	AdminController adminController;
 
-	@Autowired
-	SearchController searchController;
-	
 	@Autowired
 	ImageryController imageryController;
 	
@@ -71,8 +75,8 @@ public class CollaborativeMapController extends JSONBaseController {
 	@RequestMapping(value="/map", method = RequestMethod.GET)
 	public String get(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
 		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
-			String val = adminController.setTenant(model, id, CollaborativeMap.class, request);
-			if(val != null) return val;
+			String error = adminController.setTenant(id, CollaborativeMap.class, request);
+			if(error != null) return bounce(model, error, "/map?id=" + id);
 		}
 
 		if(request.getSession(true).getAttribute("message") != null) {
@@ -104,29 +108,101 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	@RequestMapping(value="/map", method = RequestMethod.POST)
 	public String create(Model model, @RequestParam(value="state", required=false) String clientstate, HttpServletRequest request) {
-		String val = adminController.createNewTenant(model, CollaborativeMap.class, request);
-		if(val == null) {
-			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
-			if(map != null) {
-				String lat = request.getParameter("lat");
-				String lng = request.getParameter("lng");
-				if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
-					Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
-					map.setDefaultCenter(lkp);
-				}
-				dao.save(map);
+		String error = adminController.createNewTenant(CollaborativeMap.class, request);
+		if(error != null) return bounce(model, error, "/map.html" + RuntimeProperties.getTenant());
+		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		if(map != null) {
+			String lat = request.getParameter("lat");
+			String lng = request.getParameter("lng");
+			if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
+				Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
+				map.setDefaultCenter(lkp);
 			}
-			
-			if(clientstate != null) {
-				JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
-				manager.toDB(manager.fromJSON(json));
-			}
-			return "redirect:/map?id=" + RuntimeProperties.getTenant();
+			dao.save(map);
 		}
-		return val;
+		
+		if(clientstate != null) {
+			JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
+			manager.toDB(manager.fromJSON(json));
+		}
+		return "redirect:/map?id=" + RuntimeProperties.getTenant();
 	}
+	
+	@RequestMapping(value="/rest/map/", method = RequestMethod.GET)
+	public String getMaps(Model model, @RequestParam(value="className", required=false) String className) {
+		List<Tenant> tenants = new ArrayList<Tenant>();
+		String user = RuntimeProperties.getUsername();
+		UserAccount account = null;
+		if(user != null) account = dao.getByPk(UserAccount.class, user);
+		if(isHosted()) {
+			if(account != null) {
+				if(account.getTenants() != null) tenants.addAll(account.getTenants());
+			}
+		} else {
+			tenants = dao.getAllTenants();
+		}
+		return json(model, tenants);
+	}
+	
+	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.DELETE)
+	public String delete(Model model, HttpServletRequest request, @PathVariable("id") String id) {		
+		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
+			return json(model, new HashMap()); // TODO communicate error condition
+		}
+		
+		if(!id.equals(RuntimeProperties.getTenant())) {
+			return json(model, new HashMap());
+		}
 
-	@RequestMapping(value ="/rest/tenant/config", method = RequestMethod.GET)
+		dao.deleteAll(Marker.class);
+		dao.deleteAll(Shape.class);
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		if(tenant.getAccount() != null) {
+			UserAccount account = tenant.getAccount();
+			account.getTenants().remove(tenant);
+			tenant.setAccount(null);
+			// will delete tenant as well due to delete_orphan cascade
+			dao.save(account);
+		} else {
+			dao.delete(tenant);
+		}
+		RuntimeProperties.setTenant(null);
+		request.getSession(true).removeAttribute("tenantid");
+
+		return json(model, new HashMap());
+	}
+	
+	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.POST)
+	public String updateAdmin(Model model, JSONForm params, HttpServletRequest request, @PathVariable("id") String id) {
+		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+
+		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
+			return json(model, new HashMap()); // TODO communicate error condition
+		}
+		
+		if(!id.equals(RuntimeProperties.getTenant())) {
+			return json(model, new HashMap());
+		}
+
+		Tenant updated = new CollaborativeMap(params.JSON());
+		if(updated.getAllUserPermission() == null) {
+			map.setDescription(updated.getDescription());
+			map.setComments(updated.getComments());
+		} else if(map.getAccount() != null) {
+			map.setShared(updated.getShared());
+			map.setAllUserPermission(updated.getAllUserPermission());
+			map.setPasswordProtectedUserPermission(updated.getPasswordProtectedUserPermission());
+			if(updated.getPassword() != null && updated.getPassword().length() > 0) map.setPassword(Hash.hash(updated.getPassword()));
+		}
+
+		dao.save(map);
+		map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		
+		return json(model, map);
+	}
+	
+
+	@RequestMapping(value ="/rest/map/config", method = RequestMethod.GET)
 	public String getSearchProperty(Model model, HttpServletRequest request, HttpServletResponse response) {
 		ClientState state = new ClientState();
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
@@ -135,7 +211,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		return json(model, manager.toJSON(state));
 	}
 
-	@RequestMapping(value = "/rest/tenant/config", method = RequestMethod.POST)
+	@RequestMapping(value = "/rest/map/config", method = RequestMethod.POST)
 	public String setSearchProperty(Model model, JSONForm params) {
 		ClientState state = manager.fromJSON(params.JSON());
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
@@ -146,7 +222,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		return json(model, tenant);
 	}
 
-	@RequestMapping(value = "/rest/tenant/center", method = RequestMethod.POST)
+	@RequestMapping(value = "/rest/map/center", method = RequestMethod.POST)
 	public String setDefaultCenter(Model model, JSONForm params, HttpServletRequest request) {
 		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 		Waypoint center = new Waypoint(params.JSON());

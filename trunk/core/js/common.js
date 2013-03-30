@@ -776,35 +776,25 @@ org.sarsoft.view.EntityForm.prototype._setValue = function(node, value) {
 	}
 }
 
-org.sarsoft.TenantDAO = function(errorHandler, baseURL) {
-	if(typeof baseURL == "undefined") baseURL = "/rest/tenant";
-	this.baseURL = baseURL;
-	this.errorHandler = errorHandler;
+org.sarsoft.CollaborativeMapDAO = function() {
+	this.baseURL = "/rest/map";
 }
 
-org.sarsoft.TenantDAO.prototype = new org.sarsoft.BaseDAO();
+org.sarsoft.CollaborativeMapDAO.prototype = new org.sarsoft.BaseDAO();
 
-org.sarsoft.TenantDAO.prototype.loadByClassName = function(className, handler) {
-	this._doGet("/?className=" + className, handler);
+org.sarsoft.CollaborativeMapDAO.prototype.getMaps = function(handler) {
+	this._doGet("/", handler);
 }
 
-org.sarsoft.TenantDAO.prototype.loadRecent = function(className, handler) {
-	this._doGet("/recent?className=" + className, handler);
-}
-
-org.sarsoft.TenantDAO.prototype.loadShared = function(handler) {
-	this._doGet("/shared", handler);
-}
-
-org.sarsoft.TenantDAO.prototype.saveCenter = function(center, handler) {
+org.sarsoft.CollaborativeMapDAO.prototype.setCenter = function(center, handler) {
 	this._doPost("/center", handler, center);
 }
 
-org.sarsoft.TenantDAO.prototype.saveConfig = function(state, handler) {
+org.sarsoft.CollaborativeMapDAO.prototype.setConfig = function(state, handler) {
 	this._doPost("/config", handler, state);
 }
 
-org.sarsoft.TenantDAO.prototype.getConfig = function(handler) {
+org.sarsoft.CollaborativeMapDAO.prototype.getConfig = function(handler) {
 	if(org.sarsoft.preload.MapConfig != null) {
 		return org.sarsoft.async(function() {
 			handler({ MapConfig: org.sarsoft.preload.MapConfig, MapLayers: org.sarsoft.preload.MapLayers });
@@ -830,12 +820,12 @@ org.sarsoft.view.TenantTable = function(cols) {
 	var permissionFormatter = function(cell, record, column, data) {
 		var tenant = record.getData();
 		var value = "N/A";
-		if(tenant.allPerm == "WRITE") value = '<span style="white-space: nowrap">Edit with URL</span>';
-		else if(tenant.passwordPerm == "WRITE" && tenant.allPerm == "READ") value = '<span style="white-space: nowrap">View with URL</span>, <span style="white-space: nowrap">Edit with Password</span>';
-		else if(tenant.passwordPerm == "WRITE") value = '<span style="white-space: nowrap">Edit with Password</span>';
-		else if(tenant.passwordPerm == "READ" && tenant.allPerm == "NONE") value = '<span style="white-space: nowrap">View with Password</span>';
-		else if(tenant.allPerm == "READ") value = '<span style="white-space: nowrap">View with URL</span>';
-		else if(tenant.passwordPerm == "NONE" && tenant.allPerm == "NONE") value = "Private";
+		if(tenant.allUserPermission == "WRITE") value = '<span style="white-space: nowrap">Edit with URL</span>';
+		else if(tenant.passwordProtectedUserPermission == "WRITE" && tenant.allUserPermission == "READ") value = '<span style="white-space: nowrap">View with URL</span>, <span style="white-space: nowrap">Edit with Password</span>';
+		else if(tenant.passwordProtectedUserPermission == "WRITE") value = '<span style="white-space: nowrap">Edit with Password</span>';
+		else if(tenant.passwordProtectedUserPermission == "READ" && tenant.allUserPermission == "NONE") value = '<span style="white-space: nowrap">View with Password</span>';
+		else if(tenant.allUserPermission == "READ") value = '<span style="white-space: nowrap">View with URL</span>';
+		else if(tenant.passwordProtectedUSerPermission == "NONE" && tenant.allUSerPermission == "NONE") value = "Private";
 		cell.innerHTML = value;
 	}
 	
@@ -850,7 +840,7 @@ org.sarsoft.view.TenantTable = function(cols) {
 				}} }];
     if(cols.owner) coldefs.push({ key : "owner", label: "Created By", sortable : true});
     if(cols.comments) coldefs.push({ key : "comments", label: "Comments", sortable: true, formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "4em", "max-width": "30em"}); if(data != null && data.length > 120) data = data.substr(0,120) + "..."; cell.innerHTML = data;}});
-	if(cols.sharing) coldefs.push({ key : "allPerm", label : "Sharing", formatter : permissionFormatter });
+	if(cols.sharing) coldefs.push({ key : "allUserPermission", label : "Sharing", formatter : permissionFormatter });
 	if(cols.actions) coldefs.push({ key : "name", label : "Actions", formatter : function(cell, record, column, data) { 
 			if(record.getData().type == "org.sarsoft.markup.model.CollaborativeMap") {
 				var guide = jQuery('<span><a href="/guide?id=' + record.getData().name + '">Printable Guide</a>,&nbsp;</span>').appendTo(cell);
@@ -938,14 +928,6 @@ org.sarsoft.view.AlertDialog = function(title, bodynode, style) {
 	dialog.render(document.body);
 	dialog.hide();
 	return dialog;
-}
-
-org.sarsoft.PasswordDialog = function() {
-	var bodynode = jQuery('<form saction="/password" method="post">This will reload the page you are on.<br/>' +
-			'<input type="hidden" name="dest" value="' + window.location + '"/><label for="password">Password:</label><input type="password" name="password" length="10"/></form>');
-	return new org.sarsoft.view.CreateDialog("Enter Password", bodynode, "Enter", "Cancel", function() {
-		bodynode.submit();
-	});
 }
 
 org.sarsoft.ToggleControl = function(label, tooltip, handler, states) {

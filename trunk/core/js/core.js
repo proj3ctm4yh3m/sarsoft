@@ -1,3 +1,38 @@
+sarsoft.Page = function(opts) {
+	map = this.map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), opts.center, opts.zoom);
+	
+	var map_opts = {UTM: true, switchableDatum: true, dn: (opts.dnclass || org.sarsoft.DataNavigator)}
+	if(!org.sarsoft.iframe) {
+		map_opts.positionWindow = opts.position;
+		map_opts.size = opts.size && !org.sarsoft.mobile;
+		map_opts.find = opts.find;
+		map_opts.label = opts.label;
+		map_opts.container = $('#page_container')[0];
+	}
+
+	imap = this.imap = new org.sarsoft.InteractiveMap(map, map_opts);
+	
+	if(opts.url) urlwidget = this.url = new org.sarsoft.MapURLHashWidget(this.imap, org.sarsoft.iframe || opts.bgload);	
+
+	this.markers = new org.sarsoft.controller.MarkerController(this.imap, opts.bgload);
+	this.shapes = new org.sarsoft.controller.ShapeController(this.imap, opts.bgload);
+	if(opts.config) {
+		this.cfg = new opts.config(this.imap, (!org.sarsoft.iframe && sarsoft.permission != "READ"));
+		this.cfg.loadConfig();
+	}
+	if(!(opts.configured == false)) this.configured = new org.sarsoft.controller.ConfiguredLayerController(this.imap, opts.bgload);
+	if(!(opts.georef == false)) this.georef = new org.sarsoft.controller.GeoRefController(this.imap, opts.bgload);
+
+	if(opts.tools) this.tools = new org.sarsoft.controller.MapToolsController(this.imap);
+
+	if(!org.sarsoft.iframe) {
+		org.sarsoft.BrowserCheck();
+		google.maps.event.trigger(this.map, "resize");	
+	}
+
+	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
+}
+
 org.sarsoft.widget.SaveAs = function(imap) {
 	var body = $('<div style="clear: both; border-left: 1px solid red; padding-left: 5px; margin-left: 2px"></div>').appendTo(imap.controls.action.bodies['save']);
 	
@@ -114,13 +149,12 @@ org.sarsoft.widget.Account = function(imap, container, acctlink) {
 		}
 	});
 		
-	var tenantDAO = new org.sarsoft.TenantDAO();
 	var yourTable = new org.sarsoft.view.TenantTable({owner : false, comments : true, sharing : true, actions : false});
 	yourTable.create(jQuery('<div class="growYUITable" style="clear: both"></div>').appendTo(bn)[0]);
 
 	// prioritize page loading
 	window.setTimeout(function() {
-		tenantDAO.loadByClassName("org.sarsoft.markup.model.CollaborativeMap", function(rows) {
+		new org.sarsoft.CollaborativeMapDAO().getMaps(function(rows) {
 			yourTable.update(rows);
 		});
 	}, 1000);
@@ -427,7 +461,7 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 	var that = this;
 	imap.dn = this;
 
-	this.account = this.addHeader(sarsoft.account == null ? "Not Signed In" : sarsoft.account.alias, "account.png");
+	this.account = this.addHeader(sarsoft.account == null ? "Not Signed In" : (sarsoft.account.alias ? sarsoft.account.alias : sarsoft.account.email), "account.png");
 	this.account.block.css('margin-bottom', '5px');
 	if(sarsoft.account != null) {
 	    new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
@@ -544,7 +578,7 @@ org.sarsoft.view.BaseConfigWidget.prototype.saveBrowserSettings = function() {
 
 org.sarsoft.view.PersistedConfigWidget = function(imap, persist, saveCenter) {
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, persist);
-	this.tenantDAO = new org.sarsoft.TenantDAO(function() { that.imap.message("Server Communication Error!"); });
+	this.dao = new org.sarsoft.CollaborativeMapDAO();
 	this.saveCenter = saveCenter;
 }
 
@@ -554,10 +588,10 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) 
 	this.saveBrowserSettings();
 	var that = this;
 
-	this.tenantDAO.saveConfig(org.sarsoft.MapState.get(that.imap, "Map"), function() {
+	this.dao.setConfig(org.sarsoft.MapState.get(that.imap, "Map"), function() {
 		if(that.saveCenter) {
 			var center = that.imap.map.getCenter();
-			that.tenantDAO.saveCenter({lat: center.lat(), lng: center.lng()}, handler != null ? handler : function() {});
+			that.dao.setCenter({lat: center.lat(), lng: center.lng()}, handler != null ? handler : function() {});
 		} else if(handler != null) {
 			handler();
 		}
@@ -566,7 +600,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.saveConfig = function(handler) 
 
 org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides) {
 	var that = this;
-	this.tenantDAO.getConfig(function(state) {
+	this.dao.getConfig(function(state) {
 		var config = state.MapConfig || {};
 		if(typeof(overrides) != "undefined") for(var key in overrides) {
 			config[key] = overrides[key];
@@ -1148,7 +1182,7 @@ org.sarsoft.MapObjectDAO.prototype.load = function(id, handler) {
 	});
 }
 
-org.sarsoft.MapObjectDAO.prototype.mark = function() {
+org.sarsoft.MapObjectDAO.prototype.mark = function(handler) {
 	var that = this;
 	if(org.sarsoft.preload[this.type]) {
 		return org.sarsoft.async(function() {
@@ -1502,9 +1536,9 @@ org.sarsoft.GeoRefDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.GeoRefDAO.prototype = new org.sarsoft.MapObjectDAO();
 
-org.sarsoft.controller.GeoRefController = function(imap) {
+org.sarsoft.controller.GeoRefController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, {name: "GeoRef", dao: org.sarsoft.GeoRefDAO, label: "Geospatial Images"});
+	org.sarsoft.MapObjectController.call(this, imap, {name: "GeoRef", dao: org.sarsoft.GeoRefDAO, label: "Geospatial Images"}, background_load);
 	this.imap.register("org.sarsoft.controller.GeoRefController", this);
 	this.dn.cb.css('display', 'none');
 	
@@ -1626,9 +1660,9 @@ org.sarsoft.ConfigurableLayerDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.ConfigurableLayerDAO.prototype = new org.sarsoft.MapObjectDAO();
 
-org.sarsoft.controller.ConfiguredLayerController = function(imap) {
+org.sarsoft.controller.ConfiguredLayerController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, {name: "ConfiguredLayer", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"});
+	org.sarsoft.MapObjectController.call(this, imap, {name: "ConfiguredLayer", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"}, background_load);
 	this.imap.register("org.sarsoft.controller.ConfiguredLayerController", this);
 	this.dn.cb.css('display', 'none');
 	

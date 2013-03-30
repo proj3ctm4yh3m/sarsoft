@@ -1178,6 +1178,9 @@ org.sarsoft.DataNavigator.prototype.addHeader = function(title, icon) {
 	return tree;
 }
 
+org.sarsoft.DataNavigator.prototype.addNewOption = function(idx, text, handler) {
+}
+
 org.sarsoft.DataNavigatorToggleControl = function(imap) {
 	var that = this;
 	this.imap = imap;
@@ -2328,7 +2331,7 @@ org.sarsoft.MapURLHashWidget.createConfigStr = function(imap) {
 	if(geo != null && (geo.dao.objs.length > 0)) cl.georefs = geo.dao.dehydrate();
 	var cfg = imap.registered["org.sarsoft.controller.ConfiguredLayerController"];
 	if(cfg != null && (cfg.dao.objs.length > 0)) cl.cfglayers = cfg.dao.dehydrate();
-	if(Object.keys(cl).length > 0) hash = hash + "&gr=" + encodeURIComponent(YAHOO.lang.JSON.stringify(cl));
+	if(Object.keys(cl).length > 0) hash = hash + "&cl=" + encodeURIComponent(YAHOO.lang.JSON.stringify(cl));
 	
 	var pbc = imap.registered["org.sarsoft.PrintBoxController"];
 	if(pbc != null) hash = hash + "&print=" + encodeURIComponent(YAHOO.lang.JSON.stringify(pbc.getURLState()));
@@ -2359,7 +2362,7 @@ org.sarsoft.MapURLHashWidget.parseConfigStr = function(hash, imap) {
 		if(prop[0] == "overlay" || prop[0] == "o") config.layers = decodeURIComponent(prop[1]).split(",");
 		if(prop[0] == "opacity" || prop[0] == "n") config.opacity = prop[1].split(",");
 		if(prop[0] == "alphaOverlays" || prop[0] == "a") config.alphas = decodeURIComponent(prop[1]).split(",");
-		if(prop[0] == "cl") config.cl = YAHOO.lang.JSON.parse(decodeURIComponent(prop[1]));
+		if(prop[0] == "cl" || prop[0] == "gr") config.cl = YAHOO.lang.JSON.parse(decodeURIComponent(prop[1]));
 		if(prop[0] == "print") config.print = YAHOO.lang.JSON.parse(decodeURIComponent(prop[1]));
 	}
 	if(config.base != null) {
@@ -2911,7 +2914,7 @@ org.sarsoft.MapUtil.createFlatCircleImage = function (color) {
   if(color.indexOf('#') == 0) color = color.substring(1);
   var url = "/resource/imagery/icons/circle/" + color + ".png";
   var img = { url: url, size: new google.maps.Size(12, 12), anchor: new google.maps.Point(6, 6) }
-  img.shape = { type: "circle", coords: [5, 5, 6] }
+  img.shape = { type: "circle", coords: [6, 6, 6] }
   return img;
 }
 

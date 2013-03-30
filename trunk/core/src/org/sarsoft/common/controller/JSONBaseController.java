@@ -22,7 +22,6 @@ import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.util.Datum;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.plans.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -110,14 +109,20 @@ public abstract class JSONBaseController {
 		model.addAttribute("js_mapserver", getProperty("sarsoft.map.viewer"));
 		model.addAttribute("js_sarsoft", JSONAnnotatedPropertyFilter.fromObject(getAttrMap()));
 	}
-		
-	protected String bounce(Model model) {
-		if(!model.asMap().containsKey("targetDest")) return "redirect:/map.html";
+	
+	protected String error(Model model, String error) {
+		model.addAttribute("message", error);
+		return "error";
+	}
+	
+	protected String bounce(Model model, String error, String dest) {
+		model.addAttribute("message", error);
+		model.addAttribute("targetDest", dest);
 
 		prep(model);
-		return "Pages.Paswword";
+		return "Pages.Password";
 	}
-
+	
 	protected String app(Model model, String view) {
 		if(RuntimeProperties.getTenant() != null) model.addAttribute("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
 

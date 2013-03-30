@@ -5,8 +5,8 @@
 <xsl:template match="/json:a">
 <kml>
  <Document>
-   <name>Sarsoft Export</name>
-   <description>Export from Sarsoft</description>
+   <name>CalTopo Export</name>
+   <description>Export from CalTopo</description>
 	<xsl:for-each select="json:e[json:type='route']">
 		<xsl:call-template name="route"/>
 	</xsl:for-each>
