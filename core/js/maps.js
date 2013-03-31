@@ -2904,7 +2904,7 @@ org.sarsoft.MapUtil.createIcon = function(url) {
 				size: new google.maps.Size(target_size, target_size), 
 				url: $.img('icons/sprite.png') }
 	}
-	return createImage(20, url);
+	return org.sarsoft.MapUtil.createImage(20, $.img(url));
 }
 org.sarsoft.MapUtil.createImage = function(size, url) {
   return { anchor: new google.maps.Point(size/2, size/2), size: new google.maps.Size(size, size), url: url }

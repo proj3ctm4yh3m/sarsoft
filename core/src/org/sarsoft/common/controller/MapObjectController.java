@@ -5,12 +5,9 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.apache.log4j.Logger;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.Format;
 import org.sarsoft.common.model.MapObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
@@ -37,9 +34,20 @@ public abstract class MapObjectController extends JSONBaseController {
 		return c;
 	}
 	
+	public void link(MapObject obj) {
+	}
+	
+	public void unlink(MapObject obj) {
+	}
+	
+	public String[] getLinkDependencies() {
+		return new String[] {};
+	}
+	
 	public void persist(MapObject obj) {
 		if(obj.getClass() != c) return;
 		obj.setId(dao.generateID(c));
+		link(obj);
 		dao.save(obj);
 	}
 	
@@ -54,6 +62,7 @@ public abstract class MapObjectController extends JSONBaseController {
 	public String update(Model model, JSONForm params, @PathVariable("id") long id) {
 		MapObject obj = dao.load(c, id);
 		obj.from(params.JSON());
+		link(obj);
 		dao.save(obj);
 		return json(model, obj);
 	}
@@ -61,6 +70,7 @@ public abstract class MapObjectController extends JSONBaseController {
 	@RequestMapping(value="/{id}", method = RequestMethod.DELETE)
 	public String delete(Model model, @PathVariable("id") long id) {
 		MapObject obj = dao.load(c, id);
+		unlink(obj);
 		dao.delete(obj);
 		return json(model, obj);
 	}

@@ -3,6 +3,7 @@ package org.sarsoft.common.controller;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -88,9 +89,23 @@ public class DataManager {
 	}
 
 	public void toDB(ClientState state) {
-		for(String type : state.types()) {
-			for(MapObject object : state.get(type)) {
-				getController(type).persist(object);
+		Set<String> unsaved = new HashSet<String>(state.types());
+		while(unsaved.size() > 0) {
+			Iterator<String> it = unsaved.iterator();
+			while(it.hasNext()) {
+				String type = it.next();
+				boolean ready = true;
+				MapObjectController controller = getController(type);
+				String[] dependencies = controller.getLinkDependencies();
+				for(String dependency : dependencies) {
+					if(unsaved.contains(dependency)) ready = false;
+				}
+				if(ready) {
+					it.remove();
+					for(MapObject object : state.get(type)) {
+						getController(type).persist(object);
+					}
+				}
 			}
 		}
 		if(state.getMapConfig() != null) {

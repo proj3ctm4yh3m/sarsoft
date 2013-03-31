@@ -62,7 +62,7 @@ public class SearchAssignmentGPXHelper {
 			map.put("id", clue.getId());
 			map.put("position", clue.getPosition());
 			Map<String, String> attrs = new HashMap<String, String>();
-			if(clue.getAssignmentId() != null) attrs.put("assignmentid", clue.getAssignmentId());
+//			if(clue.getAssignmentId() != null) attrs.put("assignmentid", clue.getAssignmentId());
 			attrs.put("description", clue.getDescription());
 			attrs.put("location", clue.getLocation());
 			attrs.put("summary", clue.getSummary());
