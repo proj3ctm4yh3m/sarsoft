@@ -11,5 +11,11 @@
 <p style="font-weight: bold; color: red">${message}</p>
 </c:if>
 
+<p>
+You may be seeing this page because your session timed out.  Try logging in again.
+</p>
+<ul>
+<li>Return to the <a href="/map.html">Map Viewer</a>.</li>
+</ul>
 </body>
 </html>

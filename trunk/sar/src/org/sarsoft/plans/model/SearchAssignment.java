@@ -17,8 +17,7 @@ import javax.persistence.Transient;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
-import org.sarsoft.common.model.MapConfig;
-import org.sarsoft.common.model.SarModelObject;
+import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
@@ -33,7 +32,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 
 @JSONAnnotatedEntity
 @Entity
-public class SearchAssignment extends SarModelObject implements IPreSave {
+public class SearchAssignment extends GeoMapObject implements IPreSave {
 
 	public enum ResourceType {
 		GROUND,MOUNTED,DOG,OHV
@@ -43,6 +42,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 		DRAFT,PREPARED,INPROGRESS,COMPLETED
 	}
 
+	private String number;
 	private String details;
 	private ResourceType resourceType;
 	private Status status = Status.DRAFT;
@@ -50,7 +50,6 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	private Double timeAllocated = new Double(0);
 	private String previousEfforts;
 	private String transportation;
-	private Set<MapConfig> mapConfigs;
 	private Probability responsivePOD;
 	private Probability unresponsivePOD;
 	private Probability cluePOD;
@@ -72,25 +71,99 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 		@SuppressWarnings("rawtypes")
 		Map<String, Class> m = new HashMap<String, Class>();
 		m.putAll(Way.classHints);
-		m.put("mapConfigs", MapConfig.class);
 		m.put("ways", Way.class);
+		m.put("route", Way.class);
 		classHints = Collections.unmodifiableMap(m);
 	}
+	
+	public SearchAssignment() {
+	}
+	
+	public SearchAssignment(JSONObject json) {
+		from(json);
+	}
+	
+	public void from(JSONObject json) {
+		this.from((SearchAssignment) JSONObject.toBean(json, SearchAssignment.class, classHints));
+	}
+	
+	public void from(SearchAssignment updated) {
+		setNumber(updated.getNumber());
+		setDetails(updated.getDetails());
+		setResourceType(updated.getResourceType());
+		setStatus(updated.getStatus());
+		setOperationalPeriodId(updated.getOperationalPeriodId());
+		setTimeAllocated(updated.getTimeAllocated());
+		setPreviousEfforts(updated.getPreviousEfforts());
+		setTransportation(updated.getTransportation());
+		setResponsivePOD(updated.getResponsivePOD());
+		setUnresponsivePOD(updated.getUnresponsivePOD());
+		setCluePOD(updated.getCluePOD());
+		setUpdated(updated.getUpdated());
+		setPreparedOn(updated.getPreparedOn());
+		setPreparedBy(updated.getPreparedBy());
+		
+//		setResources(updated.getResources());
+//		setClues(updated.getClues());
 
-	public static SearchAssignment createFromJSON(JSONObject json) {
-		return (SearchAssignment) JSONObject.toBean(json, SearchAssignment.class, classHints);
+		setPrimaryFrequency(updated.getPrimaryFrequency());
+		setSecondaryFrequency(updated.getSecondaryFrequency());
+		
+		if(updated.getRoute() != null) setRoute(updated.getRoute());
+	}
+	
+	public JSONObject toGPX() {
+		return null;
+	}
+	
+	public static SearchAssignment fromGPX(JSONObject gpx) {
+		return null;
 	}
 
 	@OneToMany
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	@LazyCollection(LazyCollectionOption.FALSE)
-	@JSONSerializable
 	public List<Way> getWays() {
 		if(ways == null) ways = new ArrayList<Way>();
 		return ways;
 	}
 	public void setWays(List<Way> ways) {
 		this.ways = ways;
+	}
+	
+	@JSONSerializable
+	@Transient
+	public Way getRoute() {
+		if(ways == null) return null;
+		for(Way way : ways) {
+			if(way.getType() == WayType.ROUTE) return way;
+		}
+		return null;
+	}
+	
+	@JSONSerializable
+	@Transient
+	public void setRoute(Way route) {
+		Way myroute = getRoute();
+		if(myroute == null) {
+			myroute = new Way();
+			if(this.ways == null) this.ways = new ArrayList<Way>();
+			this.ways.add(myroute);
+		}
+		myroute.from(route);
+		myroute.setType(WayType.ROUTE);
+	}
+	
+	@JSONSerializable
+	@Transient
+	public List<Way> getTracks() {
+		if(ways == null) return null;
+		ArrayList<Way> tracks = new ArrayList<Way>();
+		for(int i = 0; i < ways.size(); i++) {
+			Way way = ways.get(i);
+			if(way != null && way.getType() == WayType.TRACK) tracks.add(way);
+		}
+		return tracks;
 	}
 
 	@OneToMany
@@ -124,6 +197,15 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 		}
 		builder.append("]");
 		return builder.toString();
+	}
+
+	@JSONSerializable
+	public String getNumber() {
+		return number;
+	}
+	
+	public void setNumber(String number) {
+		this.number = number;
 	}
 
 	@JSONSerializable
@@ -219,98 +301,9 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 		this.operationalPeriod = operationalPeriod;
 	}
 
-	@Transient
-	@JSONSerializable
-	public double getArea() {
-		double area = 0;
-		for(Way way : ways) {
-			if(way.getType() == WayType.ROUTE && way.isPolygon() == true)
-				area += way.getArea();
-		}
-		return area;
-	}
-	
-	@Transient
-	@JSONSerializable
-	public boolean isPolygon() {
-		for(Way way : ways) {
-			if(way.getType() == WayType.ROUTE && way.isPolygon()) return true;
-		}
-		return false;
-	}
-
-	@Transient
-	@JSONSerializable
-	public double getDistance() {
-		return getRouteDistance();
-	}
-
-	@Transient
-	@JSONSerializable
-	public double getTrackDistance() {
-		double distance = 0;
-		for(Way way : ways) {
-			if(way.getType() == WayType.TRACK) distance += way.getDistance();
-		}
-		return distance;
-	}
-
-	@Transient
-	@JSONSerializable
-	public double getRouteDistance() {
-		double distance = 0;
-		for(Way way : ways) {
-			if(way.getType() == WayType.ROUTE) distance += way.getDistance();
-		}
-		return distance;
-	}
-
-	@Transient
-	@JSONSerializable
-	public String getFormattedSize() {
-		for(Way way : ways) {
-			if(way.getType() == WayType.ROUTE) {
-				if(way.isPolygon()) {
-					return way.getArea() + " km&sup2;";
-				} else {
-					return way.getDistance() + " km";
-				}
-			}
-		}
-		return "--";
-	}
-
-	@Transient
-	@JSONSerializable
-	public Waypoint[] getBoundingBox() {
-		Waypoint[] box = ways.get(0).getBoundingBox();
-		for(Way way : ways) {
-			Waypoint[] bound = way.getBoundingBox();
-			if(bound != null) {
-				if(bound[0].getLat() < box[0].getLat()) box[0] = new Waypoint(bound[0].getLat(), box[0].getLng());
-				if(bound[0].getLng() < box[0].getLng()) box[0] = new Waypoint(box[0].getLat(), bound[0].getLng());
-				if(bound[1].getLat() > box[1].getLat()) box[1] = new Waypoint(bound[1].getLat(), box[1].getLng());
-				if(bound[1].getLng() > box[1].getLng()) box[1] = new Waypoint(box[1].getLat(), bound[1].getLng());
-			}
-		}
-		return box;
-	}
-
 	@OneToMany
 	@JSONSerializable
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
-	@LazyCollection(LazyCollectionOption.FALSE)
-	public Set<MapConfig> getMapConfigs() {
-		return mapConfigs;
-	}
-
-	public void setMapConfigs(Set<MapConfig> mapConfigs) {
-		this.mapConfigs = mapConfigs;
-	}
-
-	@OneToMany
-	@JSONSerializable
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public Set<Resource> getResources() {
 		return resources;
@@ -353,8 +346,7 @@ public class SearchAssignment extends SarModelObject implements IPreSave {
 	}
 	
 	@OneToMany
-	@JSONSerializable
-	@Cascade({org.hibernate.annotations.CascadeType.ALL})
+	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	@LazyCollection(LazyCollectionOption.FALSE)
 	public Set<Clue> getClues() {
 		return clues;

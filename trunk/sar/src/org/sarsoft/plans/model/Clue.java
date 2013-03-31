@@ -9,15 +9,15 @@ import javax.persistence.Transient;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
-import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
-import org.sarsoft.common.model.SarModelObject;
+import org.sarsoft.common.model.GeoMapObject;
+import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.Waypoint;
 
 @JSONAnnotatedEntity
 @Entity
-public class Clue extends SarModelObject implements IPreSave {
+public class Clue extends GeoMapObject implements IPreSave {
 	
 	public enum Disposition {
 		COLLECT,MARK,IGNORE
@@ -29,11 +29,45 @@ public class Clue extends SarModelObject implements IPreSave {
 	private Waypoint position;
 	private Date found;
 	private Date updated;
+	private Long assignmentId;
 	private SearchAssignment assignment;
 	private Disposition instructions;
 	
-	public static Clue createFromJSON(JSONObject json) {
-		return (Clue) JSONObject.toBean(json, Clue.class);
+	public Clue() {
+	}
+	
+	public Clue(JSONObject json) {
+		from(json);
+	}
+	
+	public void from(JSONObject json) {
+		this.from((Clue) JSONObject.toBean(json, Clue.class));
+	}
+	
+	public void from(Clue updated) {
+		if(updated.getDescription() != null || updated.getSummary() != null) {
+			setDescription(updated.getDescription());
+			setAssignmentId(updated.getAssignmentId());
+			setSummary(updated.getSummary());
+			setLocation(updated.getLocation());
+			setFound(updated.getFound());
+			setUpdated(updated.getUpdated());
+			setInstructions(updated.getInstructions());
+		}
+
+		if(updated.getPosition() != null) {
+			if(position == null) position = new Waypoint();
+			getPosition().setLat(updated.getPosition().getLat());
+			getPosition().setLng(updated.getPosition().getLng());
+		}
+	}
+	
+	public JSONObject toGPX() {
+		return null;
+	}
+	
+	public static Clue fromGPX(JSONObject gpx) {
+		return null;
 	}
 	
 	@ManyToOne
@@ -96,9 +130,13 @@ public class Clue extends SarModelObject implements IPreSave {
 	
 	@Transient
 	@JSONSerializable
-	public String getAssignmentId() {
-		if(assignment != null) return assignment.getId().toString();
-		return null;
+	public Long getAssignmentId() {
+		if(assignmentId != null) return assignmentId;
+		return (assignment == null) ? null : assignment.getId();
+	}
+	
+	public void setAssignmentId(Long id) {
+		this.assignmentId = id;
 	}
 	
 	@ManyToOne

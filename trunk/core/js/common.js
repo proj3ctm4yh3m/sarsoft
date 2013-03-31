@@ -82,6 +82,7 @@ org.sarsoft.getCookieProperty = function(cookie, prop) {
 
 org.sarsoft.htmlescape = function(str, newline) {
 	if(str == null) return "";
+	if(typeof(str) == "number") str = String(str);
 	if(newline) return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g, "<br/>");
 	return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
@@ -139,7 +140,7 @@ org.sarsoft.BaseDAO.prototype._doDelete = function(url, handler) {
 			$(org.sarsoft.BaseDAO).triggerHandler('success');
 			handler(YAHOO.lang.JSON.parse(response.responseText));
 		}, failure : function(response) {
-			org.sarsoft.BaseDAO.trigger(false);
+			$(org.sarsoft.BaseDAO).triggerHandler('failure');
 			throw("AJAX ERROR getting from " + url + ": " + response.responseText);
 		}});
 }

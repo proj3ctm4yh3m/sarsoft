@@ -6,62 +6,60 @@
 <meta content='True' name='HandheldFriendly' />
 <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 <meta name="format-detection" content="telephone=no" />
-${head}
+<%@include file="head.jsp" %>
 <script type="text/javascript">
 
 function doload() {
 org.sarsoft.Loader.queue(function() {
+	sarsoft.permission="ADMIN";
+
+	page = new sarsoft.Page({
+		dnclass: org.sarsoft.StructuredDataNavigator,
+		config: org.sarsoft.view.CookieConfigWidget,
+		url: true,
+		bgload: false,
+		position: true,
+		size: true,
+		find: true,
+		label: true,
+		tools: !org.sarsoft.iframe
+		});
 	
-	org.sarsoft.userPermissionLevel="ADMIN";
+	periods = new org.sarsoft.OperationalPeriodController(page.imap, false);
+	assignments = new org.sarsoft.AssignmentController(page.imap, false);
+	clues = new org.sarsoft.ClueController(page.imap, false);
 
-	map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'));
-	var embed = !(window==top);
-	var opts = {UTM: true, switchableDatum: true}
-	if(!embed) {
-		opts.positionWindow = true;
-		opts.size = !org.sarsoft.mobile;
-		opts.separators = true;
-		opts.find = true;
-		opts.label = true;
-		opts.container = $('#page_container')[0];
-	}
-	imap = new org.sarsoft.InteractiveMap(map, opts);
-	var dn = imap.registered["org.sarsoft.DataNavigator"];
-
-	  
-	var tc = new org.sarsoft.DNTree(imap.container.left, "Unsaved Map");
-	tc._lock = true;
-	tc.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
-	tc.body.css('padding-left', '2px');
-	dn.defaults.body = tc.body;
-	new org.sarsoft.widget.BrowserSettings(imap, tc.body);
-
-	dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
-	
-	jQuery('<div style="float: right; color: red; cursor: pointer; font-size: 140%; position: absolute; top: 0; right: 2px; font-weight: normal">X</div>').prependTo(tc.header).click(function() {
+	page.imap.dn.tenant.addClose("Close Unsaved Map", function() {
 		window.location.hash = "";
 		window.location.reload();
-	}).attr("title", "Close Unsaved Map");
+	});
 
+	new org.sarsoft.widget.URLSharing(page.imap, 'map.html');
+
+	if(!org.sarsoft.iframe) {
+		wprint = new org.sarsoft.widget.Print(page.imap);
+		jQuery('<span class="underlineOnHover" style="color: #5a8ed7; font-weight: bold;">&rarr; Create a PDF</span>').prependTo(jQuery('<div style="margin-top: 1ex; margin-bottom: 1ex"> (<span style="color: #dc1d00; font-weight: bold">New!</span>) Higher quality, exact scales, and multi-page map packs.  Not all layers available.</div>').appendTo(wprint.print_options.div)).click(function(e) {
+			e.stopPropagation();
+			if(!imap.controls.action.draftmode) {
+				window.location="/print.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
+			} else {
+				var form = jQuery('<form style="display: none" action="/hastyprint" method="POST" target="_new"></form>').appendTo(document.body);
+				var clientstate = jQuery('<input type="hidden" name="state"/>').appendTo(form);
+				clientstate.val(YAHOO.lang.JSON.stringify(org.sarsoft.MapState.get(imap)));
+				
+				form.submit();
+			}
 		
-	urlwidget = new org.sarsoft.MapURLHashWidget(imap, embed);
-	if(!embed) {
-		configWidget = new org.sarsoft.view.CookieConfigWidget(imap, true);
-		configWidget.loadConfig((urlwidget.config == null) ? {} : {base: urlwidget.config.base, overlay: urlwidget.config.overlay, opacity: urlwidget.config.opacity, alphaOverlays : urlwidget.config.alphaOverlays, center: {lat: map.getCenter().lat(), lng: map.getCenter().lng()}, zoom: map.getZoom()});
-		toolsController = new org.sarsoft.controller.MapToolsController(imap);
-		georefController = new org.sarsoft.controller.CustomLayerController(imap);
-		if(urlwidget.config != null && urlwidget.config.georef != null) georefController.rehydrate(urlwidget.config.georef);
-		org.sarsoft.BrowserCheck();
-	}
-
-	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
-
-	if(!org.sarsoft.mobile) {
-		imap.registered["org.sarsoft.MapFindWidget"].setState(true);
+		});
 	}
 	
-	google.maps.event.trigger(map, "resize");
+	if(!org.sarsoft.iframe && !org.sarsoft.mobile) imap.message('<a href="http://bamru.info/caltopo" target="_new">Please donate</a> to Bay Area Mountain Rescue', 5000);
 
+	<c:if test="${message ne null}">
+	alert('Error: ${message}');
+	</c:if>
+
+	if(!org.sarsoft.mobile && !org.sarsoft.iframe) imap.registered["org.sarsoft.MapFindWidget"].setState(true);
 });
 }
 

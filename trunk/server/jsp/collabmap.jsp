@@ -16,70 +16,102 @@
 <meta content='True' name='HandheldFriendly' />
 <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 <meta name="format-detection" content="telephone=no" />
-${head}
+<%@include file="head.jsp" %>
 <script type="text/javascript">
 function doload() {
 org.sarsoft.Loader.queue(function() {
-  map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas')<c:if test="${not empty tenant.defaultCenter}">, new google.maps.LatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), 14</c:if>);
-  var embed = !(window==top);
-  var opts = {UTM: true, switchableDatum: true, label: true, standardControls: !embed, container: (embed ? null : $('#page_container')[0])}
-  imap = new org.sarsoft.InteractiveMap(map, opts);
-  var dn = imap.registered["org.sarsoft.DataNavigator"];
-
-  var tc = new org.sarsoft.DNTree(imap.container.left, org.sarsoft.tenantname);
-  tc._lock = true;
-  tc.header.css({"text-transform": "capitalize", "margin": "0px", "padding-top": "3px", "font-weight": "bold", color: "white", "background-color": "#666666", "padding-bottom": "3px"});
-  tc.header.prepend('<img style="margin-right: 2px; vertical-align: text-top" src="' + org.sarsoft.imgPrefix + '/favicon.png"/>');
-  tc.body.css('padding-left', '2px');
-  dn.defaults.body = tc.body;
-  if(dn.defaults.savedAt != null) dn.defaults.savedAt.appendTo(tc.body);
-  new org.sarsoft.widget.BrowserSettings(imap, tc.body);  
-  
-  dn.defaults.layers = new org.sarsoft.widget.MapLayers(imap, tc.body);
-  
-  jQuery('<div style="float: right; color: red; cursor: pointer; margin-right: 2px">X</div>').prependTo(tc.header).click(function() {
-    window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
-  }).attr("title", "Close " + org.sarsoft.tenantname);
-  
-
-  markupController = new org.sarsoft.controller.MarkupMapController(imap, false, embed);
-  if(!embed) {
-	toolsController = new org.sarsoft.controller.MapToolsController(imap);
-	georefController = new org.sarsoft.controller.CustomLayerController(imap);
-	org.sarsoft.BrowserCheck();
-  }
-  configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, (!embed && org.sarsoft.userPermissionLevel != "READ"), true);
-  configWidget.loadConfig();
-
-  <c:if test="${userPermission eq admin}">
-	var detailslink = jQuery('<div style="margin-bottom: 3px; margin-top: 3px; font-weight: bold; color: #5a8ed7; cursor: pointer; margin-right: 2px"><img style="vertical-align: text-bottom; margin-right: 2px" src="' + org.sarsoft.imgPrefix + '/details.png"/>Details</div>').insertBefore(dn.defaults.layers.tree.block);
-
-	var settings_details = $('<div></div>');
-	var settings_table = $('<tbody></tbody>').appendTo($('<table border="0" style="width: 90%"></table>').appendTo(settings_details));
 	
-	var details_name = jQuery('<input type="text" size="30" value="${tenant.publicName}"/>').appendTo($('<td></td>').appendTo($('<tr><td valign="top" style="width: 10em">Name</td></tr>').appendTo(settings_table)));
-	var details_comments = jQuery('<textarea style="width: 100%; height: 6em">${tenant.comments}</textarea>').appendTo($('<td></td>').appendTo($('<tr><td valign="top">Comments</td></tr>').appendTo(settings_table)));
-	
-	settings_details.append('<div style="padding-top: 20px">You can also <a href="javascript:deleteDlg.show()">delete this map</a>.</div>');	
-	
-	var detailsDlg = new org.sarsoft.view.MapDialog(imap, "Details", settings_details, "OK", "Cancel", function() {
-		var dao = new org.sarsoft.TenantDAO();
-		dao.save('${tenant.name}', {'description': details_name.val(), 'comments': details_comments.val()});
+	page = new sarsoft.Page({
+		dnclass: org.sarsoft.StructuredDataNavigator,
+		config: org.sarsoft.view.PersistedConfigWidget,
+		url: false,
+		bgload: false,
+		position: true,
+		size: true,
+		find: true,
+		label: true,
+		tools: !org.sarsoft.iframe
+		 <c:if test="${not empty tenant.defaultCenter}">, center: new google.maps.LatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), zoom: 14</c:if>
 	});
 
-	detailslink.click(function() {detailsDlg.swap();});
+	periods = new org.sarsoft.OperationalPeriodController(page.imap, false);
+	assignments = new org.sarsoft.AssignmentController(page.imap, false);
+	clues = new org.sarsoft.ClueController(page.imap, false);
 
-	deleteDlg = new org.sarsoft.view.MapDialog(imap, "Delete ${tenant.publicName}", $('#deleteObject'), "OK", "Cancel", function() {
-		var dao = new org.sarsoft.TenantDAO();
-		dao.del2('${tenant.name}', function() {
+ 	page.imap.dn.tenant.addClose("Close " + sarsoft.tenant.publicName, function(e) {
+		e.stopPropagation();
+		window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
+	});
+
+  var sharing = new org.sarsoft.widget.TenantSharing(page.imap, 'map');
+  <c:if test="${userPermission eq admin and hosted}">
+  $('<div><div style="font-size: 120%; color: #5a8ed7; padding-top: 5px">Permissions</div>' +
+  '<input type="checkbox" value="true" id="sharedcb"/>' +
+  '<span>Allow people to <a href="/find" target="_new">find this map</a> without the URL.<br/>' +
+  '<label for="allUsers">Grant</label>' +
+  '<select id="allusersdd">' +
+  '  <option value="NONE"<c:if test="${tenant.allUserPermission eq none}"> selected="selected"</c:if>>No</option>' +
+  '  <option value="READ"<c:if test="${tenant.allUserPermission eq read}"> selected="selected"</c:if>>Read</option>' +
+  '  <option value="WRITE"<c:if test="${tenant.allUserPermission eq write}"> selected="selected"</c:if>>Write</option>' +
+  '</select> access to all users<br/>' +
+  '<label for="passwordUsers">Grant</label>' +
+  '<select id="passwordusersdd">' +
+  ' <option value="NONE"<c:if test="${tenant.passwordProtectedUserPermission eq none}"> selected="selected"</c:if>>No</option>' +
+  ' <option value="READ"<c:if test="${tenant.passwordProtectedUserPermission eq read}"> selected="selected"</c:if>>Read</option>' +
+  ' <option value="WRITE"<c:if test="${tenant.passwordProtectedUserPermission eq write}"> selected="selected"</c:if>>Write</option>' +
+  '</select> access to users with the password (if set):<br/>' +
+  '<span style="padding-left: 3em">Password: <input type="password" size="15" id="inpassword"/>' +
+  '<span class="hint"><c:choose><c:when test="${fn:length(tenant.password) eq 0}">No password currently set</c:when><c:otherwise>Leave blank to keep the current password</c:otherwise></c:choose></span></span></div>').insertAfter(sharing.share);
+
+  <c:if test="${tenant.shared}">$('#sharedcb').attr("checked", "checked");</c:if>
+  $('#allusersdd').change(function() { var val = $('#sharedcb').prop('checked'); var val2 = $('#allusersdd').val(); if(val && val2 == 'NONE') $('#sharedcb').prop('checked', false)});
+  $('#sharedcb').change(function() { var val = $('#sharedcb').prop('checked'); var val2 = $('#allusersdd').val(); if(val && val2 == 'NONE') $('#allusersdd').val('READ')});
+
+  sharing.save = function() {
+	  var dao = new org.sarsoft.CollaborativeMapDAO();
+		dao.save('${tenant.name}', {'shared': $('#sharedcb').is(':checked'), 'allUserPermission': $('#allusersdd').val(), 'passwordProtectedUserPermission': $('#passwordusersdd').val(), 'password': $('#inpassword').val()});
+  }
+  </c:if>
+
+  <c:if test="${userPermission eq admin}">
+	deleteDlg = new org.sarsoft.view.MapDialog(page.imap, "Delete " + sarsoft.tenant.publicName + $('<div id="deleteObject" style="height: 6em">Are you sure you want to delete ' + sarsoft.tenant.publicName + '?  This action cannot be undone.</div>'), "OK", "Cancel", function() {
+		var dao = new org.sarsoft.CollaborativeMapDAO();
+		dao.del('${tenant.name}', function() {
 			window.location='/map.html';
 		});
 	});
+  
+	var settings_details = $('<div></div>');
+	var settings_table = $('<tbody></tbody>').appendTo($('<table border="0" style="width: 90%"></table>').appendTo(settings_details));
+	
+	var details_name = jQuery('<input type="text" size="30" value=""/>').val(sarsoft.tenant.publicName).appendTo($('<td></td>').appendTo($('<tr><td valign="top" style="width: 10em">Name</td></tr>').appendTo(settings_table)));
+	var details_comments = jQuery('<textarea style="width: 100%; height: 6em"></textarea>').val(sarsoft.tenant.comments).appendTo($('<td></td>').appendTo($('<tr><td valign="top">Comments</td></tr>').appendTo(settings_table)));
+	
+	settings_details.append('<div style="padding-top: 20px">You can also <a href="javascript:deleteDlg.show()">delete this map</a>.</div>');	
+	
+	var detailsDlg = new org.sarsoft.view.MapDialog(page.imap, "Details", settings_details, "OK", "Cancel", function() {
+		var dao = new org.sarsoft.CollaborativeMapDAO();
+		dao.save('${tenant.name}', {'description': details_name.val(), 'comments': details_comments.val()});
+	});
+	page.imap.dn.tenant.header.attr("title", "click for details").click(function() {detailsDlg.swap();});
+
 	</c:if>
-  if(!embed) {
-	google.maps.event.trigger(map, "resize");	
-  }
-	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
+	
+	if(!org.sarsoft.iframe) {
+	    wprint = new org.sarsoft.widget.Print(page.imap);
+		jQuery('<button style="margin-left: 20px; cursor; pointer">Print Key</button>').insertAfter(wprint.pageSizeForm.printButton).click(function() {
+			window.open('/guide?id=' + sarsoft.tenant.name + "&print=true", '_blank');
+		});
+		jQuery('<span class="underlineOnHover" style="color: #5a8ed7; font-weight: bold;">&rarr; Create a PDF</span>').prependTo(jQuery('<div style="margin-top: 1ex; margin-bottom: 1ex"> (<span style="color: #dc1d00; font-weight: bold">New!</span>) Higher quality, exact scales, and multi-page map packs.  Not all layers available.</div>').appendTo(wprint.print_options.div)).click(function(e) {
+			e.stopPropagation();
+			window.location="/print?id=" + sarsoft.tenant.name;
+		});
+	}
+  
+  <c:if test="${message ne null}">
+    alert("Error: ${message}");
+  </c:if>
+
 });
 }
 </script>
@@ -91,17 +123,6 @@ org.sarsoft.Loader.queue(function() {
  <div id="map_right" style="height: 100%">
   <div id="map_canvas" style="width: 100%; height: 100%"></div>
  </div>
-</div>
-
-<div style="display: none" id="sharingpermissions">
-
-<c:if test="${userPermission eq admin}">
-
-<div id="deleteObject" style="height: 6em">
-	Are you sure you want to delete ${tenant.publicName}?  This action cannot be undone.
-</div>
-
-</c:if>
 </div>
 
 </body>

@@ -130,7 +130,7 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 
 org.sarsoft.controller.MarkerController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, {name: "Marker", dao : org.sarsoft.MarkerDAO, label: "Markers", geo: true}, background_load);	
+	org.sarsoft.WaypointObjectController.call(this, imap, {name: "Marker", dao : org.sarsoft.MarkerDAO, label: "Markers", geo: true, waypoint: "position"}, background_load);
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Marker", function(point) {
@@ -141,7 +141,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 	if(!org.sarsoft.iframe && !this.bgload) {
 		
 		var form = new org.sarsoft.view.MarkerForm();
-		this.markerDlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker details", form);
+		this.markerDlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker Details", form);
 		
 		this.markerDlg.discardGeoInfo = function() { that.discard(this.object.id) }
 		this.markerDlg.saveGeoInfo = function(marker, callback) { that.save(this.object.id, callback); }
@@ -157,7 +157,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 
 		var pc = function(obj) {
 			if(obj == null) return {}
-			var marker = that.obj(that.getMarkerIdFromWpt(obj));
+			var marker = that.obj(that.getObjectIdFromWpt(obj));
 			var inedit = (marker != null && that.attr(marker, "inedit"));
 			return { marker: marker, inedit: inedit}
 		}
@@ -173,53 +173,10 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 
 }
 
-org.sarsoft.controller.MarkerController.prototype = new org.sarsoft.MapObjectController();
+org.sarsoft.controller.MarkerController.prototype = new org.sarsoft.WaypointObjectController();
 
-org.sarsoft.controller.MarkerController.prototype.growmap = function(object) {
-	this.imap.growInitialMap(new google.maps.LatLng(object.position.lat, object.position.lng));
-}
-
-org.sarsoft.controller.MarkerController.prototype.edit = function(marker) {
-	marker = this.obj(marker);
-	this.imap.allowDragging(marker.position);
-	this.attr(marker, "inedit", true);
-}
-
-org.sarsoft.controller.MarkerController.prototype.save = function(marker, handler) {
-	marker = this.obj(marker);
-	this.imap.saveDrag(marker.position);
-	this.attr(marker, "inedit", false);
-	this.dao.updatePosition(marker.id, marker.position, function() {if(handler != null) handler();});
-}
-
-org.sarsoft.controller.MarkerController.prototype.discard = function(marker) {
-	marker = this.obj(marker);
-	this.imap.discardDrag(marker.position);
-	this.attr(marker, "inedit", false);
-}
-
-org.sarsoft.controller.MarkerController.prototype.drag = function(marker) {
-	marker = this.obj(marker);
-	var that = this;
-	this.attr(marker, "inedit", true);
-	this.imap.dragOnce(marker.position, function(gll) {
-		that.attr(marker, "inedit", false);
-		marker.position.lat = gll.lat();
-		marker.position.lng = gll.lng();
-		that.dao.updatePosition(marker.id, marker.position, function() {});
-	});
-}
-
-org.sarsoft.controller.MarkerController.prototype.remove = function(object) {
-	this.imap.removeWaypoint(object.position);
-	org.sarsoft.MapObjectController.prototype.remove.call(this, object);
-}
-
-org.sarsoft.controller.MarkerController.prototype.getMarkerIdFromWpt = function(wpt) {
-	for(var key in this.dao.objs) {
-		var obj = this.dao.getObj(key);
-		if(obj != null && obj.position == wpt) return key;
-	}
+org.sarsoft.controller.MarkerController.prototype._saveWaypoint = function(id, waypoint, handler) {
+	this.dao.updatePosition(id, waypoint, handler);
 }
 
 org.sarsoft.controller.MarkerController.getRealURLForMarker = function(url) {
@@ -294,29 +251,13 @@ org.sarsoft.controller.MarkerController.prototype.handleSetupChange = function(i
 
 
 org.sarsoft.ShapeDAO = function(errorHandler, baseURL) {
-	org.sarsoft.MapObjectDAO.call(this, "Shape");
-	if(typeof baseURL == "undefined") baseURL = "/rest/shape";
-	this.baseURL = baseURL;
-	this.errorHandler = errorHandler;
-	this.geo = true;
+	org.sarsoft.WayObjectDAO.call(this, "Shape", "/rest/shape");
 }
 
-org.sarsoft.ShapeDAO.prototype = new org.sarsoft.MapObjectDAO();
-
-org.sarsoft.ShapeDAO.prototype.addBoundingBox = function(way) {
-	var bb = [{lat: 90, lng: 180}, {lat: -90, lng: -180}]
-	for(var i = 0; i < way.waypoints.length; i++) {
-		var wpt = way.waypoints[i];
-		if(wpt.lat < bb[0].lat) bb[0].lat = wpt.lat;
-		if(wpt.lng < bb[0].lng) bb[0].lng = wpt.lng;
-		if(wpt.lat > bb[1].lat) bb[1].lat = wpt.lat;
-		if(wpt.lng > bb[1].lng) bb[1].lng = wpt.lng;
-	}
-	way.boundingBox=bb;
-}
+org.sarsoft.ShapeDAO.prototype = new org.sarsoft.WayObjectDAO();
 
 org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
-	obj = org.sarsoft.MapObjectDAO.prototype.validate.call(this, obj);
+	obj = org.sarsoft.WayObjectDAO.prototype.validate.call(this, obj);
 
 	if(obj.lastUpdated == null) obj.lastUpdated = new Date().getTime();
 	if(obj.way.boundingBox == null) this.addBoundingBox(obj.way);
@@ -330,14 +271,6 @@ org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
 		}
 	}
 	return obj;
-}
-
-org.sarsoft.ShapeDAO.prototype.getWaypoints = function(handler, shape, precision) {
-	if(this.offline) {
-		handler(shape.way);
-	} else {
-		this._doGet("/" + shape.id + "/way?precision=" + precision, handler);
-	}
 }
 
 org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handler) {
@@ -423,7 +356,7 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 
 org.sarsoft.controller.ShapeController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, {name: "Shape", dao: org.sarsoft.ShapeDAO, label: "Shapes", geo: true}, background_load);	
+	org.sarsoft.WayObjectController.call(this, imap, {name: "Shape", dao: org.sarsoft.ShapeDAO, label: "Shapes", geo: true, way: "way"}, background_load);	
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Line", function(point) {
@@ -507,13 +440,13 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 		
 		var pc = function(obj) {
 			if(obj == null) return {}
-			var shape = that.obj(that.getShapeIdFromWay(obj));
+			var shape = that.obj(that.getObjectIdFromWay(obj));
 			var inedit = (shape != null && that.attr(shape, "inedit"));
 			return { shape: shape, inedit: inedit}
 		}
 		
 		var pc2 = function(obj) {
-			var shape = that.dao.getObj(that.getShapeIdFromWay(obj));
+			var shape = that.dao.getObj(that.getObjectIdFromWay(obj));
 			return { shape: shape }
 		}
 		
@@ -536,46 +469,10 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 
 }
 
-org.sarsoft.controller.ShapeController.prototype = new org.sarsoft.MapObjectController();
+org.sarsoft.controller.ShapeController.prototype = new org.sarsoft.WayObjectController();
 
-org.sarsoft.controller.ShapeController.prototype.growmap = function(object) {
-		var bb = object.way.boundingBox;
-		this.imap.growInitialMap(new google.maps.LatLng(bb[0].lat, bb[0].lng));
-		this.imap.growInitialMap(new google.maps.LatLng(bb[1].lat, bb[1].lng));
-}
-
-org.sarsoft.controller.ShapeController.prototype.save = function(shape, handler) {
-	var that = this;
-	shape = this.obj(shape);
-	if(!this.attr(shape, "inedit")) {
-		this.discard(shape);
-		return handler();
-	}
-	shape.way.waypoints = this.imap.save(shape.way.id);
-	this.dao.saveWaypoints(shape, shape.way.waypoints, function(obj) { shape.way = obj; that.show(shape); if(handler != null) handler();});
-	this.attr(shape, "inedit", false);
-}
-
-org.sarsoft.controller.ShapeController.prototype.discard = function(shape) {
-	shape = this.obj(shape);
-	this.imap.discard(shape.way.id);
-	this.attr(shape, "inedit", false);
-}
-
-org.sarsoft.controller.ShapeController.prototype.redraw = function(shape, onEnd, onCancel) {
-	shape = this.obj(shape);
-	this.imap.redraw(shape.way.id, onEnd, onCancel);
-	this.attr(shape, "inedit", true);
-}
-
-org.sarsoft.controller.ShapeController.prototype.edit = function(shape) {
-	shape = this.obj(shape);
-	if(shape.way.waypoints.length > 500) {
-		alert("> 500 waypoints");
-		return;
-	}
-	this.imap.edit(shape.way.id);
-	this.attr(shape, "inedit", true);
+org.sarsoft.controller.ShapeController.prototype._saveWay = function(obj, waypoints, handler) {
+	this.dao.saveWaypoints(obj, waypoints, handler);
 }
 
 org.sarsoft.controller.ShapeController.prototype.profile = function(shape) {
@@ -617,19 +514,6 @@ org.sarsoft.controller.ShapeController.prototype.splitLineAt = function(shape, g
 		that.show(shape);
 		that.dao.create(shape2);
 	});
-}
-
-org.sarsoft.controller.ShapeController.prototype.remove = function(object) {
-	this.imap.removeWay(object.way);
-	org.sarsoft.MapObjectController.prototype.remove.call(this, object);
-}
-
-org.sarsoft.controller.ShapeController.prototype.getShapeIdFromWay = function(way) {
-	if(way == null || way.waypoints == null) return null;
-	for(var key in this.dao.objs) {
-		var obj = this.dao.objs[key];
-		if(obj != null && obj.way.id == way.id) return key;
-	}
 }
 
 org.sarsoft.controller.ShapeController.getIconForShape = function(shape) {
