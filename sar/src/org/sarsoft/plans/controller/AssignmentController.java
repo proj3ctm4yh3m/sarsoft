@@ -18,11 +18,12 @@ import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.GPX;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.Action;
 import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.OperationalPeriod;
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.model.Assignment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -35,36 +36,36 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
 @RequestMapping("/rest/assignment")
-public class SearchAssignmentController extends GeoMapObjectController {
+public class AssignmentController extends GeoMapObjectController {
 
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 	}
 	
-	public SearchAssignmentController() {
-		super(SearchAssignment.class);
+	public AssignmentController() {
+		super(Assignment.class);
 	}
 	
-	public SearchAssignment make(JSONObject json) {
-		return new SearchAssignment(json);
+	public Assignment make(JSONObject json) {
+		return new Assignment(json);
 	}
 	
 	public JSONObject toGPX(MapObject obj) {
-		return ((SearchAssignment) obj).toGPX();
+		return ((Assignment) obj).toGPX();
 	}
 	
 	public MapObject fromGPX(JSONObject obj) {
-		return SearchAssignment.fromGPX(obj);
+		return Assignment.fromGPX(obj);
 	}
 	
 	public String getLabel(MapObject obj) {
-		SearchAssignment assignment = (SearchAssignment) obj;
+		Assignment assignment = (Assignment) obj;
 		return "Assignment " + assignment.getId();
 	}
 	
 	public void link(MapObject obj) {
-		SearchAssignment assignment = (SearchAssignment) obj;
+		Assignment assignment = (Assignment) obj;
 		Long id = assignment.getOperationalPeriodId();
 		OperationalPeriod period = assignment.getOperationalPeriod();
 		if(period != null && !id.equals(period.getId())) {
@@ -80,7 +81,7 @@ public class SearchAssignmentController extends GeoMapObjectController {
 	}
 	
 	public void unlink(MapObject obj) {
-		SearchAssignment assignment = (SearchAssignment) obj;
+		Assignment assignment = (Assignment) obj;
 		OperationalPeriod period = assignment.getOperationalPeriod();
 		if(period != null) {
 			period.removeAssignment(assignment);
@@ -104,29 +105,29 @@ public class SearchAssignmentController extends GeoMapObjectController {
 
 	@RequestMapping(value="/{id}/transition", method = RequestMethod.POST)
 	public String transition(Model model, @PathVariable("id") long id, @RequestParam("action") Action action) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, id);
+		Assignment assignment = dao.load(Assignment.class, id);
 		
 		switch(action) {
 		case FINALIZE :
-			assignment.setStatus(SearchAssignment.Status.PREPARED);
+			assignment.setStatus(Assignment.Status.PREPARED);
 			assignment.setPreparedOn(new Date());
 			break;
 		case START :
-			assignment.setStatus(SearchAssignment.Status.INPROGRESS);
+			assignment.setStatus(Assignment.Status.INPROGRESS);
 			break;
 		case STOP :
-			assignment.setStatus(SearchAssignment.Status.COMPLETED);
-			Iterator<Resource> it = assignment.getResources().iterator();
+			assignment.setStatus(Assignment.Status.COMPLETED);
+/*			Iterator<Resource> it = assignment.getResources().iterator();
 			while(it.hasNext()) {
 				Resource resource = it.next();
 				it.remove();
 				resource.setAssignment(null);
 				dao.save(resource);
-			}
+			}*/
 			break;
 		case ROLLBACK :
-			if(assignment.getStatus() == SearchAssignment.Status.INPROGRESS) assignment.setStatus(SearchAssignment.Status.PREPARED);
-			if(assignment.getStatus() == SearchAssignment.Status.COMPLETED) assignment.setStatus(SearchAssignment.Status.INPROGRESS);
+			if(assignment.getStatus() == Assignment.Status.INPROGRESS) assignment.setStatus(Assignment.Status.PREPARED);
+			if(assignment.getStatus() == Assignment.Status.COMPLETED) assignment.setStatus(Assignment.Status.INPROGRESS);
 			break;
 		}
 		return json(model, assignment);
@@ -135,7 +136,7 @@ public class SearchAssignmentController extends GeoMapObjectController {
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	@RequestMapping(value = "/{id}/route", method = RequestMethod.POST)
 	public String updateWay(Model model, JSONForm params, @PathVariable("id") long id) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, id);
+		Assignment assignment = dao.load(Assignment.class, id);
 		Way route = assignment.getRoute();
 		route.softCopy((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
 		assignment.setUpdated(new Date());
@@ -155,7 +156,7 @@ public class SearchAssignmentController extends GeoMapObjectController {
 
 	@RequestMapping(value = "/{id}/wpt/{wid}", method = RequestMethod.POST)
 	public String updateWaypoint(Model model, JSONForm params, @PathVariable("id") long id, @PathVariable("wid") int wid) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, id);
+		Assignment assignment = dao.load(Assignment.class, id);
 		Waypoint wpt = assignment.getWaypoints().get(wid);
 		wpt.from(params.JSON());
 		dao.save(assignment);
@@ -165,11 +166,19 @@ public class SearchAssignmentController extends GeoMapObjectController {
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	@RequestMapping(value = "/{id}/wpt/{wid}", method = RequestMethod.DELETE)
 	public String deleteWaypoint(Model model, JSONForm params, @PathVariable("id") long id, @PathVariable("wid") int wid) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, id);
+		Assignment assignment = dao.load(Assignment.class, id);
 		Waypoint wpt = assignment.getWaypoints().get(wid);
 		assignment.getWaypoints().remove(wid);
 		dao.save(assignment);
 		return json(model, wpt);
+	}
+	
+	@RequestMapping(value = "/{id}/in", method = RequestMethod.POST)
+	public String loadTracks(Model model, JSONForm params, @PathVariable("id") long id) {
+		Assignment assignment = dao.load(Assignment.class, id);
+		JSONArray jarray = GPX.parse(context, params);
+
+		return "";
 	}
 
 	@Override

@@ -15,8 +15,7 @@ import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.plans.model.Clue;
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.model.Assignment;
 
 @Entity
 @JSONAnnotatedEntity
@@ -33,7 +32,7 @@ public class Resource extends SarModelObject {
 	protected String spotPassword;
 	protected Type type;
 	protected Waypoint position;
-	protected SearchAssignment assignment;
+	protected Assignment assignment;
 	protected Date updated;
 
 	public static Resource createFromJSON(JSONObject json) {
@@ -84,11 +83,11 @@ public class Resource extends SarModelObject {
 	}
 
 	@ManyToOne
-	public SearchAssignment getAssignment() {
+	public Assignment getAssignment() {
 		return assignment;
 	}
 
-	public void setAssignment(SearchAssignment assignment) {
+	public void setAssignment(Assignment assignment) {
 		this.assignment = assignment;
 	}
 

@@ -25,9 +25,9 @@ import org.sarsoft.plans.model.Clue.Disposition;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Probability;
 import org.sarsoft.plans.model.Search;
-import org.sarsoft.plans.model.SearchAssignment;
-import org.sarsoft.plans.model.SearchAssignment.ResourceType;
-import org.sarsoft.plans.model.SearchAssignment.Status;
+import org.sarsoft.plans.model.Assignment;
+import org.sarsoft.plans.model.Assignment.ResourceType;
+import org.sarsoft.plans.model.Assignment.Status;
 
 public class SearchAssignmentGPXHelper {
 
@@ -50,7 +50,7 @@ public class SearchAssignmentGPXHelper {
 
 	public static Map<String, Object> gpxifySearch(Search search, GenericHibernateDAO dao) {
 		Map<String, Object> modified = new HashMap<String, Object>();		
-		modified.put("assignments", gpxifyAssignmentList(dao.loadAll(SearchAssignment.class)));
+		modified.put("assignments", gpxifyAssignmentList(dao.loadAll(Assignment.class)));
 		if(search.getLkp() != null) modified.put("lkp", search.getLkp());
 		if(search.getPls() != null) modified.put("pls", search.getPls());
 		if(search.getCP() != null) modified.put("cp", search.getCP());
@@ -140,7 +140,7 @@ public class SearchAssignmentGPXHelper {
 				clue.setPosition(wpt);
 				Map<String, String> clueAttrs = decodeAttrs((String) map.get("desc"));
 				if(clueAttrs.containsKey("assignmentid") && clueAttrs.get("assignmentid") != null) {
-					SearchAssignment assignment = dao.load(SearchAssignment.class, Long.parseLong(clueAttrs.get("assignmentid")));
+					Assignment assignment = dao.load(Assignment.class, Long.parseLong(clueAttrs.get("assignmentid")));
 					if(assignment != null) {
 						assignment.addClue(clue);
 						dao.save(assignment);
@@ -160,15 +160,15 @@ public class SearchAssignmentGPXHelper {
 		
 	}
 
-	public static List<Map<String, Object>> gpxifyAssignmentList(Collection<SearchAssignment> assignments) {
+	public static List<Map<String, Object>> gpxifyAssignmentList(Collection<Assignment> assignments) {
 		List<Map<String, Object>> modified = new ArrayList<Map<String, Object>>();
-		for(SearchAssignment assignment : assignments) {
+		for(Assignment assignment : assignments) {
 			modified.add(gpxifyAssignment(assignment));
 		}
 		return modified;
 	}
 		
-	public static Map<String, Object> gpxifyAssignment(SearchAssignment assignment) {
+	public static Map<String, Object> gpxifyAssignment(Assignment assignment) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("id", assignment.getId());
 		map.put("ways", assignment.getWays());
@@ -242,16 +242,16 @@ public class SearchAssignmentGPXHelper {
 			}
 
 			if(period != null) {
-				SearchAssignment assignment = dao.load(SearchAssignment.class, Long.parseLong(name.substring(2, 5)));
+				Assignment assignment = dao.load(Assignment.class, Long.parseLong(name.substring(2, 5)));
 				if(assignment == null) {
-					assignment = new SearchAssignment();
+					assignment = new Assignment();
 					assignment.setId(Long.parseLong(name.substring(2, 5)));
 					period.addAssignment(assignment);
 					dao.save(assignment);
 				}
 			}
 			
-			SearchAssignment assignment = dao.load(SearchAssignment.class, Long.parseLong(name.substring(2, 5)));
+			Assignment assignment = dao.load(Assignment.class, Long.parseLong(name.substring(2, 5)));
 
 			if(obj.containsKey("waypoints")) {
 				Way way = new Way();

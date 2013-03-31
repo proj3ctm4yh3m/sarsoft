@@ -20,7 +20,7 @@ import org.sarsoft.common.model.MapObject;
 public class OperationalPeriod extends MapObject {
 
 	private String description;
-	private Set<SearchAssignment> assignments = new HashSet<SearchAssignment>();
+	private Set<Assignment> assignments = new HashSet<Assignment>();
 
 	public OperationalPeriod() {	
 	}
@@ -49,20 +49,20 @@ public class OperationalPeriod extends MapObject {
 	@OneToMany(mappedBy="operationalPeriod")
 	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	@LazyCollection(LazyCollectionOption.TRUE)
-	public Set<SearchAssignment> getAssignments() {
+	public Set<Assignment> getAssignments() {
 		return assignments;
 	}
 
-	public void setAssignments(Set<SearchAssignment> assignments) {
+	public void setAssignments(Set<Assignment> assignments) {
 		this.assignments = assignments;
 	}
 
-	public void addAssignment(SearchAssignment assignment) {
+	public void addAssignment(Assignment assignment) {
 		this.assignments.add(assignment);
 		assignment.setOperationalPeriod(this);
 	}
 
-	public void removeAssignment(SearchAssignment assignment) {
+	public void removeAssignment(Assignment assignment) {
 		this.assignments.remove(assignment);
 		assignment.setOperationalPeriod(null);
 	}

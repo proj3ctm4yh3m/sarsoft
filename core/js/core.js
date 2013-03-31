@@ -268,47 +268,65 @@ org.sarsoft.widget.TenantSharing = function(imap, page) {
 
 org.sarsoft.widget.TenantSharing.prototype = new org.sarsoft.widget.BaseSharing();
 
+org.sarsoft.widget.Importer = function(container, url) {
+	var that = this;
+	this.body = container;
+
+    $('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.body).append(
+            $('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gps64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').click(function() {
+                    that.header.css('visibility', 'inherit');
+                    that.comms.init(false, url, "", function(data) { that.processImportedData(data) } );
+            }));
+	
+	this.gpx = new Object();
+	this.gpx.form = $('<form style="float: left; display: none; padding-left: 10px" name="gpsform" action="' + url + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/>Please choose a file to import:<br/></form>');
+	this.gpx.file = $('<input type="file" name="file" style="margin-top: 10px;"/>').appendTo(this.gpx.form);
+	this.gpx.file.change(function() {
+		if(that.bgframe == null)  {
+			that.bgframe = jQuery('<iframe name="IOFrame" id="IOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
+			that.bgform = jQuery('<form style="display: none" name="gpsform" action="/rest/in" target="IOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
+		}
+		jsonFrameCallback = function(data) { that.processImportedData(data) };
+		_bgframe = that.bgframe;
+		that.gpx.file.appendTo(that.bgform);
+		that.bgform.attr("action", url);
+		that.bgform.submit();
+	});
+	$('<div style="cursor: pointer; float: left"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gpx64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>').click(function() {
+		that.gpx.form.css('display', 'block');
+	}).prependTo($('<div style="float: left"></div').append(this.gpx.form).appendTo($('<div style="display: inline-block"></div>').appendTo(this.body)));
+	
+	this.header = $('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + $.img('gps.png') + '"/><b>GPS Console</b></div>').appendTo(this.body);
+	this.comms = new org.sarsoft.GPSComms(this.header);
+}
+
+org.sarsoft.widget.Importer.prototype.clear = function () {
+	this.comms.clear();
+	this.gpx.file.appendTo(this.gpx.form).val("");
+	this.gpx.form.css('display', 'none');
+}
+
+org.sarsoft.widget.Importer.prototype.processImportedData = function(data) {
+	for(var name in org.sarsoft.MapState.daos) {
+		if(data[name]) org.sarsoft.MapState.daos[name].sideload(data[name]);
+	}
+	$(this).triggerHandler('success');
+}
+
 org.sarsoft.widget.IO = function(imap) {
 	var that = this;
 	this.imap = imap;
+	imap.register("org.sarsoft.widget.IO", this);
 	
 	if(org.sarsoft.writeable) {
 		this.imp = new Object();
-		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>'), null, "Cancel", function() {});
-		this.imp.body = this.imp.dlg.bd.children().first();
+		this.imp.importer = new org.sarsoft.widget.Importer($('<div></div>'), '/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : ''));
+		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>').append(this.imp.importer.body), null, "Cancel", function() {});
 		imap.controls.action.links['import'].css('display', '').click(function() {
-			that.imp.comms.clear();
-			that.imp.gpx.file.appendTo(that.imp.gpx.form).val("");
-			that.imp.gpx.form.css('display', 'none');
+			that.imp.importer.clear();
 			that.imp.dlg.swap();
 		});
-		
-		$('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.imp.body).append(
-				$('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gps64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').click(function() {
-					that.imp.header.css('visibility', 'inherit');
-					that.imp.comms.init(false, "/rest/in", "", function(data) { that.processImportedData(data) } );
-				}));
-
-		this.imp.gpx = new Object();
-		this.imp.gpx.form = $('<form style="float: left; display: none; padding-left: 10px" name="gpsform" action="/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : '') + '" enctype="multipart/form-data" method="post"><input type="hidden" name="format" value="gpx"/>Please choose a file to import:<br/></form>');
-		this.imp.gpx.file = $('<input type="file" name="file" style="margin-top: 10px;"/>').appendTo(this.imp.gpx.form);
-		this.imp.gpx.file.change(function() {
-			if(that.bgframe == null)  {
-				that.bgframe = jQuery('<iframe name="IOFrame" id="IOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
-				that.bgform = jQuery('<form style="display: none" name="gpsform" action="/rest/in" target="IOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
-			}
-			jsonFrameCallback = function(data) { that.processImportedData(data) };
-			_bgframe = that.bgframe;
-			that.imp.gpx.file.appendTo(that.bgform);
-			that.bgform.attr("action", "/rest/in?tid=" + (sarsoft.tenant ? sarsoft.tenant.name : ''));
-			that.bgform.submit();
-		});
-		$('<div style="cursor: pointer; float: left"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gpx64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>').click(function() {
-			that.imp.gpx.form.css('display', 'block');
-		}).prependTo($('<div style="float: left"></div').append(this.imp.gpx.form).appendTo($('<div style="display: inline-block"></div>').appendTo(this.imp.body)));
-		
-		this.imp.header = $('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + $.img('gps.png') + '"/><b>GPS Console</b></div>').appendTo(this.imp.body);
-		this.imp.comms = new org.sarsoft.GPSComms(this.imp.header);
+		$(this.imp.importer).bind('success', function() { that.imp.dlg.hide(); })
 	}
 	
 	this.exp = new Object();
@@ -323,7 +341,7 @@ org.sarsoft.widget.IO = function(imap) {
 			if(dao.geo) {
 				for(var i = 0; i < dao.objs.length; i++) {
 					var obj = dao.objs[i];
-					if(obj != null && (obj.label || "").length > 0) exportables.append('<option value="' + name + '_' + obj.id + '">' + obj.label + '</option>');
+					if(obj != null && (obj[dao.label] || "").length > 0) exportables.append('<option value="' + name + '_' + obj.id + '">' + obj[dao.label] + '</option>');
 				}
 			}
 		}
@@ -348,14 +366,6 @@ org.sarsoft.widget.IO = function(imap) {
 
 	this.exp.header = jQuery('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + $.img('gps.png') + '"/><b>GPS Console</b></div>').appendTo(this.exp.body);
 	this.exp.comms = new org.sarsoft.GPSComms(this.exp.header);
-}
-
-org.sarsoft.widget.IO.prototype.processImportedData = function(data) {
-	var that = this;
-	for(var name in org.sarsoft.MapState.daos) {
-		if(data[name]) org.sarsoft.MapState.daos[name].sideload(data[name]);
-	}
-	that.imp.dlg.hide();
 }
 
 org.sarsoft.widget.IO.prototype.doexport = function(format) {
@@ -1093,6 +1103,7 @@ org.sarsoft.MapObjectDAO = function(type) {
 	this.type = type;
 	this.offline = (sarsoft.tenant == null);
 	org.sarsoft.MapState.daos[type] = this;
+	this.label = "label";
 }
 
 org.sarsoft.MapObjectDAO.prototype = new org.sarsoft.BaseDAO();

@@ -10,7 +10,7 @@ import org.sarsoft.common.controller.GeoMapObjectController;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.MapObject;
 import org.sarsoft.plans.model.Clue;
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.model.Assignment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,14 +45,14 @@ public class ClueController extends GeoMapObjectController {
 	public void link(MapObject obj) {
 		Clue clue = (Clue) obj;
 		Long id = clue.getAssignmentId();
-		SearchAssignment assignment = clue.getAssignment();
+		Assignment assignment = clue.getAssignment();
 		if(assignment != null && !id.equals(assignment.getId())) {
 			assignment.removeClue(clue);
 			dao.save(assignment);
 			assignment = null;
 		}
 		if(assignment == null && id != null) {
-			assignment = dao.load(SearchAssignment.class, id);
+			assignment = dao.load(Assignment.class, id);
 			assignment.addClue(clue);
 			dao.save(assignment);
 		}
@@ -60,7 +60,7 @@ public class ClueController extends GeoMapObjectController {
 	
 	public void unlink(MapObject obj) {
 		Clue clue = (Clue) obj;
-		SearchAssignment assignment = clue.getAssignment();
+		Assignment assignment = clue.getAssignment();
 		if(assignment != null) {
 			assignment.removeClue(clue);
 			dao.save(assignment);

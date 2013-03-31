@@ -11,7 +11,7 @@ import net.sf.json.JSONObject;
 import org.sarsoft.common.controller.MapObjectController;
 import org.sarsoft.common.model.MapObject;
 import org.sarsoft.plans.model.OperationalPeriod;
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.model.Assignment;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -38,8 +38,8 @@ public class OperationalPeriodController extends MapObjectController {
 	public void unlink(MapObject obj) {
 		OperationalPeriod period = (OperationalPeriod) obj;
 		if(period.getAssignments() != null) {
-			Set<SearchAssignment> copy = new HashSet<SearchAssignment>(period.getAssignments());
-			for(SearchAssignment assignment : copy) {
+			Set<Assignment> copy = new HashSet<Assignment>(period.getAssignments());
+			for(Assignment assignment : copy) {
 				period.removeAssignment(assignment);
 			}
 		}

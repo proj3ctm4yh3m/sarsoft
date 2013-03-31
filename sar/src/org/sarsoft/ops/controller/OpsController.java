@@ -23,8 +23,8 @@ import org.sarsoft.ops.model.Resource.Type;
 import org.sarsoft.ops.service.location.APRSLocalEngine;
 import org.sarsoft.ops.service.location.APRSTier2Engine;
 import org.sarsoft.ops.service.location.SpotLocationEngine;
-import org.sarsoft.plans.controller.SearchAssignmentController;
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.controller.AssignmentController;
+import org.sarsoft.plans.model.Assignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -53,7 +53,7 @@ public class OpsController extends JSONBaseController {
 	private Logger logger = Logger.getLogger(OpsController.class);
 	
 	@Autowired
-	SearchAssignmentController searchAssignmentController;
+	AssignmentController searchAssignmentController;
 	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
@@ -184,8 +184,8 @@ public class OpsController extends JSONBaseController {
 		String assignmentId = resource.getAssignmentId();
 		if(assignmentId != null && assignmentId.length() > 0) {
 			long id = Long.parseLong(assignmentId);
-			SearchAssignment assignment = dao.load(SearchAssignment.class, id);
-			assignment.addResource(resource);
+			Assignment assignment = dao.load(Assignment.class, id);
+//			assignment.addResource(resource);
 			dao.save(assignment);
 		}
 		
@@ -298,11 +298,11 @@ public class OpsController extends JSONBaseController {
 			@RequestParam(value="spotId", required=false) String spotId, @RequestParam(value="spotPassword", required=false) String spotPassword) {
 		Resource resource = dao.load(Resource.class, id);
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action")) == Action.DELETE) {			
-			if(resource.getAssignment() != null) {
+/*			if(resource.getAssignment() != null) {
 				SearchAssignment assignment = resource.getAssignment();
 				assignment.removeResource(resource);
 				dao.save(assignment);
-			}
+			}*/
 			dao.delete(resource);
 			return getAppResources(model, request, response);
 		}
@@ -327,11 +327,11 @@ public class OpsController extends JSONBaseController {
 		Resource resource = dao.load(Resource.class, id);
 
 		if(request.getParameter("action") != null && Action.valueOf(request.getParameter("action").toUpperCase()) == Action.DELETE) {			
-			if(resource.getAssignment() != null) {
+/*			if(resource.getAssignment() != null) {
 				SearchAssignment assignment = resource.getAssignment();
 				assignment.removeResource(resource);
 				dao.save(assignment);
-			}
+			} */
 			dao.delete(resource);
 			return json(model, new Object());
 		}
@@ -443,9 +443,9 @@ public class OpsController extends JSONBaseController {
 	}
 	
 	protected void detachResource(long resourceid, long assignmentid) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentid);
+		Assignment assignment = dao.load(Assignment.class, assignmentid);
 		Resource resource = dao.load(Resource.class, resourceid);
-		assignment.removeResource(resource);
+//		assignment.removeResource(resource);
 		dao.save(assignment);
 		dao.save(resource);
 	}
@@ -463,14 +463,14 @@ public class OpsController extends JSONBaseController {
 	}
 	
 	protected void attachResource(long resourceid, long assignmentid) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, assignmentid);
+		Assignment assignment = dao.load(Assignment.class, assignmentid);
 		Resource resource = dao.load(Resource.class, resourceid);
-		if(resource.getAssignment() != null) {
-			SearchAssignment old = resource.getAssignment();
+/*		if(resource.getAssignment() != null) {
+			Assignment old = resource.getAssignment();
 			old.removeResource(resource);
 			dao.save(old);
 		}
-		assignment.addResource(resource);
+		assignment.addResource(resource);*/
 		dao.save(assignment);
 	}
 
