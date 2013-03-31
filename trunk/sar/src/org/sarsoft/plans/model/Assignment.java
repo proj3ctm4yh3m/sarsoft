@@ -32,7 +32,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 
 @JSONAnnotatedEntity
 @Entity
-public class SearchAssignment extends GeoMapObject implements IPreSave {
+public class Assignment extends GeoMapObject implements IPreSave {
 
 	public enum ResourceType {
 		GROUND,MOUNTED,DOG,OHV
@@ -59,7 +59,6 @@ public class SearchAssignment extends GeoMapObject implements IPreSave {
 	private Date preparedOn;
 	private String preparedBy;
 	private OperationalPeriod operationalPeriod;
-	private Set<Resource> resources;
 	private String primaryFrequency;
 	private String secondaryFrequency;
 	private Set<Clue> clues = new HashSet<Clue>();
@@ -76,18 +75,18 @@ public class SearchAssignment extends GeoMapObject implements IPreSave {
 		classHints = Collections.unmodifiableMap(m);
 	}
 	
-	public SearchAssignment() {
+	public Assignment() {
 	}
 	
-	public SearchAssignment(JSONObject json) {
+	public Assignment(JSONObject json) {
 		from(json);
 	}
 	
 	public void from(JSONObject json) {
-		this.from((SearchAssignment) JSONObject.toBean(json, SearchAssignment.class, classHints));
+		this.from((Assignment) JSONObject.toBean(json, Assignment.class, classHints));
 	}
 	
-	public void from(SearchAssignment updated) {
+	public void from(Assignment updated) {
 		setNumber(updated.getNumber());
 		setDetails(updated.getDetails());
 		setResourceType(updated.getResourceType());
@@ -116,7 +115,7 @@ public class SearchAssignment extends GeoMapObject implements IPreSave {
 		return null;
 	}
 	
-	public static SearchAssignment fromGPX(JSONObject gpx) {
+	public static Assignment fromGPX(JSONObject gpx) {
 		return null;
 	}
 
@@ -301,50 +300,6 @@ public class SearchAssignment extends GeoMapObject implements IPreSave {
 		this.operationalPeriod = operationalPeriod;
 	}
 
-	@OneToMany
-	@JSONSerializable
-	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
-	@LazyCollection(LazyCollectionOption.FALSE)
-	public Set<Resource> getResources() {
-		return resources;
-	}
-
-	public void setResources(Set<Resource> resources) {
-		this.resources = resources;
-	}
-
-	public void addResource(Resource resource) {
-		this.resources.add(resource);
-		resource.setAssignment(this);
-	}
-
-	public void removeResource(Resource resource) {
-		if(resources.contains(resource)) {
-			resources.remove(resource);
-			resource.setAssignment(null);
-		}
-	}
-	
-	@Transient
-	public List<Resource> getPeople() {
-		if(resources == null) return null;
-		List<Resource> people = new ArrayList<Resource>();
-		for(Resource resource : resources) {
-			if(resource.getType() == Type.PERSON) people.add(resource);
-		}
-		return people;
-	}
-
-	@Transient
-	public List<Resource> getEquipment() {
-		if(resources == null) return null;
-		List<Resource> equipment = new ArrayList<Resource>();
-		for(Resource resource : resources) {
-			if(resource.getType() == Type.EQUIPMENT) equipment.add(resource);
-		}
-		return equipment;
-	}
-	
 	@OneToMany
 	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	@LazyCollection(LazyCollectionOption.FALSE)

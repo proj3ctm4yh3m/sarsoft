@@ -1,12 +1,12 @@
 package org.sarsoft.plans.controller;
 
+import org.sarsoft.plans.model.Assignment;
 import org.sarsoft.plans.model.Probability;
-import org.sarsoft.plans.model.SearchAssignment;
 
-public class SearchAssignmentForm {
+public class AssignmentForm {
 	private long id;
 	private String bulkIds;
-	private SearchAssignment.ResourceType resourceType;
+	private Assignment.ResourceType resourceType;
 	private String details;
 	private Double timeAllocated;
 	private String previousEfforts;
@@ -42,10 +42,10 @@ public class SearchAssignmentForm {
 	public void setId(long id) {
 		this.id = id;
 	}
-	public SearchAssignment.ResourceType getResourceType() {
+	public Assignment.ResourceType getResourceType() {
 		return resourceType;
 	}
-	public void setResourceType(SearchAssignment.ResourceType resourceType) {
+	public void setResourceType(Assignment.ResourceType resourceType) {
 		this.resourceType = resourceType;
 	}
 	public Double getTimeAllocated() {

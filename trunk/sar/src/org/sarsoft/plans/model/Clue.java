@@ -30,7 +30,7 @@ public class Clue extends GeoMapObject implements IPreSave {
 	private Date found;
 	private Date updated;
 	private Long assignmentId;
-	private SearchAssignment assignment;
+	private Assignment assignment;
 	private Disposition instructions;
 	
 	public Clue() {
@@ -140,11 +140,11 @@ public class Clue extends GeoMapObject implements IPreSave {
 	}
 	
 	@ManyToOne
-	public SearchAssignment getAssignment() {
+	public Assignment getAssignment() {
 		return assignment;
 	}
 	
-	public void setAssignment(SearchAssignment assignment) {
+	public void setAssignment(Assignment assignment) {
 		this.assignment = assignment;
 	}
 	

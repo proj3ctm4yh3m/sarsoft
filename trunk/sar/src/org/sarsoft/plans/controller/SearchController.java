@@ -25,7 +25,7 @@ import org.sarsoft.ops.controller.OpsController;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Search;
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.model.Assignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -70,7 +70,7 @@ public class SearchController extends JSONBaseController {
 		}
 		model.addAttribute("period", lastPeriod);
 		model.addAttribute("periods", periods);
-		model.addAttribute("assignments", dao.loadAll(SearchAssignment.class));
+		model.addAttribute("assignments", dao.loadAll(Assignment.class));
 		opsController.checkLocators();
 		return app(model, "OperationalPeriod.Detail");
 	}
@@ -220,7 +220,7 @@ public class SearchController extends JSONBaseController {
 	@RequestMapping(value ="/rest/search", method = RequestMethod.GET)
 	public String bulkGPXDownload(Model model, HttpServletRequest request, HttpServletResponse response) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
-		List<SearchAssignment >assignments = dao.loadAll(SearchAssignment.class);
+		List<Assignment >assignments = dao.loadAll(Assignment.class);
 
 		switch (format) {
 		case GPX :

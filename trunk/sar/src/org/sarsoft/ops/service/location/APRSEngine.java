@@ -18,7 +18,7 @@ import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.ops.model.Resource;
-import org.sarsoft.plans.model.SearchAssignment;
+import org.sarsoft.plans.model.Assignment;
 
 import com.google.api.client.googleapis.GoogleTransport;
 import com.google.api.client.googleapis.json.JsonCParser;
@@ -186,7 +186,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 					resource.setUpdated(new Date());
 					dao.superSave(resource);
 					if(resource.getAssignment() != null) {
-						SearchAssignment assignment = resource.getAssignment();
+						Assignment assignment = resource.getAssignment();
 						boolean updated = false;
 						for(Way way : assignment.getWays()) {
 							if(way != null && from.equalsIgnoreCase(way.getName())) {

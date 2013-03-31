@@ -6,7 +6,7 @@ org.sarsoft.OperationalPeriodDAO = function() {
 org.sarsoft.OperationalPeriodDAO.prototype = new org.sarsoft.MapObjectDAO();
 
 org.sarsoft.OperationalPeriodDAO.prototype.unlink = function(period) {
-	var dao = org.sarsoft.MapState.daos["SearchAssignment"];
+	var dao = org.sarsoft.MapState.daos["Assignment"];
 	for(i = 0; i < dao.objs.length; i++) {
 		if(dao.objs[i] && dao.objs[i].operationalPeriodId == period.id) dao.objs[i].operationalPeriodId = null;
 	}
@@ -67,7 +67,8 @@ org.sarsoft.OperationalPeriodController.prototype.active = function(id) {
 }
 
 org.sarsoft.AssignmentDAO = function() {
-	org.sarsoft.WayObjectDAO.call(this, "SearchAssignment", "/rest/assignment");
+	org.sarsoft.WayObjectDAO.call(this, "Assignment", "/rest/assignment");
+	this.label = "number";
 }
 
 org.sarsoft.AssignmentDAO.prototype = new org.sarsoft.WayObjectDAO();
@@ -151,16 +152,23 @@ org.sarsoft.AssignmentForm.prototype.write = function(obj) {
 
 org.sarsoft.AssignmentMapDialog = function(imap, controller) {
 	this.body = $('<div></div>');
+	var that = this;
 	
 	this.tabs = {
+			action: $('<div></div>'),
 			tracks: $('<div></div>'),
 			clues: $('<div></div>')
 	}
 	
 	this.tabview = new YAHOO.widget.TabView();
+	this.tabview.addTab(new YAHOO.widget.Tab({label: 'Actions', contentEl: this.tabs.action[0]}))
 	this.tabview.addTab(new YAHOO.widget.Tab({label: 'Tracks', contentEl: this.tabs.tracks[0]}));
 	this.tabview.addTab(new YAHOO.widget.Tab({label: 'Clues', contentEl: this.tabs.clues[0]}));
 	this.tabview.appendTo(this.body[0]);
+	
+	this.imp = new Object();
+	this.imp.importer = new org.sarsoft.widget.Importer($('<div></div>').appendTo(this.tabs.clues), '/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : ''));
+	$(this.imp.importer).bind('success', function() { that.dialog.hide(); })
 	
     this.cluetable = new org.sarsoft.ClueTable(function(clue) {
     	imap.map.setCenter(new google.maps.LatLng(clue.position.lat, clue.position.lng));
@@ -171,19 +179,20 @@ org.sarsoft.AssignmentMapDialog = function(imap, controller) {
 }
 
 org.sarsoft.AssignmentMapDialog.prototype.show = function(id) {
+	this.imp.importer.clear();
 	this.cluetable.clear();
 	var dao = org.sarsoft.MapState.daos["Clue"];
 	for(i = 0; i < dao.objs.length; i++) {
 		if(dao.objs[i] && dao.objs[i].assignmentId == id) this.cluetable.table.addRow(dao.objs[i]);
 	}
-	this.dialog.swap();
+	this.dialog.show();
 }
 
 org.sarsoft.AssignmentController = function(imap, background_load) {
 	var that = this;
 	this.opcontroller = imap.registered["org.sarsoft.OperationalPeriodController"]; 
 
-	org.sarsoft.WayObjectController.call(this, imap, {name: "SearchAssignment", dao: org.sarsoft.AssignmentDAO, label: "Assignments", geo: true, way : "route"})
+	org.sarsoft.WayObjectController.call(this, imap, {name: "Assignment", dao: org.sarsoft.AssignmentDAO, label: "Assignments", geo: true, way : "route"})
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Line Assignment", function(point) {
@@ -324,6 +333,7 @@ org.sarsoft.ClueDAO = function() {
 	org.sarsoft.MapObjectDAO.call(this, "Clue");
 	this.baseURL = "/rest/clue";
 	this.geo = true;
+	this.label = "summary";
 }
 
 org.sarsoft.ClueDAO.prototype = new org.sarsoft.MapObjectDAO();
@@ -386,7 +396,7 @@ org.sarsoft.ClueForm.prototype.read = function() {
 
 org.sarsoft.ClueForm.prototype.write = function(obj) {
 	this.fields.assignmentId.empty();
-	var assignments = org.sarsoft.MapState.daos["SearchAssignment"].objs;
+	var assignments = org.sarsoft.MapState.daos["Assignment"].objs;
 	for(var i = 0; i < assignments.length; i++) {
 		if(assignments[i] != null) this.fields.assignmentId.append('<option value="' + i + '">' + assignments[i].number + '</option>');
 	}
