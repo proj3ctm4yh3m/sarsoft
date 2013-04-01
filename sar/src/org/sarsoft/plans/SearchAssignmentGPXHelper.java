@@ -171,8 +171,8 @@ public class SearchAssignmentGPXHelper {
 	public static Map<String, Object> gpxifyAssignment(Assignment assignment) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("id", assignment.getId());
-		map.put("ways", assignment.getWays());
-		map.put("waypoints", assignment.getWaypoints());
+//		map.put("ways", assignment.getWays());
+//		map.put("waypoints", assignment.getWaypoints());
 		map.put("operationalPeriodId", assignment.getOperationalPeriodId());
 		
 		Map<String, String> attrs = new HashMap<String, String>();
@@ -280,7 +280,7 @@ public class SearchAssignmentGPXHelper {
 				
 				List<Waypoint> wpts = way.getWaypoints();
 				if(way.getType() == WayType.ROUTE && wpts.get(0).equals(wpts.get(wpts.size() - 1))) way.setPolygon(true);
-				assignment.getWays().add(way);
+//				assignment.getWays().add(way);
 				way.setUpdated(new Date());
 
 				dao.save(assignment);
@@ -289,7 +289,7 @@ public class SearchAssignmentGPXHelper {
 				wpt.setName((String) obj.get("desc"));
 				wpt.setLat((Double) obj.get("lat"));
 				wpt.setLng((Double) obj.get("lng"));
-				assignment.getWaypoints().add(wpt);
+//				assignment.getWaypoints().add(wpt);
 				dao.save(assignment);
 			}
 		}

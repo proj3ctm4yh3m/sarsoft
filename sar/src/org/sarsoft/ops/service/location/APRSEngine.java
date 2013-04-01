@@ -188,14 +188,14 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 					if(resource.getAssignment() != null) {
 						Assignment assignment = resource.getAssignment();
 						boolean updated = false;
-						for(Way way : assignment.getWays()) {
+/*						for(Way way : assignment.getWays()) {
 							if(way != null && from.equalsIgnoreCase(way.getName())) {
 								way.getWaypoints().add(wpt.clone());
 								dao.superSave(way);
 								dao.superSave(assignment);
 								updated = true;
 							}
-						}
+						}*/
 						if(!updated && oldPosition != null) {
 							Way way = new Way();
 							way.setType(WayType.TRACK);
@@ -205,7 +205,7 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 							waypoints.add(wpt.clone());
 							waypoints.add(oldPosition.clone());
 							way.setWaypoints(waypoints);
-							assignment.getWays().add(way);
+//							assignment.getWays().add(way);
 							dao.superSave(assignment);
 						}
 					}
