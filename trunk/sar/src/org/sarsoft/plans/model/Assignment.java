@@ -53,15 +53,16 @@ public class Assignment extends GeoMapObject implements IPreSave {
 	private Probability responsivePOD;
 	private Probability unresponsivePOD;
 	private Probability cluePOD;
-	private List<Way> ways;
-	private List<Waypoint> waypoints;
 	private Date updated;
 	private Date preparedOn;
 	private String preparedBy;
 	private OperationalPeriod operationalPeriod;
 	private String primaryFrequency;
 	private String secondaryFrequency;
+	private Way segment;
 	private Set<Clue> clues = new HashSet<Clue>();
+	private List<FieldWaypoint> fieldWaypoints = new ArrayList<FieldWaypoint>();
+	private List<FieldTrack> fieldTracks = new ArrayList<FieldTrack>();
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -70,8 +71,7 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		@SuppressWarnings("rawtypes")
 		Map<String, Class> m = new HashMap<String, Class>();
 		m.putAll(Way.classHints);
-		m.put("ways", Way.class);
-		m.put("route", Way.class);
+		m.put("segment", Way.class);
 		classHints = Collections.unmodifiableMap(m);
 	}
 	
@@ -101,14 +101,13 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		setUpdated(updated.getUpdated());
 		setPreparedOn(updated.getPreparedOn());
 		setPreparedBy(updated.getPreparedBy());
-		
-//		setResources(updated.getResources());
-//		setClues(updated.getClues());
-
 		setPrimaryFrequency(updated.getPrimaryFrequency());
 		setSecondaryFrequency(updated.getSecondaryFrequency());
 		
-		if(updated.getRoute() != null) setRoute(updated.getRoute());
+		if(updated.getSegment() != null) {
+			if(segment == null) segment = new Way();
+			segment.from(updated.getSegment());
+		}
 	}
 	
 	public JSONObject toGPX() {
@@ -119,64 +118,17 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		return null;
 	}
 
-	@OneToMany
+	@ManyToOne
 	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-	@LazyCollection(LazyCollectionOption.FALSE)
-	public List<Way> getWays() {
-		if(ways == null) ways = new ArrayList<Way>();
-		return ways;
-	}
-	public void setWays(List<Way> ways) {
-		this.ways = ways;
+	@JSONSerializable
+	public Way getSegment() {
+		return segment;
 	}
 	
-	@JSONSerializable
-	@Transient
-	public Way getRoute() {
-		if(ways == null) return null;
-		for(Way way : ways) {
-			if(way.getType() == WayType.ROUTE) return way;
-		}
-		return null;
+	public void setSegment(Way segment) {
+		this.segment = segment;
 	}
 	
-	@JSONSerializable
-	@Transient
-	public void setRoute(Way route) {
-		Way myroute = getRoute();
-		if(myroute == null) {
-			myroute = new Way();
-			if(this.ways == null) this.ways = new ArrayList<Way>();
-			this.ways.add(myroute);
-		}
-		myroute.from(route);
-		myroute.setType(WayType.ROUTE);
-	}
-	
-	@JSONSerializable
-	@Transient
-	public List<Way> getTracks() {
-		if(ways == null) return null;
-		ArrayList<Way> tracks = new ArrayList<Way>();
-		for(int i = 0; i < ways.size(); i++) {
-			Way way = ways.get(i);
-			if(way != null && way.getType() == WayType.TRACK) tracks.add(way);
-		}
-		return tracks;
-	}
-
-	@OneToMany
-	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-	@LazyCollection(LazyCollectionOption.FALSE)
-	@JSONSerializable
-	public List<Waypoint> getWaypoints() {
-		if(waypoints == null) waypoints = new ArrayList<Waypoint>();
-		return waypoints;
-	}
-	public void setWaypoints(List<Waypoint> waypoints) {
-		this.waypoints = waypoints;
-	}
-
 	@JSONSerializable
 	public Date getUpdated() {
 		return updated;
@@ -189,13 +141,7 @@ public class Assignment extends GeoMapObject implements IPreSave {
 	}
 
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("SearchAssignment " + id + ": (" + updated + ")\n[");
-		for(Way way : ways) {
-			builder.append(way.toString() + ",");
-		}
-		builder.append("]");
-		return builder.toString();
+		return "SearchAssignment " + id + ": (" + updated + ")";
 	}
 
 	@JSONSerializable
@@ -302,7 +248,7 @@ public class Assignment extends GeoMapObject implements IPreSave {
 
 	@OneToMany
 	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
-	@LazyCollection(LazyCollectionOption.FALSE)
+	@LazyCollection(LazyCollectionOption.TRUE)
 	public Set<Clue> getClues() {
 		return clues;
 	}
@@ -320,7 +266,49 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		this.clues.remove(clue);
 		clue.setAssignment(null);
 	}
+	
+	@OneToMany
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	@LazyCollection(LazyCollectionOption.TRUE)
+	public List<FieldTrack> getFieldTracks() {
+		return fieldTracks;
+	}
+	
+	public void setFieldTracks(List<FieldTrack> fieldTracks) {
+		this.fieldTracks = fieldTracks;
+	}
+	
+	public void addFieldTrack(FieldTrack track) {
+		this.fieldTracks.add(track);
+		track.setAssignment(this);
+	}
+	
+	public void removeFieldTrack(FieldTrack track) {
+		this.fieldTracks.remove(track);
+		track.setAssignment(null);
+	}
 
+	@OneToMany
+	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	@LazyCollection(LazyCollectionOption.TRUE)
+	public List<FieldWaypoint> getFieldWaypoints() {
+		return fieldWaypoints;
+	}
+	
+	public void setFieldWaypoints(List<FieldWaypoint> fieldWaypoints) {
+		this.fieldWaypoints = fieldWaypoints;
+	}
+	
+	public void addFieldWaypoint(FieldWaypoint fwpt) {
+		this.fieldWaypoints.add(fwpt);
+		fwpt.setAssignment(this);
+	}
+	
+	public void removeFieldWaypoint(FieldWaypoint fwpt) {
+		this.fieldWaypoints.remove(fwpt);
+		fwpt.setAssignment(null);
+	}
+	
 	public String getPreparedBy() {
 		return preparedBy;
 	}

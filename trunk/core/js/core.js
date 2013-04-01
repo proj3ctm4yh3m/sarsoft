@@ -1403,10 +1403,28 @@ org.sarsoft.MapObjectController.prototype.checkForObjects = function() {
 
 
 org.sarsoft.WaypointObjectController = function(imap, type, background_load) {
-	org.sarsoft.MapObjectController.call(this, imap, type, background_load);	
+	org.sarsoft.MapObjectController.call(this, imap, type, background_load);
+	var that = this;
+
+	this.cm = {
+			a_none : function(obj) { return obj == null && that.dn.visible },
+			a_editnodlg : function(obj) { return obj.inedit && !that.dlg.live },
+			a_noedit : function(obj) { return obj.obj != null && !obj.inedit && !that.dlg.live },
+			
+			h_details : function(data) { that.dlg.show(data.pc.obj) },
+			h_drag : function(data) { that.edit(data.pc.obj) },
+			h_del : function(data) { that.del(function() { that.dao.del(data.pc.obj.id) }) }
+	}
 }
 
 org.sarsoft.WaypointObjectController.prototype = new org.sarsoft.MapObjectController();
+
+org.sarsoft.WaypointObjectController.prototype._contextMenuCheck = function(mapobj) {
+	if(mapobj == null) return {}
+	var obj = that.dao.getObj(that.getObjectIdFromWpt(mapobj));
+	var inedit = (obj != null && that.attr(obj, "inedit"));
+	return { obj: obj, inedit: inedit}
+}
 
 org.sarsoft.WaypointObjectController.prototype.growmap = function(obj) {
 	this.imap.growInitialMap(new google.maps.LatLng(obj.position.lat, obj.position.lng));
@@ -1459,6 +1477,36 @@ org.sarsoft.WaypointObjectController.prototype.getObjectIdFromWpt = function(wpt
 	}
 }
 
+org.sarsoft.WaypointObjectController.prototype.DNGetIcon = function(obj) {
+	return $('<div></div>');
+}
+
+org.sarsoft.WaypointObjectController.prototype.DNAddLine = function(obj, handler) {
+	var that = this;
+	var line = this.dn.add(obj.id, obj[this.dao.label], function() {
+		that.imap.map.setCenter(new google.maps.LatLng(obj[that.type.waypoint].lat, obj[that.type.waypoint].lng));
+		if(handler) handler();
+	});
+	line.prepend(this.DNGetIcon(obj));
+	return line
+}
+
+org.sarsoft.WaypointObjectController.prototype.DNAddEdit = function(obj, handler) {
+	var that = this;
+	this.dn.addIconEdit(obj.id, function() {
+		that.dlg.show(obj, null, true);
+		that.dlg.live = true;
+		that.edit(obj);
+	});
+}
+
+org.sarsoft.WaypointObjectController.prototype.DNAddDelete = function(obj) {
+	var that = this;
+	this.dn.addIconDelete(obj.id, function() {
+		that.del(function() { that.dao.del(obj.id); });
+	});
+}
+
 
 org.sarsoft.WayObjectDAO = function(name, baseURL) {
 	org.sarsoft.MapObjectDAO.call(this, name);
@@ -1487,9 +1535,47 @@ org.sarsoft.WayObjectDAO.prototype.validate = function(obj) {
 
 org.sarsoft.WayObjectController = function(imap, type, background_load) {
 	org.sarsoft.MapObjectController.call(this, imap, type, background_load);	
+	var that = this;
+	
+	this.pg = new org.sarsoft.view.ProfileGraph();
+	this.profileDlg = new org.sarsoft.view.MapDialog(imap, "Elevation Profile", this.pg.div, "OK", null, function() { that.pg.hide(); });
+	this.profileDlg.dialog.hideEvent.subscribe(function() { that.pg.hide(); });
+	
+	this.cm = {
+			a_none : function(obj) { return obj == null && that.dn.visible },
+			a_editnodlg : function(obj) { return obj.inedit && !that.dlg.live },
+			a_noedit : function(obj) { return obj.obj != null && !obj.inedit && !that.dlg.live },
+
+			h_details : function(data) { that.dlg.show(data.pc.obj, data.point) },
+			h_profile : function(data) { that.profile(data.pc.obj) },
+			h_drag : function(data) { that.edit(data.pc.obj) },
+			h_save : function(data) { that.save(data.pc.obj) },
+			h_discard : function(data) { that.discard(data.pc.obj) },
+			h_del : function(data) { that.del(function() { that.dao.del(data.pc.obj.id) }) }
+	}	
 }
 
 org.sarsoft.WayObjectController.prototype = new org.sarsoft.MapObjectController();
+
+org.sarsoft.WayObjectController.prototype._contextMenuCheck = function(mapobj) {
+	if(mapobj == null) return {}
+	var obj = that.dao.getObj(that.getObjectIdFromWay(mapobj));
+	var inedit = (obj != null && that.attr(obj, "inedit"));
+	return { obj: obj, inedit: inedit}
+}
+
+org.sarsoft.WayObjectController.prototype.getConfig = function(obj) {
+	return { color : "#FF0000", weight : 2, fill : 30 }
+}
+
+org.sarsoft.WayObjectController.prototype.profile = function(obj) {
+	var that = this;
+	obj = this.obj(obj);
+	var config = this.getConfig(obj);
+	this.pg.profile(obj[this.type.way], config.color, function() {
+		that.profileDlg.show();
+	});
+}
 
 org.sarsoft.WayObjectController.prototype.growmap = function(object) {
 		var bb = object[this.type.way].boundingBox;
@@ -1548,6 +1634,53 @@ org.sarsoft.WayObjectController.prototype.getObjectIdFromWay = function(way) {
 		var obj = this.dao.objs[key];
 		if(obj != null && obj[this.type.way].id == way.id) return key;
 	}
+}
+
+org.sarsoft.WayObjectController.prototype.DNGetIcon = function(obj) {
+	var obj = this.obj(obj);
+	var config = this.getConfig(obj);
+	
+	if(obj[this.type.way].polygon) {
+		var div = jQuery('<div style="height: 0.6em;"></div>');
+		div.css({"border-top": '1px solid ' + config.color, "border-bottom": '1px solid ' + config.color});
+		jQuery('<div style="width: 100%; height: 100%"></div>').appendTo(div).css({"background-color": config.color, filter: "alpha(opacity=" + config.fill + ")", opacity : config.fill/100});
+		return div;
+	} else {
+		return jQuery('<div style="height: 0.5ex"></div>').css("border-top", config.weight + "px solid " + config.color);			
+	}
+}
+
+org.sarsoft.WayObjectController.prototype.DNAddLine = function(obj, handler) {
+	var that = this;
+	var line = this.dn.add(obj.id, obj[this.dao.label], function() {
+		that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(obj[that.type.way].boundingBox[0].lat, obj[that.type.way].boundingBox[0].lng), new google.maps.LatLng(obj[that.type.way].boundingBox[1].lat, obj[that.type.way].boundingBox[1].lng)));
+		if(handler) handler();
+	});
+	line.prepend(this.DNGetIcon(obj));
+	return line
+}
+
+org.sarsoft.WayObjectController.prototype.DNAddProfile = function(obj) {
+	var that = this;
+	this.dn.addIcon(obj.id, "Elevation Profile", '<img src="' + $.img('profile.png') + '"/>', function() {
+		that.profile(obj);
+	});
+}
+
+org.sarsoft.WayObjectController.prototype.DNAddEdit = function(obj, handler) {
+	var that = this;
+	this.dn.addIconEdit(obj.id, function() {
+		that.edit(obj);
+		that.dlg.show(obj, null, true);
+		that.dlg.live = true;
+	});
+}
+
+org.sarsoft.WayObjectController.prototype.DNAddDelete = function(obj) {
+	var that = this;
+	this.dn.addIconDelete(obj.id, function() {
+		that.del(function() { that.dao.del(obj.id); });
+	});
 }
 
 

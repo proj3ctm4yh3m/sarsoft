@@ -134,40 +134,34 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Marker", function(point) {
-			that.markerDlg.show({url: "#FF0000"}, point);
+			that.dlg.show({url: "#FF0000"}, point);
 		});
 	}
 
 	if(!org.sarsoft.iframe && !this.bgload) {
+		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker Details",  new org.sarsoft.view.MarkerForm());
 		
-		var form = new org.sarsoft.view.MarkerForm();
-		this.markerDlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker Details", form);
-		
-		this.markerDlg.discardGeoInfo = function() { that.discard(this.object.id) }
-		this.markerDlg.saveGeoInfo = function(marker, callback) { that.save(this.object.id, callback); }
-		this.markerDlg.saveData = function(marker) {
+		this.dlg.discardGeoInfo = function() { that.discard(this.object.id) }
+		this.dlg.saveGeoInfo = function(marker, callback) { that.save(this.object.id, callback); }
+		this.dlg.saveData = function(marker) {
 			marker.position = this.object.position;
 			that.dao.save(this.object.id, marker);
 		}
-		this.markerDlg.create = function(marker) {
+		this.dlg.create = function(marker) {
 			var wpt = that.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(this.point.x, this.point.y));
 			marker.position = {lat: wpt.lat(), lng: wpt.lng()};
 			that.dao.create(marker);
 		}
 
-		var pc = function(obj) {
-			if(obj == null) return {}
-			var marker = that.obj(that.getObjectIdFromWpt(obj));
-			var inedit = (marker != null && that.attr(marker, "inedit"));
-			return { marker: marker, inedit: inedit}
-		}
+		var pc = function(obj) { return that._contextMenuCheck(obj) }
 		
-		if(org.sarsoft.writeable && !this.bgload) {
+		if(org.sarsoft.writeable) {
 			this.imap.addContextMenuItems([
-			    {text : "New Marker", applicable : function(obj) { return obj == null && that.dn.visible}, handler: function(data) { that.markerDlg.show({url: "#FF0000"}, data.point); }},
-	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live; }, handler: function(data) { that.markerDlg.show(data.pc.marker) }},
-	    		{text : "Drag to New Location", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live;}, handler: function(data) { that.drag(data.pc.marker)}},
-	    		{text : "Delete Marker", precheck: pc, applicable : function(obj) { return obj.marker != null && !obj.inedit && !that.markerDlg.live;}, handler: function(data) { that.del(function() { that.dao.del(data.pc.marker.id);})}} ]);
+			    {text : "New Marker", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({url: "#FF0000"}, data.point); }},
+	    		{text : "Details", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_details },
+	    		{text : "Drag to New Location", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_drag},
+	    		{text : "Delete Marker", precheck: pc, applicable : that.cm.a_noedit, handler:  that.cm.h_del}
+	    		]);
 		}
 	}
 
@@ -193,28 +187,22 @@ org.sarsoft.controller.MarkerController.getRealURLForMarker = function(url) {
 	}
 }
 
+org.sarsoft.controller.MarkerController.prototype.DNGetIcon = function(obj) {
+	return $('<div><img src="' + org.sarsoft.controller.MarkerController.getRealURLForMarker(obj.url) + '"/></div>');
+}
+
 org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 	var that = this;
 	this.imap.removeWaypoint(object.position);
 
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
 
-	var line = this.dn.add(object.id, object.label, function() {
-		that.imap.map.setCenter(new google.maps.LatLng(object.position.lat, object.position.lng));
-	});
-
+	this.DNAddLine(object);
 	if((object.comments || "").length > 0) this.dn.addComments(object.id, object.comments);
-	line.prepend('<div><img src="' + org.sarsoft.controller.MarkerController.getRealURLForMarker(object.url) + '"/></div>');
 	
 	if(org.sarsoft.writeable) {
-		this.dn.addIconEdit(object.id, function() {
-			that.markerDlg.show(object, null, true);
-			that.markerDlg.live = true;
-			that.edit(object);
-		});
-		this.dn.addIconDelete(object.id, function() {
-			that.del(function() { that.dao.del(object.id); });
-		});
+		this.DNAddEdit(object);
+		this.DNAddDelete(object);
 	}
 	
 	if(this.dn.visible) {
@@ -360,26 +348,24 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Line", function(point) {
-			that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, point);
+			that.dlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, point);
 		});
 
 		this.buildAddButton(0, "Polygon", function(point) {
-		    that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, point);
+		    that.dlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, point);
 		});
 	}
 
 	if(!org.sarsoft.iframe && !this.bgload) {
 	
-		form = new org.sarsoft.view.ShapeForm();
-				
-		this.shapeDlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Shape Details", form);
+		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Shape Details", new org.sarsoft.view.ShapeForm());
 		
-		this.shapeDlg.discardGeoInfo = function() { that.discard(this.object); }
-		this.shapeDlg.saveGeoInfo = function(shape, callback) { that.save(this.object.id, callback); }
-		this.shapeDlg.saveData = function(shape) {
+		this.dlg.discardGeoInfo = function() { that.discard(this.object); }
+		this.dlg.saveGeoInfo = function(shape, callback) { that.save(this.object.id, callback); }
+		this.dlg.saveData = function(shape) {
 			that.dao.save(this.object.id, shape);
 		}
-		this.shapeDlg.create = function(shape) {
+		this.dlg.create = function(shape) {
 			shape.way = {polygon: this.object.way.polygon};
 			shape.way.waypoints = that.imap.getNewWaypoints(this.point, this.object.way.polygon);
 			that.dao.create(shape, function(obj) {
@@ -387,8 +373,8 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 			});
 		}
 		
-		this.sizewarning = $('<div style="font-weight: bold; color: red; display: none"></div>').prependTo(this.shapeDlg.body);
-		this.shapeDlg.dialog.dialog.hideEvent.subscribe(function() {
+		this.sizewarning = $('<div style="font-weight: bold; color: red; display: none"></div>').prependTo(this.dlg.body);
+		this.dlg.dialog.dialog.hideEvent.subscribe(function() {
 			that.sizewarning.css('display', 'none');
 		});
 		
@@ -434,35 +420,22 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 			org.sarsoft.view.MapDialog.prototype.show.call(this);
 		}
 		
-		this.pg = new org.sarsoft.view.ProfileGraph();
-		this.profileDlg = new org.sarsoft.view.MapDialog(imap, "Elevation Profile", this.pg.div, "OK", null, function() { that.pg.hide(); });
-		this.profileDlg.dialog.hideEvent.subscribe(function() { that.pg.hide(); });
-		
-		var pc = function(obj) {
-			if(obj == null) return {}
-			var shape = that.obj(that.getObjectIdFromWay(obj));
-			var inedit = (shape != null && that.attr(shape, "inedit"));
-			return { shape: shape, inedit: inedit}
-		}
-		
-		var pc2 = function(obj) {
-			var shape = that.dao.getObj(that.getObjectIdFromWay(obj));
-			return { shape: shape }
-		}
-		
-		if(org.sarsoft.writeable && !this.bgload) {
+		var pc = function(obj) { return that._contextMenuCheck(obj) }
+		var pc2 = function(obj) { return that._contextMenuCheck(obj) }
+
+		if(org.sarsoft.writeable) {
 			this.imap.addContextMenuItems([
-				{text : "New Line", applicable : function(obj) { return obj == null && that.dn.visible}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, data.point); }},
-				{text : "New Polygon", applicable : function(obj) { return obj == null && that.dn.visible}, handler: function(data) { that.shapeDlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, data.point); }},
-	    		{text : "Details", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.shapeDlg.show(data.pc.shape, data.point) }},
-	    		{text : "Profile", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.profile(data.pc.shape);}},
-	    		{text: "Modify \u2192", precheck: pc, applicable: function(obj) { return obj.shape != null && !obj.inedit }, items:
-	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.shape.way.waypoints.length <= 500 }, handler : function(data) { that.edit(data.pc.shape) }},
-		    		{text : "Split Here", precheck: pc2, applicable: function(obj) { return !obj.shape.way.polygon}, handler: function(data) { that.splitLineAt(data.pc.shape, that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
-		    		{text : "Join Lines", precheck: pc2, applicable: function(obj) { return !obj.shape.way.polygon}, handler: function(data) { that.joinDlg.show(data.pc.shape); }}]},
-	    		{text : "Save Changes", precheck: pc, applicable : function(obj) { return obj.shape != null && obj.inedit && !that.shapeDlg.live; }, handler: function(data) { that.save(data.pc.shape) }},
-	    		{text : "Discard Changes", precheck: pc, applicable : function(obj) { return obj.shape != null && obj.inedit && !that.shapeDlg.live }, handler: function(data) { that.discard(data.pc.shape) }},
-	    		{text : "Delete Shape", precheck: pc, applicable : function(obj) { return obj.shape != null && !obj.inedit }, handler: function(data) { that.del(function() { that.dao.del(data.pc.shape.id);});}}
+				{text : "New Line", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, data.point); }},
+				{text : "New Polygon", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, data.point); }},
+	    		{text : "Details", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_details},
+	    		{text : "Profile", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_profile},
+	    		{text: "Modify \u2192", precheck: pc, applicable: function(obj) { that.cm.a_noedit }, items:
+	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.obj.way.waypoints.length <= 500 }, handler : this.cm.a_drag },
+		    		{text : "Split Here", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.splitLineAt(data.pc.obj, that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
+		    		{text : "Join Lines", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.joinDlg.show(data.pc.obj); }}]},
+	    		{text : "Save Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_save },
+	    		{text : "Discard Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_discard },
+	    		{text : "Delete Shape", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_del }
 	     		]);
 		}
 	}
@@ -473,14 +446,6 @@ org.sarsoft.controller.ShapeController.prototype = new org.sarsoft.WayObjectCont
 
 org.sarsoft.controller.ShapeController.prototype._saveWay = function(obj, waypoints, handler) {
 	this.dao.saveWaypoints(obj, waypoints, handler);
-}
-
-org.sarsoft.controller.ShapeController.prototype.profile = function(shape) {
-	shape = this.obj(shape);
-	var that = this;
-	this.pg.profile(shape.way, shape.color, function() {
-		that.profileDlg.show();
-	});
 }
 
 org.sarsoft.controller.ShapeController.prototype.splitLineAt = function(shape, gll) {
@@ -516,36 +481,21 @@ org.sarsoft.controller.ShapeController.prototype.splitLineAt = function(shape, g
 	});
 }
 
-org.sarsoft.controller.ShapeController.getIconForShape = function(shape) {
-	if(shape.way.polygon) {
-		var div = jQuery('<div style="height: 0.6em;"></div>');
-		div.css({"border-top": shape.weight + 'px solid ' + shape.color, "border-bottom": shape.weight + 'px solid ' + shape.color});
-		jQuery('<div style="width: 100%; height: 100%"></div>').appendTo(div).css({"background-color": shape.color, filter: "alpha(opacity=" + shape.fill + ")", opacity : shape.fill/100});
-		return div;
-	} else {
-		return jQuery('<div style="height: 0.5ex"></div>').css("border-top", shape.weight + "px solid " + shape.color);			
-	}
+org.sarsoft.controller.ShapeController.getConfig = function(shape) {
+	return { color: shape.color, weight: shape.weight, fill: shape.fill }
 }
 
 org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	var that = this;
 	this.imap.removeWay(object.way);
-
 	if(object.way == null) return;	
 	
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
 
-	var line = this.dn.add(object.id, object.label, function() {
-		that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(object.way.boundingBox[0].lat, object.way.boundingBox[0].lng), new google.maps.LatLng(object.way.boundingBox[1].lat, object.way.boundingBox[1].lng)));
-	});
-	
+	var line = this.DNAddLine(object);
 	if((object.comments || "").length > 0) this.dn.addComments(object.id, object.comments);
-	line.prepend(org.sarsoft.controller.ShapeController.getIconForShape(object));
 
-	this.dn.addIcon(object.id, "Elevation Profile", '<img src="' + $.img('profile.png') + '"/>', function() {
-		that.profile(object);
-	});
-	
+	this.DNAddProfile(object);
 	if(org.sarsoft.writeable) {
 		this.dn.addIconEdit(object.id, function() {
 			 if(object.way.waypoints.length <= 500) {
@@ -553,12 +503,10 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 			 } else {
 				 that.sizewarning.css('display', 'block').html('Vertex editing is not possible on shapes with more than 500 waypoints (this one has ' + object.way.waypoints.length + ').  Please split into multiple segments to edit vertices.');
 			 }
-			 that.shapeDlg.show(object, null, true);
-			 that.shapeDlg.live = true;
+			 that.dlg.show(object, null, true);
+			 that.dlg.live = true;
 		});
-		this.dn.addIconDelete(object.id, function() {
-			that.del(function() { that.dao.del(object.id); });
-		});
+		this.DNAddDelete(object);
 	}
 	
 	if(this.dn.visible) {

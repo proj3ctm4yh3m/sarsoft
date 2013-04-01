@@ -134,43 +134,14 @@ public class AssignmentController extends GeoMapObjectController {
 	}
 	
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	@RequestMapping(value = "/{id}/route", method = RequestMethod.POST)
+	@RequestMapping(value = "/{id}/segment", method = RequestMethod.POST)
 	public String updateWay(Model model, JSONForm params, @PathVariable("id") long id) {
 		Assignment assignment = dao.load(Assignment.class, id);
-		Way route = assignment.getRoute();
+		Way route = assignment.getSegment();
 		route.softCopy((List<Waypoint>) JSONArray.toList((JSONArray) JSONSerializer.toJSON(params.getJson()), Waypoint.class));
 		assignment.setUpdated(new Date());
 		dao.save(assignment);
 		return json(model, route);
-	}
-	
-/*	@SuppressWarnings({ "unchecked", "deprecation" })
-	@RequestMapping(value = "/rest/assignment/{id}/way/{wid}", method = RequestMethod.DELETE)
-	public String deleteWay(Model model, JSONForm params, @PathVariable("id") long id, @PathVariable("wid") int wid) {
-		SearchAssignment assignment = dao.load(SearchAssignment.class, id);
-		Way way = assignment.getWays().get(wid);
-		assignment.getWays().remove(wid);
-		dao.save(assignment);
-		return json(model, way);
-	}*/
-
-	@RequestMapping(value = "/{id}/wpt/{wid}", method = RequestMethod.POST)
-	public String updateWaypoint(Model model, JSONForm params, @PathVariable("id") long id, @PathVariable("wid") int wid) {
-		Assignment assignment = dao.load(Assignment.class, id);
-		Waypoint wpt = assignment.getWaypoints().get(wid);
-		wpt.from(params.JSON());
-		dao.save(assignment);
-		return json(model, wpt);
-	}
-
-	@SuppressWarnings({ "unchecked", "deprecation" })
-	@RequestMapping(value = "/{id}/wpt/{wid}", method = RequestMethod.DELETE)
-	public String deleteWaypoint(Model model, JSONForm params, @PathVariable("id") long id, @PathVariable("wid") int wid) {
-		Assignment assignment = dao.load(Assignment.class, id);
-		Waypoint wpt = assignment.getWaypoints().get(wid);
-		assignment.getWaypoints().remove(wid);
-		dao.save(assignment);
-		return json(model, wpt);
 	}
 	
 	@RequestMapping(value = "/{id}/in", method = RequestMethod.POST)

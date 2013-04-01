@@ -36,7 +36,6 @@ sarsoft=${js_sarsoft}
 	<src>/static/js/core.js</src>
 	<src>/static/js/markup.js</src>
 	<src>/static/js/plans.js</src>
-	<src>/static/js/imaging.js</src>
 </pack:script>
 <!--[if gte IE 9]>
 <style type="text/css">

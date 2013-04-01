@@ -4,20 +4,18 @@ import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
 
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
-import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.Waypoint;
 
 @JSONAnnotatedEntity
 @Entity
-public class Clue extends GeoMapObject implements IPreSave {
+public class Clue extends AssignmentChildObject implements IPreSave {
 	
 	public enum Disposition {
 		COLLECT,MARK,IGNORE
@@ -29,8 +27,6 @@ public class Clue extends GeoMapObject implements IPreSave {
 	private Waypoint position;
 	private Date found;
 	private Date updated;
-	private Long assignmentId;
-	private Assignment assignment;
 	private Disposition instructions;
 	
 	public Clue() {
@@ -127,27 +123,7 @@ public class Clue extends GeoMapObject implements IPreSave {
 	public void setLocation(String location) {
 		this.location = location;
 	}
-	
-	@Transient
-	@JSONSerializable
-	public Long getAssignmentId() {
-		if(assignmentId != null) return assignmentId;
-		return (assignment == null) ? null : assignment.getId();
-	}
-	
-	public void setAssignmentId(Long id) {
-		this.assignmentId = id;
-	}
-	
-	@ManyToOne
-	public Assignment getAssignment() {
-		return assignment;
-	}
-	
-	public void setAssignment(Assignment assignment) {
-		this.assignment = assignment;
-	}
-	
+		
 	@JSONSerializable
 	public Disposition getInstructions() {
 		return instructions;
