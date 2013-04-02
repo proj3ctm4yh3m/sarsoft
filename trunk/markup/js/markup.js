@@ -207,7 +207,7 @@ org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 }
 
 org.sarsoft.ShapeDAO = function(errorHandler, baseURL) {
-	org.sarsoft.WayObjectDAO.call(this, "Shape", "/rest/shape");
+	org.sarsoft.WayObjectDAO.call(this, "Shape", "/rest/shape", "way");
 }
 
 org.sarsoft.ShapeDAO.prototype = new org.sarsoft.WayObjectDAO();
@@ -313,7 +313,7 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 
 	if(!org.sarsoft.iframe && !this.bgload) {
 	
-		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Shape Details", new org.sarsoft.view.ShapeForm());
+		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Shape Details", new org.sarsoft.view.ShapeForm(), this);
 		
 		this.dlg.create = function(shape) {
 			shape.way = {polygon: this.object.way.polygon};
@@ -379,8 +379,8 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 				{text : "New Polygon", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, data.point); }},
 	    		{text : "Details", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_details},
 	    		{text : "Profile", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_profile},
-	    		{text: "Modify \u2192", precheck: pc, applicable: function(obj) { that.cm.a_noedit }, items:
-	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.obj.way.waypoints.length <= 500 }, handler : this.cm.h_edit },
+	    		{text: "Modify \u2192", precheck: pc, applicable: that.cm.a_noedit, items:
+	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.obj.way.waypoints.length <= 500 }, handler : this.cm.h_drag },
 		    		{text : "Split Here", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.splitLineAt(data.pc.obj, that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
 		    		{text : "Join Lines", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.joinDlg.show(data.pc.obj); }}]},
 	    		{text : "Save Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_save },
@@ -431,7 +431,7 @@ org.sarsoft.controller.ShapeController.prototype.splitLineAt = function(shape, g
 	});
 }
 
-org.sarsoft.controller.ShapeController.getConfig = function(shape) {
+org.sarsoft.controller.ShapeController.prototype.getConfig = function(shape) {
 	return { color: shape.color, weight: shape.weight, fill: shape.fill }
 }
 

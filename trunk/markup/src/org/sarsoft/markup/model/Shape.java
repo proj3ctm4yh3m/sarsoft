@@ -1,5 +1,6 @@
 package org.sarsoft.markup.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -99,14 +100,29 @@ public class Shape extends GeoMapObject implements IPreSave {
 		String label = gpx.getString("name");
 		if(label != null && label.startsWith("-")) label = null;
 		shape.setLabel(label);
-		shape.setWay(new Way((JSONObject) gpx.get("way")));
+		
+		if(gpx.has("way")) {
+			shape.setWay(new Way((JSONObject) gpx.get("way")));
+		} else if(gpx.has("coordinates")) {
+			String[] coordinates = gpx.getString("coordinates").trim().replaceAll("\n", " ").split(" ");
+			List<Waypoint> waypoints = new ArrayList<Waypoint>();
+			for(String coordinate : coordinates) {
+				String[] ll = coordinate.trim().split(",");
+				waypoints.add(new Waypoint(Double.parseDouble(ll[1].trim()), Double.parseDouble(ll[0].trim())));
+			}
+			shape.setWay(new Way());
+			shape.getWay().setWaypoints(waypoints);
+		}
 		List<Waypoint> wpts = shape.getWay().getWaypoints();
-		if(type == "route" && wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) shape.getWay().setPolygon(true);
+		if("route".equals(type) && wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) shape.getWay().setPolygon(true);
 
 		shape.setColor(attrs.containsKey("color") ? attrs.get("color") : "#FF0000");
 		shape.setWeight(attrs.containsKey("weight") ? Float.parseFloat(attrs.get("weight")) : 2f);
 		shape.setFill(attrs.containsKey("fill") ? Float.parseFloat(attrs.get("fill")) : 0f);
 		shape.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
+		
+		if(gpx.has("color")) shape.setColor('#' + gpx.getString("color").toUpperCase());
+		if(gpx.has("weight")) shape.setWeight(Float.parseFloat(gpx.getString("weight")));
 
 		return shape;
 	}
