@@ -227,6 +227,12 @@ public class Way extends SarModelObject implements IPreSave {
 		distance = Math.round(distance*100);
 		return distance/100;
 	}
+	
+	@Transient
+	public String getFormattedSize() {
+		if(polygon) return getArea() + "km&sup2;";
+		return getDistance() + "km";
+	}
 
 	@Transient
 	@JSONSerializable

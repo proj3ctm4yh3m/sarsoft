@@ -3,7 +3,7 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<%@page import="org.sarsoft.plans.model.SearchAssignment"%>
+<%@page import="org.sarsoft.plans.model.Assignment"%>
 
 <c:forEach var="copy" items='<%= new String[][] {{"White Copy - Team", "#DDDDDD"}, {"Yellow Copy - Comms","yellow"}, {"Pink Copy - Ops","pink"}, {"Gold Copy - Plans","#DDAA22"}} %>' varStatus='status'>
 
@@ -16,8 +16,8 @@
 <div style="width: 100%; height: 24pt; border-bottom: 1px solid black">
 	<div class="lbox" style="width: 25%;"><b>TEAM ASSIGNMENT</b></div>
 	<div class="box" style="width: 25%"><div class="label">1. INCIDENT NAME</div>${tenant.publicName}</div>
-	<div class="box" style="width: 25%"><div class="label">2. OPERATIONAL PERIOD</div>${assignment.operationalPeriod.id}</div>
-	<div class="box" style="width: 24%"><div class="label">3. ASSIGNMENT NUMBER</div>${assignment.id}</div>
+	<div class="box" style="width: 25%"><div class="label">2. OPERATIONAL PERIOD</div>${assignment.operationalPeriod.description}</div>
+	<div class="box" style="width: 24%"><div class="label">3. ASSIGNMENT NUMBER</div>${assignment.number}</div>
 </div>
 
 <div style="width: 100%; height: 16pt; border-bottom: 1px solid black">
@@ -55,7 +55,7 @@
 
 <div style="width: 100%; height: 24pt; border-bottom: 1px solid black">
 	<div class="lbox" style="width: 15%"><div class="label">8. TIME ALLOCATED</div><c:if test="${assignment.timeAllocated ne null}">${assignment.timeAllocated} hours</c:if></div>
-	<div class="box" style="width: 20%"><div class="label">9. SIZE OF ASSIGNMENT</div>${assignment.formattedSize}</div>
+	<div class="box" style="width: 20%"><div class="label">9. SIZE OF ASSIGNMENT</div>${assignment.segment.formattedSize}</div>
 	<div class="box" style="width: 64%"><div class="label">10. EXPECTED P.O.D.</div><span style="text-transform: capitalize; font-size: 80%">Responsive: ${fn:toLowerCase(assignment.responsivePOD)}&nbsp;&nbsp;&nbsp;Unresponsive: ${fn:toLowerCase(assignment.unresponsivePOD)}&nbsp;&nbsp;&nbsp;Clue: ${fn:toLowerCase(assignment.cluePOD)}</span></div>
 </div>
 

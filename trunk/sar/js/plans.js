@@ -1,5 +1,6 @@
 org.sarsoft.MapObjectChildDialog = function(imap, controller, title) {
 	var that = this;
+	this.imap = imap;
 	this.controller = controller;
 	this.body = $('<div style="height: 150px; width: 95%"></div>');
 	
@@ -20,13 +21,20 @@ org.sarsoft.MapObjectChildDialog.prototype.addTab = function(type, title) {
 	this.tabview.addTab(this.tabs[type].tab);
 }
 
-org.sarsoft.MapObjectChildDialog.prototype.addChildTab = function(type, title, coldefs) {
+org.sarsoft.MapObjectChildDialog.prototype.addChildTab = function(type, title, coldefs, deleteable) {
 	var that = this;
 	this.addTab(type, title);
 	
 	var div = this.tabs[type].div;
 	this.tabs[type].message = $('<div>No ' + title + ' found</div>').appendTo(div);
 	this.tabs[type].content = $('<div></div>').appendTo(div);
+	
+	if(deleteable) {
+		coldefs[0].formatter = function(cell, record, column, data) { $(cell).html("<span style='color: red; font-weight: bold'>X</span>").click(function(evt) {
+			evt.stopPropagation();
+			org.sarsoft.MapState.daos[type].del(record.getData().id, function() { that.tabs[type].table.table.deleteRow(record) });
+		})}
+	}
 	
 	this.tabs[type].table = new org.sarsoft.view.EntityTable(coldefs, { height: "120px" }, function(obj) {
 		if(that.controller.childControllers[type]) that.controller.childControllers[type].focus(obj);
@@ -50,6 +58,7 @@ org.sarsoft.MapObjectChildDialog.prototype.show = function(obj) {
 	
 	this.tabview.selectTab(0);
 	this.dialog.show();
+	google.maps.event.trigger(this.imap.map, "resize");
 }
 
 org.sarsoft.OperationalPeriodDAO = function() {
@@ -61,10 +70,27 @@ org.sarsoft.OperationalPeriodDAO = function() {
 
 org.sarsoft.OperationalPeriodDAO.prototype = new org.sarsoft.MapObjectDAO();
 
+org.sarsoft.OperationalPeriodChildDialog = function(imap, controller) {
+	org.sarsoft.MapObjectChildDialog.call(this, imap, controller, "OperationalPeriod");
+	var that = this;
+	
+	this.addTab("action", "Actions");
+	this.tabs['action'].div.html('bulk print');
+
+	this.addChildTab("Assignment", "Assignments", [
+		{ key : "number", label : ""},
+		{ key : "resourceType", label : "type"},
+		{ key : "updated", label : "Uploaded", formatter : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}]);
+}
+
+org.sarsoft.OperationalPeriodChildDialog.prototype = new org.sarsoft.MapObjectChildDialog();
+
+
 org.sarsoft.OperationalPeriodController = function(imap, background_load) {
 	var that = this;
 	imap.register("org.sarsoft.OperationalPeriodController", this);
 	org.sarsoft.MapObjectController.call(this, imap, {name: "OperationalPeriod", dao: org.sarsoft.OperationalPeriodDAO, label: "Operational Periods"})
+	this.dn.cb.css('display', 'none');	
 	this.cb = new Array();
 	
 	if(org.sarsoft.writeable && !background_load) {
@@ -74,7 +100,8 @@ org.sarsoft.OperationalPeriodController = function(imap, background_load) {
 
 		var form = new org.sarsoft.view.EntityForm([{ name : "description", label: "Name", type : "string"}]);
 		
-		this.periodDlg = new org.sarsoft.view.MapEntityDialog(imap, "Operational Period", form, function(period) {
+		this.childDlg = new org.sarsoft.OperationalPeriodChildDialog(imap, this);
+		this.dlg = new org.sarsoft.view.MapEntityDialog(imap, "Operational Period", form, function(period) {
 			period.id = that.periodDlg.id;
 			that.periodDlg.id = null;
 			if(period.id == null) {
@@ -91,15 +118,15 @@ org.sarsoft.OperationalPeriodController.prototype = new org.sarsoft.MapObjectCon
 org.sarsoft.OperationalPeriodController.prototype.show = function(object) {
 	var that = this;
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
-	
-	var line = this.dn.add(object.id, object.description, function() {});
+
+	var line = this.dn.add(object.id, object.description, function() { that.childDlg.show(object.id) });
 	var cb = this.cb[object.id] = $('<input type="checkbox" checked="checked">').appendTo('<div></div>').change(function() { that.handleSetupChange(true) });
 	line.prepend(cb.parent());
 	
 	if(org.sarsoft.writeable) {
 		this.dn.addIconEdit(object.id, function() {
-			that.periodDlg.show(object);
-			that.periodDlg.id = object.id;
+			that.dlg.show(object);
+			that.dlg.id = object.id;
 		});
 		this.dn.addIconDelete(object.id, function() {
 			that.del(function() { that.dao.del(object.id); });
@@ -192,24 +219,22 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 	org.sarsoft.MapObjectChildDialog.call(this, imap, controller, "Assignment");
 	var that = this;
 	
+	this.addTab("action", "Actions");
+	
 	this.addTab("imp", "Import");
 	this.imp = new Object();
 	this.imp.importer = new org.sarsoft.widget.Importer(this.tabs['imp'].div, '/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : ''));
 	$(this.imp.importer).bind('success', function() { that.dialog.hide(); })
 
 	this.addChildTab("FieldTrack", "Tracks", [
-		{ key : "id", label : "", formatter : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
+		{ key : "id", label : ""},
 		{ key : "label", label : "Name"},
-		{ key : "updated", label : "Uploaded", formatter : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}]);
-/*	    	var way = record.getData();
-	    	if(idx != 100) assignmentDAO.deleteWay(function() {}, _assignment, idx, way);
-	    	_assignment.ways.splice(idx, 1);
-	    	tracktable.table.deleteRow(record); */
+		{ key : "updated", label : "Uploaded", formatter : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}], true);
 	
 	this.addChildTab("FieldWaypoint", "Waypoints", [
-		{ key : "id", label : "", formatter2 : function(cell, record, column, data) { cell.innerHTML = "<span style='color: red; font-weight: bold'>X</span>"; cell.onclick=function() {onDelete(record);} }},
+		{ key : "id", label : ""},
 		{ key : "name", label : "Name"},
-		{ key : "time", label : "Uploaded", formatter2 : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}]);
+		{ key : "time", label : "Uploaded", formatter2 : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}], true);
 	
 	this.addChildTab("Clue", "Clues", [
  	      { key : "id", label : "Clue #"},
@@ -626,6 +651,117 @@ org.sarsoft.FieldTrackController.prototype.show = function(object) {
 		this.imap.addWay(object.way, {displayMessage: org.sarsoft.htmlescape(object.label), clickable : config.active, fill: config.fill, color: config.color, weight: config.weight}, org.sarsoft.htmlescape(object.label));
 	}
 }
+
+
+
+
+
+
+org.sarsoft.controller.AssignmentPrintMapController = function(container, id) {
+	var that = this;
+	this.dao = org.sarsoft.MapState.daos["Assignment"] || new org.sarsoft.AssignmentDAO();
+	this.showPrevious = showPreviousEfforts;
+	this.previousEfforts = new Array();
+	
+	this.div = container;
+	var height = "10.5in";
+	if(navigator.userAgent.indexOf("MSIE") > 0 && typeof(GMap2.ol) == "undefined") height = "8in";
+	this.div.style.width="8in";
+	this.div.style.height=height;
+	var map = org.sarsoft.EnhancedGMap.createMap(this.div);
+	this.imap = new org.sarsoft.InteractiveMap(map, {standardControls : true});
+
+	this.markerController = new org.sarsoft.controller.MarkerController(this.imap, "none");
+	this.shapeController = new org.sarsoft.controller.ShapeController(this.imap, "none");
+	var configWidget = new org.sarsoft.view.PersistedConfigWidget(this.imap);
+	configWidget.loadConfig();
+	
+	this.dao.load(id, function(assignment) { that._loadAssignmentCallback(assignment) });
+
+}
+
+org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCallback = function(assignment) {
+	var that = this;
+	this.assignment = assignment;
+
+	var config = {clickable : false, fill: false, color: "#FF0000", opacity: 100};	
+	var trackConfig = {clickable: false, fill: false, color: "#FF8800", opacity: 100};	
+	var otherTrackConfig = {clickable: false, fill: false, color: "#000000", opacity: 80};
+	this.otherTrackConfig = otherTrackConfig;
+
+	jQuery('<div class="printonly" style="z-index: 2000; position: absolute; top: 0px; left: 0px; background: white">Assignment ' + assignment.id + ((assignment.status == "COMPLETED") ? ' Debrief' : '') + '</div>').appendTo(this.fmap.map.getDiv());
+	
+	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED") ? false : true;
+	
+	var showHide = new org.sarsoft.ToggleControl("PREV TRK", "Show/Hide Previous Efforts in Search Area", function(value) {
+		that.showPrevious = value;
+		that.handleSetupChange();
+	});
+	showHide.setValue(this.showPrevious);
+	this.fmap.addMenuItem(showHide.node, 19);
+	this.showHide = showHide;
+	
+	var bb = this.assignment.boundingBox;
+	this.fmap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(bb[0].lat, bb[0].lng), new google.maps.LatLng(bb[1].lat, bb[1].lng)));
+
+
+	this.assignmentDAO.getWays(function(ways) {
+		for(var i = 0; i < ways.length; i++) {
+			var way = ways[i];
+			that.fmap.addWay(way, (way.type == "ROUTE") ? config : trackConfig, (way.type == "ROUTE") ? null : way.name);
+		}
+	}, assignment, 10);
+	
+	for(var i = 0; i < assignment.waypoints.length; i++) {
+		var wpt = assignment.waypoints[i];
+		that.fmap.addWaypoint(wpt, config, wpt.name, wpt.name);
+	}
+	
+	for(var i = 0; i < assignment.clues.length; i++) {
+		var clue = assignment.clues[i];
+		if(clue.position != null) {
+			that.fmap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createImage(16, "/static/images/clue.png") }, clue.id, clue.summary);
+			that.fmap.growMap(new google.maps.LatLng(clue.position.lat, clue.position.lng));
+		}
+	}
+	
+	var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new google.maps.LatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
+	this.assignmentDAO.loadAll(function(assignments) {
+		for(var i = 0; i < assignments.length; i++) {
+			var abounds = new google.maps.LatLngBounds(new google.maps.LatLng(assignments[i].boundingBox[0].lat, assignments[i].boundingBox[0].lng), new google.maps.LatLng(assignments[i].boundingBox[1].lat, assignments[i].boundingBox[1].lng));
+			if(assignments[i].id != assignment.id && (bounds.intersects(abounds) || bounds.containsBounds(abounds) || abounds.containsBounds(bounds))) {
+				that.assignmentDAO.getWays(function(ways) {
+					for(var i = 0; i < ways.length; i++) {
+						var way = ways[i];
+						way.waypoints = way.zoomAdjustedWaypoints;
+						if(way.type == "TRACK") {
+							that.previousEfforts.push(way);
+							if(that.showPrevious) that.fmap.addWay(way, otherTrackConfig, null);
+						}
+					}
+				}, assignments[i], 10);
+			}
+		}
+	});
+}
+
+org.sarsoft.controller.AssignmentPrintMapController.prototype.handleSetupChange = function() {
+	if(this.showPrevious) {
+		this.showHide.innerHTML = "PREV TRK";
+		for(var i = 0; i < this.previousEfforts.length; i++) {
+			this.fmap.addWay(this.previousEfforts[i], this.otherTrackConfig, null);
+		}
+	} else {
+		this.showHide.innerHTML = "<span style='text-decoration: line-through'>PREV TRK</span>";
+		for(var i = 0; i < this.previousEfforts.length; i++) {
+			this.fmap.removeWay(this.previousEfforts[i], this.otherTrackConfig, null);
+		}
+	}
+}
+
+
+
+
 
 
 
