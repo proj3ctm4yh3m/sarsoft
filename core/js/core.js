@@ -1302,8 +1302,19 @@ org.sarsoft.MapObjectDN.prototype.setDNVisible = function(visible) {
 
 org.sarsoft.MapObjectDN.prototype.add = function(id, name, fn) {
 	var that = this;
-	
-	if(this.lines[id] == null) this.lines[id] = $('<div class="dn-obj"></div>').appendTo(this.div);
+
+	if(this.lines[id] == null) {
+		var div = null;
+		for(var i = 0; i <= id; i++) {
+			div = this.lines[i] || div;
+		}
+		this.lines[id] = $('<div class="dn-obj"></div>');
+		if(div) {
+			this.lines[id].insertAfter(div);
+		} else {
+			this.lines[id].prependTo(this.div);
+		}
+	}
 	this.lines[id].html('<div class="dn-obj-left"></div><div class="dn-obj-right"></div>');
 	
 	return this.get(id, 0).click(function() {
@@ -1570,8 +1581,8 @@ org.sarsoft.WaypointObjectController.prototype.DNGetIcon = function(obj) {
 org.sarsoft.WaypointObjectController.prototype.DNAddLine = function(obj, handler) {
 	var that = this;
 	var line = this.dn.add(obj.id, obj[this.dao.label], function() {
+		if(handler && handler()) return;
 		that.focus(obj);
-		if(handler) handler();
 	});
 	line.prepend(this.DNGetIcon(obj));
 	return line
@@ -1767,8 +1778,8 @@ org.sarsoft.WayObjectController.prototype.DNGetIcon = function(obj) {
 org.sarsoft.WayObjectController.prototype.DNAddLine = function(obj, handler) {
 	var that = this;
 	var line = this.dn.add(obj.id, obj[this.dao.label], function() {
+		if(handler && handler()) return;
 		that.focus(obj);
-		if(handler) handler();
 	});
 	line.prepend(this.DNGetIcon(obj));
 	return line

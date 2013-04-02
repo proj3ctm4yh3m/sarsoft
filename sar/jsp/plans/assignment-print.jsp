@@ -4,11 +4,11 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<%@page import="org.sarsoft.plans.model.SearchAssignment"%>
+<%@page import="org.sarsoft.plans.model.Assignment"%>
 <html>
 <head>
-<title>${tenant.publicName} - Assignment ${assignment.id}</title>
-${head}
+<title>${tenant.publicName} - Assignment ${assignment.number}</title>
+<%@include file="/head.jsp" %>
 <style tyle="text/css">
 .box {
 	border-left: 1px solid black; float: left; height: 100%; overflow: hidden;
