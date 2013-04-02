@@ -4,26 +4,14 @@ if(typeof org.sarsoft.view == "undefined") org.sarsoft.view = new Object();
 if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Object();
 
 org.sarsoft.MarkerDAO = function(errorHandler, baseURL) {
-	org.sarsoft.MapObjectDAO.call(this, "Marker");
+	org.sarsoft.WaypointObjectDAO.call(this, "Marker");
 	if(typeof baseURL == "undefined") baseURL = "/rest/marker";
 	this.baseURL = baseURL;
 	this.errorHandler = errorHandler;
 	this.geo = true;
 }
 
-org.sarsoft.MarkerDAO.prototype = new org.sarsoft.MapObjectDAO();
-
-org.sarsoft.MarkerDAO.prototype.updatePosition = function(id, position, handler) {
-	var that = this;
-	if(this.offline) {
-		var m = this.getObj(id);
-		m.position.lat = position.lat;
-		m.position.lng = position.lng;
-		org.sarsoft.async(function() { handler(m) });
-	} else {
-		this._doPost("/" + id + "/position", function(r) { that.setObj(id, r); handler(r) }, {position: position});
-	}
-}
+org.sarsoft.MarkerDAO.prototype = new org.sarsoft.WaypointObjectDAO;
 
 org.sarsoft.view.MarkerForm = function() {
 }
@@ -139,14 +127,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 	}
 
 	if(!org.sarsoft.iframe && !this.bgload) {
-		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker Details",  new org.sarsoft.view.MarkerForm());
-		
-		this.dlg.discardGeoInfo = function() { that.discard(this.object.id) }
-		this.dlg.saveGeoInfo = function(marker, callback) { that.save(this.object.id, callback); }
-		this.dlg.saveData = function(marker) {
-			marker.position = this.object.position;
-			that.dao.save(this.object.id, marker);
-		}
+		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker Details",  new org.sarsoft.view.MarkerForm(), this);
 		this.dlg.create = function(marker) {
 			var wpt = that.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(this.point.x, this.point.y));
 			marker.position = {lat: wpt.lat(), lng: wpt.lng()};
@@ -225,19 +206,6 @@ org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 	}
 }
 
-org.sarsoft.controller.MarkerController.prototype.handleSetupChange = function(i) {
-	if(!this.dn.visible) {
-		for(var key in this.dao.objs) {
-			this.imap.removeWaypoint(this.dao.getObj([key]).position);
-		}
-	} else {
-		for(var key in this.dao.objs) {
-			this.show(this.dao.getObj([key]));
-		}
-	}
-}
-
-
 org.sarsoft.ShapeDAO = function(errorHandler, baseURL) {
 	org.sarsoft.WayObjectDAO.call(this, "Shape", "/rest/shape");
 }
@@ -263,23 +231,10 @@ org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
 
 org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handler) {
 	var that = this;
-	if(this.offline) {
-		org.sarsoft.async(function() {
-			var way = that.getObj(shape.id).way;
-			way.waypoints = waypoints;
-			that.addBoundingBox(way);
-			if(way.polygon) {
-				var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(way.waypoints))/1000000;
-				shape.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
-			} else {
-				var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(way.waypoints))/1000;
-				shape.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
-			}
-			if(handler != null) handler(way);
-		});
-	} else {
-		this._doPost("/" + shape.id + "/way", function(r) { that.getObj(shape.id).way = r; if(handler != null) handler(r);}, waypoints);
-	}
+	this.saveWay(shape, waypoints, function(obj) {
+		if(that.offline) that.validate(obj);
+		if(handler) handler(obj);
+	});
 }
 
 org.sarsoft.view.ShapeForm = function() {
@@ -360,11 +315,6 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 	
 		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Shape Details", new org.sarsoft.view.ShapeForm());
 		
-		this.dlg.discardGeoInfo = function() { that.discard(this.object); }
-		this.dlg.saveGeoInfo = function(shape, callback) { that.save(this.object.id, callback); }
-		this.dlg.saveData = function(shape) {
-			that.dao.save(this.object.id, shape);
-		}
 		this.dlg.create = function(shape) {
 			shape.way = {polygon: this.object.way.polygon};
 			shape.way.waypoints = that.imap.getNewWaypoints(this.point, this.object.way.polygon);
@@ -430,7 +380,7 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 	    		{text : "Details", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_details},
 	    		{text : "Profile", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_profile},
 	    		{text: "Modify \u2192", precheck: pc, applicable: function(obj) { that.cm.a_noedit }, items:
-	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.obj.way.waypoints.length <= 500 }, handler : this.cm.a_drag },
+	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.obj.way.waypoints.length <= 500 }, handler : this.cm.h_edit },
 		    		{text : "Split Here", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.splitLineAt(data.pc.obj, that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
 		    		{text : "Join Lines", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.joinDlg.show(data.pc.obj); }}]},
 	    		{text : "Save Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_save },
@@ -511,19 +461,6 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	
 	if(this.dn.visible) {
 		this.imap.addWay(object.way, {displayMessage: org.sarsoft.htmlescape(object.label) + " (" + object.formattedSize + ")", clickable : (!org.sarsoft.iframe && (org.sarsoft.writeable || (object.comments != null && object.comments.length > 0))), fill: object.fill, color: object.color, weight: object.weight}, org.sarsoft.htmlescape(object.label));
-	}
-}
-
-
-org.sarsoft.controller.ShapeController.prototype.handleSetupChange = function() {
-	if(!this.dn.visible) {
-		for(var key in this.dao.objs) {
-			this.imap.removeWay(this.dao.getObj(key).way);
-		}
-	} else {
-		for(var key in this.dao.objs) {
-			this.show(this.dao.getObj([key]));
-		}
 	}
 }
 

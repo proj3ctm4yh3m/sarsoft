@@ -592,7 +592,9 @@ org.sarsoft.view.EntityTable.prototype.click = function(record) {
 org.sarsoft.view.EntityTable.prototype.create = function(container) {
 	var that = this;
 	this.container = container;
-	this.table = new YAHOO.widget.DataTable(container, this.coldefs, this.datasource, this.config);
+	var tclass = YAHOO.widget.DataTable;
+	if(this.config && this.config.height) tclass = YAHOO.widget.ScrollingDataTable;
+	this.table = new tclass(container, this.coldefs, this.datasource, this.config);
 	this.table.showTableMessage('<i>Loading Data . . .</i>');
 	if(this.coldefs[0].sortable) {
 		this.table.sortColumn(this.table.getColumn(this.coldefs[0].key), YAHOO.widget.DataTable.CLASS_ASC);

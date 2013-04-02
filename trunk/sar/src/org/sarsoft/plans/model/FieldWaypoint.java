@@ -29,7 +29,8 @@ public class FieldWaypoint extends AssignmentChildObject {
 	}
 	
 	public void from(FieldWaypoint updated) {
-		if(updated.getLabel() != null) {
+		if(updated.getPosition() == null || updated.getLabel() != null) {
+			setAssignmentId(updated.getAssignmentId());
 			setLabel(updated.getLabel());
 		}
 		if(updated.getPosition() != null) {
@@ -44,7 +45,16 @@ public class FieldWaypoint extends AssignmentChildObject {
 	}
 	
 	public static FieldWaypoint fromGPX(JSONObject gpx) {
-		return null;
+		String type = gpx.getString("type");
+		if(!"waypoint".equals(type)) return null;
+
+		FieldWaypoint fwpt = new FieldWaypoint();
+		String label = gpx.getString("name");
+		if(label != null && label.startsWith("-")) label = null;
+		fwpt.setLabel(label);
+		fwpt.setPosition(new Waypoint((JSONObject) gpx.get("position")));
+
+		return fwpt;
 	}
 
 	@ManyToOne

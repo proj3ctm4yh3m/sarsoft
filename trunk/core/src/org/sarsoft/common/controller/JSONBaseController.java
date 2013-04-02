@@ -13,14 +13,11 @@ import net.sf.json.JSON;
 import net.sf.json.xml.XMLSerializer;
 
 import org.sarsoft.common.dao.GenericHibernateDAO;
-import org.sarsoft.common.model.ConfiguredLayer;
-import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.Icon;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
-import org.sarsoft.common.util.Datum;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

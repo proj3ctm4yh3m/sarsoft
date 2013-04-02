@@ -246,7 +246,7 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		this.operationalPeriod = operationalPeriod;
 	}
 
-	@OneToMany
+	@OneToMany(mappedBy="assignment")
 	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	@LazyCollection(LazyCollectionOption.TRUE)
 	public Set<Clue> getClues() {
@@ -267,8 +267,8 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		clue.setAssignment(null);
 	}
 	
-	@OneToMany
-	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	@OneToMany(mappedBy="assignment")
+	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	@LazyCollection(LazyCollectionOption.TRUE)
 	public List<FieldTrack> getFieldTracks() {
 		return fieldTracks;
@@ -288,8 +288,8 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		track.setAssignment(null);
 	}
 
-	@OneToMany
-	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	@OneToMany(mappedBy="assignment")
+	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	@LazyCollection(LazyCollectionOption.TRUE)
 	public List<FieldWaypoint> getFieldWaypoints() {
 		return fieldWaypoints;

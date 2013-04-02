@@ -13,17 +13,21 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.GeoMapObjectController;
 import org.sarsoft.common.json.JSONForm;
+import org.sarsoft.common.model.ClientState;
 import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.GPX;
-import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.Action;
 import org.sarsoft.plans.model.Clue;
+import org.sarsoft.plans.model.FieldTrack;
+import org.sarsoft.plans.model.FieldWaypoint;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.sarsoft.plans.model.Assignment;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -38,6 +42,9 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 @RequestMapping("/rest/assignment")
 public class AssignmentController extends GeoMapObjectController {
 
+	@Autowired
+	DataManager manager;
+	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
@@ -93,6 +100,18 @@ public class AssignmentController extends GeoMapObjectController {
 				assignment.removeClue(clue);
 			}
 		}
+		if(assignment.getFieldWaypoints() != null) {
+			Set<FieldWaypoint> copy = new HashSet<FieldWaypoint>(assignment.getFieldWaypoints());
+			for(FieldWaypoint fwpt : copy) {
+				assignment.removeFieldWaypoint(fwpt);
+			}
+		}
+		if(assignment.getFieldTracks() != null) {
+			Set<FieldTrack> copy = new HashSet<FieldTrack>(assignment.getFieldTracks());
+			for(FieldTrack track : copy) {
+				assignment.removeFieldTrack(track);
+			}
+		}
 	}
 	
 	public String[] getLinkDependencies() {
@@ -145,11 +164,31 @@ public class AssignmentController extends GeoMapObjectController {
 	}
 	
 	@RequestMapping(value = "/{id}/in", method = RequestMethod.POST)
-	public String loadTracks(Model model, JSONForm params, @PathVariable("id") long id) {
-		Assignment assignment = dao.load(Assignment.class, id);
-		JSONArray jarray = GPX.parse(context, params);
+	public String loadTracks(Model model, JSONForm params, @PathVariable("id") long id, HttpServletRequest request) {
+		JSONArray gpx = GPX.parse(context, params);
+		ClientState state = new ClientState();
 
-		return "";
+		Iterator it = gpx.listIterator();
+		while(it.hasNext()) {
+			JSONObject jobject = (JSONObject) it.next();
+			FieldWaypoint fwpt = FieldWaypoint.fromGPX(jobject);
+			FieldTrack track = FieldTrack.fromGPX(jobject);
+			if(fwpt != null) {
+				fwpt.setAssignmentId(id);
+				state.add("FieldWaypoint", fwpt);
+			} else if(track != null) {
+				track.setAssignmentId(id);
+				state.add("FieldTrack", track);
+			}
+		}
+
+		manager.toDB(state);
+
+		if("frame".equals(request.getParameter("responseType"))) {
+			return jsonframe(model, manager.toJSON(state));
+		} else {
+			return json(model, manager.toJSON(state));
+		}
 	}
 
 	@Override
