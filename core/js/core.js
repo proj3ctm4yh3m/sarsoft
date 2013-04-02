@@ -326,6 +326,7 @@ org.sarsoft.widget.IO = function(imap) {
 	if(org.sarsoft.writeable) {
 		this.imp = new Object();
 		this.imp.importer = new org.sarsoft.widget.Importer($('<div></div>'), '/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : ''));
+		this.imp.importer.body.append('<div style="clear: both"></div>');
 		this.imp.dlg = new org.sarsoft.view.MapDialog(imap, "Import Data", $('<div><div style="font-weight: bold; margin-bottom: 10px">To import data, click on the file type you wish to import from:</div></div>').append(this.imp.importer.body), null, "Cancel", function() {});
 		imap.controls.action.links['import'].css('display', '').click(function() {
 			that.imp.importer.clear();
@@ -1565,7 +1566,7 @@ org.sarsoft.WaypointObjectController.prototype.remove = function(obj) {
 org.sarsoft.WaypointObjectController.prototype.getObjectIdFromWpt = function(wpt) {
 	for(var key in this.dao.objs) {
 		var obj = this.dao.getObj(key);
-		if(obj != null && obj[this.type.waypoint] == wpt) return key;
+		if(obj != null && obj[this.type.waypoint].id == wpt.id) return key;
 	}
 }
 

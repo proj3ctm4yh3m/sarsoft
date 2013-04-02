@@ -151,11 +151,13 @@ public class DataManager {
 		while(it.hasNext()) {
 			JSONObject jobject = (JSONObject) it.next();
 			for(String key : getGeoDataTypes()) {
-				MapObject obj = this.getGeoController(key).fromGPX(jobject);
-				if(obj != null) {
-					state.add(key, obj);
-					break;
-				}
+				try {
+					MapObject obj = this.getGeoController(key).fromGPX(jobject);
+					if(obj != null) {
+						state.add(key, obj);
+						break;
+					}
+				} catch (Exception e) { }
 			}
 		}
 		
