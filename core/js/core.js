@@ -271,11 +271,12 @@ org.sarsoft.widget.TenantSharing.prototype = new org.sarsoft.widget.BaseSharing(
 org.sarsoft.widget.Importer = function(container, url) {
 	var that = this;
 	this.body = container;
+	this.url = url;
 
-    $('<div style="display: inline-block; padding-right: 50px"></div>').appendTo(this.body).append(
+    $('<div style="float: left; padding-right: 50px"></div>').appendTo(this.body).append(
             $('<div style="cursor: pointer"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gps64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold;">Garmin GPS</div></div>').click(function() {
                     that.header.css('visibility', 'inherit');
-                    that.comms.init(false, url, "", function(data) { that.processImportedData(data) } );
+                    that.comms.init(false, that.url, "", function(data) { that.processImportedData(data) } );
             }));
 	
 	this.gpx = new Object();
@@ -284,26 +285,30 @@ org.sarsoft.widget.Importer = function(container, url) {
 	this.gpx.file.change(function() {
 		if(that.bgframe == null)  {
 			that.bgframe = jQuery('<iframe name="IOFrame" id="IOFrame" width="0px" height="0px" style="display: none"></iframe>').appendTo(document.body);
-			that.bgform = jQuery('<form style="display: none" name="gpsform" action="/rest/in" target="IOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
+			that.bgform = jQuery('<form style="display: none" name="gpsform" action="' + that.url + '" target="IOFrame" enctype="multipart/form-data" method="post"><input type="hidden" name="responseType" value="frame"/><input type="hidden" name="format" value="gpx"/></form>').appendTo(document.body);
 		}
 		jsonFrameCallback = function(data) { that.processImportedData(data) };
 		_bgframe = that.bgframe;
 		that.gpx.file.appendTo(that.bgform);
-		that.bgform.attr("action", url);
+		that.bgform.attr("action", that.url);
 		that.bgform.submit();
 	});
 	$('<div style="cursor: pointer; float: left"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gpx64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>').click(function() {
 		that.gpx.form.css('display', 'block');
-	}).prependTo($('<div style="float: left"></div').append(this.gpx.form).appendTo($('<div style="display: inline-block"></div>').appendTo(this.body)));
+	}).prependTo($('<div style="float: left"></div').append(this.gpx.form).appendTo($('<div style="float: left"></div>').appendTo(this.body)));
 	
-	this.header = $('<div style="visibility: hidden; display: inline-block; vertical-align: top"><img src="' + $.img('gps.png') + '"/><b>GPS Console</b></div>').appendTo(this.body);
+	this.header = $('<div style="visibility: hidden; float: left; vertical-align: top"><img src="' + $.img('gps.png') + '"/><b>GPS Console</b></div>').appendTo(this.body);
 	this.comms = new org.sarsoft.GPSComms(this.header);
 }
 
-org.sarsoft.widget.Importer.prototype.clear = function () {
+org.sarsoft.widget.Importer.prototype.clear = function (url) {
 	this.comms.clear();
 	this.gpx.file.appendTo(this.gpx.form).val("");
 	this.gpx.form.css('display', 'none');
+	if(url) {
+		this.url = url;
+		this.gpx.form.attr("action", url);
+	}
 }
 
 org.sarsoft.widget.Importer.prototype.processImportedData = function(data) {
@@ -991,8 +996,10 @@ org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
 }
 
 
-org.sarsoft.view.MapObjectEntityDialog = function(imap, title, entityform) {
+org.sarsoft.view.MapObjectEntityDialog = function(imap, title, entityform, controller) {
 	var that = this;
+	this.controller = controller;
+	
 	org.sarsoft.view.MapEntityDialog.call(this, imap, title, entityform, function(obj) { that.ok(obj) }, "OK");
 	
 	this.dialog.dialog.hideEvent.subscribe(function() {
@@ -1015,11 +1022,17 @@ org.sarsoft.view.MapObjectEntityDialog.prototype.ok = function(obj) {
 	}
 }
 
-// override these stubs
-org.sarsoft.view.MapObjectEntityDialog.prototype.discardGeoInfo = function() { }
-org.sarsoft.view.MapObjectEntityDialog.prototype.saveGeoInfo = function(obj) { }
-org.sarsoft.view.MapObjectEntityDialog.prototype.saveData = function(obj) { }
-org.sarsoft.view.MapObjectEntityDialog.prototype.create = function(obj) { }
+org.sarsoft.view.MapObjectEntityDialog.prototype.discardGeoInfo = function() {
+	this.controller.discard(this.object);
+}
+org.sarsoft.view.MapObjectEntityDialog.prototype.saveGeoInfo = function(obj, callback) {
+	this.controller.save(this.object.id, callback);
+}
+org.sarsoft.view.MapObjectEntityDialog.prototype.saveData = function(obj) {
+	this.controller.dao.save(this.object.id, obj);
+}
+org.sarsoft.view.MapObjectEntityDialog.prototype.create = function(obj) {
+}
 
 org.sarsoft.view.MapObjectEntityDialog.prototype.show = function(obj, point, hasGeoInfo) {
 	this.object = obj;
@@ -1131,6 +1144,25 @@ org.sarsoft.MapObjectDAO.prototype.link = function(obj) {
 }
 
 org.sarsoft.MapObjectDAO.prototype.unlink = function(obj) {
+	if(this.childTypes) {
+		for(var type in this.childTypes) {
+			var prop = this.childTypes[type];
+			var dao = org.sarsoft.MapState.daos[type];
+			for(i = 0; i < dao.objs.length; i++) {
+				if(dao.objs[i] && dao.objs[i][prop] == obj.id) dao.objs[i][prop] = null;
+			}
+		}
+	}
+}
+
+org.sarsoft.MapObjectDAO.prototype.children = function(obj, type) {
+	var prop = this.childTypes[type];
+	var children = [];
+	var dao = org.sarsoft.MapState.daos[type];
+	for(i = 0; i < dao.objs.length; i++) {
+		if(dao.objs[i] && dao.objs[i][prop] == obj.id) children.push(dao.objs[i]);
+	}
+	return children;
 }
 
 org.sarsoft.MapObjectDAO.prototype.dehydrate = function() {
@@ -1179,9 +1211,9 @@ org.sarsoft.MapObjectDAO.prototype.save = function(id, obj, handler) {
 }
 
 org.sarsoft.MapObjectDAO.prototype.del = function(id, handler) {
-	if(!this.offline) return org.sarsoft.BaseDAO.prototype.del.call(this, id, handler);
-
 	var that = this;
+	if(!this.offline) return org.sarsoft.BaseDAO.prototype.del.call(this, id, function(obj) { that.unlink(obj); if(handler) handler(obj) });
+
 	org.sarsoft.async(function() {
 		var obj = that.objs[id];
 		that.unlink(obj);
@@ -1317,6 +1349,7 @@ org.sarsoft.MapObjectController = function(imap, type, background_load) {
 	var that = this;
 	this.imap = imap;
 	this.type = type;
+	this.childControllers = new Object();
 	this.bgload = background_load;
 
 	this.delconfirm = new org.sarsoft.view.MapDialog(imap, "Delete?", $('<div>Delete - Are You Sure?</div>'), "Delete", "Cancel", function() {
@@ -1355,7 +1388,13 @@ org.sarsoft.MapObjectController.prototype.buildAddButton = function(idx, text, h
 	});
 }
 
-org.sarsoft.MapObjectController.prototype.growmap = function(object) {
+org.sarsoft.MapObjectController.prototype.removeFromMap = function(obj) {
+}
+
+org.sarsoft.MapObjectController.prototype.focus = function(obj) {
+}
+
+org.sarsoft.MapObjectController.prototype.growmap = function(obj) {
 	// override this stub
 }
 
@@ -1391,8 +1430,21 @@ org.sarsoft.MapObjectController.prototype.del = function(handler) {
 	this.delconfirm.show();
 }
 
-org.sarsoft.MapObjectController.prototype.handleSetupChange = function() {
-	// override this stub
+org.sarsoft.MapObjectController.prototype.handleSetupChange = function(cascade) {
+	if(!this.dn.visible) {
+		for(var key in this.dao.objs) {
+			this.removeFromMap(this.dao.getObj(key));
+		}
+	} else {
+		for(var key in this.dao.objs) {
+			this.show(this.dao.getObj([key]));
+		}
+	}
+	if(cascade) {
+		for(var type in this.childControllers) {
+			this.childControllers[type].handleSetupChange(true);
+		}
+	}
 }
 
 org.sarsoft.MapObjectController.prototype.checkForObjects = function() {
@@ -1401,6 +1453,25 @@ org.sarsoft.MapObjectController.prototype.checkForObjects = function() {
 	this.dn.setDNVisible(check);
 }
 
+org.sarsoft.WaypointObjectDAO = function(name, baseURL) {
+	org.sarsoft.MapObjectDAO.call(this, name);
+	this.baseURL = baseURL;
+	this.geo = true;
+}
+
+org.sarsoft.WaypointObjectDAO.prototype = new org.sarsoft.MapObjectDAO();
+
+org.sarsoft.WaypointObjectDAO.prototype.updatePosition = function(id, position, handler) {
+	var that = this;
+	if(this.offline) {
+		var m = this.getObj(id);
+		m.position.lat = position.lat;
+		m.position.lng = position.lng;
+		org.sarsoft.async(function() { handler(m) });
+	} else {
+		this._doPost("/" + id + "/position", function(r) { that.setObj(id, r); if(handler) handler(r) }, {position: position});
+	}
+}
 
 org.sarsoft.WaypointObjectController = function(imap, type, background_load) {
 	org.sarsoft.MapObjectController.call(this, imap, type, background_load);
@@ -1412,7 +1483,8 @@ org.sarsoft.WaypointObjectController = function(imap, type, background_load) {
 			a_noedit : function(obj) { return obj.obj != null && !obj.inedit && !that.dlg.live },
 			
 			h_details : function(data) { that.dlg.show(data.pc.obj) },
-			h_drag : function(data) { that.edit(data.pc.obj) },
+			h_edit : function(data) { that.edit(data.pc.obj) },
+			h_drag : function(data) { that.drag(data.pc.obj) },
 			h_del : function(data) { that.del(function() { that.dao.del(data.pc.obj.id) }) }
 	}
 }
@@ -1420,10 +1492,19 @@ org.sarsoft.WaypointObjectController = function(imap, type, background_load) {
 org.sarsoft.WaypointObjectController.prototype = new org.sarsoft.MapObjectController();
 
 org.sarsoft.WaypointObjectController.prototype._contextMenuCheck = function(mapobj) {
+	var that = this;
 	if(mapobj == null) return {}
 	var obj = that.dao.getObj(that.getObjectIdFromWpt(mapobj));
 	var inedit = (obj != null && that.attr(obj, "inedit"));
 	return { obj: obj, inedit: inedit}
+}
+
+org.sarsoft.WaypointObjectController.prototype.focus = function(obj) {
+	this.imap.map.setCenter(new google.maps.LatLng(obj[this.type.waypoint].lat, obj[this.type.waypoint].lng));
+}
+
+org.sarsoft.WaypointObjectController.prototype.removeFromMap = function(obj) {
+	this.imap.removeWaypoint(obj[this.type.waypoint]);
 }
 
 org.sarsoft.WaypointObjectController.prototype.growmap = function(obj) {
@@ -1459,9 +1540,9 @@ org.sarsoft.WaypointObjectController.prototype.drag = function(obj) {
 	this.attr(obj, "inedit", true);
 	this.imap.dragOnce(obj[this.type.waypoint], function(gll) {
 		that.attr(obj, "inedit", false);
-		obj[this.type.waypoint].lat = gll.lat();
-		obj[this.type.waypoint].lng = gll.lng();
-		that._saveWaypoint(obj.id, obj[this.type.waypoint]);
+		obj[that.type.waypoint].lat = gll.lat();
+		obj[that.type.waypoint].lng = gll.lng();
+		that._saveWaypoint(obj.id, obj[that.type.waypoint]);
 	});
 }
 
@@ -1477,14 +1558,19 @@ org.sarsoft.WaypointObjectController.prototype.getObjectIdFromWpt = function(wpt
 	}
 }
 
+org.sarsoft.WaypointObjectController.prototype.getConfig = function(obj) {
+	return { active: true, visible: true, icon: "#FF0000" }
+}
+
 org.sarsoft.WaypointObjectController.prototype.DNGetIcon = function(obj) {
-	return $('<div></div>');
+	var config = this.getConfig(obj);
+	return $('<div><img src="' + org.sarsoft.controller.MarkerController.getRealURLForMarker(config.icon) + '"/></div>');
 }
 
 org.sarsoft.WaypointObjectController.prototype.DNAddLine = function(obj, handler) {
 	var that = this;
 	var line = this.dn.add(obj.id, obj[this.dao.label], function() {
-		that.imap.map.setCenter(new google.maps.LatLng(obj[that.type.waypoint].lat, obj[that.type.waypoint].lng));
+		that.focus(obj);
 		if(handler) handler();
 	});
 	line.prepend(this.DNGetIcon(obj));
@@ -1508,10 +1594,11 @@ org.sarsoft.WaypointObjectController.prototype.DNAddDelete = function(obj) {
 }
 
 
-org.sarsoft.WayObjectDAO = function(name, baseURL) {
+org.sarsoft.WayObjectDAO = function(name, baseURL, wname) {
 	org.sarsoft.MapObjectDAO.call(this, name);
 	this.baseURL = baseURL;
 	this.geo = true;
+	this.wname = wname;
 }
 
 org.sarsoft.WayObjectDAO.prototype = new org.sarsoft.MapObjectDAO();
@@ -1530,6 +1617,24 @@ org.sarsoft.WayObjectDAO.prototype.addBoundingBox = function(way) {
 
 org.sarsoft.WayObjectDAO.prototype.validate = function(obj) {
 	return org.sarsoft.MapObjectDAO.prototype.validate.call(this, obj);
+}
+
+org.sarsoft.WayObjectDAO.prototype.saveWay = function(obj, waypoints, handler) {
+	var that = this;
+	if(this.offline) {
+		org.sarsoft.async(function() {
+			var way = that.getObj(obj.id)[that.wname];
+			way.waypoints = waypoints;
+			that.addBoundingBox(way);
+			if(handler != null) handler(way);
+		});
+	} else {
+		this._doPost("/" + obj.id + "/" + this.wname, function(way) {
+			that.getObj(obj.id)[that.wname] = way;
+			if(handler != null) handler(way);
+		}, waypoints);
+		
+	}
 }
 
 
@@ -1558,6 +1663,7 @@ org.sarsoft.WayObjectController = function(imap, type, background_load) {
 org.sarsoft.WayObjectController.prototype = new org.sarsoft.MapObjectController();
 
 org.sarsoft.WayObjectController.prototype._contextMenuCheck = function(mapobj) {
+	var that = this;
 	if(mapobj == null) return {}
 	var obj = that.dao.getObj(that.getObjectIdFromWay(mapobj));
 	var inedit = (obj != null && that.attr(obj, "inedit"));
@@ -1565,7 +1671,7 @@ org.sarsoft.WayObjectController.prototype._contextMenuCheck = function(mapobj) {
 }
 
 org.sarsoft.WayObjectController.prototype.getConfig = function(obj) {
-	return { color : "#FF0000", weight : 2, fill : 30 }
+	return { active: true, visible: true, color : "#FF0000", weight : 2, fill : 30 }
 }
 
 org.sarsoft.WayObjectController.prototype.profile = function(obj) {
@@ -1575,6 +1681,14 @@ org.sarsoft.WayObjectController.prototype.profile = function(obj) {
 	this.pg.profile(obj[this.type.way], config.color, function() {
 		that.profileDlg.show();
 	});
+}
+
+org.sarsoft.WayObjectController.prototype.removeFromMap = function(obj) {
+	this.imap.removeWay(obj[this.type.way]);
+}
+
+org.sarsoft.WayObjectController.prototype.focus = function(obj) {
+	this.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(obj[this.type.way].boundingBox[0].lat, obj[this.type.way].boundingBox[0].lng), new google.maps.LatLng(obj[this.type.way].boundingBox[1].lat, obj[this.type.way].boundingBox[1].lng)));
 }
 
 org.sarsoft.WayObjectController.prototype.growmap = function(object) {
@@ -1653,7 +1767,7 @@ org.sarsoft.WayObjectController.prototype.DNGetIcon = function(obj) {
 org.sarsoft.WayObjectController.prototype.DNAddLine = function(obj, handler) {
 	var that = this;
 	var line = this.dn.add(obj.id, obj[this.dao.label], function() {
-		that.imap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(obj[that.type.way].boundingBox[0].lat, obj[that.type.way].boundingBox[0].lng), new google.maps.LatLng(obj[that.type.way].boundingBox[1].lat, obj[that.type.way].boundingBox[1].lng)));
+		that.focus(obj);
 		if(handler) handler();
 	});
 	line.prepend(this.DNGetIcon(obj));

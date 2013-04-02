@@ -28,6 +28,8 @@ org.sarsoft.Loader.queue(function() {
 	periods = new org.sarsoft.OperationalPeriodController(page.imap, false);
 	assignments = new org.sarsoft.AssignmentController(page.imap, false);
 	clues = new org.sarsoft.ClueController(page.imap, false);
+	ftracks = new org.sarsoft.FieldTrackController(page.imap, false);
+	fwpts = new org.sarsoft.FieldWaypointController(page.imap, false);
 
 	page.imap.dn.tenant.addClose("Close Unsaved Map", function() {
 		window.location.hash = "";

@@ -1,11 +1,16 @@
 package org.sarsoft.plans.model;
 
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.GeoMapObject;
 
+@MappedSuperclass
 public abstract class AssignmentChildObject extends GeoMapObject {
 
 	private Long assignmentId;

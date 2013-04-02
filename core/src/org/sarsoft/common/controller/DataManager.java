@@ -1,6 +1,5 @@
 package org.sarsoft.common.controller;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,7 +14,6 @@ import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ClientState;
-import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapObject;

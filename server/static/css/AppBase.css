@@ -198,6 +198,32 @@ body.yui-skin-sam .yui-panel .bd, body.yui-skin-sam .yui-panel .ft {
 	background-color: white;
 }
 
+body.yui-skin-sam .yui-dialog .yui-navset {
+	height: 100%;
+}
+
+body.yui-skin-sam .yui-dialog .yui-navset .yui-nav {
+	border-style: solid;
+	border-color: #E6E6E6;
+}	
+
+body.yui-skin-sam .yui-dialog .yui-navset .yui-nav .selected a {
+	background: none;
+	background-color: #E6E6E6;
+	border: none;
+	color: black;
+}
+
+body.yui-skin-sam .yui-dialog .yui-navset .yui-nav .selected a em {
+	border: none;
+}
+
+body.yui-skin-sam .yui-dialog .yui-navset .yui-content {
+	border: none;
+	background: none;
+	padding: 0;
+}
+
 div.item label, div.item span.label {
 	float: left;
 	margin-right: 5px;

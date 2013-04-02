@@ -41,9 +41,9 @@ public class Clue extends AssignmentChildObject implements IPreSave {
 	}
 	
 	public void from(Clue updated) {
-		if(updated.getDescription() != null || updated.getSummary() != null) {
-			setDescription(updated.getDescription());
+		if(updated.getPosition() == null || (updated.getDescription() != null || updated.getSummary() != null)) {
 			setAssignmentId(updated.getAssignmentId());
+			setDescription(updated.getDescription());
 			setSummary(updated.getSummary());
 			setLocation(updated.getLocation());
 			setFound(updated.getFound());
