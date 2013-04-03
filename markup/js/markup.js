@@ -232,7 +232,6 @@ org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
 org.sarsoft.ShapeDAO.prototype.saveWaypoints = function(shape, waypoints, handler) {
 	var that = this;
 	this.saveWay(shape, waypoints, function(obj) {
-		if(that.offline) that.validate(obj);
 		if(handler) handler(obj);
 	});
 }
