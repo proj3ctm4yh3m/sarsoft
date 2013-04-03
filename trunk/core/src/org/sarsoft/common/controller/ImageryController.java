@@ -299,7 +299,7 @@ public class ImageryController extends JSONBaseController {
 		}
 		
 		int tiles = 1000;
-		while(z > 5 && tiles > 80) {
+		while(z > 5 && tiles > 120) {
 			double[] px_ne = WebMercator.MetersToPixels(m_ne[0], m_ne[1], z);
 			double[] px_sw = WebMercator.MetersToPixels(m_sw[0], m_sw[1], z);
 			
@@ -307,7 +307,7 @@ public class ImageryController extends JSONBaseController {
 			double[] t_sw = WebMercator.PixelsToDecimalTile(px_sw[0], px_sw[1]);
 			
 			tiles = (int) (Math.round(t_ne[0]-t_sw[0])*Math.round(t_ne[1]-t_sw[1]));
-			if(tiles > 80) z--;
+			if(tiles > 120) z--;
 		}
 		
 		double[] px_ne = WebMercator.MetersToPixels(m_ne[0], m_ne[1], z);
