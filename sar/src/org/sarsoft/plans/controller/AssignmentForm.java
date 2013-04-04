@@ -6,6 +6,7 @@ import org.sarsoft.plans.model.Probability;
 public class AssignmentForm {
 	private long id;
 	private String bulkIds;
+	private Long operationalPeriodId;
 	private Assignment.ResourceType resourceType;
 	private String details;
 	private Double timeAllocated;
@@ -18,6 +19,12 @@ public class AssignmentForm {
 	private String primaryFrequency;
 	private String secondaryFrequency;
 
+	public Long getOperationalPeriodId() {
+		return operationalPeriodId;
+	}
+	public void setOperationalPeriodId(Long id) {
+		operationalPeriodId = id;
+	}
 	public String getPrimaryFrequency() {
 		return primaryFrequency;
 	}

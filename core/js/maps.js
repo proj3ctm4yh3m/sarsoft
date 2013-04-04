@@ -217,6 +217,8 @@ org.sarsoft.MapOverlayManager.prototype.updateMap = function(base, layers, opaci
 		});
 	}
 	this.alphas = alphas;
+	
+	$(this).trigger('update', {base : base, layers : layers, opacity : opacity, alphas : alphas});
 }
 
 org.sarsoft.MapOverlayControl = function(map, manager) {

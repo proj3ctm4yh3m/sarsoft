@@ -8,9 +8,6 @@
 </head>
 <body class="yui-skin-sam">
 
-<tiles:importAttribute name="app"/>
-<tiles:importAttribute name="subHeader"/>
-
 <div class="header noprint" style="background-image: url(/static/images/header.jpg); background-repeat: repeat-x;">
 <div style="font-weight: bold; margin-left: 1.5em;"><span style="font-size: 200%">${version}</span></div>
 </div>

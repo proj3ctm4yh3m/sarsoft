@@ -128,7 +128,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	@RequestMapping(value="/rest/map/", method = RequestMethod.GET)
-	public String getMaps(Model model, @RequestParam(value="className", required=false) String className) {
+	public String getMaps(Model model, @RequestParam(value="id", required=false) String id) {
 		List<Tenant> tenants = new ArrayList<Tenant>();
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;

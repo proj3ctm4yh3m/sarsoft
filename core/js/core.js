@@ -933,11 +933,11 @@ org.sarsoft.view.MapSizeForm.prototype.write = function() {
 		height = (1*nHeight - nMargin*2) + "cm";
 	}
 	
-	var container = $(map.getDiv());
+	var container = $(this.map.getDiv());
 	container.css({width: width, height: height});
 	this.map.getDiv()._margin=margin;
 	
-	var ugc = map._imap.registered["org.sarsoft.UTMGridControl"];
+	var ugc = this.map._imap.registered["org.sarsoft.UTMGridControl"];
 	var mdw = this.map._imap.registered["org.sarsoft.MapDatumWidget"];
 	var mic = this.map._imap._mapInfoControl;
 	if(this.cbborder[0].checked) {
