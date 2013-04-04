@@ -18,6 +18,9 @@
 	</definition>
 	<definition name="Assignment.PrintForms" template="/plans/assignment-print.jsp"/>
 	<definition name="Assignment.PrintBulk" template="/plans/assignment-printbulk.jsp"/>
+	<definition name="Assignment.Bulk" extends="Search.Base">
+		<put-attribute name="content" value="/plans/assignment-bulk.jsp"/>
+	</definition>
 
 	<definition name="OperationalPeriod.Detail.Sub" template="/home.jsp">
 		<put-attribute name="subcontent" value="/plans/opdetail.jsp"/>

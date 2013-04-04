@@ -151,6 +151,24 @@ org.sarsoft.OperationalPeriodController.prototype.handleSetupChange = function(c
 	}
 }
 
+org.sarsoft.AssignmentTable = function() {
+	var status = { "DRAFT" : 0, "PREPARED" : 1, "INPROGRESS" : 2, "COMPLETED" : 3};
+	var pod = {"LOW" : 0, "MEDIUM" : 1, "HIGH" : 2};
+	var coldefs = [
+		{ key : "id", label : "Number", sortable: true},
+		{ key : "resourceType", label : "Resource Type", sortable: true},
+		{ key : "status", label : "Status", sortable: true, formatter: org.sarsoft.view.getColorFormatter({DRAFT: "#0088FF", INPROGRESS: "#FF0000", PREPARED: "#FF8800", COMPLETED: "#8800FF"}), sortOptions: {sortFunction: function(a, b, desc) { 
+			return YAHOO.util.Sort.compare(status[a.getData("status")], status[b.getData("status")], desc); 
+			}} },
+		{ key : "formattedSize", label : "Size", sortable: true},
+		{ key : "timeAllocated", label : "Time Allocated", sortable : true},
+		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter({MEDIUM: "#FF8800", HIGH: "#FF0000", LOW: "#0088FF"}), sortOptions : {sortFunction: function(a, b, desc) { return YAHOO.util.Sort.compare(pod[a.getData("responsivePOD")], pod[b.getData("responsivePOD")], desc)}}},
+		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "40em"}); cell.innerHTML = data;}}
+	];
+	org.sarsoft.view.EntityTable.call(this, coldefs, { }, function(assignment) { } );
+}
+org.sarsoft.AssignmentTable.prototype = new org.sarsoft.view.EntityTable();
+
 org.sarsoft.AssignmentDAO = function() {
 	org.sarsoft.WayObjectDAO.call(this, "Assignment", "/rest/assignment", "segment");
 	this.label = "number";
@@ -287,7 +305,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 		}
 		
 		this.imap.addContextMenuItems([
-		    { text: "New Assignment", applicable: this.cm.a_none, handler: function(data) { that.dlg.show({create: true, operationalPeriodId: 1, polygon: true}, data.point)}},
+		    { text: "New Assignment", applicable: this.cm.a_none, handler: function(data) { that.dlg.show({create: true, operationalPeriodId: 1, segment : {polygon: true}}, data.point)}},
 		    { text: "Drag Vertices", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: this.cm.h_edit},
     		{text : "Save Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_save },
     		{text : "Discard Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_discard },
@@ -653,113 +671,116 @@ org.sarsoft.FieldTrackController.prototype.show = function(object) {
 }
 
 
-
-
-
-
-org.sarsoft.controller.AssignmentPrintMapController = function(container, id) {
+org.sarsoft.AssignmentPrintMapController = function(container, ids) {
 	var that = this;
-	this.dao = org.sarsoft.MapState.daos["Assignment"] || new org.sarsoft.AssignmentDAO();
-	this.showPrevious = showPreviousEfforts;
+	this.container = container;
+	this.maps = {}
+	this.dao = {
+		assignment : org.sarsoft.MapState.daos["Assignment"] || new org.sarsoft.AssignmentDAO(),
+		clue : org.sarsoft.MapState.daos["Clue"] || new org.sarsoft.ClueDAO(),
+		track : org.sarsoft.MapState.daos["FieldTrack"] || new org.sarsoft.FieldTrackDAO(),
+		waypoint : org.sarsoft.MapState.daos["FieldWaypoint"] || new org.sarsoft.FieldWaypointDAO()
+	}
+	
+	this.header = $('<div class="noprint"></div>').appendTo(container);
+	var cb_utm = $('<input type="checkbox">').prependTo($('<div>Show UTM Grid</div>').appendTo(this.header)).change(function() {
+		for(var id in that.maps) {
+			that.maps[id].utm.setValue(cb_utm[0].checked);
+		}
+	});
+
+	var cb_utm = $('<input type="checkbox">').prependTo($('<div>Show Overlapping Tracks From Other Assignments</div>').appendTo(this.header)).change(function() {
+		for(var id in that.maps) {
+			that.toggleTracks(id, cb_utm[0].checked);
+		}
+	});
+
+	this.showPrevious = false;
 	this.previousEfforts = new Array();
 	
-	this.div = container;
-	var height = "10.5in";
-	if(navigator.userAgent.indexOf("MSIE") > 0 && typeof(GMap2.ol) == "undefined") height = "8in";
-	this.div.style.width="8in";
-	this.div.style.height=height;
-	var map = org.sarsoft.EnhancedGMap.createMap(this.div);
-	this.imap = new org.sarsoft.InteractiveMap(map, {standardControls : true});
+	this.dao.clue.loadAll();
+	this.dao.track.loadAll();
+	this.dao.waypoint.loadAll();
 
-	this.markerController = new org.sarsoft.controller.MarkerController(this.imap, "none");
-	this.shapeController = new org.sarsoft.controller.ShapeController(this.imap, "none");
-	var configWidget = new org.sarsoft.view.PersistedConfigWidget(this.imap);
-	configWidget.loadConfig();
+	$(this.dao.assignment).bind('loadall', function(e, obj) { 
+		if(ids == null || ids.indexOf(String(obj.id)) >= 0) that.create(obj);
+	});
 	
-	this.dao.load(id, function(assignment) { that._loadAssignmentCallback(assignment) });
-
+	this.dao.assignment.loadAll();
 }
 
-org.sarsoft.controller.AssignmentPrintMapController.prototype._loadAssignmentCallback = function(assignment) {
+org.sarsoft.AssignmentPrintMapController.prototype.create = function(assignment) {
 	var that = this;
-	this.assignment = assignment;
-
-	var config = {clickable : false, fill: false, color: "#FF0000", opacity: 100};	
-	var trackConfig = {clickable: false, fill: false, color: "#FF8800", opacity: 100};	
-	var otherTrackConfig = {clickable: false, fill: false, color: "#000000", opacity: 80};
-	this.otherTrackConfig = otherTrackConfig;
-
-	jQuery('<div class="printonly" style="z-index: 2000; position: absolute; top: 0px; left: 0px; background: white">Assignment ' + assignment.id + ((assignment.status == "COMPLETED") ? ' Debrief' : '') + '</div>').appendTo(this.fmap.map.getDiv());
+	var id = assignment.id
+	this.maps[id] = new Object();
 	
-	if(this.showPrevious == null) this.showPrevious = (assignment.status == "COMPLETED") ? false : true;
+	this.container.append('<div class="noprint" style="height: 40px"></div>');
 	
-	var showHide = new org.sarsoft.ToggleControl("PREV TRK", "Show/Hide Previous Efforts in Search Area", function(value) {
-		that.showPrevious = value;
-		that.handleSetupChange();
-	});
-	showHide.setValue(this.showPrevious);
-	this.fmap.addMenuItem(showHide.node, 19);
-	this.showHide = showHide;
+	var div = this.maps[id].div = $('<div class="page"></div>').appendTo(this.container).css({'width' : '8in', 'height': '10in'});
+	var map = this.maps[id].map = org.sarsoft.EnhancedGMap.createMap(div[0]);
+	var imap = this.maps[id].imap = new org.sarsoft.InteractiveMap(map, {});
+	this.maps[id].utm = new org.sarsoft.UTMGridControl(imap);
 	
-	var bb = this.assignment.boundingBox;
-	this.fmap.setBounds(new google.maps.LatLngBounds(new google.maps.LatLng(bb[0].lat, bb[0].lng), new google.maps.LatLng(bb[1].lat, bb[1].lng)));
-
-
-	this.assignmentDAO.getWays(function(ways) {
-		for(var i = 0; i < ways.length; i++) {
-			var way = ways[i];
-			that.fmap.addWay(way, (way.type == "ROUTE") ? config : trackConfig, (way.type == "ROUTE") ? null : way.name);
-		}
-	}, assignment, 10);
-	
-	for(var i = 0; i < assignment.waypoints.length; i++) {
-		var wpt = assignment.waypoints[i];
-		that.fmap.addWaypoint(wpt, config, wpt.name, wpt.name);
+	if(Object.keys(this.maps).length == 1) {
+		$(map._overlaymanager).bind('update', function(e, cfg) { that.copyConfig(id, cfg) });
 	}
 	
-	for(var i = 0; i < assignment.clues.length; i++) {
-		var clue = assignment.clues[i];
-		if(clue.position != null) {
-			that.fmap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createImage(16, "/static/images/clue.png") }, clue.id, clue.summary);
-			that.fmap.growMap(new google.maps.LatLng(clue.position.lat, clue.position.lng));
-		}
+	this.maps[id].markers = new org.sarsoft.controller.MarkerController(imap, true);
+	this.maps[id].shapes = new org.sarsoft.controller.ShapeController(imap, true);
+	var configWidget = new org.sarsoft.view.PersistedConfigWidget(imap, false);
+	configWidget.loadConfig();
+
+	
+	$('<div class="printonly" style="z-index: 2000; position: absolute; top: 0px; left: 0px; background: white">Assignment ' + assignment.id + ((assignment.status == "COMPLETED") ? ' Debrief' : '') + '</div>').appendTo(div);
+
+	var bounds = new google.maps.LatLngBounds(GeoUtil.wpt2gll(assignment.segment.boundingBox[0]), GeoUtil.wpt2gll(assignment.segment.boundingBox[1]));
+	imap.setBounds(bounds);
+	imap.addWay(assignment.segment, {clickable : false, fill: false, color: "#FF0000", opacity: 100});
+	
+	var tracks = this.dao.assignment.children(assignment, "FieldTrack");
+	for(var i = 0; i < tracks.length; i++) {
+		var track = tracks[i];
+		imap.addWay(track.way, {clickable: false, fill: false, color: "#FF8800", opacity: 100}, track.label);
 	}
 	
-	var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(assignment.boundingBox[0].lat, assignment.boundingBox[0].lng), new google.maps.LatLng(assignment.boundingBox[1].lat, assignment.boundingBox[1].lng));
-	this.assignmentDAO.loadAll(function(assignments) {
-		for(var i = 0; i < assignments.length; i++) {
-			var abounds = new google.maps.LatLngBounds(new google.maps.LatLng(assignments[i].boundingBox[0].lat, assignments[i].boundingBox[0].lng), new google.maps.LatLng(assignments[i].boundingBox[1].lat, assignments[i].boundingBox[1].lng));
-			if(assignments[i].id != assignment.id && (bounds.intersects(abounds) || bounds.containsBounds(abounds) || abounds.containsBounds(bounds))) {
-				that.assignmentDAO.getWays(function(ways) {
-					for(var i = 0; i < ways.length; i++) {
-						var way = ways[i];
-						way.waypoints = way.zoomAdjustedWaypoints;
-						if(way.type == "TRACK") {
-							that.previousEfforts.push(way);
-							if(that.showPrevious) that.fmap.addWay(way, otherTrackConfig, null);
-						}
-					}
-				}, assignments[i], 10);
+	var waypoints = this.dao.assignment.children(assignment, "FieldWaypoint");
+	for(var i = 0; i < waypoints.length; i++) {
+		var fwpt = waypoints[i];
+		imap.addWaypoint(fwpt.position, { color: "#FF0000" }, fwpt.label, fwpt.label);
+	}
+
+	var clues = this.dao.assignment.children(assignment, "Clue");
+	for(var i = 0; i < clues.length; i++) {
+		var clue = clues[i];
+		imap.addWaypoint(clue.position, { icon: org.sarsoft.MapUtil.createImage(16, "/static/images/clue.png") }, clue.summary, clue.description);
+	}
+	
+}
+
+org.sarsoft.AssignmentPrintMapController.prototype.toggleTracks = function(id, on) {
+	var assignment = this.dao.assignment.objs[id];
+	var imap = this.maps[id].imap;
+	var bounds = new google.maps.LatLngBounds(GeoUtil.wpt2gll(assignment.segment.boundingBox[0]), GeoUtil.wpt2gll(assignment.segment.boundingBox[1]));
+	for(var i = 0; i < this.dao.track.objs.length; i++) {
+		var track = this.dao.track.objs[i];
+		if(track == null) continue;
+		var abounds = new google.maps.LatLngBounds(GeoUtil.wpt2gll(track.way.boundingBox[0]), GeoUtil.wpt2gll(track.way.boundingBox[1]));
+		if(track.assignmentId != id && bounds.intersects(abounds)) {
+			if(on) {
+				imap.addWay(track.way, {clickable: false, fill: false, color: "#000000", opacity: 100});
+			} else {
+				imap.removeWay(track.way);
 			}
 		}
-	});
-}
-
-org.sarsoft.controller.AssignmentPrintMapController.prototype.handleSetupChange = function() {
-	if(this.showPrevious) {
-		this.showHide.innerHTML = "PREV TRK";
-		for(var i = 0; i < this.previousEfforts.length; i++) {
-			this.fmap.addWay(this.previousEfforts[i], this.otherTrackConfig, null);
-		}
-	} else {
-		this.showHide.innerHTML = "<span style='text-decoration: line-through'>PREV TRK</span>";
-		for(var i = 0; i < this.previousEfforts.length; i++) {
-			this.fmap.removeWay(this.previousEfforts[i], this.otherTrackConfig, null);
-		}
 	}
 }
 
-
+org.sarsoft.AssignmentPrintMapController.prototype.copyConfig = function(sourceid, config) {
+	for(var id in this.maps) {
+		if(id == sourceid) continue;
+		this.maps[id].imap.setConfig(config);
+	}
+}
 
 
 
@@ -798,26 +819,6 @@ org.sarsoft.view.OperationalPeriodTable = function() {
 	});
 }
 org.sarsoft.view.OperationalPeriodTable.prototype = new org.sarsoft.view.EntityTable();
-
-org.sarsoft.view.SearchAssignmentTable = function() {
-	var status = { "DRAFT" : 0, "PREPARED" : 1, "INPROGRESS" : 2, "COMPLETED" : 3};
-	var pod = {"LOW" : 0, "MEDIUM" : 1, "HIGH" : 2};
-	var coldefs = [
-		{ key : "id", label : "Number", sortable: true},
-		{ key : "resourceType", label : "Resource Type", sortable: true},
-		{ key : "status", label : "Status", sortable: true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByStatus), sortOptions: {sortFunction: function(a, b, desc) { 
-			return YAHOO.util.Sort.compare(status[a.getData("status")], status[b.getData("status")], desc); 
-			}} },
-		{ key : "formattedSize", label : "Size", sortable: true},
-		{ key : "timeAllocated", label : "Time Allocated", sortable : true},
-		{ key : "responsivePOD", label : "Responsive POD", sortable : true, formatter: org.sarsoft.view.getColorFormatter(org.sarsoft.Constants.colorsByProbability), sortOptions : {sortFunction: function(a, b, desc) { return YAHOO.util.Sort.compare(pod[a.getData("responsivePOD")], pod[b.getData("responsivePOD")], desc)}}},
-		{ key : "details", label : "Details", formatter : function(cell, record, column, data) { $(cell).css({overflow: "hidden", "max-height": "1em", "max-width": "40em"}); cell.innerHTML = data;}}
-	];
-	org.sarsoft.view.EntityTable.call(this, coldefs, { caption: "Search Assignments" }, function(assignment) {
-		window.location="/assignment/" + assignment.id;
-	});
-}
-org.sarsoft.view.SearchAssignmentTable.prototype = new org.sarsoft.view.EntityTable();
 
 org.sarsoft.view.WayTable = function(handler, onDelete) {
 	var coldefs = [
