@@ -105,6 +105,24 @@ public class CollaborativeMapController extends JSONBaseController {
 		}
 	}
 	
+	@RequestMapping(value="/rest/map", method = RequestMethod.POST)
+	public String restCreate(Model model, @RequestParam(value="state", required=false) String clientstate, HttpServletRequest request) {
+		String error = adminController.createNewTenant(CollaborativeMap.class, request);
+		if(error != null) return json(model, error);
+		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		if(map != null) {
+			String lat = request.getParameter("lat");
+			String lng = request.getParameter("lng");
+			if(lat != null && lat.length() > 0 && lng != null && lng.length() > 0) {
+				Waypoint lkp = new Waypoint(Double.parseDouble(lat), Double.parseDouble(lng));
+				map.setDefaultCenter(lkp);
+			}
+			dao.save(map);
+		}
+		
+		return json(model, map);
+	}
+	
 	@RequestMapping(value="/map", method = RequestMethod.POST)
 	public String create(Model model, @RequestParam(value="state", required=false) String clientstate, HttpServletRequest request) {
 		String error = adminController.createNewTenant(CollaborativeMap.class, request);
@@ -128,7 +146,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	@RequestMapping(value="/rest/map/", method = RequestMethod.GET)
-	public String getMaps(Model model, @RequestParam(value="id", required=false) String id) {
+	public String getMaps(Model model) {
 		List<Tenant> tenants = new ArrayList<Tenant>();
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
@@ -143,14 +161,25 @@ public class CollaborativeMapController extends JSONBaseController {
 		return json(model, tenants);
 	}
 	
+	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.GET)
+	public String restGet(Model model, @PathVariable("id") String id, HttpServletRequest request, HttpServletResponse response) {
+		if(!(RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
+			String error = adminController.setTenant(id, CollaborativeMap.class, request);
+			if(error != null) return json(model, error);
+		}
+
+		return json(model, dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant()));
+	}
+
+	
 	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.DELETE)
 	public String delete(Model model, HttpServletRequest request, @PathVariable("id") String id) {		
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
-			return json(model, new HashMap()); // TODO communicate error condition
+			return json(model, "You do not have admin rights to this map");
 		}
 		
 		if(!id.equals(RuntimeProperties.getTenant())) {
-			return json(model, new HashMap());
+			return json(model, "You are not currently working on this map, concerned this may be an accidental deletion");
 		}
 
 		dao.deleteAll(Marker.class);
@@ -168,7 +197,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		RuntimeProperties.setTenant(null);
 		request.getSession(true).removeAttribute("tenantid");
 
-		return json(model, new HashMap());
+		return json(model, tenant);
 	}
 	
 	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.POST)
@@ -176,11 +205,11 @@ public class CollaborativeMapController extends JSONBaseController {
 		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
-			return json(model, new HashMap()); // TODO communicate error condition
+			return json(model, "You do not have admin rights to this map");
 		}
 		
 		if(!id.equals(RuntimeProperties.getTenant())) {
-			return json(model, new HashMap());
+			return json(model, "You are not currently working on this map, concerned this may be an accidental update");
 		}
 
 		Tenant updated = new CollaborativeMap(params.JSON());

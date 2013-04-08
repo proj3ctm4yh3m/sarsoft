@@ -149,6 +149,13 @@ public abstract class JSONBaseController {
 		if(obj != null) model.addAttribute("json", toJSON(obj));
 		return "/json";
 	}
+	
+	@SuppressWarnings({"unchecked","rawtypes"})
+	protected String json(Model model, String error) {
+		Map m = new HashMap();
+		m.put("error", error);
+		return json(model, m);
+	}
 
 	private void prepXML(Model model, Object obj) {
 		String xml = new XMLSerializer().write(toJSON(obj));
