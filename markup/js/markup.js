@@ -54,7 +54,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 				} else {
 					var icon = sarsoft.map.icons[url];
 					if(icon) {
-						var swatch = $('<img src="' + $.img('blank.gif') + '" style="cursor: pointer; width: 20px; height: 20px; background-image: url(' + $.img('icons/sprite.png') + '); background-position: -' + (icon.offset*20) + 'px 0px"></div>').appendTo(ic2);
+						var swatch = $('<img src="' + $.img('blank.gif') + '" style="cursor: pointer; width: 20px; height: 20px; background-image: url(' + $.img('icons/sprite2.png') + '); background-position: -' + (icon.offset*20) + 'px 0px"></div>').appendTo(ic2);
 					} else {
 						var swatch = jQuery('<img style="cursor: pointer; width: 20px; height: 20px" src="' + $.img('icons/' + url + '.png') + '"/>').appendTo(ic2);
 					}

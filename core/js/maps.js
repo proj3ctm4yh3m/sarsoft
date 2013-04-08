@@ -2898,13 +2898,13 @@ org.sarsoft.MapUtil = new Object();
 org.sarsoft.MapUtil.createIcon = function(url) {
 	if(sarsoft.map.icons[url]) {
 		var icon = sarsoft.map.icons[url];
-		var sprite_count = 71;
+		var sprite_count = 72;
 		var target_size = 20;
 		return { anchor : new google.maps.Point(icon.anchor[0]*target_size, icon.anchor[1]*target_size),
 				scaledSize: new google.maps.Size(sprite_count*target_size, target_size),
 				origin: new google.maps.Point(icon.offset*target_size, 0),
 				size: new google.maps.Size(target_size, target_size), 
-				url: $.img('icons/sprite.png') }
+				url: $.img('icons/sprite2.png') }
 	}
 	return org.sarsoft.MapUtil.createImage(20, $.img(url));
 }
