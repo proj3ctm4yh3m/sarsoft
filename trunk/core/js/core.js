@@ -1479,7 +1479,7 @@ org.sarsoft.WaypointObjectDAO.prototype.updatePosition = function(id, position, 
 		var m = this.getObj(id);
 		m.position.lat = position.lat;
 		m.position.lng = position.lng;
-		org.sarsoft.async(function() { handler(m) });
+		if(handler) org.sarsoft.async(function() { handler(m) });
 	} else {
 		this._doPost("/" + id + "/position", function(r) { that.setObj(id, r); if(handler) handler(r) }, {position: position});
 	}

@@ -61,6 +61,7 @@ public class Icon {
 		build("nps-picnic");
 		build("nps-water");
 		build("skiing");
+		build("xc");
 		build("walking");
 		build("snowshoe");
 		build("climbing");
