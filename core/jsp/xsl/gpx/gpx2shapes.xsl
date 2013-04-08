@@ -99,10 +99,13 @@
 
 <xsl:when test="local-name()='Style'">
 	<xsl:for-each select="*[local-name()='LineStyle']/*[local-name()='color']">
-		<color type="string"><xsl:value-of select="substring(., 3, 6)"/></color>
+		<color type="string"><xsl:value-of select="concat(substring(., 7, 2), substring(., 5, 2), substring(., 3, 2))"/></color>
 	</xsl:for-each>
 	<xsl:for-each select="*[local-name()='LineStyle']/*[local-name()='width']">
 		<weight type="string"><xsl:value-of select="."/></weight>
+	</xsl:for-each>
+	<xsl:for-each select="*[local-name()='IconStyle']/*[local-name()='Icon']/*[local-name()='href']">
+		<xsl:if test="not(starts-with(text(), 'http://maps.google.com'))"><url type="string"><xsl:value-of select="."/></url></xsl:if>
 	</xsl:for-each>
 </xsl:when>
 
@@ -150,6 +153,7 @@
 	<name type="string"><xsl:value-of select="*[local-name()='name']"/></name>
 	<desc></desc>
 	<type type="string">waypoint</type>
+	<xsl:call-template name="KMLStyle"/>
 	<position>
 		<lat type="number"><xsl:value-of select="substring-before(substring-after($coordinates, ','), ',')"/></lat>
 		<lng type="number"><xsl:value-of select="substring-before($coordinates, ',')"/></lng>

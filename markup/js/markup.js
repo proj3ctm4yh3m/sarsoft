@@ -28,13 +28,20 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	this.comments = $('<textarea rows="5" cols="50"></textarea>').appendTo(left);
 	this.specsDiv = $('<div class="item" style="padding-top: 10px"></div>').appendTo(left);
 	
-	div = $('<div class="item" style="min-height: 22px"><label for="image" style="width: 80px">Image:</label></div>').appendTo(right);
-	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px;" valign="top"/>').appendTo(div);
-	jQuery('<img style="width: 20px; height: 20px; visibility: hidden" src="' + $.img('blank.gif') + '"/>').appendTo(div);
+	div = $('<div class="item" style="min-height: 20px; vertical-align: bottom">Image:</div>').appendTo(right);
+	jQuery('<img style="width: 10px; height: 20px; visibility: hidden" src="' + $.img('blank.gif') + '"/>').appendTo(div);
+	this.imgSwatch = jQuery('<img style="width: 20px; height: 20px; vertical-align: bottom"/>').appendTo(div);
+	
+	var div = $('<div></div>').appendTo(right);	
+	div.append('Color Code or Custom URL: ');
+	this.imageInput = $('<input type="text" size="20" style="margin-left: 10px"/>').appendTo(div).change(function() {
+		that.imageUrl = that.imageInput.val();
+		that.handleChange();
+	});
 
 	var imageContainer = jQuery('<div style="padding-top: 5px"></div>').appendTo(right);
-	this.images = {circles : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF"],
-	        arrows : ["arr-sw","arr-w","arr-nw","arr-n","arr-ne","arr-e","arr-se","arr-s"],
+	this.images = {
+	        arrows : ["#FF0000", "#FF5500", "#FFAA00", "#FFFF00", "#0000FF", "#8800FF", "#FF00FF", "arr-sw","arr-w","arr-nw","arr-n","arr-ne","arr-e","arr-se","arr-s"],
 			npsactivities : ["nps-ski","nps-xc","nps-skate","nps-climbing","nps-scramble","nps-caving","nps-diving","nps-canoe","nps-roadbike","nps-dirtbike","nps-4wd","nps-snowmobile","nps-camera"],
 	        npssymbols : ["nps-parking","nps-lookout","nps-lighthouse","nps-info","nps-phone","nps-gas","nps-firstaid","nps-fire","nps-shower","nps-anchor","nps-rockfall","nps-slip","nps-shelter","nps-picnic","nps-water"],
 	        activities : ["skiing","xc","walking","snowshoe","climbing","spelunking","windsurf","snorkel","hunting","mountainbike","bike","motorbike","car","snowmobile","camera","circle","target"],
@@ -50,7 +57,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 				var url = that.images[key][i];
 				if(url.indexOf("#") == 0) {
 					var swatch = jQuery('<img style="cursor: pointer; width: 16px; height: 16px" src="/resource/imagery/icons/circle/' + url.substr(1) + '.png"></div>').appendTo(ic2);
-					swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["circles"][j].substr(1)); that.imageInput.trigger('change');}}());
+					swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["arrows"][j]); that.imageInput.trigger('change');}}());
 				} else {
 					var icon = sarsoft.map.icons[url];
 					if(icon) {
@@ -62,16 +69,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 						that.imageInput.val(""); that.imageUrl = that.images[l][j]; that.handleChange();}}());
 				}
 			}
-			if(key == "circles") {
-				ic2.append('<span style="padding-left: 5px">or color code</span>');
-				that.imageInput = jQuery('<input name="image" type="text" size="8" style="margin-left: 10px"/>').appendTo(ic2);
-			}
 		}
-		
-		that.imageInput.change(function() {
-			that.imageUrl = "#" + that.imageInput.val();
-			that.handleChange();
-		});
 	}, 1200);
 
 }
@@ -102,11 +100,8 @@ org.sarsoft.view.MarkerForm.prototype.read = function() {
 org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.labelInput.val(obj.label);
 	this.imageUrl = obj.url;
-	if(this.imageUrl != null && this.imageUrl.indexOf("#")==0) {
-		this.imageInput.val(obj.url.substr(1));
-	} else {
-		this.imageInput.val("");
-	}
+	this.imageInput.val((this.imageUrl != null && (this.imageUrl.indexOf("#")==0 || this.imageUrl.indexOf("http")==0)) ? this.imageUrl : "");
+
 	this.comments.val(obj.comments);
 	if(obj.lastUpdated != null) {
 		this.specsDiv.html("Last updated on " + new Date(1*obj.lastUpdated).toDateString());

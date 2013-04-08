@@ -293,7 +293,7 @@ org.sarsoft.widget.Importer = function(container, url) {
 		that.bgform.attr("action", that.url);
 		that.bgform.submit();
 	});
-	$('<div style="cursor: pointer; float: left"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gpx64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX File</div></div>').click(function() {
+	$('<div style="cursor: pointer; float: left"><div><img style="display: block; margin-right: auto; margin-left: auto;" src="' + $.img('gpx64.png') + '"/></div><div style="font-size: 120%; color: #5a8ed7; font-weight: bold; text-align: center">GPX or KML File</div></div>').click(function() {
 		that.gpx.form.css('display', 'block');
 	}).prependTo($('<div style="float: left"></div').append(this.gpx.form).appendTo($('<div style="float: left"></div>').appendTo(this.body)));
 	

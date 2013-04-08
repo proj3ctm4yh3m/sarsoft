@@ -16,6 +16,7 @@ import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.RuntimeProperties;
 
 @JSONAnnotatedEntity
 @Entity
@@ -64,6 +65,12 @@ public class Marker extends GeoMapObject implements IPreSave {
 		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
 		marker.setUrl(attrs.containsKey("url") ? attrs.get("url") : "#FF0000");
 		marker.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
+		
+		if(gpx.containsKey("url")) {
+			String url = gpx.getString("url");
+			if(url.startsWith("http://caltopo")) url = url.replaceAll("http://caltopo.com/resource/imagery/icons/circle/", "#").replaceAll("http://caltopo.com/static/images/icons/", "").replaceAll(".png", "");
+			marker.setUrl(url);
+		}
 
 		return marker;
 	}

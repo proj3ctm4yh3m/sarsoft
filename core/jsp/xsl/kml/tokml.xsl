@@ -17,14 +17,15 @@
 </kml>
 </xsl:template>
 
-<xsl:template name="route">
+<xsl:template name="route">	
 	<xsl:variable name="rgbcolor" select="json:color"/>
 	<xsl:variable name="color" select="concat(substring($rgbcolor,6,2),substring($rgbcolor,4,2),substring($rgbcolor,2,2))"/>
+	
 	<xsl:variable name="name" select="json:name"/>
   <Placemark>
     <Style>
       <LineStyle>
-           <color><xsl:value-of select="concat('FF', $color)"/></color>
+           <color><xsl:value-of select="concat('ff', $color)"/></color>
         <width><xsl:value-of select="json:weight"/></width>
       </LineStyle>
       <PolyStyle>
@@ -47,8 +48,9 @@
 	<Placemark> 
 	 <name><xsl:value-of select="$name"/></name> 
 	<Style>
-	      <IconStyle>
-	<Icon>
+	    <IconStyle>
+		<hotSpot x="0.5"  y="0.5" xunits="fraction" yunits="fraction"/>
+    <Icon>
 	<href>
 <xsl:choose>
 <xsl:when test="string-length(json:icon) = 0">http://caltopo.com/resource/imagery/icons/circle/FF0000.png</xsl:when>
@@ -58,7 +60,7 @@
 </xsl:choose>
 	</href>
 	</Icon>
-	      </IconStyle>
+	    </IconStyle>
 	</Style>
 	 <Point>
 	  <coordinates>

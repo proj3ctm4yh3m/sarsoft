@@ -1978,7 +1978,8 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	});
 	marker.id = waypoint.id;
 	if(label != null && config.drag == null) {
-		labelOverlay = new Label(this.map, gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", icon.anchor ? new google.maps.Size(icon.size.width-icon.anchor.x, -1*icon.anchor.y) : new google.maps.Size(icon.size.width*0.5, icon.size.height*-0.5));
+		var s = icon.size || icon.scaledSize;
+		labelOverlay = new Label(this.map, gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", icon.anchor ? new google.maps.Size(s-icon.anchor.x, -1*icon.anchor.y) : new google.maps.Size(s.width*0.5, s.height*-0.5));
 		marker.label = labelOverlay;
 	}
 	if(config.clickable)  {
@@ -2909,7 +2910,7 @@ org.sarsoft.MapUtil.createIcon = function(url) {
 	return org.sarsoft.MapUtil.createImage(20, $.img(url));
 }
 org.sarsoft.MapUtil.createImage = function(size, url) {
-  return { anchor: new google.maps.Point(size/2, size/2), size: new google.maps.Size(size, size), url: url }
+  return { anchor: new google.maps.Point(size/2, size/2), scaledSize: new google.maps.Size(size, size), url: url }
 }
 
 org.sarsoft.MapUtil.createFlatCircleImage = function (color) {
