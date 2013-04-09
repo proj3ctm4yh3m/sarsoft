@@ -1,6 +1,7 @@
 package org.sarsoft.plans.model;
 
 import java.util.Date;
+import java.util.Map;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
@@ -8,6 +9,7 @@ import javax.persistence.ManyToOne;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.IPreSave;
@@ -62,8 +64,28 @@ public class Clue extends AssignmentChildObject implements IPreSave {
 		return null;
 	}
 	
-	public static Clue fromGPX(JSONObject gpx) {
-		return null;
+	public static Pair<Integer, Clue> fromGPX(JSONObject gpx) {
+		String type = gpx.getString("type");
+		if(!"waypoint".equals(type)) return null;
+
+		String label = gpx.getString("name");
+		if(label == null || !label.startsWith("CLUE")) return null;
+
+		Clue clue = new Clue();
+		clue.setPosition(new Waypoint((JSONObject) gpx.get("position")));
+		
+		if(label.length() > 4) try { clue.setId(Long.parseLong(label.substring(4))); } catch (NumberFormatException e) {}
+
+		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
+		if(attrs.containsKey("description")) clue.setDescription(attrs.get("description"));
+		if(attrs.containsKey("location")) clue.setLocation(attrs.get("location"));
+		if(attrs.containsKey("summary")) clue.setSummary(attrs.get("summary"));
+		if(attrs.containsKey("found")) clue.setFound(new Date(Long.parseLong(attrs.get("found"))));
+		if(attrs.containsKey("instructions")) clue.setInstructions(Disposition.valueOf(attrs.get("instructions")));
+		if(attrs.containsKey("updated")) clue.setUpdated(new Date(Long.parseLong(attrs.get("updated"))));
+		if(attrs.containsKey("assignmentid")) clue.setAssignmentId(Long.parseLong(attrs.get("assignmentid")));
+
+		return new Pair<Integer, Clue>(100, clue);
 	}
 	
 	@ManyToOne

@@ -9,29 +9,34 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.Format;
-import org.sarsoft.common.model.MapObject;
+import org.sarsoft.common.Pair;
+import org.sarsoft.common.model.GeoMapObject;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-public abstract class GeoMapObjectController extends MapObjectController {
+public abstract class GeoMapObjectController <T extends GeoMapObject> extends MapObjectController<T> {
 
-	public GeoMapObjectController(Class<? extends MapObject> cls) {
+	public GeoMapObjectController(Class<T> cls) {
 		super(cls);
 	}
 	
-	public abstract String getLabel(MapObject object);
+	public abstract String getLabel(T object);
 	
-	public abstract JSONObject toGPX(MapObject obj);
-	public abstract MapObject fromGPX(JSONObject obj);
-	public abstract <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom, List<T> checkAgainst);
+	public abstract Pair<Integer, T> fromGPX(JSONObject obj);
+	
+	public JSONObject toGPX(T obj) {
+		return obj.toGPX();
+	}
+	
+	public abstract List<T> dedupe(List<T> removeFrom, List<T> checkAgainst);
 	
 	@RequestMapping(value="/{id}", method = RequestMethod.GET)
 	public String get(Model model, @PathVariable("id") long id, HttpServletRequest request, HttpServletResponse response) {
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.JSON;
 		if(format == Format.GPX || format == Format.KML) {
-			MapObject obj = dao.load(getC(), id);
+			T obj = (T) dao.load(getC(), id);
 			String name = getC().getSimpleName();
 			JSONArray jarray = new JSONArray();
 			switch (format) {

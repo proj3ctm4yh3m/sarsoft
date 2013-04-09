@@ -14,15 +14,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.Way;
-import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.ops.model.Resource;
-import org.sarsoft.ops.model.Resource.Type;
 
 import net.sf.json.JSONObject;
 
@@ -114,8 +112,51 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		return null;
 	}
 	
-	public static Assignment fromGPX(JSONObject gpx) {
-		return null;
+	public static Pair<Integer, Assignment> fromGPX(JSONObject gpx) {
+		String type = gpx.getString("type");
+		if(!"route".equals(type)) return null;
+		if(!gpx.has("way")) return null;
+		
+		int confidence = 1;
+		Assignment assignment = new Assignment();
+		
+		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
+		if(attrs.containsKey("details")) assignment.setDetails(attrs.get("details"));
+		if(attrs.containsKey("resourceType")) assignment.setResourceType(ResourceType.valueOf(attrs.get("resourceType")));
+		if(attrs.containsKey("status")) assignment.setStatus(Status.valueOf(attrs.get("status")));
+		if(attrs.containsKey("timeAllocated")) assignment.setTimeAllocated(Double.parseDouble(attrs.get("timeAllocated")));
+		if(attrs.containsKey("previousEfforts")) assignment.setPreviousEfforts(attrs.get("previousEfforts"));
+		if(attrs.containsKey("transportation")) assignment.setTransportation(attrs.get("transportation"));
+		if(attrs.containsKey("responsivePOD")) assignment.setResponsivePOD(Probability.valueOf(attrs.get("responsivePOD")));
+		if(attrs.containsKey("unresponsivePOD")) assignment.setUnresponsivePOD(Probability.valueOf(attrs.get("unresponsivePOD")));
+		if(attrs.containsKey("cluePOD")) assignment.setCluePOD(Probability.valueOf(attrs.get("cluePOD")));
+		if(attrs.containsKey("updated")) assignment.setUpdated(new Date(Long.parseLong(attrs.get("updated"))));
+		if(attrs.containsKey("preparedOn")) assignment.setPreparedOn(new Date(Long.parseLong(attrs.get("preparedOn"))));
+		if(attrs.containsKey("preparedBy")) assignment.setPreparedBy(attrs.get("preparedBy"));
+		if(attrs.containsKey("primaryFrequency")) assignment.setPrimaryFrequency(attrs.get("primaryFrequency"));
+		if(attrs.containsKey("secondaryFrequency")) assignment.setSecondaryFrequency(attrs.get("secondaryFrequency"));
+		if(attrs.containsKey("operationalPeriodId")) assignment.setOperationalPeriodId(Long.parseLong(attrs.get("operationalPeriodId")));
+
+		Long parsed = null;
+		String name = gpx.getString("name");
+		try {
+			if(name != null) parsed = Long.parseLong(name);
+		} catch (NumberFormatException e) {}
+		if(parsed != null && name.length() == 5) {
+			assignment.setOperationalPeriodId(Long.parseLong(name.substring(0, 2)));
+			assignment.setNumber(name.substring(2, 5));
+			try { assignment.setId(Long.parseLong(assignment.getNumber())); } catch (NumberFormatException e) {}
+			confidence = 100;
+		} else {
+			assignment.setNumber(name);
+		}		
+		if(assignment.getResourceType() != null) confidence = 100;
+		
+		assignment.setSegment(new Way((JSONObject) gpx.get("way")));
+		List<Waypoint> wpts = assignment.getSegment().getWaypoints();
+		if( wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) assignment.getSegment().setPolygon(true);
+		
+		return new Pair<Integer, Assignment>(confidence, assignment);
 	}
 
 	@ManyToOne

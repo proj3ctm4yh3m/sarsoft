@@ -6,10 +6,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import net.sf.json.JSONObject;
 
-import org.sarsoft.common.controller.GeoMapObjectController;
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.common.model.MapObject;
-import org.sarsoft.plans.model.AssignmentChildObject;
 import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.Assignment;
 import org.springframework.stereotype.Controller;
@@ -20,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping("/rest/clue")
-public class ClueController extends AssignmentChildController {
+public class ClueController extends AssignmentChildController<Clue> {
 
 	public ClueController() {
 		super(Clue.class);
@@ -30,24 +28,19 @@ public class ClueController extends AssignmentChildController {
 		return new Clue(json);
 	}
 	
-	public JSONObject toGPX(MapObject obj) {
-		return ((Clue) obj).toGPX();
-	}
-	
-	public MapObject fromGPX(JSONObject obj) {
+	public Pair<Integer, Clue> fromGPX(JSONObject obj) {
 		return Clue.fromGPX(obj);
 	}
 	
-	public String getLabel(MapObject object) {
-		Clue clue = (Clue) object;
+	public String getLabel(Clue clue) {
 		return clue.getSummary() != null ? clue.getSummary() : Long.toString(clue.getId());
 	}
 
-	public void removeFrom(Assignment assignment, AssignmentChildObject child) {
+	public void removeFrom(Assignment assignment, Clue child) {
 		assignment.removeClue((Clue) child);
 	}
 	
-	public void addTo(Assignment assignment, AssignmentChildObject child) {
+	public void addTo(Assignment assignment, Clue child) {
 		assignment.addClue((Clue) child);
 	}
 	
@@ -60,10 +53,9 @@ public class ClueController extends AssignmentChildController {
 	}
 
 	@Override
-	public <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom,
-			List<T> checkAgainst) {
-		// TODO Auto-generated method stub
+	public List<Clue> dedupe(List<Clue> removeFrom, List<Clue> checkAgainst) {
 		return null;
 	}
+
 
 }
