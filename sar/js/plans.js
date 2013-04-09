@@ -93,17 +93,18 @@ org.sarsoft.OperationalPeriodController = function(imap, background_load) {
 	this.dn.cb.css('display', 'none');	
 	this.cb = new Array();
 	
+	this.childDlg = new org.sarsoft.OperationalPeriodChildDialog(imap, this);
+
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Operational Period", function(point) {
-			that.periodDlg.show({create: true}, point);
+			that.dlg.show({create: true}, point);
 		});
 
 		var form = new org.sarsoft.view.EntityForm([{ name : "description", label: "Name", type : "string"}]);
 		
-		this.childDlg = new org.sarsoft.OperationalPeriodChildDialog(imap, this);
 		this.dlg = new org.sarsoft.view.MapEntityDialog(imap, "Operational Period", form, function(period) {
-			period.id = that.periodDlg.id;
-			that.periodDlg.id = null;
+			period.id = that.dlg.id;
+			that.dlg.id = null;
 			if(period.id == null) {
 				that.dao.create(period);
 			} else {
@@ -118,9 +119,9 @@ org.sarsoft.OperationalPeriodController.prototype = new org.sarsoft.MapObjectCon
 org.sarsoft.OperationalPeriodController.prototype.show = function(object) {
 	var that = this;
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
-
+	
 	var line = this.dn.add(object.id, object.description, function() { that.childDlg.show(object.id) });
-	var cb = this.cb[object.id] = $('<input type="checkbox" checked="checked">').appendTo('<div></div>').change(function() { that.handleSetupChange(true) });
+	var cb = this.cb[object.id] = $('<input type="checkbox" checked="checked">').appendTo('<div></div>').click(function(evt) { evt.stopPropagation() }).change(function() { that.handleSetupChange(true) });
 	line.prepend(cb.parent());
 	
 	if(org.sarsoft.writeable) {
@@ -275,8 +276,28 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 	imap.register("org.sarsoft.AssignmentController", this);
 	this.parentController = imap.registered["org.sarsoft.OperationalPeriodController"];
 	this.parentController.childControllers["Assignment"] = this;
+	this.config = { show : "NA", color: "NA" }
 
 	org.sarsoft.WayObjectController.call(this, imap, {name: "Assignment", dao: org.sarsoft.AssignmentDAO, label: "Assignments", geo: true, way : "segment"})
+
+	this.childDlg = new org.sarsoft.AssignmentChildDialog(imap, this);
+	
+	this.configDiv = $('<div style="display: none"></div>').prependTo(this.dn.tree.body);
+	
+	var line = $('<div style="clear: both">Show:</div>').appendTo(this.configDiv);
+	this.s_show = $('<select style="float: right"><option value="NA">All Assignments</option><option>GROUND</option><option>DOG</option><option>MOUNTED</option><option>OHV</option></select>').appendTo(line).change(function() {
+		that.config.show = that.s_show.val();
+		that.handleSetupChange(true);
+	});
+
+	var line = $('<div style="clear: both">Color By:</div>').appendTo(this.configDiv);
+	this.s_color = $('<select style="float: right"><option value="NA">N/A</option><option value="number">Random</option><option value="type">Resource Type</option><option value="pod">POD</option><option value="status">Status</option></select>').appendTo(line).change(function() {
+		that.config.color = that.s_color.val();
+		that.handleSetupChange(true);
+	});
+	
+	this.dn.tree.getTool().html('<img src="' + $.img('config.png') + '"/>CFG').
+	attr("title", "Color and Visibility").click(function(evt) { evt.stopPropagation(); that.configDiv.css('display', (that.configDiv.css('display') == 'block' ? 'none' : 'block')) });
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Line Assignment", function(point) {
@@ -288,15 +309,19 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 		});
 		
 		
-		this.childDlg = new org.sarsoft.AssignmentChildDialog(imap, this);
 		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Assignment Details", new org.sarsoft.AssignmentForm(), this);
 		this.dlg.create = function(assignment) {
 			assignment.segment = {type: "ROUTE", polygon: this.object.segment.polygon};
-			assignment.segment.waypoints = that.imap.getNewWaypoints(this.point, this.object.segment.polygon);
-			that.dao.create(assignment, function(obj) {
-				that.redraw(obj, function() { that.save(obj, function() { that.show(obj);}); }, function() { that.dao.del(obj.id); });
-			});
-		}
+			if(this.object.segment.waypoints != null) {
+				assignment.segment.waypoints = this.object.segment.waypoints.slice(0, this.object.segment.waypoints.length);
+				that.dao.create(assignment, function(obj) { that.show(obj) });
+			} else {
+				assignment.segment.waypoints = that.imap.getNewWaypoints(this.point, this.object.segment.polygon);
+				that.dao.create(assignment, function(obj) {
+					that.redraw(obj, function() { that.save(obj, function() { that.show(obj);}); }, function() { that.dao.del(obj.id); });
+				});
+			}
+		};
 		
 		var pc = function(obj) {
 			var r = that._contextMenuCheck(obj);
@@ -307,12 +332,18 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 		this.imap.addContextMenuItems([
 		    { text: "New Assignment", applicable: this.cm.a_none, handler: function(data) { that.dlg.show({create: true, operationalPeriodId: 1, segment : {polygon: true}}, data.point)}},
 		    { text: "Drag Vertices", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: this.cm.h_edit},
+		    { text: "Clone Assignment", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: function(data) {
+		    	var a = data.pc.obj;
+		    	that.dlg.point = null;
+		    	that.dlg.original = a;
+		    	that.dlg.show({create: true, operationalPeriodId : a.operationalPeriodId, segment: a.segment, resourceType: a.resourceType, unresponsivePOD: a.unresponsivePOD, responsivePOD: a.responsivePOD, cluePOD: a.cluePOD, timeAllocated: a.timeAllocated, details: a.details});
+		    }},
     		{text : "Save Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_save },
     		{text : "Discard Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_discard },
     		{text : "Delete Assignment", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_del }
 		    ]);
 	}
-	
+		
 }
 
 org.sarsoft.AssignmentController.prototype = new org.sarsoft.WayObjectController();
@@ -323,18 +354,36 @@ org.sarsoft.AssignmentController.prototype._saveWay = function(obj, waypoints, h
 
 org.sarsoft.AssignmentController.prototype.getConfig = function(assignment) {
 	var cfg = this.parentController.getChildConfig(assignment.operationalPeriodId);
-	return { color : (cfg.active ? "#FF0000" : "#000000"), weight: 2, fill : (cfg.active ? 30 : 0), active : cfg.active, visible : cfg.visible }
+
+	var visible = cfg.visible;
+	if(this.config.show != "NA" && this.config.show != assignment.resourceType) visible = false;
+	
+	var color = "#000000";
+	if(cfg.active) {
+		if(this.config.color == "number") {
+			var colors = ["#FF0000", "#FF5500", "#FFAA00", "#0000FF", "#0088FF", "#8800FF"];
+			color = colors[assignment.id % colors.length];
+		} else if(this.config.color == "type") {
+			var colors = {MOUNTED: "#0088FF", OHV: "#8800FF", GROUND: "#FF0000", DOG: "#FF8800"}
+			color = colors[assignment.resourceType];
+		} else if(this.config.color == "pod") {
+			colors = {MEDIUM: "#FF8800", HIGH: "#FF0000", LOW: "#0088FF"}
+			color = colors[assignment.responsivePOD]
+		} else if(this.config.color == "status") {
+			colors = {DRAFT: "#0088FF", INPROGRESS: "#FF0000", PREPARED: "#FF8800", COMPLETED: "#8800FF"}
+			color = colors[assignment.status];
+		} else {
+			color = "#FF0000";
+		}
+	}
+	
+	return { color : color, weight: 2, fill : (cfg.active ? 30 : 0), active : cfg.active, visible : visible }
 }
 
 org.sarsoft.AssignmentController.prototype.getChildConfig = function(id) {
 	var obj = this.obj(id);
 	if(obj == null) return { active : true, visible : true, color : "#FF0000", weight: 2, fill : 30 }
-	var config = this.parentController.getChildConfig(obj.operationalPeriodId);
-	
-	config.color = config.active ? "#FF0000" : "#000000";
-	config.weight = 2;
-	config.fill = config.active ? 30 : 0;
-	return config;
+	return this.getConfig(obj);
 }
 
 org.sarsoft.AssignmentController.prototype.show = function(assignment) {
