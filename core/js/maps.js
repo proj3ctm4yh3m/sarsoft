@@ -1979,7 +1979,7 @@ org.sarsoft.InteractiveMap.prototype._addMarker = function(waypoint, config, too
 	marker.id = waypoint.id;
 	if(label != null && config.drag == null) {
 		var s = icon.size || icon.scaledSize;
-		labelOverlay = new Label(this.map, gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", icon.anchor ? new google.maps.Size(s-icon.anchor.x, -1*icon.anchor.y) : new google.maps.Size(s.width*0.5, s.height*-0.5));
+		labelOverlay = new Label(this.map, gll, "<span class='maplabel'>" + label + "</span>", "width: 8em", icon.anchor ? new google.maps.Size(s.width-icon.anchor.x, -1*icon.anchor.y) : new google.maps.Size(s.width*0.5, s.height*-0.5));
 		marker.label = labelOverlay;
 	}
 	if(config.clickable)  {
