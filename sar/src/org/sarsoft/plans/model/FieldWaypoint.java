@@ -6,6 +6,7 @@ import javax.persistence.ManyToOne;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.Waypoint;
@@ -44,17 +45,28 @@ public class FieldWaypoint extends AssignmentChildObject {
 		return null;
 	}
 	
-	public static FieldWaypoint fromGPX(JSONObject gpx) {
+	public static Pair<Integer, FieldWaypoint> fromGPX(JSONObject gpx) {
 		String type = gpx.getString("type");
 		if(!"waypoint".equals(type)) return null;
-
+		if(!gpx.has("position")) return null;
+		
+		int confidence = 1;
 		FieldWaypoint fwpt = new FieldWaypoint();
+
 		String label = gpx.getString("name");
-		if(label != null && label.startsWith("-")) label = null;
 		fwpt.setLabel(label);
+		
+		try {
+			Long.parseLong(label.substring(0, 5));
+			fwpt.setLabel(gpx.getString("desc"));
+			confidence = 100;
+			fwpt.setAssignmentId(Long.parseLong(label.substring(2, 5)));
+		} catch (Exception e) {}
+
+		if(fwpt.getLabel() != null && fwpt.getLabel().startsWith("-")) fwpt.setLabel(null);
 		fwpt.setPosition(new Waypoint((JSONObject) gpx.get("position")));
 
-		return fwpt;
+		return new Pair<Integer, FieldWaypoint>(confidence, fwpt);
 	}
 
 	@ManyToOne

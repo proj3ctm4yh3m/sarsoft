@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-public abstract class MapObjectController extends JSONBaseController {
+public abstract class MapObjectController <T extends MapObject> extends JSONBaseController {
 
-	private Class<? extends MapObject> c;
+	private Class<T> c;
 
-	public MapObjectController(Class<? extends MapObject> cls) {
+	public MapObjectController(Class<T> cls) {
 		this.c = cls;
 	}
 	
@@ -27,24 +27,24 @@ public abstract class MapObjectController extends JSONBaseController {
 	public void setManager(DataManager manager) {
 		manager.register(c.getSimpleName(), this);
 	}
-
-	public abstract MapObject make(JSONObject json);
 	
-	public Class<? extends MapObject> getC() {
+	public abstract T make(JSONObject json);
+	
+	public Class<T> getC() {
 		return c;
 	}
 	
-	public void link(MapObject obj) {
+	public void link(T obj) {
 	}
 	
-	public void unlink(MapObject obj) {
+	public void unlink(T obj) {
 	}
 	
 	public String[] getLinkDependencies() {
 		return new String[] {};
 	}
 	
-	public void persist(MapObject obj) {
+	public void persist(T obj) {
 		if(obj.getClass() != c) return;
 		obj.setId(dao.generateID(c));
 		link(obj);
@@ -53,14 +53,14 @@ public abstract class MapObjectController extends JSONBaseController {
 	
 	@RequestMapping(value="", method = RequestMethod.POST)
 	public String create(Model model, JSONForm params) {
-		MapObject obj = make(params.JSON());
+		T obj = make(params.JSON());
 		persist(obj);
 		return json(model, obj);
 	}
 	
 	@RequestMapping(value="/{id}", method = RequestMethod.POST)
 	public String update(Model model, JSONForm params, @PathVariable("id") long id) {
-		MapObject obj = dao.load(c, id);
+		T obj = dao.load(c, id);
 		obj.from(params.JSON());
 		link(obj);
 		dao.save(obj);
@@ -69,7 +69,7 @@ public abstract class MapObjectController extends JSONBaseController {
 	
 	@RequestMapping(value="/{id}", method = RequestMethod.DELETE)
 	public String delete(Model model, @PathVariable("id") long id) {
-		MapObject obj = dao.load(c, id);
+		T obj = dao.load(c, id);
 		unlink(obj);
 		dao.delete(obj);
 		return json(model, obj);

@@ -3,15 +3,14 @@ package org.sarsoft.markup.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.controller.GeoMapObjectController;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.markup.model.Shape;
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping("/rest/shape")
-public class ShapeController extends GeoMapObjectController {
+public class ShapeController extends GeoMapObjectController<Shape> {
 
 	public ShapeController() {
 		super(Shape.class);
@@ -33,16 +32,12 @@ public class ShapeController extends GeoMapObjectController {
 		return new Shape(json);
 	}
 	
-	public JSONObject toGPX(MapObject obj) {
-		return ((Shape) obj).toGPX();
+	public Pair<Integer, Shape> fromGPX(JSONObject obj) {
+		Shape shape = Shape.fromGPX(obj);
+		return shape == null ? null : new Pair<Integer, Shape>(10, shape);
 	}
 
-	public MapObject fromGPX(JSONObject obj) {
-		return Shape.fromGPX(obj);
-	}
-
-	public String getLabel(MapObject object) {
-		Shape shape = (Shape) object;
+	public String getLabel(Shape shape) {
 		return (shape.getLabel() != null && shape.getLabel().length() > 0) ? shape.getLabel() : Long.toString(shape.getId());
 	}
 	
@@ -56,12 +51,11 @@ public class ShapeController extends GeoMapObjectController {
 		return json(model, way);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom, List<T> checkAgainst) {
-		List<MapObject> dupes = new ArrayList<MapObject>();
+	public List<Shape> dedupe(List<Shape> removeFrom, List<Shape> checkAgainst) {
+		List<Shape> dupes = new ArrayList<Shape>();
 
-		for(Shape against : (List<Shape>) checkAgainst) {
-			for(Shape check : (List<Shape>) removeFrom) {
+		for(Shape against : checkAgainst) {
+			for(Shape check : removeFrom) {
 				if(check.getLabel() != null && against.getLabel() != null && !check.getLabel().toUpperCase().startsWith(against.getLabel().toUpperCase())) continue;
 				List<Waypoint> l1 = check.getWay().getWaypoints();
 				List<Waypoint> l2 = against.getWay().getWaypoints();

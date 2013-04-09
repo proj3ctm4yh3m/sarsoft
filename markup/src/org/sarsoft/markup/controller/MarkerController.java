@@ -7,12 +7,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import net.sf.json.JSONObject;
 
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.controller.GeoMapObjectController;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.common.model.MapObject;
-import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.markup.model.Marker;
-import org.sarsoft.markup.model.Shape;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping("/rest/marker")
-public class MarkerController extends GeoMapObjectController {
+public class MarkerController extends GeoMapObjectController<Marker> {
 
 	public MarkerController() {
 		super(Marker.class);
@@ -31,16 +29,12 @@ public class MarkerController extends GeoMapObjectController {
 		return new Marker(json);
 	}
 
-	public JSONObject toGPX(MapObject obj) {
-		return ((Marker) obj).toGPX();
+	public Pair<Integer, Marker> fromGPX(JSONObject obj) {
+		Marker marker = Marker.fromGPX(obj);
+		return marker == null ? null : new Pair<Integer, Marker>(10, marker);
 	}
 
-	public MapObject fromGPX(JSONObject obj) {
-		return Marker.fromGPX(obj);
-	}
-
-	public String getLabel(MapObject object) {
-		Marker marker = (Marker) object;
+	public String getLabel(Marker marker) {
 		return (marker.getLabel() != null && marker.getLabel().length() > 0) ? marker.getLabel() : Long.toString(marker.getId());
 	}
 	
@@ -52,15 +46,14 @@ public class MarkerController extends GeoMapObjectController {
 		return json(model, marker);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom, List<T> checkAgainst) {
-		List<MapObject> dupes = new ArrayList<MapObject>();
+	public List<Marker> dedupe(List<Marker> removeFrom, List<Marker> checkAgainst) {
+		List<Marker> dupes = new ArrayList<Marker>();
 
-		for(Marker against : (List<Marker>) checkAgainst) {
-			for(Marker check : (List<Marker>) removeFrom) {
+		for(Marker against : checkAgainst) {
+			for(Marker check : removeFrom) {
 				if(check.getLabel() != null && against.getLabel() != null && !check.getLabel().toUpperCase().startsWith(against.getLabel().toUpperCase())) continue;
 				if(check.getPosition().distanceFrom(against.getPosition()) > 5) continue;
-				if(!dupes.contains(check)) dupes.add((T) check);
+				if(!dupes.contains(check)) dupes.add(check);
 			}
 		}
 

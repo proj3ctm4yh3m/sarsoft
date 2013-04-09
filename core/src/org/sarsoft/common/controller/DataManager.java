@@ -12,8 +12,10 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.model.ClientState;
+import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.MapObject;
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class DataManager {
 
 	private Map<String, MapObjectController> controllers = new HashMap<String, MapObjectController>();
@@ -53,7 +56,6 @@ public class DataManager {
 		return geoControllers.keySet();
 	}
 
-	@SuppressWarnings("unchecked")
 	public ClientState fromDB() {
 		ClientState state = new ClientState();
 		for(String type : getDataTypes()) {
@@ -65,7 +67,6 @@ public class DataManager {
 		return state;
 	}
 
-	@SuppressWarnings("rawtypes")
 	public ClientState fromJSON(JSONObject json) {
 		ClientState state = new ClientState();
 
@@ -115,7 +116,6 @@ public class DataManager {
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public JSONObject toJSON(ClientState state) {
 		Map m = new HashMap();
 		m.put("timestamp", Long.toString(new Date().getTime()));
@@ -137,28 +137,26 @@ public class DataManager {
 		for(String type : state.types()) {
 			GeoMapObjectController controller = getGeoController(type);
 			if(controller != null) for(MapObject object : state.get(type)) {
-				jarray.add(controller.toGPX(object));
+				jarray.add(controller.toGPX((GeoMapObject) object));
 			}
 		}
 		
 		return jarray;
 	}
 	
-	@SuppressWarnings("rawtypes")
 	public ClientState fromGPX(JSONArray gpx) {
 		ClientState state = new ClientState();
 		Iterator it = gpx.listIterator();
 		while(it.hasNext()) {
 			JSONObject jobject = (JSONObject) it.next();
+			Pair<String, Pair<Integer, GeoMapObject>> best = null;
 			for(String key : getGeoDataTypes()) {
 				try {
-					MapObject obj = this.getGeoController(key).fromGPX(jobject);
-					if(obj != null) {
-						state.add(key, obj);
-						break;
-					}
+					Pair<Integer, GeoMapObject> pair = this.getGeoController(key).fromGPX(jobject);
+					if(pair != null && (best == null || pair.getFirst() > best.getSecond().getFirst())) best = new Pair<String, Pair<Integer, GeoMapObject>>(key, pair);
 				} catch (Exception e) { }
 			}
+			if(best != null) state.add(best.getFirst(), best.getSecond().getSecond());
 		}
 		
 		return state;

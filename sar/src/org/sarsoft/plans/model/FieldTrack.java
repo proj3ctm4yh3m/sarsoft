@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.Way;
@@ -58,18 +59,29 @@ public class FieldTrack extends AssignmentChildObject {
 		return null;
 	}
 	
-	public static FieldTrack fromGPX(JSONObject gpx) {
+	public static Pair<Integer, FieldTrack> fromGPX(JSONObject gpx) {
 		String type = gpx.getString("type");
 		if(!"track".equals(type)) return null;
-
-		FieldTrack track = new FieldTrack();
-		String label = gpx.getString("name");
-		if(label != null && label.startsWith("-")) label = null;
-		track.setLabel(label);
-		track.setWay(new Way((JSONObject) gpx.get("way")));
+		if(!gpx.has("way")) return null;
 		
+		int confidence = 1;
+		FieldTrack track = new FieldTrack();
+		
+		String label = gpx.getString("name");
+		track.setLabel(label);
+		
+		try {
+			Long.parseLong(label.substring(0, 5));
+			track.setLabel(gpx.getString("desc"));
+			confidence = 100;
+			track.setAssignmentId(Long.parseLong(label.substring(2, 5)));
+		} catch (Exception e) {}
+
+		if(track.getLabel() != null && track.getLabel().startsWith("-")) track.setLabel(null);
+		track.setWay(new Way((JSONObject) gpx.get("way")));
+
 		if(track.getWay().getWaypoints().size() < 2) return null;
-		return track;
+		return new Pair<Integer, FieldTrack>(confidence, track);
 	}
 
 	@ManyToOne

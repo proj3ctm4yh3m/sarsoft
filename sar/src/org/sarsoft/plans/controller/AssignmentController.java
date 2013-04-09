@@ -13,11 +13,11 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.GeoMapObjectController;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.ClientState;
-import org.sarsoft.common.model.MapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.util.GPX;
@@ -40,7 +40,7 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 
 @Controller
 @RequestMapping("/rest/assignment")
-public class AssignmentController extends GeoMapObjectController {
+public class AssignmentController extends GeoMapObjectController<Assignment> {
 
 	@Autowired
 	DataManager manager;
@@ -58,21 +58,15 @@ public class AssignmentController extends GeoMapObjectController {
 		return new Assignment(json);
 	}
 	
-	public JSONObject toGPX(MapObject obj) {
-		return ((Assignment) obj).toGPX();
-	}
-	
-	public MapObject fromGPX(JSONObject obj) {
+	public Pair<Integer, Assignment> fromGPX(JSONObject obj) {
 		return Assignment.fromGPX(obj);
 	}
 	
-	public String getLabel(MapObject obj) {
-		Assignment assignment = (Assignment) obj;
+	public String getLabel(Assignment assignment) {
 		return "Assignment " + assignment.getId();
 	}
 	
-	public void link(MapObject obj) {
-		Assignment assignment = (Assignment) obj;
+	public void link(Assignment assignment) {
 		Long id = assignment.getOperationalPeriodId();
 		OperationalPeriod period = assignment.getOperationalPeriod();
 		if(period != null && !id.equals(period.getId())) {
@@ -87,8 +81,7 @@ public class AssignmentController extends GeoMapObjectController {
 		}
 	}
 	
-	public void unlink(MapObject obj) {
-		Assignment assignment = (Assignment) obj;
+	public void unlink(Assignment assignment) {
 		OperationalPeriod period = assignment.getOperationalPeriod();
 		if(period != null) {
 			period.removeAssignment(assignment);
@@ -118,10 +111,6 @@ public class AssignmentController extends GeoMapObjectController {
 		return new String[] { "OperationalPeriod" };
 	}
 	
-	public void persist(MapObject obj) {
-		super.persist(obj);
-	}
-
 	@RequestMapping(value="/{id}/transition", method = RequestMethod.POST)
 	public String transition(Model model, @PathVariable("id") long id, @RequestParam("action") Action action) {
 		Assignment assignment = dao.load(Assignment.class, id);
@@ -171,12 +160,14 @@ public class AssignmentController extends GeoMapObjectController {
 		Iterator it = gpx.listIterator();
 		while(it.hasNext()) {
 			JSONObject jobject = (JSONObject) it.next();
-			FieldWaypoint fwpt = FieldWaypoint.fromGPX(jobject);
-			FieldTrack track = FieldTrack.fromGPX(jobject);
-			if(fwpt != null) {
+			Pair<Integer, FieldWaypoint> pfwpt = FieldWaypoint.fromGPX(jobject);
+			Pair<Integer, FieldTrack> ptrack = FieldTrack.fromGPX(jobject);
+			if(pfwpt != null) {
+				FieldWaypoint fwpt = pfwpt.getSecond();
 				fwpt.setAssignmentId(id);
 				state.add("FieldWaypoint", fwpt);
-			} else if(track != null) {
+			} else if(ptrack != null) {
+				FieldTrack track = ptrack.getSecond();
 				track.setAssignmentId(id);
 				state.add("FieldTrack", track);
 			}
@@ -192,8 +183,7 @@ public class AssignmentController extends GeoMapObjectController {
 	}
 
 	@Override
-	public <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom,
-			List<T> checkAgainst) {
+	public List<Assignment> dedupe(List<Assignment> removeFrom, List<Assignment> checkAgainst) {
 		// TODO Auto-generated method stub
 		return null;
 	}

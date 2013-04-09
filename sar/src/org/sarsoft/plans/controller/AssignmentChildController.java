@@ -1,21 +1,19 @@
 package org.sarsoft.plans.controller;
 
 import org.sarsoft.common.controller.GeoMapObjectController;
-import org.sarsoft.common.model.MapObject;
 import org.sarsoft.plans.model.Assignment;
 import org.sarsoft.plans.model.AssignmentChildObject;
 
-public abstract class AssignmentChildController extends GeoMapObjectController {
+public abstract class AssignmentChildController <T extends AssignmentChildObject> extends GeoMapObjectController<T> {
 
-	public AssignmentChildController(Class<? extends AssignmentChildObject> c) {
-		super(c);
+	public AssignmentChildController(Class<T> cls) {
+		super(cls);
 	}
 	
-	public abstract void removeFrom(Assignment assignment, AssignmentChildObject aco);
-	public abstract void addTo(Assignment assignemnt, AssignmentChildObject aco);
+	public abstract void removeFrom(Assignment assignment, T aco);
+	public abstract void addTo(Assignment assignemnt, T aco);
 	
-	public void link(MapObject obj) {
-		AssignmentChildObject child = (AssignmentChildObject) obj;
+	public void link(T child) {
 		Long id = child.getAssignmentId();
 		Assignment assignment = child.getAssignment();
 		if(assignment != null && !id.equals(assignment.getId())) {
@@ -30,8 +28,7 @@ public abstract class AssignmentChildController extends GeoMapObjectController {
 		}
 	}
 	
-	public void unlink(MapObject obj) {
-		AssignmentChildObject child = (AssignmentChildObject) obj;
+	public void unlink(T child) {
 		Assignment assignment = child.getAssignment();
 		if(assignment != null) {
 			removeFrom(assignment, child);
@@ -42,5 +39,5 @@ public abstract class AssignmentChildController extends GeoMapObjectController {
 	public String[] getLinkDependencies() {
 		return new String[] { "Assignment" };
 	}
-	
+
 }

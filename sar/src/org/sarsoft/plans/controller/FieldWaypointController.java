@@ -6,10 +6,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import net.sf.json.JSONObject;
 
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.json.JSONForm;
-import org.sarsoft.common.model.MapObject;
 import org.sarsoft.plans.model.Assignment;
-import org.sarsoft.plans.model.AssignmentChildObject;
 import org.sarsoft.plans.model.FieldWaypoint;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping("/rest/fieldwpt")
-public class FieldWaypointController extends AssignmentChildController {
+public class FieldWaypointController extends AssignmentChildController<FieldWaypoint> {
 
 	public FieldWaypointController() {
 		super(FieldWaypoint.class);
@@ -29,25 +28,20 @@ public class FieldWaypointController extends AssignmentChildController {
 		return new FieldWaypoint(json);
 	}
 	
-	public JSONObject toGPX(MapObject obj) {
-		return ((FieldWaypoint) obj).toGPX();
-	}
-	
-	public MapObject fromGPX(JSONObject obj) {
+	public Pair<Integer, FieldWaypoint> fromGPX(JSONObject obj) {
 		return FieldWaypoint.fromGPX(obj);
 	}
 	
-	public String getLabel(MapObject object) {
-		FieldWaypoint fwpt = (FieldWaypoint) object;
+	public String getLabel(FieldWaypoint fwpt) {
 		return fwpt.getLabel() != null ? fwpt.getLabel() : Long.toString(fwpt.getId());
 	}
 	
-	public void removeFrom(Assignment assignment, AssignmentChildObject child) {
-		assignment.removeFieldWaypoint((FieldWaypoint) child);
+	public void removeFrom(Assignment assignment, FieldWaypoint child) {
+		assignment.removeFieldWaypoint(child);
 	}
 	
-	public void addTo(Assignment assignment, AssignmentChildObject child) {
-		assignment.addFieldWaypoint((FieldWaypoint) child);
+	public void addTo(Assignment assignment, FieldWaypoint child) {
+		assignment.addFieldWaypoint(child);
 	}
 	
 	@RequestMapping(value="/{id}/position", method = RequestMethod.POST)
@@ -59,9 +53,7 @@ public class FieldWaypointController extends AssignmentChildController {
 	}
 	
 	@Override
-	public <T extends MapObject> List<MapObject> dedupe(List<T> removeFrom,
-			List<T> checkAgainst) {
-		// TODO Auto-generated method stub
+	public List<FieldWaypoint> dedupe(List<FieldWaypoint> removeFrom, List<FieldWaypoint> checkAgainst) {
 		return null;
 	}
 
