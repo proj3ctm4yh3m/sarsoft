@@ -17,7 +17,7 @@ sarsoft.Page = function(opts) {
 	this.markers = new org.sarsoft.controller.MarkerController(this.imap, opts.bgload);
 	this.shapes = new org.sarsoft.controller.ShapeController(this.imap, opts.bgload);
 	if(opts.config) {
-		this.cfg = new opts.config(this.imap, (!org.sarsoft.iframe && sarsoft.permission != "READ"));
+		this.cfg = new opts.config(this.imap, (!org.sarsoft.iframe && sarsoft.permission != "READ"), true);
 		this.cfg.loadConfig();
 	}
 	if(!(opts.configured == false)) this.configured = new org.sarsoft.controller.ConfiguredLayerController(this.imap, opts.bgload);
@@ -176,7 +176,7 @@ org.sarsoft.widget.Account = function(imap, container, acctlink) {
 		var center = imap.map.getCenter();
 		newlat.val(center.lat());
 		newlng.val(center.lng());
-		clientstate.val(YAHOO.lang.JSON.stringify(org.sarsoft.MapState.get(imap)));
+		clientstate.val(YAHOO.lang.JSON.stringify(org.sarsoft.MapState.get(imap, ["Map"])));
 		newform.submit();
 	});
 	
@@ -627,7 +627,7 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 	})
 }
 
-org.sarsoft.view.CookieConfigWidget = function(imap, saveCenter) {
+org.sarsoft.view.CookieConfigWidget = function(imap, persist, saveCenter) {
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, true, "Save map settings for future page loads?");
 	this.saveCenter = saveCenter;
 }
