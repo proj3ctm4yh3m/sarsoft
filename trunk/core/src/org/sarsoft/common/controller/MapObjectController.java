@@ -45,7 +45,6 @@ public abstract class MapObjectController <T extends MapObject> extends JSONBase
 	}
 	
 	public void persist(T obj) {
-		if(obj.getClass() != c) return;
 		obj.setId(dao.generateID(c));
 		link(obj);
 		dao.save(obj);

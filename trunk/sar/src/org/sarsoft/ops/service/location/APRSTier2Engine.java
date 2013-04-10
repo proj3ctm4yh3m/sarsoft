@@ -38,17 +38,14 @@ public class APRSTier2Engine extends APRSEngine {
 		String filter = "#filter";
 		try {
 			if(createTransaction) beginTransaction();
-			Search search = dao.getByAttr(Search.class, "name", RuntimeProperties.getTenant());
-			Waypoint wpt = search.getPls();
-			if(search.getCP() != null) wpt = search.getCP();
-			if(search.getLkp() != null) wpt = search.getLkp();
+/*			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 			if(wpt != null) {
 				String lat = Double.toString(wpt.getLat());
 				if(lat.length() > 10) lat = lat.substring(0, 10);
 				String lng = Double.toString(wpt.getLng());
 				if(lng.length() > 10) lng = lng.substring(0, 10);
 				filter += " r/" + lat + "/" + lng + "/20";
-			}
+			}*/
 			
 			boolean b = false;
 			List<Resource> resources = dao.loadAll(Resource.class);

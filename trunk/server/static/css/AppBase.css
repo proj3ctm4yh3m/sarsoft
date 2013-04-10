@@ -224,6 +224,10 @@ body.yui-skin-sam .yui-dialog .yui-navset .yui-content {
 	padding: 0;
 }
 
+div.item {
+	clear: both;
+}
+
 div.item label, div.item span.label {
 	float: left;
 	margin-right: 5px;

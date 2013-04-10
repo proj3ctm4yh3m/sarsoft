@@ -15,12 +15,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import org.sarsoft.common.Pair;
-import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.ops.model.Resource;
 
 import net.sf.json.JSONObject;
 
@@ -30,7 +30,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 
 @JSONAnnotatedEntity
 @Entity
-public class Assignment extends GeoMapObject implements IPreSave {
+public class Assignment extends GeoMapObject {
 
 	public enum ResourceType {
 		GROUND,MOUNTED,DOG,OHV
@@ -51,7 +51,6 @@ public class Assignment extends GeoMapObject implements IPreSave {
 	private Probability responsivePOD;
 	private Probability unresponsivePOD;
 	private Probability cluePOD;
-	private Date updated;
 	private Date preparedOn;
 	private String preparedBy;
 	private OperationalPeriod operationalPeriod;
@@ -61,6 +60,7 @@ public class Assignment extends GeoMapObject implements IPreSave {
 	private Set<Clue> clues = new HashSet<Clue>();
 	private List<FieldWaypoint> fieldWaypoints = new ArrayList<FieldWaypoint>();
 	private List<FieldTrack> fieldTracks = new ArrayList<FieldTrack>();
+	private Set<Resource> resources = new HashSet<Resource>();
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -170,19 +170,8 @@ public class Assignment extends GeoMapObject implements IPreSave {
 		this.segment = segment;
 	}
 	
-	@JSONSerializable
-	public Date getUpdated() {
-		return updated;
-	}
-	public void setUpdated(Date updated) {
-		this.updated = updated;
-	}
-	public void preSave() {
-		setUpdated(new Date());
-	}
-
 	public String toString() {
-		return "SearchAssignment " + id + ": (" + updated + ")";
+		return "SearchAssignment " + id + ": (" + getUpdated() + ")";
 	}
 
 	@JSONSerializable
@@ -348,6 +337,27 @@ public class Assignment extends GeoMapObject implements IPreSave {
 	public void removeFieldWaypoint(FieldWaypoint fwpt) {
 		this.fieldWaypoints.remove(fwpt);
 		fwpt.setAssignment(null);
+	}
+
+	@OneToMany(mappedBy="assignment")
+	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
+	@LazyCollection(LazyCollectionOption.TRUE)
+	public Set<Resource> getResources() {
+		return resources;
+	}
+	
+	public void setResources(Set<Resource> resources) {
+		this.resources = resources;
+	}
+	
+	public void addResource(Resource resource) {
+		this.resources.add(resource);
+		resource.setAssignment(this);
+	}
+	
+	public void removeResource(Resource resource) {
+		this.resources.remove(resource);
+		resource.setAssignment(null);
 	}
 	
 	public String getPreparedBy() {

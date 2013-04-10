@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
@@ -13,13 +12,12 @@ import net.sf.json.JSONObject;
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
-import org.sarsoft.common.model.SarModelObject;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.plans.model.Assignment;
+import org.sarsoft.plans.model.AssignmentChildObject;
 
 @Entity
 @JSONAnnotatedEntity
-public class Resource extends SarModelObject {
+public class Resource extends AssignmentChildObject {
 
 	public enum Type {
 		PERSON, EQUIPMENT
@@ -32,12 +30,40 @@ public class Resource extends SarModelObject {
 	protected String spotPassword;
 	protected Type type;
 	protected Waypoint position;
-	protected Assignment assignment;
-	protected Date updated;
 
-	public static Resource createFromJSON(JSONObject json) {
-		return (Resource) JSONObject.toBean(json, Resource.class);
+	public Resource() {
 	}
+	
+	public Resource(JSONObject json) {
+		from(json);
+	}
+	
+	public void from(JSONObject json) {
+		this.from((Resource) JSONObject.toBean(json, Resource.class));
+	}
+	
+	public void from(Resource updated) {
+		if(updated.getPosition() == null || updated.getName() != null) {
+			setName(updated.getName());
+			setAgency(updated.getAgency());
+			setCallsign(updated.getCallsign());
+			setSpotId(updated.getSpotId());
+			setSpotPassword(updated.getSpotPassword());
+			setType(updated.getType());
+			setUpdated(updated.getUpdated());
+		}
+		
+		if(updated.getPosition() != null) {
+			if(position == null) position = new Waypoint();
+			getPosition().setLat(updated.getPosition().getLat());
+			getPosition().setLng(updated.getPosition().getLng());
+		}
+	}
+	
+	public JSONObject toGPX() {
+		return null;
+	}
+
 	
 	@JSONSerializable
 	public String getName() {
@@ -72,34 +98,10 @@ public class Resource extends SarModelObject {
 	}
 
 	public void setPosition(Waypoint position) {
-		if(position != null) updated = position.getTime();
+		if(position != null) setUpdated(position.getTime());
 		this.position = position;
 	}
 
-	@Transient
-	@JSONSerializable
-	public String getAssignmentId() {
-		return (assignment == null) ? null : Long.toString(assignment.getId());
-	}
-
-	@ManyToOne
-	public Assignment getAssignment() {
-		return assignment;
-	}
-
-	public void setAssignment(Assignment assignment) {
-		this.assignment = assignment;
-	}
-
-	public void setUpdated(Date updated) {
-		this.updated = updated;
-	}
-		
-	@JSONSerializable
-	public Date getUpdated() {
-		return updated;
-	}
-	
 	@JSONSerializable
 	@Transient
 	public String getLastFix() {
@@ -129,5 +131,5 @@ public class Resource extends SarModelObject {
 	public void setSpotPassword(String spotPassword) {
 		this.spotPassword = spotPassword;
 	}
-	
+
 }

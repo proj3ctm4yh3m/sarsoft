@@ -6,10 +6,13 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.MappedSuperclass;
+
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.model.MapObject;
 
+@MappedSuperclass
 public abstract class GeoMapObject extends MapObject {
 	
 	public abstract JSONObject toGPX();
