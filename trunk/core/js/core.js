@@ -27,7 +27,7 @@ sarsoft.Page = function(opts) {
 
 	if(!org.sarsoft.iframe) {
 		org.sarsoft.BrowserCheck();
-		google.maps.event.trigger(this.map, "resize");	
+		google.maps.event.trigger(this.map, "resize");
 	}
 
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
@@ -1749,7 +1749,7 @@ org.sarsoft.WayObjectController.prototype.redraw = function(obj, onEnd, onCancel
 org.sarsoft.WayObjectController.prototype.edit = function(obj) {
 	obj = this.obj(obj);
 	if(obj[this.type.way].waypoints.length > 500) {
-		alert("> 500 waypoints");
+		alert("Vertex dragging is not possible on lines with more than 500 waypoints.");
 		return;
 	}
 	this.imap.edit(obj[this.type.way].id);

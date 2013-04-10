@@ -1,3 +1,13 @@
+for(var i = 0; i < sarsoft.map.layers.length; i++) {
+	if(sarsoft.map.layers[i].type == "NATIVE") {
+		for(var j = 0; j < sarsoft.map.layers_visible.length; j++) {
+			if(sarsoft.map.layers[i].alias == sarsoft.map.layers_visible[j]) delete sarsoft.map.layers_visible[j];
+		}
+		sarsoft.map.layers.splice(i, 1);
+		i--;
+	}
+}
+
 google = new Object();
 google.maps = new Object();
 
@@ -69,7 +79,7 @@ google.maps.ImageMapType = function(opts) {
 		var xyz = this.getXYZ(bounds);
 		return opts.getTileUrl({x: xyz.x, y: xyz.y}, xyz.z);		
 	}
-	this.ol.olayer = new OpenLayers.Layer.XYZ(opts.name, "", {sphericalMercator: true, isBaseLayer: false, numZoomLevels: opts.maxZoom+1});
+	this.ol.olayer = new OpenLayers.Layer.XYZ(opts.name, "", {sphericalMercator: true, isBaseLayer: false, numZoomLevels: opts.maxZoom+1, opacity: this.opacity});
 	this.ol.olayer.getURL = function(bounds) {
 		var xyz = this.getXYZ(bounds);
 		return opts.getTileUrl({x: xyz.x, y: xyz.y}, xyz.z);		
@@ -161,8 +171,14 @@ google.maps.Map = function(node, opts) {
             units: 'm',
             projection: new OpenLayers.Projection("EPSG:900913"),
             displayProjection: new OpenLayers.Projection("EPSG:4326"),
-            controls: [new OpenLayers.Control.PanZoomBar({displayClass: "noprint"}), this.ol.navigation]
+            controls: [this.ol.navigation]
 		};
+	
+	var d = $('<div style="position: absolute; left: 0; top: 0; z-index: 1003; top: 8px; left: 8px; background: rgba(255,255,255,0.4); border-radius: 4px; padding: 2px; color: white; font-family: Lucida Grande, Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;"></div>').appendTo(node);
+	var zin = $('<div style="cursor: pointer; background: rgba(0, 60, 136, 0.5); display: block; margin: 1px; padding: 0; font-size: 18px; font-weight: bold; text-align: center; height: 22px; width: 22px; line-height: 19px; border-radius: 4px 4px 0 0">+</div>').appendTo(d).
+		hover(function() { zin.css('background', 'rgba(0, 60, 136, 0.7)') }, function() { zin.css('background', 'rgba(0, 60, 136, 0.5)') }).click(function() { that.ol.map.zoomIn() });
+	var zout = $('<div style="cursor: pointer; background: rgba(0, 60, 136, 0.5); display: block; margin: 1px; padding: 0; font-size: 18px; font-weight: bold; text-align: center; height: 22px; width: 22px; line-height: 19px; border-radius: 0 0 4px 4px">-</div>').appendTo(d).
+		hover(function() { zout.css('background', 'rgba(0, 60, 136, 0.7)') }, function() { zout.css('background', 'rgba(0, 60, 136, 0.5)') }).click(function() { that.ol.map.zoomOut() });
 	
 	this.ol.map = new OpenLayers.Map(node, options);
 	this.ol.map.div.style.position="relative";
@@ -235,23 +251,7 @@ google.maps.Map = function(node, opts) {
 			createPolyMouseEvent(feature, trigger, e);
 		}
 	}
-	
-	this.ol.clickHandler = new OpenLayers.Handler.Click(this, {
-		rightclick: function(e) { 
-			createEvent("rightclick", e);
-			return false;
-		}, 
-		click: function(e) { 
-			if(e.ctrlKey || (Event.META_MASK || Event.CTRL_MASK)) {
-				createEvent("rightclick", e);
-			} else {
-				createEvent("click", e);
-		} return false}}, {});
-	this.ol.clickHandler.control = new Object();
-	this.ol.clickHandler.control.handleRightClicks = true;
-	this.ol.clickHandler.setMap(this.ol.map);
-	this.ol.clickHandler.activate();
-	
+
 	this.ol.map.events.register("mouseover", this, function(e) {
 		createEvent("mouseover", e);
 	});
@@ -260,14 +260,18 @@ google.maps.Map = function(node, opts) {
 		createEvent("mouseout", e);
 	});
 
+	node.addEventListener('mousedown', function(e) {
+       if(e.which == 3 || e.ctrlKey || (Event.META_MASK || Event.CTRL_MASK)) {
+    	   var offset = $(node).offset();
+    	   e.xy = new OpenLayers.Pixel(e.pageX-offset.left, e.pageY-offset.top);
+    	   createEvent("rightclick", e);
+    	   e.stopPropagation();
+       }
+	}, true);
+
 	this.ol.map.events.register("mousemove", this, function(e) {google.maps.event.trigger(that, "mousemove", {latLng: google.maps.LatLng.fromLonLat(that.ol.map.getLonLatFromPixel(that.ol.map.events.getMousePosition(e)))} )});
 	this.ol.map.events.register("zoomend", this, function(e) { that.redrawOverlays(); google.maps.event.trigger(that, "zoom_changed"); google.maps.event.trigger(that, "zoomeend")});
 	this.ol.map.events.register("moveend", this, function(e) { that.redrawOverlays(); google.maps.event.trigger(that, "moveend"); google.maps.event.trigger(that, "center_changed"); google.maps.event.trigger(that, "idle"); google.maps.event.trigger(that, "dragend"), google.maps.event.trigger(that, "bounds_changed")});
-	
-	document.oncontextmenu = function(e) {return false;}
-	if(node.attachEvent) {
-		document.body.oncontextmenu = function(e) { return false; }
-	}
 	
 	window.setInterval(function() {google.maps.event.trigger(that, "tilesloaded", {})}, 1000);
 	
@@ -690,11 +694,11 @@ google.maps.Polyline.prototype.getPath = function() {
 google.maps.Marker = function(opts) {
 	this.position = opts.position;
 	this.icon = opts.icon;
-	var size = new OpenLayers.Size(12,12);
+	var s = opts.icon.size || opts.icon.scaledSize || new google.maps.Size(20,20);
+	var size = new OpenLayers.Size(s.width, s.height);
 	var url = this.icon;
 	if(this.icon.url != null) {
 		url = this.icon.url;
-		if(this.icon.size != null) size = new OpenLayers.Size(this.icon.size.width, this.icon.size.height);
 	}
 	var offset = new OpenLayers.Pixel(-(size.w/2), -(size.h/2));
 	var icon = new OpenLayers.Icon(url, size, offset);
@@ -779,6 +783,10 @@ google.maps.geometry.spherical.computeArea = function(path) {
 		area += x0*y1 - x1*y0;
 	}
 	return Math.abs(area)/2;
+}
+
+google.maps.geometry.spherical.interpolate = function(from, to, fraction) {
+	return new google.maps.LatLng((from.lat()*fraction + to.lat()*(1-fraction)), (from.lng()*fraction + to.lng()*(1-fraction)));
 }
 
 google.maps.drawing = new Object();
