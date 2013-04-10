@@ -2,6 +2,7 @@ package org.sarsoft.markup.controller;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,7 +139,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			dao.save(map);
 		}
 		
-		if(clientstate != null) {
+		if(clientstate != null && clientstate.length() > 0) {
 			JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
 			manager.toDB(manager.fromJSON(json));
 		}
@@ -171,6 +172,10 @@ public class CollaborativeMapController extends JSONBaseController {
 		return json(model, dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant()));
 	}
 
+	@RequestMapping(value="/rest/since/{time}")
+	public String getSince(Model model, @PathVariable("time") Long time) {
+		return json(model, manager.toJSON(manager.fromDB(new Date(time))));
+	}
 	
 	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.DELETE)
 	public String delete(Model model, HttpServletRequest request, @PathVariable("id") String id) {		

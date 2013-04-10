@@ -56,6 +56,14 @@ public class DataManager {
 		return geoControllers.keySet();
 	}
 
+	public ClientState fromDB(Date date) {
+		ClientState state = new ClientState();
+		for(String type : getDataTypes()) {
+			state.add(type, (List<MapObject>) dao.loadSince(getController(type).getC(), date));
+		}
+		return state;
+	}
+
 	public ClientState fromDB() {
 		ClientState state = new ClientState();
 		for(String type : getDataTypes()) {

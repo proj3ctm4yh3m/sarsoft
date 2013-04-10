@@ -20,13 +20,12 @@ import org.sarsoft.common.util.RuntimeProperties;
 
 @JSONAnnotatedEntity
 @Entity
-public class Marker extends GeoMapObject implements IPreSave {
+public class Marker extends GeoMapObject {
 	
 	private Waypoint position;
 	private String label;
 	private String comments;
 	private String url;
-	private Date updated;
 
 	public Marker() {
 	}
@@ -120,14 +119,6 @@ public class Marker extends GeoMapObject implements IPreSave {
 	
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	@JSONSerializable
-	public Date getUpdated() {
-		return updated;
-	}
-	public void setUpdated(Date updated) {
-		this.updated = updated;
 	}
 
 	public void setComments(String comments) {

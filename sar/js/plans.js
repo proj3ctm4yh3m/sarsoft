@@ -261,6 +261,15 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 	      { key : "assignmentId", label : "Team"},
 		  { key : "position", label : "Location Found", formatter : function(cell, record, column, data) { if(data == null) return; var gll = {lat: function() {return data.lat;}, lng: function() {return data.lng;}}; cell.innerHTML = GeoUtil.GLatLngToUTM(GeoUtil.fromWGS84(gll)).toString();}},
 		  { key : "instructions", label: "Instructions"}]);
+
+	this.addChildTab("Resource", "Resources", [
+   	    { key : "id", label : ""},
+		{ key : "name", label : "Name", sortable : true},
+		{ key : "agency", label : "Agency", sortable : true},
+		{ key : "type", label : "Type", sortable : true},
+		{ key : "callsign", label : "Callsign"},
+		{ key : "spotId", label: "SPOT ID"},
+		{ key : "lastFix", label : "Last Update", sortable : true }]);
 }
 
 org.sarsoft.AssignmentChildDialog.prototype = new org.sarsoft.MapObjectChildDialog();
@@ -479,7 +488,7 @@ org.sarsoft.ClueForm.prototype.create = function(container) {
 
 org.sarsoft.ClueController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.WaypointObjectController.call(this, imap, {name: "Clue", dao : org.sarsoft.ClueDAO, label: "Clues", geo: true, waypoint: "position"}, background_load);
+	org.sarsoft.WaypointObjectController.call(this, imap, {name: "Clue", dao: org.sarsoft.ClueDAO, label: "Clues", geo: true, waypoint: "position"}, background_load);
 	this.parentController = imap.registered["org.sarsoft.AssignmentController"];
 	this.parentController.childControllers["Clue"] = this;
 	

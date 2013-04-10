@@ -37,11 +37,11 @@ public class ClueController extends AssignmentChildController<Clue> {
 	}
 
 	public void removeFrom(Assignment assignment, Clue child) {
-		assignment.removeClue((Clue) child);
+		assignment.removeClue(child);
 	}
 	
 	public void addTo(Assignment assignment, Clue child) {
-		assignment.addClue((Clue) child);
+		assignment.addClue(child);
 	}
 	
 	@RequestMapping(value="/{id}/position", method = RequestMethod.POST)

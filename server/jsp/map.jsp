@@ -30,6 +30,8 @@ org.sarsoft.Loader.queue(function() {
 	clues = new org.sarsoft.ClueController(page.imap, false);
 	ftracks = new org.sarsoft.FieldTrackController(page.imap, false);
 	fwpts = new org.sarsoft.FieldWaypointController(page.imap, false);
+	resources = new org.sarsoft.ResourceController(page.imap, false);
+	callsigns = new org.sarsoft.CallsignController(page.imap, false);
 
 	page.imap.dn.tenant.addClose("Close Unsaved Map", function() {
 		window.location.hash = "";

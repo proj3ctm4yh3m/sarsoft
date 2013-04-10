@@ -244,12 +244,13 @@ org.sarsoft.widget.TenantSharing = function(imap, page) {
 		var val = that.sync.attr("checked")=="checked";
 		if(val) {
 			alert('This page will automatically sync with changes made by other users for the next hour.');
-			that.timer = setInterval(function() {that.imap.timer();}, 10000);
+			that.timer = setInterval(function() {that.imap.timer(); org.sarsoft.MapState.timer(); }, sarsoft.refresh_interval);
 			that.killswitch = setTimeout(function() { that.toggle.setValue(false); clearInterval(that.timer); that.timer = null; that.killswitch = null}, 3600000)
 		}
 	});
 
 	if(sarsoft.refresh_auto) {
+		this.timer = setInterval(function() {that.imap.timer(); org.sarsoft.MapState.timer(); }, sarsoft.refresh_interval);
 		this.sync.attr("checked", "checked");
 	}
 
@@ -1045,6 +1046,8 @@ org.sarsoft.view.MapObjectEntityDialog.prototype.show = function(obj, point, has
 org.sarsoft.MapState = new Object();
 
 org.sarsoft.MapState.daos = new Object();
+org.sarsoft.MapState._dao = new org.sarsoft.BaseDAO();
+org.sarsoft.MapState._dao.baseURL = "/rest";
 
 org.sarsoft.MapState.get = function(imap, types) {
 	var daos = org.sarsoft.MapState.daos;
@@ -1059,6 +1062,16 @@ org.sarsoft.MapState.get = function(imap, types) {
 	}
 	
 	return state;
+}
+
+org.sarsoft.MapState.timer = function() {
+	var timestamp = this._timestamp || org.sarsoft.preload.timestamp || 0;
+	this._dao._doGet("/since/" + timestamp, function(r) {
+		org.sarsoft.MapState._timestamp = r.timestamp;
+		for(var type in org.sarsoft.MapState.daos) {
+			if(r[type]) org.sarsoft.MapState.daos[type].sideload(r[type]);
+		}
+	});
 }
 
 org.sarsoft.MapState.getConfig = function(imap) {
@@ -1418,12 +1431,6 @@ org.sarsoft.MapObjectController.prototype.attr = function(id, key, value) {
 		this.attrs[id][key] = value;
 	}
 	return this.attrs[id] ? this.attrs[id][key] : null;
-}
-
-org.sarsoft.MapObjectController.prototype.timer = function() {
-	var that = this;
-	this.dao.loadSince();
-	this.dao.mark();
 }
 
 org.sarsoft.MapObjectController.prototype.remove = function(object) {

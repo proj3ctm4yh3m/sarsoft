@@ -32,7 +32,6 @@ public class Shape extends GeoMapObject implements IPreSave {
 	private Float fill;
 	private String label;
 	private String comments;
-	private Date updated;
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -174,18 +173,11 @@ public class Shape extends GeoMapObject implements IPreSave {
 		this.label = label;
 	}
 	
-	public Date getUpdated() {
-		return updated;
-	}
-	public void setUpdated(Date updated) {
-		this.updated = updated;
-	}
-	
 	@JSONSerializable
 	@Transient
 	public Long getLastUpdated() {
-		if(updated == null) return null;
-		return updated.getTime();
+		if(getUpdated() == null) return null;
+		return getUpdated().getTime();
 	}
 	
 	public void setLastUpdated(Long time) {

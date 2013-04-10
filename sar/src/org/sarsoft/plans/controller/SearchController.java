@@ -71,7 +71,7 @@ public class SearchController extends JSONBaseController {
 		model.addAttribute("period", lastPeriod);
 		model.addAttribute("periods", periods);
 		model.addAttribute("assignments", dao.loadAll(Assignment.class));
-		opsController.checkLocators();
+//		opsController.checkLocators();
 		return app(model, "OperationalPeriod.Detail");
 	}
 	
@@ -85,7 +85,7 @@ public class SearchController extends JSONBaseController {
 	public String setAppDataSchema(Model model, @RequestParam(value="id", required=false) String name, HttpServletRequest request, HttpServletResponse response) {
 		if(name == null) return "error";
 		String val = adminController.setTenant(name, Search.class, request);
-		opsController.checkLocators();
+//		opsController.checkLocators();
 		if(val != null) return val;
 		return homePage(model);
 	}

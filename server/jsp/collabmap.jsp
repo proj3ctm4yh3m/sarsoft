@@ -39,6 +39,8 @@ org.sarsoft.Loader.queue(function() {
 	clues = new org.sarsoft.ClueController(page.imap, false);
 	ftracks = new org.sarsoft.FieldTrackController(page.imap, false);
 	fwpts = new org.sarsoft.FieldWaypointController(page.imap, false);
+	resources = new org.sarsoft.ResourceController(page.imap, false);
+	callsigns = new org.sarsoft.CallsignController(page.imap, false);
 
  	page.imap.dn.tenant.addClose("Close " + sarsoft.tenant.publicName, function(e) {
 		e.stopPropagation();
@@ -76,7 +78,7 @@ org.sarsoft.Loader.queue(function() {
   </c:if>
 
   <c:if test="${userPermission eq admin}">
-	deleteDlg = new org.sarsoft.view.MapDialog(page.imap, "Delete " + sarsoft.tenant.publicName + $('<div id="deleteObject" style="height: 6em">Are you sure you want to delete ' + sarsoft.tenant.publicName + '?  This action cannot be undone.</div>'), "OK", "Cancel", function() {
+	deleteDlg = new org.sarsoft.view.MapDialog(page.imap, "Delete " + sarsoft.tenant.publicName, $('<div id="deleteObject" style="height: 6em">Are you sure you want to delete ' + sarsoft.tenant.publicName + '?  This action cannot be undone.</div>'), "OK", "Cancel", function() {
 		var dao = new org.sarsoft.CollaborativeMapDAO();
 		dao.del('${tenant.name}', function() {
 			window.location='/map.html';

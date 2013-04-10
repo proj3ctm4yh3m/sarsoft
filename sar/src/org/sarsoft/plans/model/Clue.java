@@ -17,7 +17,7 @@ import org.sarsoft.common.model.Waypoint;
 
 @JSONAnnotatedEntity
 @Entity
-public class Clue extends AssignmentChildObject implements IPreSave {
+public class Clue extends AssignmentChildObject {
 	
 	public enum Disposition {
 		COLLECT,MARK,IGNORE
@@ -28,7 +28,6 @@ public class Clue extends AssignmentChildObject implements IPreSave {
 	private String location;
 	private Waypoint position;
 	private Date found;
-	private Date updated;
 	private Disposition instructions;
 	
 	public Clue() {
@@ -108,17 +107,6 @@ public class Clue extends AssignmentChildObject implements IPreSave {
 		this.found = found;
 	}
 	
-	@JSONSerializable
-	public Date getUpdated() {
-		return updated;
-	}
-	public void setUpdated(Date updated) {
-		this.updated = updated;
-	}
-	public void preSave() {
-		setUpdated(new Date());
-	}
-
 	@JSONSerializable
 	public String getSummary() {
 		return summary;
