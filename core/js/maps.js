@@ -127,7 +127,7 @@ org.sarsoft.MapOverlayManager.prototype.removeOverlay = function(id) {
 	if(type && type.setMap) {
 		type.setMap(null);
 	} else {
-		for(var i = 0; i < this.map.overlayMapTypes.length; i++) {
+		for(var i = 0; i < this.map.overlayMapTypes.getLength(); i++) {
 			if(this.map.overlayMapTypes.getAt(i) == type) {
 				this.map.overlayMapTypes.removeAt(i);
 				this.bo_count--;
@@ -2898,6 +2898,7 @@ org.sarsoft.MapUtil = new Object();
 
 org.sarsoft.MapUtil.createIcon = function(url) {
 	if(sarsoft.map.icons[url]) {
+		if(google.maps._openlayers) return org.sarsoft.MapUtil.createImage(20, $.img('/icons/' + url + '.png'));
 		var icon = sarsoft.map.icons[url];
 		var sprite_count = 72;
 		var target_size = 20;

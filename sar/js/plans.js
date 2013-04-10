@@ -340,7 +340,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 		
 		this.imap.addContextMenuItems([
 		    { text: "New Assignment", applicable: this.cm.a_none, handler: function(data) { that.dlg.show({create: true, operationalPeriodId: 1, segment : {polygon: true}}, data.point)}},
-		    { text: "Drag Vertices", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: this.cm.h_edit},
+		    { text: "Drag Vertices", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: this.cm.h_drag},
 		    { text: "Clone Assignment", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: function(data) {
 		    	var a = data.pc.obj;
 		    	that.dlg.point = null;
@@ -671,14 +671,19 @@ org.sarsoft.FieldTrackController = function(imap, background_load) {
 	this.parentController.childControllers["FieldTrack"] = this;
 	
 	if(org.sarsoft.writeable && !background_load) {
-		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Shape Details", new org.sarsoft.FieldTrackForm(), this);
+		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Track Details", new org.sarsoft.FieldTrackForm(), this);
 		
+		this.sizewarning = $('<div style="font-weight: bold; color: red; display: none"></div>').prependTo(this.dlg.body);
+		this.dlg.dialog.dialog.hideEvent.subscribe(function() {
+			that.sizewarning.css('display', 'none');
+		});
+
 		var pc = function(obj) { return that._contextMenuCheck(obj) }
 		
 		if(org.sarsoft.writeable) {
 			this.imap.addContextMenuItems([
 			    {text : "Details", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_details },
-    			{text : "Drag Vertices", precheck: pc, applicable : this.cm.a_noedit, handler : this.cm.h_edit },
+    			{text : "Drag Vertices", precheck: pc, applicable : this.cm.a_noedit, handler : this.cm.h_drag },
 	    		{text : "Save Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_save },
 	    		{text : "Discard Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_discard },
     			{text : "Delete Track", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_del }
@@ -718,7 +723,15 @@ org.sarsoft.FieldTrackController.prototype.show = function(object) {
 	this.DNAddProfile(object);
 
 	if(org.sarsoft.writeable) {
-		this.DNAddEdit(object);
+		this.dn.addIconEdit(object.id, function() {
+			 if(object.way.waypoints.length <= 500) {
+				 that.edit(object);
+			 } else {
+				 that.sizewarning.css('display', 'block').html('Vertex editing is not possible on tracks with more than 500 waypoints (this one has ' + object.way.waypoints.length + ').');
+			 }
+			 that.dlg.show(object, null, true);
+			 that.dlg.live = true;
+		});
 		this.DNAddDelete(object);
 	}
 	
