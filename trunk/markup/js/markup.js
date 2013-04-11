@@ -60,7 +60,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 					swatch.click(function() { var j = i; return function() {that.imageInput.val(that.images["arrows"][j]); that.imageInput.trigger('change');}}());
 				} else {
 					var icon = sarsoft.map.icons[url];
-					if(icon) {
+					if(icon && !google.maps._openlayers) {
 						var swatch = $('<img src="' + $.img('blank.gif') + '" style="cursor: pointer; width: 20px; height: 20px; background-image: url(' + $.img('icons/sprite2.png') + '); background-position: -' + (icon.offset*20) + 'px 0px"></div>').appendTo(ic2);
 					} else {
 						var swatch = jQuery('<img style="cursor: pointer; width: 20px; height: 20px" src="' + $.img('icons/' + url + '.png') + '"/>').appendTo(ic2);

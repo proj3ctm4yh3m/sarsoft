@@ -536,6 +536,66 @@ org.sarsoft.StructuredDataNavigator.prototype.addNewOption = function(idx, text,
 	}
 }
 
+org.sarsoft.OfflineDataNavigator = function(imap) {
+	org.sarsoft.DataNavigator.call(this, imap);
+	var that = this;
+	imap.dn = this;
+
+	this.account = this.addHeader(sarsoft.account == null ? "Not Signed In" : (sarsoft.account.alias ? sarsoft.account.alias : sarsoft.account.email), "account.png");
+	this.account.block.css('margin-bottom', '5px');
+	if(sarsoft.account != null) {
+	    new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
+	} else {
+		new org.sarsoft.widget.Login(imap, this.account.body);
+	}
+
+	this.tenant = this.addHeader((sarsoft.tenant ? sarsoft.tenant.publicName : "Unsaved Map"), "favicon.png");	
+	imap.controls.action = new org.sarsoft.widget.MapAction(this.tenant.body);
+	org.sarsoft.widget.SaveAs(imap);
+	
+	this.body = $('<div></div>').appendTo(this.tenant.body);
+
+	var div = $('<div style="padding-top: 10px; clear: both; font-size: 120%; color: green"></div>').appendTo(this.tenant.body).css('display', org.sarsoft.writeable ? 'block' : 'none');
+	
+	this.addobjlink = new org.sarsoft.view.DropSelect("+ Add New Object", {color: "green", "font-weight": "normal"});
+	this.addobjlink.container.appendTo(div);
+	
+	$('<div style="margin-top: 10px"></div>').appendTo(div);
+
+	this.addlayerlink = new org.sarsoft.view.DropSelect("+ Add New Layer", {color: "green", "font-weight": "normal"});
+	this.addlayerlink.container.appendTo(div);
+	
+	$(this.addobjlink).bind('show', function() { that.addlayerlink.hide() });
+	$(this.addlayerlink).bind('show', function() { that.addobjlink.hide() });
+
+	var settings = this.addDataType("Settings");
+	settings.block.css('margin-bottom', '5px');
+	imap.controls.settings = $('<div></div>').appendTo(settings.body);
+	imap.controls.settings.more = $('<div style="padding-top: 5px"></div>').appendTo(settings.body).append($('<span style="color: #666666; cursor: pointer">Show More</span>').click(function() {
+		imap.controls.settings.more.css('display', 'none');
+		imap.controls.settings.less.css('display', 'block');
+		imap.controls.settings_browser.css('display', 'block');
+	}));
+	imap.controls.settings_browser = $('<div style="display: none"></div>').appendTo(settings.body);
+	imap.controls.settings.save = settings.getTool().css({'display': 'none'}).html('<img src="' + $.img('save.png') + '" style="cursor: pointer; vertical-align: middle"/>Save').attr("title", 'Save These and Other Map Settings for Future Visits');
+	imap.controls.settings.less = $('<div style="padding-top: 5px; display: none"></div>').appendTo(settings.body).append($('<span style="color: #666666; cursor: pointer">Show Less</span>').click(function() {
+		imap.controls.settings.more.css('display', 'block');
+		imap.controls.settings.less.css('display', 'none');
+		imap.controls.settings_browser.css('display', 'none');
+	}));
+	
+}
+
+org.sarsoft.OfflineDataNavigator.prototype = new org.sarsoft.DataNavigator();
+
+org.sarsoft.OfflineDataNavigator.prototype.addNewOption = function(idx, text, handler) {
+	if(idx == 0) {
+		this.addobjlink.addItem(text, handler);
+	} else {
+		this.addlayerlink.addItem(text, handler);
+	}
+}
+
 org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 	var that = this;
 	if(imap != null) {
