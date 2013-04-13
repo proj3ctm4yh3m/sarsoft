@@ -806,6 +806,55 @@ org.sarsoft.CollaborativeMapDAO.prototype.getConfig = function(handler) {
 	this._doGet("/config", handler);
 }
 
+org.sarsoft.LocalMapDAO = function() {
+}
+
+org.sarsoft.LocalMapDAO.prototype.getMaps = function() {
+	var maps = [];
+	for(var key in localStorage) {
+		if(key.indexOf("map") == 0) {
+			var id = Number(key.substr(3));
+			maps[id] = YAHOO.lang.JSON.parse(localStorage[key]);
+			maps[id].id = id;
+		}
+	}
+	return maps;
+}
+
+org.sarsoft.LocalMapDAO.prototype.getMap = function(id) {
+	var map = YAHOO.lang.JSON.parse(localStorage["map" + id]);
+	map.id = id;
+	return map;
+}
+
+org.sarsoft.LocalMapDAO.prototype.create = function(map) {
+	var maps = this.getMaps();
+	var min = 0;
+	for(var id in maps) {
+		min = Math.min(id, min);
+	}
+	min = min + 1;
+	localStorage["map" + min] = YAHOO.lang.JSON.stringify(map);
+	return min;
+}
+
+org.sarsoft.LocalMapDAO.prototype.saveState = function(id, state) {
+	var map = YAHOO.lang.JSON.parse(localStorage["map" + id]);
+	map.state = state;
+	localStorage["map" + id] = YAHOO.lang.JSON.stringify(map);
+}
+
+org.sarsoft.LocalMapDAO.prototype.del = function(id) {
+	delete localStorage["map" + id];
+}
+
+org.sarsoft.LocalMapDAO.prototype.listen = function(event) {
+	var that = this;
+	for(var type in org.sarsoft.MapState.daos) {
+		$(org.sarsoft.MapState.daos[type]).bind(event, function() { that.saveState(sarsoft.local.id, org.sarsoft.MapState.get()); });
+	}
+}
+
 org.sarsoft.view.TenantList = function(container) {
 	this.block = jQuery('<div></div>').appendTo(container);
 }
