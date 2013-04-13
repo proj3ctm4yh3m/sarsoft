@@ -21,32 +21,46 @@
 function doload() {
 org.sarsoft.Loader.queue(function() {
 	
+	if(sarsoft.tenant == null && window.location.hash.length > 0) {
+		var id = Number(window.location.hash.substring(1));
+		var dao = new org.sarsoft.LocalMapDAO();
+		sarsoft.local = dao.getMap(id);
+		org.sarsoft.preload = sarsoft.local.state;
+	}
+	
 	page = new sarsoft.Page({
 		dnclass: org.sarsoft.StructuredDataNavigator,
-		config: org.sarsoft.view.PersistedConfigWidget,
+		config: sarsoft.local ? org.sarsoft.view.CookieConfigWidget : org.sarsoft.view.PersistedConfigWidget,
 		url: false,
 		bgload: false,
 		position: true,
 		size: true,
 		find: true,
-		label: true,
-		tools: !org.sarsoft.iframe
+		label: true
 		 <c:if test="${not empty tenant.defaultCenter}">, center: new google.maps.LatLng(${tenant.defaultCenter.lat}, ${tenant.defaultCenter.lng}), zoom: 14</c:if>
 	});
+	
+	if(sarsoft.local) {
+		var listen_local = function(event) {
+			for(var type in org.sarsoft.MapState.daos) {
+				$(org.sarsoft.MapState.daos[type]).bind(event, function() {
+					dao.saveState(sarsoft.local.id, org.sarsoft.MapState.get());
+					$(org.sarsoft.BaseDAO).trigger('success');
+				});
+			}
+		}
+		listen_local('create');
+		listen_local('save');
+		listen_local('delete');
+		window.setTimeout(function() {listen_local('load') }, 5000); // for GPX imports
+	}
 
-	periods = new org.sarsoft.OperationalPeriodController(page.imap, false);
-	assignments = new org.sarsoft.AssignmentController(page.imap, false);
-	clues = new org.sarsoft.ClueController(page.imap, false);
-	ftracks = new org.sarsoft.FieldTrackController(page.imap, false);
-	fwpts = new org.sarsoft.FieldWaypointController(page.imap, false);
-	resources = new org.sarsoft.ResourceController(page.imap, false);
-	callsigns = new org.sarsoft.CallsignController(page.imap, false);
-
- 	page.imap.dn.tenant.addClose("Close " + sarsoft.tenant.publicName, function(e) {
+ 	page.imap.dn.tenant.addClose("Close " + (sarsoft.local ? sarsoft.local.name : sarsoft.tenant.publicName), function(e) {
 		e.stopPropagation();
 		window.location="/map.html#" + org.sarsoft.MapURLHashWidget.createConfigStr(imap);
 	});
 
+<c:if test="${not empty tenant}">
   var sharing = new org.sarsoft.widget.TenantSharing(page.imap, 'map');
   <c:if test="${userPermission eq admin and hosted}">
   $('<div><div style="font-size: 120%; color: #5a8ed7; padding-top: 5px">Permissions</div>' +
@@ -100,21 +114,7 @@ org.sarsoft.Loader.queue(function() {
 	page.imap.dn.tenant.header.attr("title", "click for details").click(function() {detailsDlg.swap();});
 
 	</c:if>
-	
-	if(!org.sarsoft.iframe) {
-	    wprint = new org.sarsoft.widget.Print(page.imap);
-		jQuery('<button style="margin-left: 20px; cursor; pointer">Print Key</button>').insertAfter(wprint.pageSizeForm.printButton).click(function() {
-			window.open('/guide?id=' + sarsoft.tenant.name + "&print=true", '_blank');
-		});
-		jQuery('<span class="underlineOnHover" style="color: #5a8ed7; font-weight: bold;">&rarr; Create a PDF</span>').prependTo(jQuery('<div style="margin-top: 1ex; margin-bottom: 1ex"> (<span style="color: #dc1d00; font-weight: bold">New!</span>) Higher quality, exact scales, and multi-page map packs.  Not all layers available.</div>').appendTo(wprint.print_options.div)).click(function(e) {
-			e.stopPropagation();
-			window.location="/print?id=" + sarsoft.tenant.name;
-		});
-	}
-  
-  <c:if test="${message ne null}">
-    alert("Error: ${message}");
-  </c:if>
+</c:if>
 
 });
 }

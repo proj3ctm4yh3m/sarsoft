@@ -144,6 +144,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 }
 
 org.sarsoft.controller.MarkerController.prototype = new org.sarsoft.WaypointObjectController();
+sarsoft.Controllers["Marker"] = [5, org.sarsoft.controller.MarkerController];
 
 org.sarsoft.controller.MarkerController.prototype._saveWaypoint = function(id, waypoint, handler) {
 	this.dao.updatePosition(id, waypoint, handler);
@@ -387,6 +388,7 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 }
 
 org.sarsoft.controller.ShapeController.prototype = new org.sarsoft.WayObjectController();
+sarsoft.Controllers["Shape"] = [10, org.sarsoft.controller.ShapeController];
 
 org.sarsoft.controller.ShapeController.prototype._saveWay = function(obj, waypoints, handler) {
 	this.dao.saveWaypoints(obj, waypoints, handler);

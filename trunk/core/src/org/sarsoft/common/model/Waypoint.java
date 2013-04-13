@@ -131,7 +131,7 @@ public class Waypoint extends SarModelObject {
 	public String getFormattedUTM() {
 		int zone = (int) (Math.floor((lng + 180) / 6) + 1);
 		double[] utm = getUTMXY();
-		return String.format("%1$3s %2$07dE\n    %3$07dN", new Object[] {zone, Math.round(utm[0]), Math.round(utm[1])});
+		return String.format("%1$3s %2$07dE %3$07dN", new Object[] {zone, Math.round(utm[0]), Math.round(utm[1])});
 	}
 	
 	@Transient

@@ -1,8 +1,8 @@
 package org.sarsoft.common.controller;
 
 import java.util.Date;
+import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class MapObjectController <T extends MapObject> extends JSONBaseController {
 
@@ -50,6 +51,10 @@ public abstract class MapObjectController <T extends MapObject> extends JSONBase
 		dao.save(obj);
 	}
 	
+	public List<String[]> toCSV(List<T> objects) {
+		return null;
+	}
+	
 	@RequestMapping(value="", method = RequestMethod.POST)
 	public String create(Model model, JSONForm params) {
 		T obj = make(params.JSON());
@@ -75,15 +80,19 @@ public abstract class MapObjectController <T extends MapObject> extends JSONBase
 	}
 	
 	@RequestMapping(value="/{id}", method = RequestMethod.GET)
-	public String get(Model model, @PathVariable("id") long id, HttpServletRequest request, HttpServletResponse response) {
+	public String get(Model model, @PathVariable("id") long id) {
 		return json(model, dao.load(c, id));
 	}
 
 	@RequestMapping(value="", method = RequestMethod.GET)
-	public String getAll(Model model) {
-		return json(model, dao.loadAll(c));
+	public String getAll(Model model, @RequestParam(value="format", required=false) String format, HttpServletResponse response) {
+		List<T> objects = dao.loadAll(c);
+		if("CSV".equals(format)) {
+			return csv(model, toCSV(objects), response);
+		}
+		return json(model, objects);
 	}
-
+	
 	@RequestMapping(value="/since/{date}", method = RequestMethod.GET)
 	public String getSince(Model model, @PathVariable("date") long date) {
 		return json(model, dao.loadSince(c, new Date(date)));
