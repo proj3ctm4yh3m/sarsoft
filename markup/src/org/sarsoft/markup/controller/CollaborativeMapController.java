@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
@@ -74,6 +75,13 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	@RequestMapping(value="/map", method = RequestMethod.GET)
 	public String get(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
+		if(id == null) {
+			RuntimeProperties.setTenant(null);		
+			HttpSession session = request.getSession(true);
+			session.removeAttribute("tenantid");
+			return app(model, "/collabmap");
+		}
+		
 		if(!((request.getParameter("password") == null || request.getParameter("password").length() == 0) && RuntimeProperties.getTenant() != null && RuntimeProperties.getTenant().equals(id))) {
 			String error = adminController.setTenant(id, CollaborativeMap.class, request);
 			if(error != null) return bounce(model, error, "/map?id=" + id);
@@ -143,6 +151,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			JSONObject json = (JSONObject) JSONSerializer.toJSON(clientstate);
 			manager.toDB(manager.fromJSON(json));
 		}
+		
 		return "redirect:/map?id=" + RuntimeProperties.getTenant();
 	}
 	
@@ -178,7 +187,11 @@ public class CollaborativeMapController extends JSONBaseController {
 	}
 	
 	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.DELETE)
-	public String delete(Model model, HttpServletRequest request, @PathVariable("id") String id) {		
+	public String delete(Model model, HttpServletRequest request, @PathVariable("id") String id) {
+		if(RuntimeProperties.getTenant() == null) {
+			String error = adminController.setTenant(id, CollaborativeMap.class, request);
+			if(error != null) return json(model, error);
+		}
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
 			return json(model, "You do not have admin rights to this map");
 		}

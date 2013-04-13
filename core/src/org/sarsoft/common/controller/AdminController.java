@@ -124,14 +124,6 @@ public class AdminController extends JSONBaseController {
 		UserAccount account = null;
 		if(user != null) account = dao.getByAttr(UserAccount.class, "name", user);
 		String name = request.getParameter("name");
-		if(!isHosted() && dao.getByAttr(Tenant.class, "name", name) != null) {
-			String error = setTenant(name, cls, request);
-			if(error != null) return error;
-			return null;
-		}
-		if(isHosted() && account == null) {
-			return "You do not appear to be logged in";
-		}
 		Tenant tenant;
 		try {
 			tenant = cls.newInstance();
@@ -140,11 +132,25 @@ public class AdminController extends JSONBaseController {
 		} catch (IllegalAccessException e) {
 			return "Something really bad happened.  Please contact the server administrator.";
 		}
-		tenant.setName(name);
+
 		tenant.setDescription(name);
 		tenant.setComments(request.getParameter("comments"));
-		if(account != null) {
+
+		boolean oneoff = Boolean.parseBoolean(request.getParameter("oneoff"));
+		if(oneoff) {
+			tenant.setAllUserPermission(Tenant.Permission.READ);
+			tenant.setPasswordProtectedUserPermission(Tenant.Permission.WRITE);
+			String password = request.getParameter("password");
+			if(password != null && password.length() > 0) tenant.setPassword(Hash.hash(password));			
+		} else if(account != null) {
 			tenant.setAccount(account);
+			tenant.setAllUserPermission(Tenant.Permission.READ);
+			tenant.setPasswordProtectedUserPermission(Tenant.Permission.NONE);
+		} else if(isHosted()) {
+			if(!oneoff) return "You do not appear to be logged in";
+		}
+
+		synchronized(this) {
 			Object obj = new Object();
 			String tenantname = null;
 			int i = 0;
@@ -154,11 +160,8 @@ public class AdminController extends JSONBaseController {
 				obj = dao.getByPk(Tenant.class, tenantname);
 			}
 			tenant.setName(tenantname);
-			tenant.setAllUserPermission(Tenant.Permission.READ);
-			tenant.setPasswordProtectedUserPermission(Tenant.Permission.NONE);
+			dao.superSave(tenant);
 		}
-
-		dao.superSave(tenant);
 
 		initPermissions(request.getSession(true), tenant.getName(), Permission.ADMIN);
 
