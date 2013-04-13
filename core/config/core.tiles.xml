@@ -4,16 +4,18 @@
 	<definition name="error" template="/error.jsp"/>
 
 	<definition name="App.Base" template="/AppTemplate.jsp">
-		<put-attribute name="subHeader" value="splash"/>
 		<put-attribute name="app" value=""/>
 	</definition>
 
 	<definition name="Pages.Tools" extends="App.Base">
-		<put-attribute name="subHeader" value="tools"/>
 		<put-attribute name="content" value="/tools.jsp"/>
 	</definition>
 	<definition name="Pages.Password" extends="App.Base">
 		<put-attribute name="content" value="/password.jsp"/>
+	</definition>
+
+	<definition name="Pages.About" extends="App.Base">
+		<put-attribute name="content" value="/splash.jsp"/>
 	</definition>
 	
 </tiles-definitions>

@@ -1,4 +1,4 @@
-package org.sarsoft.markup.model;
+package org.sarsoft.common.model;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;

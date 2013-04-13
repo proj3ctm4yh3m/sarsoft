@@ -12,7 +12,7 @@
 </context-param>
 <context-param>
     <param-name>org.apache.tiles.definition.DefinitionsFactory.DEFINITIONS_CONFIG</param-name>
-    <param-value>/WEB-INF/core.tiles.xml,/WEB-INF/markup.tiles.xml,/WEB-INF/sar.tiles.xml,/WEB-INF/server.tiles.xml</param-value>
+    <param-value>/WEB-INF/core.tiles.xml,/WEB-INF/sar.tiles.xml</param-value>
 </context-param>
 <listener>
 	<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>

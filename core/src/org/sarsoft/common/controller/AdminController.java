@@ -261,5 +261,10 @@ public class AdminController extends JSONBaseController {
 		m.put("timestamp", Long.toString(new Date().getTime()));
 		return json(model, m);
 	}
-
+	
+	@RequestMapping(value="/about.html", method = RequestMethod.GET)
+	public String about(Model model) {
+		return app(model, "Pages.ABout");
+	}
+	
 }
