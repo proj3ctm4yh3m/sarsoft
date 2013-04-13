@@ -1,11 +1,8 @@
-package org.sarsoft.markup.controller;
+package org.sarsoft.common.controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,9 +26,7 @@ import org.sarsoft.common.model.Tenant.Permission;
 import org.sarsoft.common.util.GPX;
 import org.sarsoft.common.util.Hash;
 import org.sarsoft.common.util.RuntimeProperties;
-import org.sarsoft.markup.model.CollaborativeMap;
-import org.sarsoft.markup.model.Marker;
-import org.sarsoft.markup.model.Shape;
+import org.sarsoft.common.model.CollaborativeMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -54,19 +49,6 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	@Autowired
 	DataManager manager;
-
-	@SuppressWarnings("rawtypes")
-	public static Map<String, Class> searchClassHints = new HashMap<String, Class>();
-
-	static {
-		@SuppressWarnings("rawtypes")
-		Map<String, Class> m = new HashMap<String, Class>();
-		m.put("waypoints", Waypoint.class);
-		m.put("way", Map.class);
-		m.put("shapes", Map.class);
-		m.put("markers", Map.class);
-		searchClassHints = Collections.unmodifiableMap(m);
-	}
 
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
@@ -218,8 +200,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			return json(model, "You are not currently working on this map, concerned this may be an accidental deletion");
 		}
 
-		dao.deleteAll(Marker.class);
-		dao.deleteAll(Shape.class);
+		manager.removeAllFromDB();
 		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		if(tenant.getAccount() != null) {
 			UserAccount account = tenant.getAccount();

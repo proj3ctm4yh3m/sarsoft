@@ -176,5 +176,11 @@ public class DataManager {
 			if(controller != null) removeFrom.remove(type, controller.dedupe(removeFrom.get(type), checkAgainst.get(type)));
 		}
 	}
+	
+	public void removeAllFromDB() {
+		for(String type : getDataTypes()) {
+			dao.deleteAll(getController(type).getC());
+		}
+	}
 
 }
