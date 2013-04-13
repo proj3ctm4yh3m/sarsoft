@@ -115,6 +115,7 @@ org.sarsoft.OperationalPeriodController = function(imap, background_load) {
 }
 
 org.sarsoft.OperationalPeriodController.prototype = new org.sarsoft.MapObjectController();
+sarsoft.Controllers["OperationalPeriod"] = [11, org.sarsoft.OperationalPeriodController];
 
 org.sarsoft.OperationalPeriodController.prototype.show = function(object) {
 	var that = this;
@@ -225,6 +226,7 @@ org.sarsoft.AssignmentForm.prototype.read = function() {
 
 org.sarsoft.AssignmentForm.prototype.write = function(obj) {
 	this.fields.operationalPeriodId.empty();
+	if(obj.operationalPeriodId == null) this.fields.operationalPeriodId.append('<option value="">N/A</option>');
 	var periods = org.sarsoft.MapState.daos["OperationalPeriod"].objs;
 	for(var i = 0; i < periods.length; i++) {
 		if(periods[i] != null) this.fields.operationalPeriodId.append('<option value="' + i + '">' + periods[i].description + '</option>');
@@ -310,11 +312,11 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Line Assignment", function(point) {
-			that.dlg.show({create: true, operationalPeriodId: 1, segment: {polygon: false}}, point);
+			that.dlg.show({create: true, operationalPeriodId: that.parentController.dao.getMaxId(), segment: {polygon: false}}, point);
 		});
 
 		this.buildAddButton(0, "Area Assignment", function(point) {
-			that.dlg.show({create: true, operationalPeriodId: 1, segment: {polygon: true}}, point);
+			that.dlg.show({create: true, operationalPeriodId: that.parentController.dao.getMaxId(), segment: {polygon: true}}, point);
 		});
 		
 		
@@ -339,7 +341,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 		}
 		
 		this.imap.addContextMenuItems([
-		    { text: "New Assignment", applicable: this.cm.a_none, handler: function(data) { that.dlg.show({create: true, operationalPeriodId: 1, segment : {polygon: true}}, data.point)}},
+		    { text: "New Assignment", applicable: this.cm.a_none, handler: function(data) { that.dlg.show({create: true, operationalPeriodId: that.parentController.dao.getMaxId(), segment : {polygon: true}}, data.point)}},
 		    { text: "Drag Vertices", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: this.cm.h_drag},
 		    { text: "Clone Assignment", precheck: pc, applicable: function(obj) { return obj.clickable && !obj.inedit }, handler: function(data) {
 		    	var a = data.pc.obj;
@@ -356,6 +358,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 }
 
 org.sarsoft.AssignmentController.prototype = new org.sarsoft.WayObjectController();
+sarsoft.Controllers["Assignment"] = [12, org.sarsoft.AssignmentController];
 
 org.sarsoft.AssignmentController.prototype._saveWay = function(obj, waypoints, handler) {
 	this.dao.saveSegment(obj, waypoints, handler)
@@ -446,6 +449,7 @@ org.sarsoft.AssignmentChildForm.prototype.read = function() {
 
 org.sarsoft.AssignmentChildForm.prototype.write = function(obj) {
 	this.fields.assignmentId.empty();
+	if(obj.assignmentId == null) this.fields.assignmentId.append('<option value="">N/A</option>');
 	var assignments = org.sarsoft.MapState.daos["Assignment"].objs;
 	for(var i = 0; i < assignments.length; i++) {
 		if(assignments[i] != null) this.fields.assignmentId.append('<option value="' + i + '">' + assignments[i].number + '</option>');
@@ -518,6 +522,7 @@ org.sarsoft.ClueController = function(imap, background_load) {
 }
 
 org.sarsoft.ClueController.prototype = new org.sarsoft.WaypointObjectController();
+sarsoft.Controllers["Clue"] = [13, org.sarsoft.ClueController];
 
 org.sarsoft.ClueController.prototype._saveWaypoint = function(id, waypoint, handler) {
 	this.dao.updatePosition(id, waypoint, handler);
@@ -598,6 +603,7 @@ org.sarsoft.FieldWaypointController = function(imap, background_load) {
 }
 
 org.sarsoft.FieldWaypointController.prototype = new org.sarsoft.WaypointObjectController();
+sarsoft.Controllers["FieldWaypoint"] = [15, org.sarsoft.FieldWaypointController];
 
 org.sarsoft.FieldWaypointController.prototype._saveWaypoint = function(id, waypoint, handler) {
 	this.dao.updatePosition(id, waypoint, handler);
@@ -695,6 +701,7 @@ org.sarsoft.FieldTrackController = function(imap, background_load) {
 }
 
 org.sarsoft.FieldTrackController.prototype = new org.sarsoft.WayObjectController();
+sarsoft.Controllers["FieldTrack"] = [14, org.sarsoft.FieldTrackController];
 
 org.sarsoft.FieldTrackController.prototype._saveWay = function(obj, waypoints, handler) {
 	this.dao.saveWay(obj, waypoints, handler);

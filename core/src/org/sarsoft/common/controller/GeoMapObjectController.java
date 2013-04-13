@@ -50,7 +50,7 @@ public abstract class GeoMapObjectController <T extends GeoMapObject> extends Ma
 				return kml(model, jarray);
 			}
 		} else {
-			return super.get(model, id, request, response);
+			return super.get(model, id);
 		}
 	}
 

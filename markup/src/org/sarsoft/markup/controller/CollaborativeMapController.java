@@ -73,6 +73,24 @@ public class CollaborativeMapController extends JSONBaseController {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
 	}
 	
+	@RequestMapping(value="/", method = RequestMethod.GET)
+	public String bounce() {
+		return "redirect:/map.html";
+	}
+	
+	@RequestMapping(value="/map.html", method = RequestMethod.GET)
+	public String showMap(Model model, HttpServletRequest request) {
+		RuntimeProperties.setTenant(null);		
+		HttpSession session = request.getSession(true);
+		session.removeAttribute("tenantid");
+		String clientState = (String) session.getAttribute("client_state");
+		if(clientState != null) {
+			request.getSession().removeAttribute("client_state");
+			model.addAttribute("preload", clientState);
+		}
+		return app(model, "/map");
+	}
+	
 	@RequestMapping(value="/map", method = RequestMethod.GET)
 	public String get(Model model, @RequestParam(value="id", required=false) String id, HttpServletRequest request, HttpServletResponse response) {
 		if(id == null) {
@@ -308,4 +326,10 @@ public class CollaborativeMapController extends JSONBaseController {
 			return json(model, manager.toJSON(state));
 		}
 	}
+	
+	@RequestMapping(value="/tools.html", method = RequestMethod.GET)
+	public String showTools(Model model) {
+		return app(model, "Pages.Tools");
+	}
+		
 }

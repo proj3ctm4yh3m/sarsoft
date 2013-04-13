@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSON;
 import net.sf.json.xml.XMLSerializer;
@@ -172,6 +173,21 @@ public abstract class JSONBaseController {
 	protected String kml(Model model, Object obj) {
 		prepXML(model, obj);
 		return "/xsl/kml/tokml";
+	}
+	
+	protected String csv(Model model, List<String[]> items, HttpServletResponse response) {
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < items.size(); i++) {
+			if(i > 0) sb.append("\n");
+			String[] row = items.get(i);
+			for(int j = 0; j < row.length; j++) {
+				if(j > 0) sb.append(",");
+				sb.append(row[j]);
+			}
+		}
+		response.setHeader("Content-Disposition", "attachment; filename=export.csv");
+		model.addAttribute("echo", sb.toString());
+		return "/echo";
 	}
 
 }

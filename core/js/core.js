@@ -1,3 +1,5 @@
+sarsoft.Controllers = {}
+
 sarsoft.Page = function(opts) {
 	map = this.map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), opts.center, opts.zoom);
 	
@@ -11,24 +13,31 @@ sarsoft.Page = function(opts) {
 	}
 
 	imap = this.imap = new org.sarsoft.InteractiveMap(map, map_opts);
-	
 	if(opts.url) urlwidget = this.url = new org.sarsoft.MapURLHashWidget(this.imap, org.sarsoft.iframe || opts.bgload);	
-
-	this.markers = new org.sarsoft.controller.MarkerController(this.imap, opts.bgload);
-	this.shapes = new org.sarsoft.controller.ShapeController(this.imap, opts.bgload);
 	if(opts.config) {
 		this.cfg = new opts.config(this.imap, (!org.sarsoft.iframe && sarsoft.permission != "READ"), true);
 		this.cfg.loadConfig();
 	}
-	if(!(opts.configured == false)) this.configured = new org.sarsoft.controller.ConfiguredLayerController(this.imap, opts.bgload);
-	if(!(opts.georef == false)) this.georef = new org.sarsoft.controller.GeoRefController(this.imap, opts.bgload);
 
-	if(opts.tools) this.tools = new org.sarsoft.controller.MapToolsController(this.imap);
+	var max_priority = 0;
+	for(var type in sarsoft.Controllers) {
+		max_priority = Math.max(max_priority, sarsoft.Controllers[type][0]);
+	}
+	for(var i = 0; i <= max_priority; i++) {
+		for(var type in sarsoft.Controllers) {
+			if(sarsoft.Controllers[type][0] == i && opts[type] != false) this[type] = new sarsoft.Controllers[type][1](this.imap, opts.bgload);
+		}
+	}
+
+	if(opts.print || (!org.sarsoft.iframe && opts.print != false)) this.print = new org.sarsoft.widget.Print(this.imap);
+	if(opts.tools || (!org.sarsoft.iframe && opts.tools != false)) this.tools = new org.sarsoft.controller.MapToolsController(this.imap);
 
 	if(!org.sarsoft.iframe) {
 		org.sarsoft.BrowserCheck();
 		google.maps.event.trigger(this.map, "resize");
 	}
+	
+	if(!org.sarsoft.mobile && !org.sarsoft.iframe && !org.sarsoft.tenant && !org.sarsoft.local && imap.registered["org.sarsoft.MapFindWidget"]) imap.registered["org.sarsoft.MapFindWidget"].setState(true);
 
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 }
@@ -1371,6 +1380,10 @@ org.sarsoft.MapObjectDAO.prototype.children = function(obj, type) {
 	return children;
 }
 
+org.sarsoft.MapObjectDAO.prototype.getMaxId = function() {
+	return this.objs.length-1;
+}
+
 org.sarsoft.MapObjectDAO.prototype.dehydrate = function() {
 	return this.objs.filter(function(o) { return o != null});
 }
@@ -2188,6 +2201,7 @@ org.sarsoft.controller.GeoRefController = function(imap, background_load) {
 }
 
 org.sarsoft.controller.GeoRefController.prototype = new org.sarsoft.MapObjectController();
+sarsoft.Controllers["GeoRef"] = [25, org.sarsoft.controller.GeoRefController];
 
 org.sarsoft.controller.GeoRefController.prototype.refreshLayers = function() {
 	sarsoft.map.layers_georef = this.dao.objs.filter(function(o) { return o != null });
@@ -2317,6 +2331,7 @@ org.sarsoft.controller.ConfiguredLayerController = function(imap, background_loa
 }
 
 org.sarsoft.controller.ConfiguredLayerController.prototype = new org.sarsoft.MapObjectController();
+sarsoft.Controllers["ConfiguredLayer"] = [20, org.sarsoft.controller.ConfiguredLayerController];
 
 org.sarsoft.controller.ConfiguredLayerController.prototype.refreshLayers = function() {
 	sarsoft.map.layers_configured = this.dao.objs.filter(function(o) { return o != null });

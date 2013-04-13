@@ -63,6 +63,7 @@ org.sarsoft.ResourceController = function(imap, background_load) {
 }
 
 org.sarsoft.ResourceController.prototype = new org.sarsoft.WaypointObjectController();
+sarsoft.Controllers["Resource"] = [16, org.sarsoft.ResourceController];
 
 org.sarsoft.ResourceController.prototype.growmap = function(obj) {
 	if(obj.position != null) org.sarsoft.WaypointObjectController.prototype.growmap.call(this, obj);
@@ -138,6 +139,7 @@ org.sarsoft.CallsignController = function(imap, background_load) {
 }
 
 org.sarsoft.CallsignController.prototype = new org.sarsoft.WaypointObjectController();
+sarsoft.Controllers["Callsign"] = [17, org.sarsoft.CallsignController];
 
 org.sarsoft.CallsignController.prototype.getConfig = function(obj) {
 	return { icon : "#FF0000", color : "#FF0000" }
