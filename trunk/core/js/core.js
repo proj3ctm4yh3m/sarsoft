@@ -111,7 +111,7 @@ org.sarsoft.SaveAsDialog = function(imap, offline) {
 			$('<input type="hidden" name="lng"/>').appendTo(newform).val(center.lng());
 
 			$('<input type="hidden" name="state"/>').appendTo(newform).val(YAHOO.lang.JSON.stringify(org.sarsoft.MapState.get(imap)));
-			if(that.cb[1][0]) {
+			if(that.cb[1][0].checked) {
 				 $('<input type="hidden" name="oneoff"/>').appendTo(newform).val("true");
 				 $('<input type="hidden" name="password"/>').appendTo(newform).val(pw.val());
 			}
