@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWaypoint;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.Assignment;
@@ -30,8 +31,9 @@ public class ClueController extends AssignmentChildController<Clue> {
 		return new Clue(json);
 	}
 	
-	public Pair<Integer, Clue> fromGPX(JSONObject obj) {
-		return Clue.fromGPX(obj);
+	public Pair<Integer, Clue> fromStyledGeo(StyledGeoObject obj) {
+		if(obj instanceof StyledWaypoint) return Clue.from((StyledWaypoint) obj);
+		return null;
 	}
 	
 	public String getLabel(Clue clue) {

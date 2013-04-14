@@ -23,7 +23,7 @@ import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.UserAccount;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.common.model.Tenant.Permission;
-import org.sarsoft.common.util.GPX;
+import org.sarsoft.common.gpx.GPX;
 import org.sarsoft.common.util.Hash;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.model.CollaborativeMap;
@@ -103,11 +103,11 @@ public class CollaborativeMapController extends JSONBaseController {
 		switch (format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".gpx");
-			return gpx(model, manager.toGPX(manager.fromDB()));
+			return gpx(model, GPX.toGPX(manager.toStyledGeo(manager.fromDB())));
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".kml");
 			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
-			return kml(model, manager.toGPX(manager.fromDB()));
+			return kml(model, GPX.toGPX(manager.toStyledGeo(manager.fromDB())));
 		default :
 			model.addAttribute("preload", manager.toJSON(manager.fromDB()));
 			return app(model, "/collabmap");
@@ -283,18 +283,18 @@ public class CollaborativeMapController extends JSONBaseController {
 		switch(format) {
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=export.gpx");
-			return gpx(model, manager.toGPX(manager.fromJSON(json)));
+			return gpx(model, GPX.toGPX(manager.toStyledGeo(manager.fromJSON(json))));
 		case KML :
 			response.setHeader("Content-Disposition", "attachment; filename=export.kml");
 			response.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
-			return kml(model, manager.toGPX(manager.fromJSON(json)));
+			return kml(model, GPX.toGPX(manager.toStyledGeo(manager.fromJSON(json))));
 		}
 		return "";
 	}
 		
 	@RequestMapping(value="/rest/in", method = RequestMethod.POST)
 	public String upload(JSONForm params, Model model, HttpServletRequest request) {
-		ClientState state = manager.fromGPX(GPX.parse(context, params));
+		ClientState state = manager.fromStyledGeo(GPX.StyledGeo(context, params));
 
 		if(RuntimeProperties.getTenant() != null) {
 			manager.dedupe(state, manager.fromDB());

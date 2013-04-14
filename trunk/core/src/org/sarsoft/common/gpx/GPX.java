@@ -1,7 +1,10 @@
-package org.sarsoft.common.util;
+package org.sarsoft.common.gpx;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.xml.transform.Transformer;
@@ -9,7 +12,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
@@ -22,7 +24,7 @@ public class GPX {
 
 	private static Logger logger = Logger.getLogger(GPX.class);
 
-	public static JSONArray parse(ServletContext sc, JSONForm form) {
+	public static JSONArray JSONArray(ServletContext sc, JSONForm form) {
 		String gpx = form.getFile();
 		if(gpx == null) {
 			JSONObject obj = (JSONObject) JSONSerializer.toJSON(form.getJson());
@@ -47,5 +49,30 @@ public class GPX {
 		}
 	}
 	
+	public static List<StyledGeoObject> StyledGeo(ServletContext sc, JSONForm form) {
+		JSONArray jarray = JSONArray(sc, form);
+		List<StyledGeoObject> sgo = new ArrayList<StyledGeoObject>();
+		
+		Iterator it = jarray.listIterator();
+		while(it.hasNext()) {
+			JSONObject jobject = (JSONObject) it.next();
+			String type = jobject.getString("type");
+			if("waypoint".equals(type)) {
+				sgo.add(new StyledWaypoint(jobject));
+			} else if("track".equals(type) || "route".equals(type)) {
+				sgo.add(new StyledWay(jobject));
+			}
+		}
+		
+		return sgo;
+	}
+	
+	public static JSONArray toGPX(List<StyledGeoObject> items) {
+		JSONArray jarray = new JSONArray();
+		for(StyledGeoObject item : items) {
+			jarray.add(item.toGPX());
+		}
+		return jarray;
+	}
 
 }

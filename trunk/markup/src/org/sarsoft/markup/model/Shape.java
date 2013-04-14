@@ -15,6 +15,8 @@ import javax.persistence.Transient;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.GeoMapObject;
@@ -69,61 +71,30 @@ public class Shape extends GeoMapObject implements IPreSave {
 		}
 	}
 	
-	public JSONObject toGPX() {
-		JSONObject jobj = new JSONObject();
-		jobj.put("type", "route");
-		String label = getLabel();
-		if(label == null || label.length() == 0) label = "-No Name";
-		jobj.put("name", label);
-		jobj.put("color", getColor());
-		jobj.put("weight", getWeight());
-		jobj.put("way", json(getWay()));
-		
-		Map<String, String> attrs = new HashMap<String, String>();
-		attrs.put("color", getColor());
-		attrs.put("weight", Float.toString(getWeight()));
-		attrs.put("fill", Float.toString(getFill()));
-		attrs.put("comments", getComments());
-		
-		jobj.put("desc", encodeGPXAttrs(attrs));		
-		return jobj;
-	}
-	
-	public static Shape fromGPX(JSONObject gpx) {
-		String type = gpx.getString("type");
-		if(!("route".equals(type) || "track".equals(type))) return null;
-
+	public static Shape from(StyledWay sway) {
 		Shape shape = new Shape();
-		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
 		
-		String label = gpx.getString("name");
-		if(label != null && label.startsWith("-")) label = null;
-		shape.setLabel(label);
-		
-		if(gpx.has("way")) {
-			shape.setWay(new Way((JSONObject) gpx.get("way")));
-		} else if(gpx.has("coordinates")) {
-			String[] coordinates = gpx.getString("coordinates").trim().replaceAll("\n", " ").split(" ");
-			List<Waypoint> waypoints = new ArrayList<Waypoint>();
-			for(String coordinate : coordinates) {
-				String[] ll = coordinate.trim().split(",");
-				waypoints.add(new Waypoint(Double.parseDouble(ll[1].trim()), Double.parseDouble(ll[0].trim())));
-			}
-			shape.setWay(new Way());
-			shape.getWay().setWaypoints(waypoints);
-		}
-		List<Waypoint> wpts = shape.getWay().getWaypoints();
-		if("route".equals(type) && wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) shape.getWay().setPolygon(true);
-
-		shape.setColor(attrs.containsKey("color") ? attrs.get("color") : "#FF0000");
-		shape.setWeight(attrs.containsKey("weight") ? Float.parseFloat(attrs.get("weight")) : 2f);
-		shape.setFill(attrs.containsKey("fill") ? Float.parseFloat(attrs.get("fill")) : 0f);
-		shape.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
-		
-		if(gpx.has("color")) shape.setColor('#' + gpx.getString("color").toUpperCase());
-		if(gpx.has("weight")) shape.setWeight(Float.parseFloat(gpx.getString("weight")));
+		shape.setLabel(sway.getName());
+		shape.setWay(sway.getWay());
+		shape.setColor(sway.getColor());
+		shape.setWeight(sway.getWeight());
+		shape.setFill(sway.getFill());
+		shape.setComments(sway.getAttr("comments"));
 
 		return shape;
+	}
+	
+	public StyledGeoObject toStyledGeo() {
+		StyledWay sway = new StyledWay();
+
+		sway.setName(getLabel());
+		sway.setColor(getColor());
+		sway.setWeight(getWeight());
+		sway.setFill(getFill());
+		sway.setWay(getWay());
+		sway.setAttr("comments", getComments());
+		
+		return sway;
 	}
 	
 	@ManyToOne

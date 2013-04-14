@@ -6,10 +6,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 import org.sarsoft.Format;
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.model.GeoMapObject;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,10 +24,10 @@ public abstract class GeoMapObjectController <T extends GeoMapObject> extends Ma
 	
 	public abstract String getLabel(T object);
 	
-	public abstract Pair<Integer, T> fromGPX(JSONObject obj);
+	public abstract Pair<Integer, T> fromStyledGeo(StyledGeoObject obj);
 	
-	public JSONObject toGPX(T obj) {
-		return obj.toGPX();
+	public StyledGeoObject toStyledGeo(T obj) {
+		return obj.toStyledGeo();
 	}
 	
 	public abstract List<T> dedupe(List<T> removeFrom, List<T> checkAgainst);
@@ -42,11 +42,11 @@ public abstract class GeoMapObjectController <T extends GeoMapObject> extends Ma
 			switch (format) {
 			case GPX :
 				response.setHeader("Content-Disposition", "attachment; filename=" + name + "-" + getLabel(obj) + ".gpx");
-				jarray.add(toGPX(obj));
+				jarray.add(toStyledGeo(obj).toGPX());
 				return gpx(model, jarray);
 			default :
 				response.setHeader("Content-Disposition", "attachment; filename=" + name + "-" + getLabel(obj) + ".kml");
-				jarray.add(toGPX(obj));
+				jarray.add(toStyledGeo(obj).toGPX());
 				return kml(model, jarray);
 			}
 		} else {

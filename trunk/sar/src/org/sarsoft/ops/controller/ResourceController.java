@@ -1,6 +1,5 @@
 package org.sarsoft.ops.controller;
 
-import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -8,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.ops.model.Resource;
@@ -35,7 +35,7 @@ public class ResourceController extends AssignmentChildController<Resource> {
 		return new Resource(json);
 	}
 	
-	public Pair<Integer, Resource> fromGPX(JSONObject obj) {
+	public Pair<Integer, Resource> fromStyledGeo(StyledGeoObject obj) {
 		return null;
 	}
 	

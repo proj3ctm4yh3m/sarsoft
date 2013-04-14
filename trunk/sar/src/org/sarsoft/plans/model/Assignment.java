@@ -15,11 +15,13 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.Way;
-import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.model.WayType;
 import org.sarsoft.ops.model.Resource;
 
 import net.sf.json.JSONObject;
@@ -108,37 +110,31 @@ public class Assignment extends GeoMapObject {
 		}
 	}
 	
-	public JSONObject toGPX() {
-		return null;
-	}
-	
-	public static Pair<Integer, Assignment> fromGPX(JSONObject gpx) {
-		String type = gpx.getString("type");
-		if(!"route".equals(type)) return null;
-		if(!gpx.has("way")) return null;
+	public static Pair<Integer, Assignment> from(StyledWay sway) {
+		if(sway.getWay() == null || sway.getWay().getType() != WayType.ROUTE) return null;
 		
 		int confidence = 1;
 		Assignment assignment = new Assignment();
-		
-		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
-		if(attrs.containsKey("details")) assignment.setDetails(attrs.get("details"));
-		if(attrs.containsKey("resourceType")) assignment.setResourceType(ResourceType.valueOf(attrs.get("resourceType")));
-		if(attrs.containsKey("status")) assignment.setStatus(Status.valueOf(attrs.get("status")));
-		if(attrs.containsKey("timeAllocated")) assignment.setTimeAllocated(Double.parseDouble(attrs.get("timeAllocated")));
-		if(attrs.containsKey("previousEfforts")) assignment.setPreviousEfforts(attrs.get("previousEfforts"));
-		if(attrs.containsKey("transportation")) assignment.setTransportation(attrs.get("transportation"));
-		if(attrs.containsKey("responsivePOD")) assignment.setResponsivePOD(Probability.valueOf(attrs.get("responsivePOD")));
-		if(attrs.containsKey("unresponsivePOD")) assignment.setUnresponsivePOD(Probability.valueOf(attrs.get("unresponsivePOD")));
-		if(attrs.containsKey("cluePOD")) assignment.setCluePOD(Probability.valueOf(attrs.get("cluePOD")));
-		if(attrs.containsKey("updated")) assignment.setUpdated(new Date(Long.parseLong(attrs.get("updated"))));
-		if(attrs.containsKey("preparedOn")) assignment.setPreparedOn(new Date(Long.parseLong(attrs.get("preparedOn"))));
-		if(attrs.containsKey("preparedBy")) assignment.setPreparedBy(attrs.get("preparedBy"));
-		if(attrs.containsKey("primaryFrequency")) assignment.setPrimaryFrequency(attrs.get("primaryFrequency"));
-		if(attrs.containsKey("secondaryFrequency")) assignment.setSecondaryFrequency(attrs.get("secondaryFrequency"));
-		if(attrs.containsKey("operationalPeriodId")) assignment.setOperationalPeriodId(Long.parseLong(attrs.get("operationalPeriodId")));
+		assignment.setSegment(sway.getWay());
+
+		assignment.setDetails(sway.getAttr("details"));
+		if(sway.hasAttr("resourceType")) assignment.setResourceType(ResourceType.valueOf(sway.getAttr("resourceType")));
+		if(sway.hasAttr("status")) assignment.setStatus(Status.valueOf(sway.getAttr("status")));
+		assignment.setTimeAllocated(Double.parseDouble(sway.getAttr("timeAllocated")));
+		assignment.setPreviousEfforts(sway.getAttr("previousEfforts"));
+		assignment.setTransportation(sway.getAttr("transportation"));
+		if(sway.hasAttr("responsivePOD")) assignment.setResponsivePOD(Probability.valueOf(sway.getAttr("responsivePOD")));
+		if(sway.hasAttr("unresponsivePOD")) assignment.setUnresponsivePOD(Probability.valueOf(sway.getAttr("unresponsivePOD")));
+		if(sway.hasAttr("cluePOD")) assignment.setCluePOD(Probability.valueOf(sway.getAttr("cluePOD")));
+		if(sway.hasAttr("updated")) assignment.setUpdated(new Date(Long.parseLong(sway.getAttr("updated"))));
+		if(sway.hasAttr("preparedOn")) assignment.setPreparedOn(new Date(Long.parseLong(sway.getAttr("preparedOn"))));
+		assignment.setPreparedBy(sway.getAttr("preparedBy"));
+		assignment.setPrimaryFrequency(sway.getAttr("primaryFrequency"));
+		assignment.setSecondaryFrequency(sway.getAttr("secondaryFrequency"));
+		if(sway.hasAttr("operationalPeriodId")) assignment.setOperationalPeriodId(Long.parseLong(sway.getAttr("operationalPeriodId")));
 
 		Long parsed = null;
-		String name = gpx.getString("name");
+		String name = sway.getName();
 		try {
 			if(name != null) parsed = Long.parseLong(name);
 		} catch (NumberFormatException e) {}
@@ -150,13 +146,21 @@ public class Assignment extends GeoMapObject {
 		} else {
 			assignment.setNumber(name);
 		}		
-		if(assignment.getResourceType() != null) confidence = 100;
-		
-		assignment.setSegment(new Way((JSONObject) gpx.get("way")));
-		List<Waypoint> wpts = assignment.getSegment().getWaypoints();
-		if( wpts.size() > 2 && wpts.get(0).equals(wpts.get(wpts.size() - 1))) assignment.getSegment().setPolygon(true);
+		if(assignment.getResourceType() != null) confidence = 100;		
 		
 		return new Pair<Integer, Assignment>(confidence, assignment);
+	}
+
+	public StyledGeoObject toStyledGeo() {
+		StyledWay sway = new StyledWay();
+
+		sway.setName(getNumber());
+		sway.setColor("#FF0000");
+		sway.setWeight(2f);
+		sway.setFill(0.3f);
+		sway.setWay(getSegment());
+		
+		return sway;
 	}
 
 	@ManyToOne

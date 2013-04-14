@@ -11,9 +11,12 @@ import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.Way;
+import org.sarsoft.common.model.WayType;
 
 @JSONAnnotatedEntity
 @Entity
@@ -55,33 +58,35 @@ public class FieldTrack extends AssignmentChildObject {
 		}
 	}
 
-	public JSONObject toGPX() {
-		return null;
-	}
-	
-	public static Pair<Integer, FieldTrack> fromGPX(JSONObject gpx) {
-		String type = gpx.getString("type");
-		if(!"track".equals(type)) return null;
-		if(!gpx.has("way")) return null;
+	public static Pair<Integer, FieldTrack> from(StyledWay sway) {
+		if(sway.getWay() == null || sway.getWay().getType() != WayType.TRACK) return null;
 		
 		int confidence = 1;
 		FieldTrack track = new FieldTrack();
-		
-		String label = gpx.getString("name");
-		track.setLabel(label);
+		track.setWay(sway.getWay());
+		track.setLabel(sway.getName());
 		
 		try {
-			Long.parseLong(label.substring(0, 5));
-			track.setLabel(gpx.getString("desc"));
+			Long.parseLong(sway.getName().substring(0, 5));
+			track.setLabel(sway.getDesc());
 			confidence = 100;
-			track.setAssignmentId(Long.parseLong(label.substring(2, 5)));
+			track.setAssignmentId(Long.parseLong(sway.getName().substring(2, 5)));
 		} catch (Exception e) {}
-
-		if(track.getLabel() != null && track.getLabel().startsWith("-")) track.setLabel(null);
-		track.setWay(new Way((JSONObject) gpx.get("way")));
 
 		if(track.getWay().getWaypoints().size() < 2) return null;
 		return new Pair<Integer, FieldTrack>(confidence, track);
+	}
+
+	public StyledGeoObject toStyledGeo() {
+		StyledWay sway = new StyledWay();
+
+		sway.setName(getLabel());
+		sway.setColor("#FF0000");
+		sway.setWeight(2f);
+		sway.setFill(0f);
+		sway.setWay(getWay());
+		
+		return sway;
 	}
 
 	@ManyToOne

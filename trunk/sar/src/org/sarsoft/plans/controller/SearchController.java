@@ -19,7 +19,7 @@ import org.sarsoft.plans.Action;
 import org.sarsoft.Format;
 import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.common.util.GPX;
+import org.sarsoft.common.gpx.GPX;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.ops.controller.OpsController;
 import org.sarsoft.plans.SearchAssignmentGPXHelper;
@@ -204,13 +204,13 @@ public class SearchController extends JSONBaseController {
 		Object obj;
 		switch(format) {
 		case GPX :
-			obj = GPX.parse(context, params);
+//			obj = GPX.parse(context, params);
 			break;
 		default :
 			obj = params.JSON();
 		}
 
-		SearchAssignmentGPXHelper.updateSearch((JSONObject) obj, dao);
+//		SearchAssignmentGPXHelper.updateSearch((JSONObject) obj, dao);
 
 		try {
 			response.sendRedirect("/plans");

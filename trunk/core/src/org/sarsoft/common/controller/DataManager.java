@@ -1,5 +1,6 @@
 package org.sarsoft.common.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +15,7 @@ import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.Pair;
 import org.sarsoft.common.dao.GenericHibernateDAO;
+import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.model.ClientState;
 import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.Tenant;
@@ -138,29 +140,25 @@ public class DataManager {
 		if(state.getMapLayers() != null) m.put("MapLayers", state.getMapLayers().split(","));
 		return JSONAnnotatedPropertyFilter.fromObject(m);
 	}
-		
-	
-	public JSONArray toGPX(ClientState state) {
-		JSONArray jarray = new JSONArray();
+
+	public List<StyledGeoObject> toStyledGeo(ClientState state) {
+		List<StyledGeoObject> items = new ArrayList<StyledGeoObject>();
 		for(String type : state.types()) {
 			GeoMapObjectController controller = getGeoController(type);
 			if(controller != null) for(MapObject object : state.get(type)) {
-				jarray.add(controller.toGPX((GeoMapObject) object));
+				items.add(controller.toStyledGeo((GeoMapObject) object));
 			}
 		}
-		
-		return jarray;
+		return items;
 	}
-	
-	public ClientState fromGPX(JSONArray gpx) {
+
+	public ClientState fromStyledGeo(List<StyledGeoObject> items) {
 		ClientState state = new ClientState();
-		Iterator it = gpx.listIterator();
-		while(it.hasNext()) {
-			JSONObject jobject = (JSONObject) it.next();
+		for(StyledGeoObject item : items) {
 			Pair<String, Pair<Integer, GeoMapObject>> best = null;
 			for(String key : getGeoDataTypes()) {
 				try {
-					Pair<Integer, GeoMapObject> pair = this.getGeoController(key).fromGPX(jobject);
+					Pair<Integer, GeoMapObject> pair = this.getGeoController(key).fromStyledGeo(item);
 					if(pair != null && (best == null || pair.getFirst() > best.getSecond().getFirst())) best = new Pair<String, Pair<Integer, GeoMapObject>>(key, pair);
 				} catch (Exception e) { }
 			}

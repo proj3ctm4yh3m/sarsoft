@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.json.JSONObject;
 
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWaypoint;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.plans.model.Assignment;
 import org.sarsoft.plans.model.FieldWaypoint;
@@ -28,8 +30,9 @@ public class FieldWaypointController extends AssignmentChildController<FieldWayp
 		return new FieldWaypoint(json);
 	}
 	
-	public Pair<Integer, FieldWaypoint> fromGPX(JSONObject obj) {
-		return FieldWaypoint.fromGPX(obj);
+	public Pair<Integer, FieldWaypoint> fromStyledGeo(StyledGeoObject obj) {
+		if(obj instanceof StyledWaypoint) return FieldWaypoint.from((StyledWaypoint) obj);
+		return null;
 	}
 	
 	public String getLabel(FieldWaypoint fwpt) {
