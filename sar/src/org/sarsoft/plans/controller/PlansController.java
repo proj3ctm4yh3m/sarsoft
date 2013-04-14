@@ -1,21 +1,23 @@
 package org.sarsoft.plans.controller;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.sarsoft.PDFForm;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.gpx.StyledWaypoint;
-import org.sarsoft.common.model.ClientState;
 import org.sarsoft.common.util.Datum;
+import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.imaging.IPDFMaker;
 import org.sarsoft.imaging.PDFDoc;
 import org.sarsoft.imaging.PDFPage;
@@ -50,6 +52,47 @@ public class PlansController extends JSONBaseController {
 		Assignment assignment = dao.load(Assignment.class, id);
 		model.addAttribute("assignment", assignment);
 		return app(model, "Assignment.PrintForms");
+	}
+	
+	@SuppressWarnings("deprecation")
+	@RequestMapping(value="/sar104", method = RequestMethod.GET)
+	public void getAssignmentForms(Model model, HttpServletResponse response) {
+		List<Assignment> assignments = dao.loadAll(Assignment.class);
+		List<PDFForm> pages = new ArrayList<PDFForm>();
+		for(Assignment assignment : assignments) {
+			Map<String, String> fields = new HashMap<String, String>();
+			fields.put("incident_name", RuntimeProperties.getTenant());
+			if(assignment.getOperationalPeriod() != null) fields.put("operational_period", assignment.getOperationalPeriod().getDescription());
+			fields.put("assignment_number", assignment.getNumber());
+			fields.put("resource_type", "" + assignment.getResourceType());
+			fields.put("asgn_description", "\n" + assignment.getDetails());
+			fields.put("previous_search_effort", assignment.getPreviousEfforts());
+			fields.put("time_allocated", assignment.getTimeAllocated() + " hours");
+			fields.put("size_of_assignment", assignment.getSegment().getFormattedSize());
+			fields.put("POD_" + assignment.getResponsivePOD().toString().toLowerCase().substring(0,1) + "_responsive", "X");
+			fields.put("POD_" + assignment.getUnresponsivePOD().toString().toLowerCase().substring(0,1) + "_unresponsive", "X");
+			fields.put("POD_" + assignment.getCluePOD().toString().toLowerCase().substring(0,1) + "_clues", "X");
+			fields.put("transport_instructions", assignment.getTransportation());
+			fields.put("freq_command", assignment.getPrimaryFrequency());
+			fields.put("freq_tactical", assignment.getSecondaryFrequency());
+			fields.put("prepared_by", assignment.getPreparedBy());
+			if(assignment.getPreparedOn() != null) fields.put("prepared_on", assignment.getPreparedOn().toGMTString());
+			fields.put("personnel_function_2", "M");
+			fields.put("personnel_function_3", "*");
+			pages.add(new PDFForm("sar104", fields));
+		}
+		
+		response.setContentType("application/pdf");
+		response.setHeader("Cache-Control", "max-age=432000, public");
+		try {
+			PDDocument document = PDFForm.create(context, pages);
+			document.save(response.getOutputStream());
+			document.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO handle
+		}
+		PDFForm.close(pages);
 	}
 
 	@RequestMapping(value="/bulk", method = RequestMethod.GET)

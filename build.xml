@@ -51,6 +51,7 @@
 			<fileset dir="core/jsp"/>
 			<fileset dir="markup/jsp"/>
 			<fileset dir="sar/jsp"/>
+			<fileset dir="sar/pdf"/>
 			<fileset dir="server/jsp"/>
 			<zipfileset dir="core/config" prefix="WEB-INF">
 			</zipfileset>

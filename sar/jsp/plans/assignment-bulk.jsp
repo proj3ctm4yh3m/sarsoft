@@ -10,7 +10,7 @@
 </div>
 
 <div style="margin-top: 20px">
-<a href="javascript:submitbulkprint()">Print These Assignments</a><a href="javscript:submitbulkpdf()">Print These Assignments to PDF</a><a style="margin-left: 20px" href="javascript:$('#bulkupdate').css('display', 'block')">Update These Assignments</a>
+<a href="javascript:submitbulkprint()">Print These Assignments</a><a href="javascript:submitbulkpdf()">Print These Assignments to PDF</a><a style="margin-left: 20px" href="javascript:$('#bulkupdate').css('display', 'block')">Update These Assignments</a>
 </div>
 
 <div id="bulkupdate" style="display: none; margin-top: 40px">
