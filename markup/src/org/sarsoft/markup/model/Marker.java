@@ -13,6 +13,8 @@ import net.sf.json.JSONObject;
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.IPreSave;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWaypoint;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.Waypoint;
@@ -51,45 +53,27 @@ public class Marker extends GeoMapObject {
 		}
 	}
 	
-	public static Marker fromGPX(JSONObject gpx) {
-		String type = gpx.getString("type");
-		if(!"waypoint".equals(type)) return null;
-
+	public static Marker from(StyledWaypoint swpt) {
 		Marker marker = new Marker();
-		String label = gpx.getString("name");
-		if(label != null && label.startsWith("-")) label = null;
-		marker.setLabel(label);
-		marker.setPosition(new Waypoint((JSONObject) gpx.get("position")));
 
-		Map<String, String> attrs = decodeGPXAttrs(gpx.getString("desc"));
-		marker.setUrl(attrs.containsKey("url") ? attrs.get("url") : "#FF0000");
-		marker.setComments(attrs.containsKey("comments") ? attrs.get("comments") : null);
+		marker.setLabel(swpt.getName());
+		marker.setPosition(swpt.getWaypoint());
+		marker.setUrl(swpt.getIcon());
+		marker.setComments(swpt.getAttr("comments"));
 		
-		if(gpx.containsKey("url")) {
-			String url = gpx.getString("url");
-			if(url.startsWith("http://caltopo")) url = url.replaceAll("http://caltopo.com/resource/imagery/icons/circle/", "#").replaceAll("http://caltopo.com/static/images/icons/", "").replaceAll(".png", "");
-			marker.setUrl(url);
-		}
-
 		return marker;
 	}
 	
-	public JSONObject toGPX() {
-		JSONObject jobj = new JSONObject();
-		jobj.put("type", "waypoint");
-		String label = getLabel();
-		if(label == null || label.length() == 0) label = "-No Name";
-		jobj.put("name", label);
-		jobj.put("icon", getUrl());
-		jobj.put("position", json(getPosition()));
-		
-		Map<String, String> attrs = new HashMap<String, String>();
-		attrs.put("url", getUrl());
-		attrs.put("comments", getComments());
-		
-		jobj.put("desc", encodeGPXAttrs(attrs));
-		
-		return jobj;
+	public StyledGeoObject toStyledGeo() {
+		StyledWaypoint swpt = new StyledWaypoint();
+
+		swpt.setName(getLabel());
+		swpt.setIcon(getUrl());
+		swpt.setWaypoint(getPosition());
+		swpt.setAttr("url", getUrl());
+		swpt.setAttr("comments", getComments());
+
+		return swpt;
 	}
 
 	@ManyToOne

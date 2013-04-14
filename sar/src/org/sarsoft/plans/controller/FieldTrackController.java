@@ -7,6 +7,8 @@ import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
@@ -30,8 +32,9 @@ public class FieldTrackController extends AssignmentChildController<FieldTrack> 
 		return new FieldTrack(json);
 	}
 	
-	public Pair<Integer, FieldTrack> fromGPX(JSONObject obj) {
-		return FieldTrack.fromGPX(obj);
+	public Pair<Integer, FieldTrack> fromStyledGeo(StyledGeoObject obj) {
+		if(obj instanceof StyledWay) return FieldTrack.from((StyledWay) obj);
+		return null;
 	}
 	
 	public String getLabel(FieldTrack track) {

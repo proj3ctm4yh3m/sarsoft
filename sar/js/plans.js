@@ -289,7 +289,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 	this.parentController.childControllers["Assignment"] = this;
 	this.config = { show : "NA", color: "NA" }
 
-	org.sarsoft.WayObjectController.call(this, imap, {name: "Assignment", dao: org.sarsoft.AssignmentDAO, label: "Assignments", geo: true, way : "segment"})
+	org.sarsoft.WayObjectController.call(this, imap, {name: "Assignment", dao: org.sarsoft.AssignmentDAO, label: "Assignments", geo: true, way : "segment"}, background_load);
 
 	this.childDlg = new org.sarsoft.AssignmentChildDialog(imap, this);
 	

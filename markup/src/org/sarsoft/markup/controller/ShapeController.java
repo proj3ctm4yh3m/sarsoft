@@ -10,6 +10,8 @@ import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.Pair;
 import org.sarsoft.common.controller.GeoMapObjectController;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
@@ -32,9 +34,12 @@ public class ShapeController extends GeoMapObjectController<Shape> {
 		return new Shape(json);
 	}
 	
-	public Pair<Integer, Shape> fromGPX(JSONObject obj) {
-		Shape shape = Shape.fromGPX(obj);
-		return shape == null ? null : new Pair<Integer, Shape>(10, shape);
+	public Pair<Integer, Shape> fromStyledGeo(StyledGeoObject obj) {
+		if(obj instanceof StyledWay) {
+			Shape shape = Shape.from((StyledWay) obj);
+			return shape == null ? null : new Pair<Integer, Shape>(10, shape);
+		}
+		return null;
 	}
 
 	public String getLabel(Shape shape) {

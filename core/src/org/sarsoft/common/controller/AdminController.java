@@ -264,7 +264,7 @@ public class AdminController extends JSONBaseController {
 	
 	@RequestMapping(value="/about.html", method = RequestMethod.GET)
 	public String about(Model model) {
-		return app(model, "Pages.ABout");
+		return app(model, "Pages.About");
 	}
 	
 }

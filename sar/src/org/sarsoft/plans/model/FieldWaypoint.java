@@ -7,6 +7,8 @@ import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
 import org.sarsoft.common.Pair;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWaypoint;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.Waypoint;
@@ -41,32 +43,32 @@ public class FieldWaypoint extends AssignmentChildObject {
 		}
 	}
 	
-	public JSONObject toGPX() {
-		return null;
-	}
-	
-	public static Pair<Integer, FieldWaypoint> fromGPX(JSONObject gpx) {
-		String type = gpx.getString("type");
-		if(!"waypoint".equals(type)) return null;
-		if(!gpx.has("position")) return null;
+	public static Pair<Integer, FieldWaypoint> from(StyledWaypoint swpt) {
+		if(swpt.getWaypoint() == null) return null;
 		
 		int confidence = 1;
 		FieldWaypoint fwpt = new FieldWaypoint();
-
-		String label = gpx.getString("name");
-		fwpt.setLabel(label);
+		fwpt.setPosition(swpt.getWaypoint());
+		fwpt.setLabel(swpt.getName());
 		
 		try {
-			Long.parseLong(label.substring(0, 5));
-			fwpt.setLabel(gpx.getString("desc"));
+			Long.parseLong(swpt.getName().substring(0, 5));
+			fwpt.setLabel(swpt.getDesc());
 			confidence = 100;
-			fwpt.setAssignmentId(Long.parseLong(label.substring(2, 5)));
+			fwpt.setAssignmentId(Long.parseLong(swpt.getName().substring(2, 5)));
 		} catch (Exception e) {}
 
-		if(fwpt.getLabel() != null && fwpt.getLabel().startsWith("-")) fwpt.setLabel(null);
-		fwpt.setPosition(new Waypoint((JSONObject) gpx.get("position")));
-
 		return new Pair<Integer, FieldWaypoint>(confidence, fwpt);
+	}
+
+	public StyledGeoObject toStyledGeo() {
+		StyledWaypoint swpt = new StyledWaypoint();
+
+		swpt.setName(getLabel());
+		swpt.setIcon("#FF0000");
+		swpt.setWaypoint(getPosition());
+
+		return swpt;
 	}
 
 	@ManyToOne

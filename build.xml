@@ -10,7 +10,7 @@
 		<path id="local.source.path">
 			<pathelement location="core/src"/>
 			<pathelement location="markup/src"/>
-			<pathelement location="search/src"/>
+			<pathelement location="sar/src"/>
 			<pathelement location="server/src"/>
 		</path>
 	</target>

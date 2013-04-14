@@ -9,6 +9,8 @@ import net.sf.json.JSONObject;
 
 import org.sarsoft.common.Pair;
 import org.sarsoft.common.controller.GeoMapObjectController;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWaypoint;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.markup.model.Marker;
 import org.springframework.stereotype.Controller;
@@ -29,9 +31,12 @@ public class MarkerController extends GeoMapObjectController<Marker> {
 		return new Marker(json);
 	}
 
-	public Pair<Integer, Marker> fromGPX(JSONObject obj) {
-		Marker marker = Marker.fromGPX(obj);
-		return marker == null ? null : new Pair<Integer, Marker>(10, marker);
+	public Pair<Integer, Marker> fromStyledGeo(StyledGeoObject obj) {
+		if(obj instanceof StyledWaypoint) {
+			Marker marker = Marker.from((StyledWaypoint) obj);
+			return marker == null ? null : new Pair<Integer, Marker>(10, marker);
+		}
+		return null;
 	}
 
 	public String getLabel(Marker marker) {

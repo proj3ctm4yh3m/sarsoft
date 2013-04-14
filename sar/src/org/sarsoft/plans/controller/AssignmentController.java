@@ -2,7 +2,6 @@ package org.sarsoft.plans.controller;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -16,11 +15,14 @@ import net.sf.json.JSONSerializer;
 import org.sarsoft.common.Pair;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.GeoMapObjectController;
+import org.sarsoft.common.gpx.GPX;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWay;
+import org.sarsoft.common.gpx.StyledWaypoint;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.ClientState;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.common.util.GPX;
 import org.sarsoft.plans.Action;
 import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.FieldTrack;
@@ -58,8 +60,9 @@ public class AssignmentController extends GeoMapObjectController<Assignment> {
 		return new Assignment(json);
 	}
 	
-	public Pair<Integer, Assignment> fromGPX(JSONObject obj) {
-		return Assignment.fromGPX(obj);
+	public Pair<Integer, Assignment> fromStyledGeo(StyledGeoObject obj) {
+		if(obj instanceof StyledWay) return Assignment.from((StyledWay) obj);
+		return null;
 	}
 	
 	public String getLabel(Assignment assignment) {
@@ -76,8 +79,10 @@ public class AssignmentController extends GeoMapObjectController<Assignment> {
 		}
 		if(period == null && id != null) {
 			period = dao.load(OperationalPeriod.class, id);
-			period.addAssignment(assignment);
-			dao.save(period);
+			if(period != null) {
+				period.addAssignment(assignment);
+				dao.save(period);
+			}
 		}
 	}
 	
@@ -154,22 +159,24 @@ public class AssignmentController extends GeoMapObjectController<Assignment> {
 	
 	@RequestMapping(value = "/{id}/in", method = RequestMethod.POST)
 	public String loadTracks(Model model, JSONForm params, @PathVariable("id") long id, HttpServletRequest request) {
-		JSONArray gpx = GPX.parse(context, params);
+		List<StyledGeoObject> items = GPX.StyledGeo(context, params);
 		ClientState state = new ClientState();
 
-		Iterator it = gpx.listIterator();
-		while(it.hasNext()) {
-			JSONObject jobject = (JSONObject) it.next();
-			Pair<Integer, FieldWaypoint> pfwpt = FieldWaypoint.fromGPX(jobject);
-			Pair<Integer, FieldTrack> ptrack = FieldTrack.fromGPX(jobject);
-			if(pfwpt != null) {
-				FieldWaypoint fwpt = pfwpt.getSecond();
-				fwpt.setAssignmentId(id);
-				state.add("FieldWaypoint", fwpt);
-			} else if(ptrack != null) {
-				FieldTrack track = ptrack.getSecond();
-				track.setAssignmentId(id);
-				state.add("FieldTrack", track);
+		for(StyledGeoObject item : items) {
+			if(item instanceof StyledWaypoint) {
+				Pair<Integer, FieldWaypoint> pfwpt = FieldWaypoint.from((StyledWaypoint) item);
+				if(pfwpt != null) {
+					FieldWaypoint fwpt = pfwpt.getSecond();
+					fwpt.setAssignmentId(id);
+					state.add("FieldWaypoint", fwpt);
+				}
+			} else {
+				Pair<Integer, FieldTrack> ptrack = FieldTrack.from((StyledWay) item);
+				if(ptrack != null) {
+					FieldTrack track = ptrack.getSecond();
+					track.setAssignmentId(id);
+					state.add("FieldWaypoint", track);
+				}
 			}
 		}
 

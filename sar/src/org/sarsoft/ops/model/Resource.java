@@ -1,7 +1,6 @@
 package org.sarsoft.ops.model;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.OneToOne;
@@ -10,6 +9,7 @@ import javax.persistence.Transient;
 import net.sf.json.JSONObject;
 
 import org.hibernate.annotations.Cascade;
+import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.json.JSONAnnotatedEntity;
 import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.Waypoint;
@@ -60,10 +60,9 @@ public class Resource extends AssignmentChildObject {
 		}
 	}
 	
-	public JSONObject toGPX() {
+	public StyledGeoObject toStyledGeo() {
 		return null;
 	}
-
 	
 	@JSONSerializable
 	public String getName() {
