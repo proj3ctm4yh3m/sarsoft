@@ -10,7 +10,7 @@
 </div>
 
 <div style="margin-top: 20px">
-<a href="javascript:submitbulkprint()">Print These Assignments</a><a style="margin-left: 20px" href="javascript:$('#bulkupdate').css('display', 'block')">Update These Assignments</a>
+<a href="javascript:submitbulkprint()">Print These Assignments</a><a href="javscript:submitbulkpdf()">Print These Assignments to PDF</a><a style="margin-left: 20px" href="javascript:$('#bulkupdate').css('display', 'block')">Update These Assignments</a>
 </div>
 
 <div id="bulkupdate" style="display: none; margin-top: 40px">
@@ -123,5 +123,19 @@ function submitbulkprint() {
 		window.location="/bulkprint?ids=" + value;
 	}
 }
+
+function submitbulkpdf() {
+	var data = datatable.getSelectedData();
+	if(data.length == 0) {
+		alert("Please select at least one assignment to print.");
+	} else {
+		var value = "";
+		for(var i = 0; i < data.length; i++) {
+			value = value + data[i].id + ",";
+		}
+		window.open('/bulkpdf?ids=' + value, '_blank');
+	}
+}
+
 </script>
 
