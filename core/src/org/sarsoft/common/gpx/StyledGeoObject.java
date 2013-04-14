@@ -75,21 +75,21 @@ public abstract class StyledGeoObject {
 		JSONObject jobj = new JSONObject();
 		jobj.put("name", (name == null || name.length() == 0 ? "-No Name" : name));
 
-		if(attrs.size() > 0) {
-			StringBuffer encoded = new StringBuffer();
-			for(String key : attrs.keySet()) {
-				String value = attrs.get(key);
-				if(value != null) {
-					encoded.append(key);
-					encoded.append("=");
-					try {
-						encoded.append(URLEncoder.encode(value, "UTF-8"));
-					} catch (UnsupportedEncodingException e) {
-						System.out.println("UnsupportedEncodingException while trying to URLEncode gpx attrs.  This should never, ever happen as Java explicity advises you to use UTF-8.");
-					}
-					encoded.append("&");
+		StringBuffer encoded = new StringBuffer();
+		for(String key : attrs.keySet()) {
+			String value = attrs.get(key);
+			if(value != null) {
+				encoded.append(key);
+				encoded.append("=");
+				try {
+					encoded.append(URLEncoder.encode(value, "UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					System.out.println("UnsupportedEncodingException while trying to URLEncode gpx attrs.  This should never, ever happen as Java explicity advises you to use UTF-8.");
 				}
+				encoded.append("&");
 			}
+		}
+		if(encoded.length() > 0) {
 			encoded.deleteCharAt(encoded.length() - 1);
 			jobj.put("desc", encoded.toString());
 		}

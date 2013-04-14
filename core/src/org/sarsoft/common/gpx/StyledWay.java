@@ -81,7 +81,7 @@ public class StyledWay extends StyledGeoObject {
 	@Override
 	public JSONObject toGPX() {
 		JSONObject jobject = super.toGPX();
-		jobject.put("type", (way.getType() != null ? way.getType() : WayType.ROUTE));
+		jobject.put("type", (way.getType() != null ? way.getType() : WayType.ROUTE).toString().toLowerCase());
 		jobject.put("color", getColor());
 		jobject.put("weight", getWeight());
 		jobject.put("fill", getFill());
