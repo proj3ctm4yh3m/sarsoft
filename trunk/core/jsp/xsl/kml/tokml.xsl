@@ -10,6 +10,9 @@
 	<xsl:for-each select="json:e[json:type='route']">
 		<xsl:call-template name="route"/>
 	</xsl:for-each>
+	<xsl:for-each select="json:e[json:type='track']">
+		<xsl:call-template name="route"/>
+	</xsl:for-each>
 	<xsl:for-each select="json:e[json:type='waypoint']">
 		<xsl:call-template name="waypoint"/>
 	</xsl:for-each>
