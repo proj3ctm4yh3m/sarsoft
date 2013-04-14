@@ -1,12 +1,29 @@
 package org.sarsoft.plans.controller;
 
-import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.pdfbox.exceptions.COSVisitorException;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.JSONBaseController;
+import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.gpx.StyledWay;
+import org.sarsoft.common.gpx.StyledWaypoint;
 import org.sarsoft.common.model.ClientState;
+import org.sarsoft.common.util.Datum;
+import org.sarsoft.imaging.IPDFMaker;
+import org.sarsoft.imaging.PDFDoc;
+import org.sarsoft.imaging.PDFPage;
 import org.sarsoft.plans.Action;
 import org.sarsoft.plans.model.Assignment;
+import org.sarsoft.plans.model.Clue;
+import org.sarsoft.plans.model.FieldTrack;
+import org.sarsoft.plans.model.FieldWaypoint;
 import org.sarsoft.plans.model.OperationalPeriod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,6 +38,9 @@ public class PlansController extends JSONBaseController {
 	
 	@Autowired
 	DataManager manager;
+	
+	@Autowired(required=false)
+	IPDFMaker pdfmaker;
 	
 	@Autowired
 	AssignmentController assignmentController;
@@ -73,6 +93,45 @@ public class PlansController extends JSONBaseController {
 		model.addAttribute("preload", manager.toJSON(manager.fromDB()));
 		if(ids != null) model.addAttribute("ids", ids);
 		return app(model, "Assignment.PrintBulk");
+	}
+	
+	@RequestMapping(value="/bulkpdf", method = RequestMethod.GET)
+	public void bulkPDF(Model model, HttpServletRequest request, @RequestParam(value="ids", required=true) String idstr, HttpServletResponse response) {
+		String[] ids = idstr.split(",");
+		try {
+			PDFDoc doc = new PDFDoc(Datum.WGS84, new String[] { "t" }, new float[] { 1f }, new boolean[] { true, false });
+			PDFPage[] pages = new PDFPage[ids.length];
+			for(int i = 0; i < ids.length; i++) {
+				Assignment assignment = dao.load(Assignment.class, Long.parseLong(ids[i]));
+				List<StyledGeoObject> markup = new ArrayList<StyledGeoObject>();
+				markup.add(assignment.toStyledGeo());
+				for(Clue clue : assignment.getClues()) {
+					markup.add(clue.toStyledGeo());
+				}
+				for(FieldTrack track : assignment.getFieldTracks()) {
+					StyledWay sway = (StyledWay) track.toStyledGeo();
+					sway.setColor("#FF8800");
+				}
+				for(FieldWaypoint fwpt : assignment.getFieldWaypoints()) {
+					StyledWaypoint swpt = (StyledWaypoint) fwpt.toStyledGeo();
+					swpt.setIcon("#FF8800");
+				}
+				
+				pages[i] = pdfmaker.makePage(doc, assignment.getNumber(), markup.toArray(new StyledGeoObject[markup.size()]), new float[] { 8.5f, 11f }, 24000);
+				
+			}
+			
+			response.setContentType("application/pdf");
+			response.setHeader("Cache-Control", "max-age=432000, public");
+			PDDocument document = pdfmaker.create(pages, false);
+			document.save(response.getOutputStream());
+			document.close();
+			return;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+	// TODO handle error conditon or pdfmaker null
 	}
 
 }
