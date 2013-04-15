@@ -30,7 +30,6 @@ import org.sarsoft.plans.model.OperationalPeriod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,7 +48,7 @@ public class PlansController extends JSONBaseController {
 
 	@SuppressWarnings("deprecation")
 	@RequestMapping(value="/sar/104", method = RequestMethod.GET)
-	public String getAssignmentForms(Model model, @RequestParam(value="ids", required=false) String ids, HttpServletResponse response) {
+	public String get104(Model model, @RequestParam(value="ids", required=false) String ids, HttpServletResponse response) {
 		List<Assignment> assignments = new ArrayList<Assignment>();
 		if(ids != null && ids.length() > 0) {
 			for(String id : ids.split(",")) assignments.add(dao.load(Assignment.class, Long.parseLong(id)));
@@ -89,14 +88,29 @@ public class PlansController extends JSONBaseController {
 		}
 	}
 
+	@RequestMapping(value="/sar/134", method = RequestMethod.GET)
+	public String get134(Model model, HttpServletResponse response) {
+		List<Clue> clues = dao.loadAll(Clue.class);
+		List<String[]> rows = new ArrayList<String[]>();
+
+		rows.add(new String[] { "Clue #", "Item Found", "Team", "Location of Find" });
+		for(Clue clue : clues) {
+			rows.add(new String[] { clue.getSummary(), clue.getDescription(), (clue.getAssignment() != null ? clue.getAssignment().getNumber() : ""), clue.getPosition().getFormattedUTM() });
+		}
+		
+		return csv(model, rows, response);
+	}
+	
+	
 	@RequestMapping(value="/sar/bulk", method = RequestMethod.GET)
-	public String bulkOperations(Model model) {
+	public String getBulk(Model model, @RequestParam(value="op", required=false) String op) {
+		if(op != null) model.addAttribute("period", dao.load(OperationalPeriod.class, Long.parseLong(op)));
 		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
 		return app(model, "Assignment.Bulk");
 	}
 	
 	@RequestMapping(value="/sar/bulk", method = RequestMethod.POST)
-	public String bulkUpdate(Model model, AssignmentForm form, HttpServletRequest request) {
+	public String postBulk(Model model, AssignmentForm form, HttpServletRequest request) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
 		String[] ids = form.getIds().split(",");
 		for(String id : ids) {
@@ -122,7 +136,7 @@ public class PlansController extends JSONBaseController {
 			assignmentController.link(assignment);
 			dao.save(assignment);
  		}
-		return bulkOperations(model);
+		return getBulk(model, null);
 	}
 
 	@RequestMapping(value="/sar/maps/browser", method = RequestMethod.GET)

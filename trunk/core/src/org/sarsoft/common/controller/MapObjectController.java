@@ -54,11 +54,7 @@ public abstract class MapObjectController <T extends MapObject> extends JSONBase
 		link(obj);
 		dao.save(obj);
 	}
-	
-	public List<String[]> toCSV(List<T> objects) {
-		return null;
-	}
-	
+		
 	public List<T> fromGPXDesc(GPXDesc desc) {
 		return null;
 	}
@@ -97,12 +93,8 @@ public abstract class MapObjectController <T extends MapObject> extends JSONBase
 	}
 
 	@RequestMapping(value="", method = RequestMethod.GET)
-	public String getAll(Model model, @RequestParam(value="format", required=false) String format, HttpServletResponse response) {
-		List<T> objects = dao.loadAll(c);
-		if("CSV".equals(format)) {
-			return csv(model, toCSV(objects), response);
-		}
-		return json(model, objects);
+	public String getAll(Model model, HttpServletResponse response) {
+		return json(model, dao.loadAll(c));
 	}
 	
 	@RequestMapping(value="/since/{date}", method = RequestMethod.GET)

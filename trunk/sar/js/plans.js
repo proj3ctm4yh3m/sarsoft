@@ -13,7 +13,7 @@ org.sarsoft.MapObjectChildDialog = function(imap, controller, title) {
 }
 
 org.sarsoft.MapObjectChildDialog.prototype.addTab = function(type, title) {
-	var div = $('<div style="float: left"></div>');
+	var div = $('<div style="float: left; width: 90%"></div>');
 	this.tabs[type] = {
 		div : div,
 		tab : new YAHOO.widget.Tab({label: title, contentEl: div[0]})
@@ -29,7 +29,7 @@ org.sarsoft.MapObjectChildDialog.prototype.addChildTab = function(type, title, c
 	this.tabs[type].message = $('<div>No ' + title + ' found</div>').appendTo(div);
 	this.tabs[type].content = $('<div></div>').appendTo(div);
 	
-	if(deleteable) {
+	if(deleteable && org.sarsoft.writeable) {
 		coldefs[0].formatter = function(cell, record, column, data) { $(cell).html("<span style='color: red; font-weight: bold'>X</span>").click(function(evt) {
 			evt.stopPropagation();
 			org.sarsoft.MapState.daos[type].del(record.getData().id, function() { that.tabs[type].table.table.deleteRow(record) });
@@ -73,10 +73,22 @@ org.sarsoft.OperationalPeriodDAO.prototype = new org.sarsoft.MapObjectDAO();
 org.sarsoft.OperationalPeriodChildDialog = function(imap, controller) {
 	org.sarsoft.MapObjectChildDialog.call(this, imap, controller, "OperationalPeriod");
 	var that = this;
-	
-	this.addTab("action", "Actions");
-	this.tabs['action'].div.html('bulk print');
 
+	if(sarsoft.tenant != null && org.sarsoft.writeable) {
+		this.addTab("action", "Actions");
+		
+		var div = this.tabs['action'].div;
+		var left = $('<ul></ul>').appendTo(div);
+		$('<a href="#">Bulk Operations - This Period</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
+			window.open('/sar/bulk?op=' + that.obj.id, '_blank');
+			return false;
+		});
+		$('<a href="#">Bulk Operations - All Assignments</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
+			window.open('/sar/bulk', '_blank');
+			return false;
+		});
+	}
+	
 	this.addChildTab("Assignment", "Assignments", [
 		{ key : "number", label : ""},
 		{ key : "resourceType", label : "type"},
@@ -240,31 +252,51 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 	org.sarsoft.MapObjectChildDialog.call(this, imap, controller, "Assignment");
 	var that = this;
 	
-	this.addTab("action", "Actions");
+	if(sarsoft.tenant != null) {
+		this.addTab("action", "Actions");
+		
+		var div = this.tabs['action'].div;
+		var left = $('<ul></ul>').appendTo($('<div style="float: left; padding-right: 20px;"></div>').appendTo(div));
+		$('<a href="#">Print 104 Form</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
+			window.open('/sar/104?ids=' + that.obj.id, '_blank');
+			return false;
+		});
+		$('<a href="#">Print Browser Map</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
+			window.open('/sar/maps/browser?ids=' + that.obj.id, '_blank');
+			return false;
+		});
+		$('<a href="#">Print PDF Map</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
+			window.open('/sar/maps/pdf?ids=' + that.obj.id, '_blank');
+			return false;
+		});
 	
-	var div = this.tabs['action'].div;
-	$('<span class="underlineOnHover" style="color: #5a8ed7">Print 104 Form</a>').appendTo($('<div></div>').appendTo(div));
-	$('<span class="underlineOnHover" style="color: #5a8ed7">Print PDF Map</a>').appendTo($('<div></div>').appendTo(div));
-
-	div = $('<div>Clean up Tracks and Waypoints:</div>').appendTo(div);
-	var line = $('<div>more than </div>').appendTo(div);
-	var in_dist = $('<input type="text" size="5" value="15"/>').appendTo(line);
-	line.append(' km from assignment');
-	$('<button style="margin-left: 10px">GO</button>').appendTo(line).click(function() {
-		that.controller.dao._doPost("/" + that.obj.id + "/clean", function(state) { that.updateCleanedTracks(state) }, null, "radius=" + in_dist.val());
-	});
-	
-	var line = $('<div>more than </div>').appendTo(div);
-	var in_time = $('<input type="text" size="3" value="24"/>').appendTo(line);
-	line.append(' hours (if timestamps recorded)');
-	$('<button style="margin-left: 10px">GO</button>').appendTo(line).click(function() {
-		that.controller.dao._doPost("/" + that.obj.id + "/clean", function(state) { that.updateCleanedTracks(state) }, null, "time=" + in_time.val());
-	});
-	
-	this.addTab("imp", "Import");
-	this.imp = new Object();
-	this.imp.importer = new org.sarsoft.widget.Importer(this.tabs['imp'].div, '/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : ''));
-	$(this.imp.importer).bind('success', function() { that.dialog.hide(); })
+		if(org.sarsoft.writeable) {
+			var right = $('<div style="float: left">Clean up Tracks and Waypoints:</div>').appendTo(div);
+			var line = $('<div>more than </div>').appendTo(right);
+			var in_dist = $('<input type="text" size="5" value="15"/>').appendTo(line);
+			line.append(' km from assignment');
+			$('<button style="margin-left: 10px">GO</button>').appendTo(line).click(function() {
+				that.controller.dao._doPost("/" + that.obj.id + "/clean", function(state) { that.updateCleanedTracks(state) }, null, "radius=" + in_dist.val());
+			});
+			
+			var line = $('<div>more than </div>').appendTo(right);
+			var in_time = $('<input type="text" size="3" value="24"/>').appendTo(line);
+			line.append(' hours (if timestamps recorded)');
+			$('<button style="margin-left: 10px">GO</button>').appendTo(line).click(function() {
+				that.controller.dao._doPost("/" + that.obj.id + "/clean", function(state) { that.updateCleanedTracks(state) }, null, "time=" + in_time.val());
+			});
+		}
+		div.append('<div style="clear: both"></div>');
+		
+		if(org.sarsoft.writeable) {
+			this.addTab("imp", "Import");
+			this.tabs['imp'].div.append('<div>Import Tracks and Waypoints:</div>');
+			this.imp = new Object();
+			this.imp.importer = new org.sarsoft.widget.Importer(this.tabs['imp'].div, '/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : ''));
+			$(this.imp.importer).bind('success', function() { that.dialog.hide(); })
+			
+		}
+	}
 
 	this.addChildTab("FieldTrack", "Tracks", [
 		{ key : "id", label : ""},
@@ -274,7 +306,7 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 	this.addChildTab("FieldWaypoint", "Waypoints", [
 		{ key : "id", label : ""},
 		{ key : "name", label : "Name"},
-		{ key : "time", label : "Uploaded", formatter2 : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}], true);
+		{ key : "updated", label : "Uploaded", formatter2 : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}], true);
 	
 	this.addChildTab("Clue", "Clues", [
  	      { key : "id", label : "Clue #"},
@@ -296,7 +328,7 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 org.sarsoft.AssignmentChildDialog.prototype = new org.sarsoft.MapObjectChildDialog();
 
 org.sarsoft.AssignmentChildDialog.prototype.show = function(id) {
-	this.imp.importer.clear('/rest/assignment/' + id + '/in');
+	if(this.imp) this.imp.importer.clear('/rest/assignment/' + id + '/in');
 
 	org.sarsoft.MapObjectChildDialog.prototype.show.call(this, id);
 }
@@ -652,6 +684,10 @@ org.sarsoft.FieldWaypointController = function(imap, background_load) {
 org.sarsoft.FieldWaypointController.prototype = new org.sarsoft.WaypointObjectController();
 sarsoft.Controllers["FieldWaypoint"] = [15, org.sarsoft.FieldWaypointController];
 
+org.sarsoft.FieldWaypointController.prototype.growmap = function(obj) {
+	// don't expand map due to wayward tracks and waypoints
+}
+
 org.sarsoft.FieldWaypointController.prototype._saveWaypoint = function(id, waypoint, handler) {
 	this.dao.updatePosition(id, waypoint, handler);
 }
@@ -749,6 +785,10 @@ org.sarsoft.FieldTrackController = function(imap, background_load) {
 
 org.sarsoft.FieldTrackController.prototype = new org.sarsoft.WayObjectController();
 sarsoft.Controllers["FieldTrack"] = [14, org.sarsoft.FieldTrackController];
+
+org.sarsoft.FieldTrackController.prototype.growmap = function(obj) {
+	// don't expand map due to wayward tracks and waypoints
+}
 
 org.sarsoft.FieldTrackController.prototype._saveWay = function(obj, waypoints, handler) {
 	this.dao.saveWay(obj, waypoints, handler);
@@ -906,140 +946,3 @@ org.sarsoft.AssignmentPrintMapController.prototype.copyConfig = function(sourcei
 		this.maps[id].imap.setConfig(config);
 	}
 }
-
-
-
-/*
-
-org.sarsoft.controller.SearchWaypointMapController = function(imap) {
-	var that = this;
-	this.waypoints = new Object();
-	this.searchDAO = new org.sarsoft.SearchDAO(function() { that.imap.message("Server Communication Error"); });
-	this.imap = imap;
-	this.imap.register("org.sarsoft.controller.SearchWaypointMapController", this);
-	if(org.sarsoft.userPermissionLevel == "WRITE" || org.sarsoft.userPermissionLevel == "ADMIN") {
-		this.imap.addContextMenuItems([
-		    {text : "ICS Waypoints \u2192", applicable : function(obj) { return obj == null }, items: [
-			  {text : "Set LKP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("LKP", data.point); }},
-			  {text : "Set PLS here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("PLS", data.point); }},
-			  {text : "Set CP here", applicable : function(obj) { return obj == null }, handler: function(data) { that.set("CP", data.point); }}]},
-			{text : "Delete LKP", applicable : function(obj) { return obj != null && obj == that.waypoints["LKP"]}, handler: function(data) { that.searchDAO.del("lkp"); that.imap.removeWaypoint(that.waypoints["LKP"]); delete that.waypoints["LKP"];}},
-			{text : "Delete PLS", applicable : function(obj) { return obj != null && obj == that.waypoints["PLS"]}, handler: function(data) { that.searchDAO.del("pls"); that.imap.removeWaypoint(that.waypoints["PLS"]); delete that.waypoints["PLS"];}},
-			{text : "Delete CP", applicable : function(obj) { return obj != null && obj == that.waypoints["CP"]}, handler: function(data) { that.searchDAO.del("cp"); that.imap.removeWaypoint(that.waypoints["CP"]); delete that.waypoints["CP"];}}
-		]);
-	}
-	this.rangerings = "500,1000,1500";
-
-	if(imap.registered["org.sarsoft.DataNavigator"] != null) {
-		var dn = imap.registered["org.sarsoft.DataNavigator"];
-		this.dn = new Object();
-		var stree = dn.addDataType("Search");
-		stree.header.css({"font-size": "120%", "font-weight": "bold", "margin-top": "0.5em", "border-top": "1px solid #CCCCCC"});
-		this.dn.sdiv = jQuery('<div></div>').appendTo(stree.body);
-		this.dn.waypoints = new Object();
-	}
-	
-	this.searchDAO.load(function(lkp) {
-			if(lkp.value != null) {
-				that.place("LKP", lkp.value);
-				that.imap.growInitialMap(new google.maps.LatLng(lkp.value.lat, lkp.value.lng));
-			}
-		}, "lkp");
-	that.searchDAO.load(function(pls) {
-		if(pls.value != null) {
-			that.place("PLS", pls.value);
-			that.imap.growInitialMap(new google.maps.LatLng(pls.value.lat, pls.value.lng));
-		}
-	}, "pls");
-	that.searchDAO.load(function(cp) {
-		if(cp.value != null) {
-			that.place("CP", cp.value);
-			that.imap.growInitialMap(new google.maps.LatLng(cp.value.lat, cp.value.lng));
-		}
-	}, "cp");
-
-}
-
-org.sarsoft.controller.SearchWaypointMapController.prototype.setConfig = function(config) {
-	if(config.SearchWaypointMapController == null) return;
-	this.rangerings = config.SearchWaypointMapController.rangerings;
-	if(this.waypoints["LKP"] != null) this.place("LKP", this.waypoints["LKP"]);
-}
-
-org.sarsoft.controller.SearchWaypointMapController.prototype.getConfig = function(config) {
-	if(config.SearchWaypointMapController == null) config.SearchWaypointMapController = new Object();
-	config.SearchWaypointMapController.rangerings = this.rangerings;
-	return config;
-}
-
-org.sarsoft.controller.SearchWaypointMapController.prototype.set = function(type, point) {
-	var wpt = this.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(point.x, point.y));
-	wpt = {lat: wpt.lat(), lng: wpt.lng()};
-	this.searchDAO.save(type.toLowerCase(), { value: wpt });
-	wpt.id = type;
-	this.place(type, wpt);
-}
-
-
-org.sarsoft.controller.SearchWaypointMapController.prototype.place = function(type, wpt) {
-	var that = this;
-	if(this.waypoints[type] != null) this.imap.removeWaypoint(this.waypoints[type]);
-	this.waypoints[type] = wpt;
-	if(type == "CP") {
-		var icon = org.sarsoft.MapUtil.createImage(15, "/static/images/cp.png");
-		this.imap.addWaypoint(wpt, {icon: icon}, type, type);
-	} else {
-		this.imap.addWaypoint(wpt, {color: "#FF0000"}, type, type);
-	}
-	if(type == "LKP") {
-		this.imap.removeRangeRings();
-		if(this.rangerings != null) {
-			var radii = this.rangerings.split(",");
-			for(var i = 0; i < radii.length; i++) {
-				this.imap.addRangeRing(wpt, radii[i], 36);
-			}
-		}
-	}
-	
-	if(this.dn == null) return;
-
-	if(this.dn.waypoints[type] == null) {
-		this.dn.waypoints[type] = jQuery('<div></div>').appendTo(this.dn.sdiv);
-	}
-	this.dn.waypoints[type].empty();
-	
-	var line = jQuery('<div style="padding-top: 0.5em"></div>').appendTo(this.dn.waypoints[type]);
-	var s = jQuery('<span style="cursor: pointer; font-weight: bold; color: #945e3b">' + type + '</span>');
-	s.appendTo(line).click(function() {
-		if(org.sarsoft.mobile) imap.registered["org.sarsoft.DataNavigatorToggleControl"].hideDataNavigator();
-		that.imap.setCenter(new google.maps.LatLng(wpt.lat, wpt.lng));
-	});
-	
-	if(type == "LKP") {
-		this.rrInput = jQuery('<input type="text" size="10" value="' + this.rangerings + '"/>').appendTo(jQuery('<div>Range Rings: </div>').appendTo(line)).change(function() {
-			that.rangerings = that.rrInput.val();
-			that.place("LKP", wpt);
-		});
-	}
-	
-}
-
-org.sarsoft.controller.SearchWaypointMapController.prototype.getSetupBlock = function() {
-	var that = this;
-	if(this._mapForm == null) {
-		this._mapForm = new org.sarsoft.view.EntityForm([{name : "rangerings", label: "Range Rings", type: "string"}]);
-		var node = document.createElement("div");
-		this._mapForm.create(node);
-		this._setupBlock = {order : 5, node : node, handler : function() {
-			var obj = that._mapForm.read();
-			that.rangerings = obj.rangerings;
-			if(that.waypoints["LKP"] != null) that.place("LKP", that.waypoints["LKP"]);
-		}};
-	}
-
-	this._mapForm.write({rangerings : this.rangerings});
-	return this._setupBlock;
-}
-
-
-*/
