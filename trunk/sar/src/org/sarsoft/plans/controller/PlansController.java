@@ -22,6 +22,7 @@ import org.sarsoft.imaging.IPDFMaker;
 import org.sarsoft.imaging.PDFDoc;
 import org.sarsoft.imaging.PDFPage;
 import org.sarsoft.plans.Action;
+import org.sarsoft.plans.form.AssignmentForm;
 import org.sarsoft.plans.model.Assignment;
 import org.sarsoft.plans.model.Clue;
 import org.sarsoft.plans.model.FieldTrack;

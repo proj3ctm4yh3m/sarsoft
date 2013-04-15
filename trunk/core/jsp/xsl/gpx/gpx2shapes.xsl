@@ -98,6 +98,7 @@
 <xsl:template name="GpxToWaypoint">
 	<lat type="number"><xsl:value-of select="@lat"/></lat>
 	<lng type="number"><xsl:value-of select="@lon"/></lng>
+	<xsl:if test="count(*[local-name()='time']) &gt; 0"><garminTime type="string"><xsl:value-of select="*[local-name()='time']"/></garminTime></xsl:if>
 </xsl:template>
 
 <xsl:template name="KMLStyle">
