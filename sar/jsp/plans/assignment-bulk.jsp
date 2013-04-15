@@ -16,8 +16,8 @@
 <div id="bulkupdate" style="display: none; margin-top: 40px">
 Fill in all fields you want to update.  Blank fields will be ignored; you can not clear fields through bulk update.
 
-			<form name="assignment" action="/bulk" method="post">
-			 <input type="hidden" value="" name="bulkIds" id="bulkIds"/>
+			<form name="assignment" action="/sar/bulk" method="post">
+			 <input type="hidden" value="" name="ids" id="ids"/>
 			 <input type="hidden" value="UPDATE" name="action" id="action"/>
 			 <table border="0">
 			 <tr><td>
@@ -120,7 +120,7 @@ function submitbulkprint() {
 		for(var i = 0; i < data.length; i++) {
 			value = value + data[i].id + ",";
 		}
-		window.location="/bulkprint?ids=" + value;
+		window.location="/sar/maps/browser?ids=" + value;
 	}
 }
 
@@ -133,7 +133,7 @@ function submitbulkpdf() {
 		for(var i = 0; i < data.length; i++) {
 			value = value + data[i].id + ",";
 		}
-		window.open('/bulkpdf?ids=' + value, '_blank');
+		window.open('/sar/maps/pdf?ids=' + value, '_blank');
 	}
 }
 

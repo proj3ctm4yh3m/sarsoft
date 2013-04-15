@@ -4,8 +4,7 @@ import org.sarsoft.plans.model.Assignment;
 import org.sarsoft.plans.model.Probability;
 
 public class AssignmentForm {
-	private long id;
-	private String bulkIds;
+	private String ids;
 	private Long operationalPeriodId;
 	private Assignment.ResourceType resourceType;
 	private String details;
@@ -42,12 +41,6 @@ public class AssignmentForm {
 	}
 	public void setDetails(String details) {
 		this.details = details;
-	}
-	public long getId() {
-		return id;
-	}
-	public void setId(long id) {
-		this.id = id;
 	}
 	public Assignment.ResourceType getResourceType() {
 		return resourceType;
@@ -91,11 +84,11 @@ public class AssignmentForm {
 	public void setPreviousEfforts(String previousEfforts) {
 		this.previousEfforts = previousEfforts;
 	}
-	public String getBulkIds() {
-		return bulkIds;
+	public String getIds() {
+		return ids;
 	}
-	public void setBulkIds(String bulkIds) {
-		this.bulkIds = bulkIds;
+	public void setIds(String bulkIds) {
+		this.ids = ids;
 	}
 	public String getPreparedBy() {
 		return preparedBy;
