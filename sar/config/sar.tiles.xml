@@ -4,7 +4,7 @@
 	<definition name="Assignment.Bulk" extends="App.Base">
 		<put-attribute name="content" value="/plans/bulk.jsp"/>
 	</definition>
-	<definition name="Location.Status" extends="Search.Base">
+	<definition name="Location.Status" extends="App.Base">
 		<put-attribute name="content" value="/ops/locationstatus.jsp"/>
 		<put-attribute name="app" value="setup-status"/>
 	</definition>

@@ -1,6 +1,5 @@
 package org.sarsoft.plans.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,18 +46,7 @@ public class ClueController extends AssignmentChildController<Clue> {
 	public void addTo(Assignment assignment, Clue child) {
 		assignment.addClue(child);
 	}
-	
-	public List<String[]> toCSV(List<Clue> clues) {
-		List<String[]> rows = new ArrayList<String[]>();
-		rows.add(new String[] { "Clue #", "Item Found", "Team", "Location of Find" });
 		
-		for(Clue clue : clues) {
-			rows.add(new String[] { clue.getSummary(), clue.getDescription(), (clue.getAssignment() != null ? clue.getAssignment().getNumber() : ""), clue.getPosition().getFormattedUTM() });
-		}
-		
-		return rows;
-	}
-	
 	@RequestMapping(value="/{id}/position", method = RequestMethod.POST)
 	public String updatePosition(JSONForm params, Model model, @PathVariable("id") long id, HttpServletRequest request) {
 		Clue clue = dao.load(Clue.class, id);
