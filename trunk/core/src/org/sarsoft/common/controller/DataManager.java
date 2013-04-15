@@ -163,9 +163,11 @@ public class DataManager {
 		ClientState state = new ClientState();
 
 		GPXDesc desc = geo.getFirst();
-		if(desc.hasAttr("mapConfig")) state.setMapConfig(desc.getAttr("mapConfig"));
-		for(String type : getDataTypes()) {
-			state.add(type, getController(type).fromGPXDesc(desc));
+		if(desc != null) {
+			if(desc.hasAttr("mapConfig")) state.setMapConfig(desc.getAttr("mapConfig"));
+			for(String type : getDataTypes()) {
+				state.add(type, getController(type).fromGPXDesc(desc));
+			}
 		}
 
 		List<StyledGeoObject> items = geo.getSecond();

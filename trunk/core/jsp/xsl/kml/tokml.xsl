@@ -38,7 +38,7 @@
         <color><xsl:value-of select="concat('44', $color)"/></color>
       </PolyStyle>
     </Style>
-    <name><xsl:value-of select="$name"/></name>
+	 <xsl:if test="not($name='-No Name')"><name><xsl:value-of select="$name"/></name></xsl:if>
     	<xsl:for-each select="json:way">
 			<xsl:call-template name="WayToKml"/>
 		</xsl:for-each>
@@ -49,7 +49,7 @@
 	<xsl:variable name="name" select="json:name"/>
 
 	<Placemark> 
-	 <name><xsl:value-of select="$name"/></name> 
+	 <xsl:if test="not($name='-No Name')"><name><xsl:value-of select="$name"/></name></xsl:if>
 	<Style>
 	    <IconStyle>
 		<hotSpot x="0.5"  y="0.5" xunits="fraction" yunits="fraction"/>
