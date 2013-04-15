@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -48,17 +47,15 @@ public class PlansController extends JSONBaseController {
 	@Autowired
 	AssignmentController assignmentController;
 
-	@RequestMapping(value="/sar104/{id}", method = RequestMethod.GET)
-	public String getAssignmentForm(Model model, @PathVariable("id") long id, HttpServletRequest request) {
-		Assignment assignment = dao.load(Assignment.class, id);
-		model.addAttribute("assignment", assignment);
-		return app(model, "Assignment.PrintForms");
-	}
-	
 	@SuppressWarnings("deprecation")
-	@RequestMapping(value="/sar104", method = RequestMethod.GET)
-	public void getAssignmentForms(Model model, HttpServletResponse response) {
-		List<Assignment> assignments = dao.loadAll(Assignment.class);
+	@RequestMapping(value="/sar/104", method = RequestMethod.GET)
+	public String getAssignmentForms(Model model, @RequestParam(value="ids", required=false) String ids, HttpServletResponse response) {
+		List<Assignment> assignments = new ArrayList<Assignment>();
+		if(ids != null && ids.length() > 0) {
+			for(String id : ids.split(",")) assignments.add(dao.load(Assignment.class, Long.parseLong(id)));
+		} else {
+			assignments = dao.loadAll(Assignment.class);
+		}
 		List<PDFForm> pages = new ArrayList<PDFForm>();
 		for(Assignment assignment : assignments) {
 			Map<String, String> fields = new HashMap<String, String>();
@@ -82,30 +79,26 @@ public class PlansController extends JSONBaseController {
 			fields.put("personnel_function_3", "*");
 			pages.add(new PDFForm("sar104", fields));
 		}
-		
-		response.setContentType("application/pdf");
-		response.setHeader("Cache-Control", "max-age=432000, public");
 		try {
 			PDDocument document = PDFForm.create(context, pages);
-			document.save(response.getOutputStream());
-			document.close();
+			return pdf(model, document, response);
 		} catch (Exception e) {
-			e.printStackTrace();
-			// TODO handle
+			return error(model, e.getMessage());
+		} finally {
+			PDFForm.close(pages);
 		}
-		PDFForm.close(pages);
 	}
 
-	@RequestMapping(value="/bulk", method = RequestMethod.GET)
+	@RequestMapping(value="/sar/bulk", method = RequestMethod.GET)
 	public String bulkOperations(Model model) {
 		model.addAttribute("periods", dao.loadAll(OperationalPeriod.class));
 		return app(model, "Assignment.Bulk");
 	}
 	
-	@RequestMapping(value="/bulk", method = RequestMethod.POST)
+	@RequestMapping(value="/sar/bulk", method = RequestMethod.POST)
 	public String bulkUpdate(Model model, AssignmentForm form, HttpServletRequest request) {
 		Action action = (request.getParameter("action") != null) ? Action.valueOf(request.getParameter("action").toUpperCase()) : Action.UPDATE;
-		String[] ids = form.getBulkIds().split(",");
+		String[] ids = form.getIds().split(",");
 		for(String id : ids) {
 			if(id.length() == 0) continue;
 			Assignment assignment = dao.load(Assignment.class, Long.parseLong(id));
@@ -132,14 +125,14 @@ public class PlansController extends JSONBaseController {
 		return bulkOperations(model);
 	}
 
-	@RequestMapping(value="/bulkprint", method = RequestMethod.GET)
+	@RequestMapping(value="/sar/maps/browser", method = RequestMethod.GET)
 	public String bulkPrint(Model model, HttpServletRequest request, @RequestParam(value="ids", required=false) String ids) {
 		model.addAttribute("preload", manager.toJSON(manager.fromDB()));
 		if(ids != null) model.addAttribute("ids", ids);
 		return app(model, "Assignment.PrintBulk");
 	}
 	
-	@RequestMapping(value="/bulkpdf", method = RequestMethod.GET)
+	@RequestMapping(value="/sar/maps/pdf", method = RequestMethod.GET)
 	public void bulkPDF(Model model, HttpServletRequest request, @RequestParam(value="ids", required=true) String idstr, HttpServletResponse response) {
 		String[] ids = idstr.split(",");
 		try {

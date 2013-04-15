@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSON;
 import net.sf.json.xml.XMLSerializer;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.sarsoft.common.dao.GenericHibernateDAO;
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 import org.sarsoft.common.model.Icon;
@@ -188,6 +189,17 @@ public abstract class JSONBaseController {
 		response.setHeader("Content-Disposition", "attachment; filename=export.csv");
 		model.addAttribute("echo", sb.toString());
 		return "/echo";
+	}
+	
+	protected String pdf(Model model, PDDocument document, HttpServletResponse response) {
+		response.setContentType("application/pdf");
+		try {
+			document.save(response.getOutputStream());
+			document.close();
+		} catch (Exception e) {
+			return error(model, e.getMessage());
+		}
+		return null;
 	}
 
 }
