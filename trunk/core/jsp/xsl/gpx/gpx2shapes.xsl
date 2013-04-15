@@ -36,6 +36,12 @@
 	<e class="object">
 		<type type="string">null</type>
 	</e>
+	<xsl:for-each select="*[local-name()='metadata']/*[local-name()='desc']">
+		<e class="object">
+			<desc><xsl:value-of select="."/></desc>
+			<type type="string">desc</type>
+		</e>
+	</xsl:for-each>
 	<xsl:for-each select="*[local-name()='trk']">
 		<e class="object">
 		<xsl:call-template name="GpxToTrack"/>

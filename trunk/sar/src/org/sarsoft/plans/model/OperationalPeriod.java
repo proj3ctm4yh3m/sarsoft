@@ -34,6 +34,7 @@ public class OperationalPeriod extends MapObject {
 	}
 	
 	public void from(OperationalPeriod updated) {
+		if(id == null && updated.getId() != null) id = updated.getId();
 		setDescription(updated.getDescription());
 	}
 	

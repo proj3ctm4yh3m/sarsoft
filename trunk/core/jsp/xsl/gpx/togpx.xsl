@@ -4,6 +4,11 @@
 <xsl:output method="xml" cdata-section-elements="cmt desc"/>
 <xsl:template match="/json:a">
 <gpx version="1.1" creator="CALTOPO">
+	<xsl:for-each select="json:e[json:type='desc']">
+		<metadata>
+			<desc><xsl:value-of select="json:desc"/></desc>
+		</metadata>
+	</xsl:for-each>
 	<xsl:for-each select="json:e[json:type='waypoint']">
 		<xsl:call-template name="waypoint"/>
 	</xsl:for-each>

@@ -51,12 +51,18 @@ public class FieldWaypoint extends AssignmentChildObject {
 		fwpt.setPosition(swpt.getWaypoint());
 		fwpt.setLabel(swpt.getName());
 		
-		try {
-			Long.parseLong(swpt.getName().substring(0, 5));
-			fwpt.setLabel(swpt.getDesc());
+		if("FieldWaypoint".equals(swpt.getAttr("sartype"))) {
 			confidence = 100;
-			fwpt.setAssignmentId(Long.parseLong(swpt.getName().substring(2, 5)));
-		} catch (Exception e) {}
+		} else {
+			try {
+				Long.parseLong(swpt.getName().substring(0, 5));
+				fwpt.setLabel(swpt.getDesc());
+				confidence = 100;
+				fwpt.setAssignmentId(Long.parseLong(swpt.getName().substring(2, 5)));
+			} catch (Exception e) {}
+		}
+
+		if(swpt.hasAttr("assignmentid")) fwpt.setAssignmentId(Long.parseLong(swpt.getAttr("assignmentid")));
 
 		return new Pair<Integer, FieldWaypoint>(confidence, fwpt);
 	}
@@ -67,6 +73,9 @@ public class FieldWaypoint extends AssignmentChildObject {
 		swpt.setName(getLabel());
 		swpt.setIcon("#FF0000");
 		swpt.setWaypoint(getPosition());
+		
+		swpt.setAttr("sartype", "FieldWaypoint");
+		if(getAssignmentId() != null) swpt.setAttr("assignmentid", "" + getAssignmentId());
 
 		return swpt;
 	}

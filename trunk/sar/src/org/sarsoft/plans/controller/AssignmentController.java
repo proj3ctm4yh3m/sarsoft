@@ -159,7 +159,7 @@ public class AssignmentController extends GeoMapObjectController<Assignment> {
 	
 	@RequestMapping(value = "/{id}/in", method = RequestMethod.POST)
 	public String loadTracks(Model model, JSONForm params, @PathVariable("id") long id, HttpServletRequest request) {
-		List<StyledGeoObject> items = GPX.StyledGeo(context, params);
+		List<StyledGeoObject> items = GPX.StyledGeo(context, params).getSecond();
 		ClientState state = new ClientState();
 
 		for(StyledGeoObject item : items) {
@@ -170,7 +170,7 @@ public class AssignmentController extends GeoMapObjectController<Assignment> {
 					fwpt.setAssignmentId(id);
 					state.add("FieldWaypoint", fwpt);
 				}
-			} else {
+			} else if(item instanceof StyledWay){
 				Pair<Integer, FieldTrack> ptrack = FieldTrack.from((StyledWay) item);
 				if(ptrack != null) {
 					FieldTrack track = ptrack.getSecond();

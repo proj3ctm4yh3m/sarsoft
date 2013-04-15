@@ -87,6 +87,7 @@ public class Assignment extends GeoMapObject {
 	}
 	
 	public void from(Assignment updated) {
+		if(id == null && updated.getId() != null) id = updated.getId();
 		setNumber(updated.getNumber());
 		setDetails(updated.getDetails());
 		setResourceType(updated.getResourceType());
@@ -135,18 +136,22 @@ public class Assignment extends GeoMapObject {
 
 		Long parsed = null;
 		String name = sway.getName();
-		try {
-			if(name != null) parsed = Long.parseLong(name);
-		} catch (NumberFormatException e) {}
-		if(parsed != null && name.length() == 5) {
-			assignment.setOperationalPeriodId(Long.parseLong(name.substring(0, 2)));
-			assignment.setNumber(name.substring(2, 5));
-			try { assignment.setId(Long.parseLong(assignment.getNumber())); } catch (NumberFormatException e) {}
+		assignment.setNumber(name);
+		if("Assignment".equals(sway.getAttr("sartype"))) {
 			confidence = 100;
+			if(sway.hasAttr("id")) assignment.setId(Long.parseLong(sway.getAttr("id")));
 		} else {
-			assignment.setNumber(name);
-		}		
-		if(assignment.getResourceType() != null) confidence = 100;		
+			try {
+				if(name != null) parsed = Long.parseLong(name);
+			} catch (NumberFormatException e) {}
+			if(parsed != null && name.length() == 5) {
+				assignment.setOperationalPeriodId(Long.parseLong(name.substring(0, 2)));
+				assignment.setNumber(name.substring(2, 5));
+				try { assignment.setId(Long.parseLong(assignment.getNumber())); } catch (NumberFormatException e) {}
+				confidence = 100;
+			}		
+		}
+		if(assignment.getResourceType() != null) confidence = 100;	
 		
 		return new Pair<Integer, Assignment>(confidence, assignment);
 	}
@@ -159,6 +164,24 @@ public class Assignment extends GeoMapObject {
 		sway.setWeight(2f);
 		sway.setFill(0.3f);
 		sway.setWay(getSegment());
+		
+		sway.setAttr("sartype", "Assignment");
+		if(getId() != null) sway.setAttr("id", "" + getId());
+		sway.setAttr("details", getDetails());
+		if(getResourceType() != null) sway.setAttr("resourcetype", "" + getResourceType());
+		if(getStatus() != null) sway.setAttr("status", "" + getStatus());
+		sway.setAttr("timeAllocated", "" + getTimeAllocated());
+		sway.setAttr("previousEfforts", getPreviousEfforts());
+		sway.setAttr("transportation", getTransportation());
+		if(getResponsivePOD() != null) sway.setAttr("responsivePOD", "" + getResponsivePOD());
+		if(getUnresponsivePOD() != null) sway.setAttr("unresponsivePOD", "" + getUnresponsivePOD());
+		if(getCluePOD() != null) sway.setAttr("cluePOD", "" + getCluePOD());
+		if(getUpdated() != null) sway.setAttr("updated", "" + getUpdated().getTime());
+		if(getPreparedOn() != null) sway.setAttr("preparedOn", "" + getPreparedOn().getTime());
+		sway.setAttr("preparedBy", getPreparedBy());
+		sway.setAttr("primaryFrequency", getPrimaryFrequency());
+		sway.setAttr("secondaryFrequency", getSecondaryFrequency());
+		if(getOperationalPeriodId() != null) sway.setAttr("operationalPeriodId", "" + getOperationalPeriodId());
 		
 		return sway;
 	}
