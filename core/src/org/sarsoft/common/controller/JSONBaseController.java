@@ -168,12 +168,12 @@ public abstract class JSONBaseController {
 	
 	protected String gpx(Model model, Object obj) {
 		prepXML(model, obj);
-		return "/xsl/gpx/togpx";
+		return "/xsl/togpx";
 	}
 
 	protected String kml(Model model, Object obj) {
 		prepXML(model, obj);
-		return "/xsl/kml/tokml";
+		return "/xsl/tokml";
 	}
 	
 	protected String csv(Model model, List<String[]> items, HttpServletResponse response) {
