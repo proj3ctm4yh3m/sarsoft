@@ -56,8 +56,7 @@ public class Clue extends AssignmentChildObject {
 
 		if(updated.getPosition() != null) {
 			if(position == null) position = new Waypoint();
-			getPosition().setLat(updated.getPosition().getLat());
-			getPosition().setLng(updated.getPosition().getLng());
+			position.from(updated.getPosition());
 		}
 	}
 	

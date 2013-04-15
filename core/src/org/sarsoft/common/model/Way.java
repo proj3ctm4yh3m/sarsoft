@@ -67,9 +67,7 @@ public class Way extends SarModelObject implements IPreSave {
 		if(updated.getWaypoints() != null) {
 			for(Waypoint from : updated.getWaypoints()) {
 				Waypoint wpt = new Waypoint();
-				wpt.setLat(from.getLat());
-				wpt.setLng(from.getLng());
-				wpt.setTime(from.getTime());
+				wpt.from(from);
 				waypoints.add(wpt);
 			}
 		}

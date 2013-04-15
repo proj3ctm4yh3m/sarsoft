@@ -1,4 +1,4 @@
-package org.sarsoft.plans.controller;
+package org.sarsoft.plans.form;
 
 import org.sarsoft.plans.model.Assignment;
 import org.sarsoft.plans.model.Probability;

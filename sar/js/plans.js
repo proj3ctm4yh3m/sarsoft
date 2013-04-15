@@ -43,7 +43,7 @@ org.sarsoft.MapObjectChildDialog.prototype.addChildTab = function(type, title, c
 }
 
 org.sarsoft.MapObjectChildDialog.prototype.show = function(obj) {
-	var obj = this.controller.obj(obj);
+	var obj = this.obj = this.controller.obj(obj);
 	
 	for(var type in this.tabs) {
 		var table = this.tabs[type].table;
@@ -242,6 +242,25 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 	
 	this.addTab("action", "Actions");
 	
+	var div = this.tabs['action'].div;
+	$('<span class="underlineOnHover" style="color: #5a8ed7">Print 104 Form</a>').appendTo($('<div></div>').appendTo(div));
+	$('<span class="underlineOnHover" style="color: #5a8ed7">Print PDF Map</a>').appendTo($('<div></div>').appendTo(div));
+
+	div = $('<div>Clean up Tracks and Waypoints:</div>').appendTo(div);
+	var line = $('<div>more than </div>').appendTo(div);
+	var in_dist = $('<input type="text" size="5" value="15"/>').appendTo(line);
+	line.append(' km from assignment');
+	$('<button style="margin-left: 10px">GO</button>').appendTo(line).click(function() {
+		that.controller.dao._doPost("/" + that.obj.id + "/clean", function(state) { that.updateCleanedTracks(state) }, null, "radius=" + in_dist.val());
+	});
+	
+	var line = $('<div>more than </div>').appendTo(div);
+	var in_time = $('<input type="text" size="3" value="24"/>').appendTo(line);
+	line.append(' hours (if timestamps recorded)');
+	$('<button style="margin-left: 10px">GO</button>').appendTo(line).click(function() {
+		that.controller.dao._doPost("/" + that.obj.id + "/clean", function(state) { that.updateCleanedTracks(state) }, null, "time=" + in_time.val());
+	});
+	
 	this.addTab("imp", "Import");
 	this.imp = new Object();
 	this.imp.importer = new org.sarsoft.widget.Importer(this.tabs['imp'].div, '/rest/in?tid=' + (sarsoft.tenant ? sarsoft.tenant.name : ''));
@@ -280,6 +299,34 @@ org.sarsoft.AssignmentChildDialog.prototype.show = function(id) {
 	this.imp.importer.clear('/rest/assignment/' + id + '/in');
 
 	org.sarsoft.MapObjectChildDialog.prototype.show.call(this, id);
+}
+
+org.sarsoft.AssignmentChildDialog.prototype.updateCleanedTracks = function(state) {
+	var tc = this.controller.childControllers["FieldTrack"];
+	var wc = this.controller.childControllers["FieldWaypoint"];
+
+	if(state.FieldTrack) {
+		for(var i = 0; i < state.FieldTrack.length; i++) {
+			var track = state.FieldTrack[i];
+			if(track.way.waypoints.length < 2) {
+				delete tc.dao.objs[track.id];
+				tc.remove(track);
+			} else {
+				tc.dao.setObj(track.id, track);
+				tc.show(track);
+			}
+		}
+	}
+
+	if(state.FieldWaypoint) {
+		for(var i = 0; i < state.FieldWaypoint.length; i++) {
+			var fwpt = state.FieldWaypoint[i];
+			delete wc.dao.objs[fwpt.id];
+			wc.remove(fwpt);
+		}
+	}
+	
+	this.dialog.hide();
 }
 
 org.sarsoft.AssignmentController = function(imap, background_load) {
