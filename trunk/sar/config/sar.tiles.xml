@@ -1,73 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "tiles-config_2_1.dtd">
 <tiles-definitions>
-	<definition name="Search.Base" extends="App.Base">
+	<definition name="Assignment.Bulk" extends="App.Base">
+		<put-attribute name="content" value="/plans/bulk.jsp"/>
 	</definition>
-	<definition name="Search.Setup.Sub" template="/home.jsp">
-		<put-attribute name="subcontent" value="/setup.jsp"/>
-		<put-attribute name="pane" value="setup"/>
-	</definition>
-	<definition name="Search.Setup" extends="Search.Base">
-		<put-attribute name="content" value="Search.Setup.Sub"/>
-		<put-attribute name="app" value="home"/>
-	</definition>	
-	<definition name="Assignment.Details" extends="Search.Base">
-		<put-attribute name="content" value="/plans/assignment.jsp"/>
-		<put-attribute name="app" value="plans"/>
-	</definition>
-	<definition name="Assignment.PrintForms" template="/plans/assignment-print.jsp"/>
-	<definition name="Assignment.PrintBulk" template="/plans/assignment-printbulk.jsp"/>
-	<definition name="Assignment.Bulk" extends="Search.Base">
-		<put-attribute name="content" value="/plans/assignment-bulk.jsp"/>
-	</definition>
-
-	<definition name="OperationalPeriod.Detail.Sub" template="/home.jsp">
-		<put-attribute name="subcontent" value="/plans/opdetail.jsp"/>
-		<put-attribute name="pane" value="plans"/>
-	</definition>
-	<definition name="OperationalPeriod.Detail" extends="Search.Base">
-		<put-attribute name="content" value="OperationalPeriod.Detail.Sub"/>
-		<put-attribute name="app" value="home"/>
-	</definition>
-
-	<definition name="Clue.List.Sub" template="/home.jsp">
-		<put-attribute name="subcontent" value="/plans/cluelist.jsp"/>
-		<put-attribute name="pane" value="clues"/>
-	</definition>
-	<definition name="Clue.List" extends="Search.Base">
-		<put-attribute name="content" value="Clue.List.Sub"/>
-		<put-attribute name="app" value="home"/>
-	</definition>
-	<definition name="Clue.Log" extends="Search.Base">
-		<put-attribute name="content" value="/plans/cluelog.jsp"/>
-		<put-attribute name="app" value="plans"/>
-	</definition>
-	<definition name="Clue.Detail" extends="Search.Base">
-		<put-attribute name="content" value="/plans/cluedetail.jsp"/>
-		<put-attribute name="app" value="plans"/>
-	</definition>
-
-	<definition name="Resource.List.Sub" template="/home.jsp">
-		<put-attribute name="subcontent" value="/ops/resourcelist.jsp"/>
-		<put-attribute name="pane" value="resources"/>
-	</definition>
-
-	<definition name="Resource.List" extends="Search.Base">
-		<put-attribute name="content" value="Resource.List.Sub"/>
-		<put-attribute name="app" value="home"/>
-	</definition>
-
-	<definition name="Resource.Detail" extends="Search.Base">
-		<put-attribute name="content" value="/ops/resourcedetail.jsp"/>
-		<put-attribute name="app" value="ops"/>
-	</definition>
-	
 	<definition name="Location.Status" extends="Search.Base">
 		<put-attribute name="content" value="/ops/locationstatus.jsp"/>
 		<put-attribute name="app" value="setup-status"/>
-	</definition>
-	
-	<definition name="Pages.Searches" extends="Search.Base">
-		<put-attribute name="content" value="/welcome-searches.jsp"/>
 	</definition>
 </tiles-definitions>

@@ -34,7 +34,7 @@ public class GPX {
 
 		try {
 			TransformerFactory factory = TransformerFactory.newInstance();
-			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream("/xsl/gpx/gpx2shapes.xsl")));
+			Transformer transformer = factory.newTransformer(new StreamSource(sc.getResourceAsStream("/xsl/fromgpx.xsl")));
 			StringWriter writer = new StringWriter();
 			if(gpx != null && gpx.indexOf("<?xml") > 0 && gpx.indexOf("<?xml") < 10) gpx = gpx.substring(gpx.indexOf("<?xml"));
 			gpx = gpx.replaceAll("\u0004", "");

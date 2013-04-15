@@ -129,7 +129,7 @@ public class PlansController extends JSONBaseController {
 	public String bulkPrint(Model model, HttpServletRequest request, @RequestParam(value="ids", required=false) String ids) {
 		model.addAttribute("preload", manager.toJSON(manager.fromDB()));
 		if(ids != null) model.addAttribute("ids", ids);
-		return app(model, "Assignment.PrintBulk");
+		return app(model, "/plans/print");
 	}
 	
 	@RequestMapping(value="/sar/maps/pdf", method = RequestMethod.GET)
