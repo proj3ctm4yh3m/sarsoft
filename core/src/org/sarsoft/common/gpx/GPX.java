@@ -74,7 +74,9 @@ public class GPX {
 	
 	public static JSONArray toGPX(Pair<GPXDesc, List<StyledGeoObject>> items) {
 		JSONArray jarray = toGPX(items.getSecond());
-		jarray.add(items.getFirst().toGPX());
+		GPXDesc desc = items.getFirst();
+		desc.encode();
+		if(desc.getDesc() != null) jarray.add(items.getFirst().toGPX());
 		return jarray;
 	}
 	
