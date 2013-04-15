@@ -26,6 +26,7 @@ public class ClientState {
 	}
 	
 	public void add(String name, List<MapObject> obj) {
+		if(obj == null) return;
 		if(!map.containsKey(name)) {
 			map.put(name, obj);
 		} else {
@@ -34,11 +35,13 @@ public class ClientState {
 	}
 	
 	public void remove(String name, List<MapObject> remove) {
+		if(remove == null) return;
 		map.get(name).removeAll(remove);
 	}
 	
 	@SuppressWarnings("unchecked")
 	public List<MapObject> get(String name) {
+		if(!map.containsKey(name)) return null;
 		return (List <MapObject>) Collections.unmodifiableList(map.get(name));
 	}
 	

@@ -18,6 +18,7 @@ import net.sf.json.JSONSerializer;
 import net.sf.json.xml.XMLSerializer;
 
 import org.apache.log4j.Logger;
+import org.sarsoft.common.Pair;
 import org.sarsoft.common.json.JSONForm;
 
 public class GPX {
@@ -49,9 +50,11 @@ public class GPX {
 		}
 	}
 	
-	public static List<StyledGeoObject> StyledGeo(ServletContext sc, JSONForm form) {
+	public static Pair<GPXDesc, List<StyledGeoObject>> StyledGeo(ServletContext sc, JSONForm form) {
 		JSONArray jarray = JSONArray(sc, form);
 		List<StyledGeoObject> sgo = new ArrayList<StyledGeoObject>();
+		
+		GPXDesc desc = null;
 		
 		Iterator it = jarray.listIterator();
 		while(it.hasNext()) {
@@ -61,10 +64,18 @@ public class GPX {
 				sgo.add(new StyledWaypoint(jobject));
 			} else if("track".equals(type) || "route".equals(type)) {
 				sgo.add(new StyledWay(jobject));
+			} else if("desc".equals(type)) {
+				desc = new GPXDesc(jobject);
 			}
 		}
 		
-		return sgo;
+		return new Pair<GPXDesc, List<StyledGeoObject>>(desc, sgo);
+	}
+	
+	public static JSONArray toGPX(Pair<GPXDesc, List<StyledGeoObject>> items) {
+		JSONArray jarray = toGPX(items.getSecond());
+		jarray.add(items.getFirst().toGPX());
+		return jarray;
 	}
 	
 	public static JSONArray toGPX(List<StyledGeoObject> items) {

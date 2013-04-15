@@ -63,21 +63,33 @@ public class Clue extends AssignmentChildObject {
 	
 	public static Pair<Integer, Clue> from(StyledWaypoint swpt) {
 		String name = swpt.getName();
-		if(name == null || !name.startsWith("CLUE")) return null;
+		int confidence = 1;
+		if(name == null) return null;
 
 		Clue clue = new Clue();
 		clue.setPosition(swpt.getWaypoint());
-		if(name.length() > 4) try { clue.setId(Long.parseLong(name.substring(4))); } catch (NumberFormatException e) {}
-
+		
+		if("Clue".equals(swpt.getAttr("sartype"))) {
+			confidence = 100;
+			clue.setSummary(swpt.getName());
+		} else {
+			if(name.startsWith("CLUE")) {
+				try {
+					clue.setId(Long.parseLong(name.substring(4)));
+					confidence = 100;
+					clue.setSummary(swpt.getAttr("summary"));
+				} catch (NumberFormatException e) {}
+			}
+		}
+		
 		clue.setDescription(swpt.getAttr("description"));
 		clue.setLocation(swpt.getAttr("location"));
-		clue.setSummary(swpt.getAttr("summary"));
 		if(swpt.hasAttr("found")) clue.setFound(new Date(Long.parseLong(swpt.getAttr("found"))));
 		if(swpt.hasAttr("instructions")) clue.setInstructions(Disposition.valueOf(swpt.getAttr("instructions")));
 		if(swpt.hasAttr("updated")) clue.setUpdated(new Date(Long.parseLong(swpt.getAttr("updated"))));
 		if(swpt.hasAttr("assignmentid")) clue.setAssignmentId(Long.parseLong(swpt.getAttr("assignmentid")));
-
-		return new Pair<Integer, Clue>(100, clue);
+		
+		return new Pair<Integer, Clue>(confidence, clue);
 	}
 
 	public StyledGeoObject toStyledGeo() {
@@ -86,6 +98,14 @@ public class Clue extends AssignmentChildObject {
 		swpt.setName(getSummary());
 		swpt.setIcon("clue");
 		swpt.setWaypoint(getPosition());
+		
+		swpt.setAttr("sartype", "Clue");
+		swpt.setAttr("description", getDescription());
+		swpt.setAttr("location", getLocation());
+		if(getFound() != null) swpt.setAttr("found", "" + getFound().getTime());
+		if(getInstructions() != null) swpt.setAttr("instructions", "" + getInstructions());
+		if(getUpdated() != null) swpt.setAttr("updated", "" + getUpdated().getTime());
+		if(getAssignmentId() != null) swpt.setAttr("assignmentid", "" + getAssignmentId());
 
 		return swpt;
 	}

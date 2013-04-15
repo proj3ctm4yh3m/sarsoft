@@ -64,16 +64,21 @@ public class FieldTrack extends AssignmentChildObject {
 		int confidence = 1;
 		FieldTrack track = new FieldTrack();
 		track.setWay(sway.getWay());
+		if(track.getWay().getWaypoints().size() < 2) return null;
 		track.setLabel(sway.getName());
 		
-		try {
-			Long.parseLong(sway.getName().substring(0, 5));
-			track.setLabel(sway.getDesc());
+		if("FieldTrack".equals(sway.getAttr("sartype"))) {
 			confidence = 100;
-			track.setAssignmentId(Long.parseLong(sway.getName().substring(2, 5)));
-		} catch (Exception e) {}
-
-		if(track.getWay().getWaypoints().size() < 2) return null;
+		} else {
+			try {
+				Long.parseLong(sway.getName().substring(0, 5));
+				track.setLabel(sway.getDesc());
+				confidence = 100;
+				track.setAssignmentId(Long.parseLong(sway.getName().substring(2, 5)));
+			} catch (Exception e) {}
+		}
+		
+		if(sway.hasAttr("assignmentid")) track.setAssignmentId(Long.parseLong(sway.getAttr("assignmentid")));
 		return new Pair<Integer, FieldTrack>(confidence, track);
 	}
 
@@ -85,6 +90,9 @@ public class FieldTrack extends AssignmentChildObject {
 		sway.setWeight(2f);
 		sway.setFill(0f);
 		sway.setWay(getWay());
+		
+		sway.setAttr("sartype", "FieldTrack");
+		if(getAssignmentId() != null) sway.setAttr("assignmentid", "" + getAssignmentId());
 		
 		return sway;
 	}

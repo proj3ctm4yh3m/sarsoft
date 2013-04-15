@@ -15,6 +15,7 @@ import net.sf.json.JSONSerializer;
 
 import org.sarsoft.common.Pair;
 import org.sarsoft.common.dao.GenericHibernateDAO;
+import org.sarsoft.common.gpx.GPXDesc;
 import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.model.ClientState;
 import org.sarsoft.common.model.GeoMapObject;
@@ -141,7 +142,13 @@ public class DataManager {
 		return JSONAnnotatedPropertyFilter.fromObject(m);
 	}
 
-	public List<StyledGeoObject> toStyledGeo(ClientState state) {
+	public Pair<GPXDesc, List<StyledGeoObject>> toStyledGeo(ClientState state) {
+		GPXDesc desc = new GPXDesc();
+		desc.setAttr("mapConfig", state.getMapConfig());
+		for(String type : getDataTypes()) {
+			if(state.get(type) != null) desc.setAttr(type, getController(type).toGPXDesc(state.get(type)));
+		}
+		
 		List<StyledGeoObject> items = new ArrayList<StyledGeoObject>();
 		for(String type : state.types()) {
 			GeoMapObjectController controller = getGeoController(type);
@@ -149,11 +156,19 @@ public class DataManager {
 				items.add(controller.toStyledGeo((GeoMapObject) object));
 			}
 		}
-		return items;
+		return new Pair<GPXDesc, List<StyledGeoObject>>(desc, items);
 	}
-
-	public ClientState fromStyledGeo(List<StyledGeoObject> items) {
+	
+	public ClientState fromStyledGeo(Pair<GPXDesc, List<StyledGeoObject>> geo) {
 		ClientState state = new ClientState();
+
+		GPXDesc desc = geo.getFirst();
+		if(desc.hasAttr("mapConfig")) state.setMapConfig(desc.getAttr("mapConfig"));
+		for(String type : getDataTypes()) {
+			state.add(type, getController(type).fromGPXDesc(desc));
+		}
+
+		List<StyledGeoObject> items = geo.getSecond();
 		for(StyledGeoObject item : items) {
 			Pair<String, Pair<Integer, GeoMapObject>> best = null;
 			for(String key : getGeoDataTypes()) {

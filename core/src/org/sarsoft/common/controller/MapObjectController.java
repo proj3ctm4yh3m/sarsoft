@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
 
+import org.sarsoft.common.gpx.GPXDesc;
 import org.sarsoft.common.json.JSONForm;
 import org.sarsoft.common.model.MapObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +47,23 @@ public abstract class MapObjectController <T extends MapObject> extends JSONBase
 	}
 	
 	public void persist(T obj) {
-		obj.setId(dao.generateID(c));
+		if(obj.getId() != null) {
+			if(dao.load(c, obj.getId()) != null) obj.setId(null);
+		}
+		if(obj.getId() == null) obj.setId(dao.generateID(c));
 		link(obj);
 		dao.save(obj);
 	}
 	
 	public List<String[]> toCSV(List<T> objects) {
+		return null;
+	}
+	
+	public List<T> fromGPXDesc(GPXDesc desc) {
+		return null;
+	}
+	
+	public String toGPXDesc(List<T> items) {
 		return null;
 	}
 	
