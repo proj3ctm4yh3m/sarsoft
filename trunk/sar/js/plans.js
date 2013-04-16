@@ -101,7 +101,7 @@ org.sarsoft.OperationalPeriodChildDialog.prototype = new org.sarsoft.MapObjectCh
 org.sarsoft.OperationalPeriodController = function(imap, background_load) {
 	var that = this;
 	imap.register("org.sarsoft.OperationalPeriodController", this);
-	org.sarsoft.MapObjectController.call(this, imap, {name: "OperationalPeriod", dao: org.sarsoft.OperationalPeriodDAO, label: "Operational Periods"})
+	org.sarsoft.MapObjectController.call(this, imap, {name: "OperationalPeriod", dao: org.sarsoft.OperationalPeriodDAO, label: "Operational Periods"}, background_load);
 	this.dn.cb.css('display', 'none');	
 	this.cb = new Array();
 	
@@ -381,7 +381,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 	});
 
 	var line = $('<div style="clear: both">Color By:</div>').appendTo(this.configDiv);
-	this.s_color = $('<select style="float: right"><option value="NA">N/A</option><option value="number">Random</option><option value="type">Resource Type</option><option value="pod">POD</option><option value="status">Status</option></select>').appendTo(line).change(function() {
+	this.s_color = $('<select style="float: right"><option value="NA">N/A</option><option value="id">Random</option><option value="color_type">Resource Type</option><option value="probability">POD</option><option value="status">Status</option></select>').appendTo(line).change(function() {
 		that.config.color = that.s_color.val();
 		that.handleSetupChange(true);
 	});
@@ -443,30 +443,21 @@ org.sarsoft.AssignmentController.prototype._saveWay = function(obj, waypoints, h
 	this.dao.saveSegment(obj, waypoints, handler)
 }
 
+org.sarsoft.AssignmentController.prototype.getColor = function(assignment, colorby) {
+	if(colorby == "id") return sarsoft.constants.color_id[assignment.id % sarsoft.constants.color_id.length];
+	if(colorby == "probability") return sarsoft.constants.color_probability[assignment.responsivePOD];
+	if(colorby == "status") return sarsoft.constants.color_status[assignment.status];
+	if(colorby == "type") return sarsoft.constants.color_type[assignment.resourceType];
+	return "#FF0000";
+}
+
 org.sarsoft.AssignmentController.prototype.getConfig = function(assignment) {
 	var cfg = this.parentController.getChildConfig(assignment.operationalPeriodId);
 
 	var visible = cfg.visible;
 	if(this.config.show != "NA" && this.config.show != assignment.resourceType) visible = false;
 	
-	var color = "#000000";
-	if(cfg.active) {
-		if(this.config.color == "number") {
-			var colors = ["#FF0000", "#FF5500", "#FFAA00", "#0000FF", "#0088FF", "#8800FF"];
-			color = colors[assignment.id % colors.length];
-		} else if(this.config.color == "type") {
-			var colors = {MOUNTED: "#0088FF", OHV: "#8800FF", GROUND: "#FF0000", DOG: "#FF8800"}
-			color = colors[assignment.resourceType];
-		} else if(this.config.color == "pod") {
-			colors = {MEDIUM: "#FF8800", HIGH: "#FF0000", LOW: "#0088FF"}
-			color = colors[assignment.responsivePOD]
-		} else if(this.config.color == "status") {
-			colors = {DRAFT: "#0088FF", INPROGRESS: "#FF0000", PREPARED: "#FF8800", COMPLETED: "#8800FF"}
-			color = colors[assignment.status];
-		} else {
-			color = "#FF0000";
-		}
-	}
+	var color = cfg.active ? this.getColor(assignment, this.config.color) : "#000000";
 	
 	return { color : color, weight: 2, fill : (cfg.active ? 30 : 0), active : cfg.active, visible : visible }
 }
@@ -755,7 +746,7 @@ org.sarsoft.FieldTrackForm.prototype.create = function(container) {
 
 org.sarsoft.FieldTrackController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.WayObjectController.call(this, imap, {name: "FieldTrack", dao: org.sarsoft.FieldTrackDAO, label: "Tracks", geo: true, way : "way"})
+	org.sarsoft.WayObjectController.call(this, imap, {name: "FieldTrack", dao: org.sarsoft.FieldTrackDAO, label: "Tracks", geo: true, way : "way"}, background_load);
 	this.parentController = imap.registered["org.sarsoft.AssignmentController"];
 	this.parentController.childControllers["FieldTrack"] = this;
 	
@@ -854,9 +845,9 @@ org.sarsoft.AssignmentPrintMapController = function(container, ids) {
 		}
 	});
 
-	var cb_utm = $('<input type="checkbox">').prependTo($('<div>Show Overlapping Tracks From Other Assignments</div>').appendTo(this.header)).change(function() {
+	var cb_tracks = $('<input type="checkbox">').prependTo($('<div>Show Overlapping Tracks From Other Assignments</div>').appendTo(this.header)).change(function() {
 		for(var id in that.maps) {
-			that.toggleTracks(id, cb_utm[0].checked);
+			that.toggleTracks(id, cb_tracks[0].checked);
 		}
 	});
 

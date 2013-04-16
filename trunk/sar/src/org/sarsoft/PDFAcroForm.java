@@ -1,7 +1,6 @@
 package org.sarsoft;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -12,13 +11,13 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 
-public class PDFForm {
+public class PDFAcroForm {
 
 	private String filename;
 	private Map<String, String> values;
 	private PDDocument doc;
 	
-	public PDFForm(String filename, Map<String, String> values) {
+	public PDFAcroForm(String filename, Map<String, String> values) {
 		this.filename = filename;
 		this.values = values;
 	}
@@ -48,16 +47,16 @@ public class PDFForm {
 		}
 	}
 	
-	public static PDDocument create(ServletContext sc, List<PDFForm> pages) throws IOException {
+	public static PDDocument create(ServletContext sc, List<PDFAcroForm> pages) throws IOException {
 		PDDocument dest = new PDDocument();
-		for(PDFForm page : pages) {
+		for(PDFAcroForm page : pages) {
 			page.write(sc, dest);
 		}
 		return dest;
 	}
 	
-	public static void close(List<PDFForm> pages) {
-		for(PDFForm page : pages) {
+	public static void close(List<PDFAcroForm> pages) {
+		for(PDFAcroForm page : pages) {
 			page.close();
 		}
 	}

@@ -15,8 +15,6 @@ public class Constants {
 	public static Map<Probability, String> colorsByProbability = new HashMap<Probability, String>();
 	public static Map<Assignment.Status, String> colorsByStatus = new HashMap<Assignment.Status, String>();
 
-	public static Map<String, Object> all = new HashMap<String, Object>();
-
 	static {
 		colorsByResourceType.put(ResourceType.GROUND, "#FF0000");
 		colorsByResourceType.put(ResourceType.DOG, "#FF8800");
@@ -31,26 +29,13 @@ public class Constants {
 		colorsByStatus.put(Assignment.Status.PREPARED, "#FF8800");
 		colorsByStatus.put(Assignment.Status.INPROGRESS, "#FF0000");
 		colorsByStatus.put(Assignment.Status.COMPLETED, "#8800FF");
-
-		all.put("colorsById", colorsById);
-		all.put("colorsByResourceType", colorsByResourceType);
-		all.put("colorsByProbability", colorsByProbability);
-		all.put("colorsByStatus", colorsByStatus);
-		all.put("probability", Probability.values());
-		all.put("resourceType", ResourceType.values());
-
-		all = convert(all);
 	}
 
 	@SuppressWarnings("rawtypes")
-	static private Map<String, Object> convert(Map map) {
+	static public Map<String, Object> convert(Map map) {
 		Map<String, Object> strmap = new HashMap<String, Object>();
 		for(Object key : map.keySet()) {
-			if(map.get(key) instanceof Map) {
-				strmap.put(key.toString(), convert((Map) map.get(key)));
-			} else {
-				strmap.put(key.toString(), map.get(key));
-			}
+			strmap.put(key.toString(), map.get(key));
 		}
 		return strmap;
 	}

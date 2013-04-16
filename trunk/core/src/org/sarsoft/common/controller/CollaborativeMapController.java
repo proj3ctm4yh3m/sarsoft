@@ -161,7 +161,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		String user = RuntimeProperties.getUsername();
 		UserAccount account = null;
 		if(user != null) account = dao.getByPk(UserAccount.class, user);
-		if(isHosted()) {
+		if(server.isHosted()) {
 			if(account != null) {
 				if(account.getTenants() != null) tenants.addAll(account.getTenants());
 			}

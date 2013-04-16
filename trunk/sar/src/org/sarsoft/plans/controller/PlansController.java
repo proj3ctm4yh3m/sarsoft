@@ -9,9 +9,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.sarsoft.PDFForm;
+import org.sarsoft.PDFAcroForm;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.JSONBaseController;
+import org.sarsoft.common.controller.ServerInfo;
 import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.gpx.StyledWaypoint;
@@ -19,8 +20,11 @@ import org.sarsoft.common.util.Datum;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.imaging.IPDFMaker;
 import org.sarsoft.imaging.PDFDoc;
+import org.sarsoft.imaging.PDFForm;
 import org.sarsoft.imaging.PDFPage;
+import org.sarsoft.imaging.PDFSize;
 import org.sarsoft.plans.Action;
+import org.sarsoft.plans.Constants;
 import org.sarsoft.plans.form.AssignmentForm;
 import org.sarsoft.plans.model.Assignment;
 import org.sarsoft.plans.model.Clue;
@@ -34,6 +38,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 @Controller
 public class PlansController extends JSONBaseController {
 	
@@ -45,6 +51,14 @@ public class PlansController extends JSONBaseController {
 	
 	@Autowired
 	AssignmentController assignmentController;
+	
+	public void setServerInfo(ServerInfo server) {
+		super.setServerInfo(server);
+		server.addConstant("color_id", Constants.colorsById);
+		server.addConstant("color_probability", Constants.convert(Constants.colorsByProbability));
+		server.addConstant("color_status", Constants.convert(Constants.colorsByStatus));
+		server.addConstant("color_type", Constants.convert(Constants.colorsByResourceType));
+	}
 
 	@SuppressWarnings("deprecation")
 	@RequestMapping(value="/sar/104", method = RequestMethod.GET)
@@ -55,7 +69,7 @@ public class PlansController extends JSONBaseController {
 		} else {
 			assignments = dao.loadAll(Assignment.class);
 		}
-		List<PDFForm> pages = new ArrayList<PDFForm>();
+		List<PDFAcroForm> pages = new ArrayList<PDFAcroForm>();
 		for(Assignment assignment : assignments) {
 			Map<String, String> fields = new HashMap<String, String>();
 			fields.put("incident_name", RuntimeProperties.getTenant());
@@ -76,15 +90,15 @@ public class PlansController extends JSONBaseController {
 			if(assignment.getPreparedOn() != null) fields.put("prepared_on", assignment.getPreparedOn().toGMTString());
 			fields.put("personnel_function_2", "M");
 			fields.put("personnel_function_3", "*");
-			pages.add(new PDFForm("sar104", fields));
+			pages.add(new PDFAcroForm("sar104", fields));
 		}
 		try {
-			PDDocument document = PDFForm.create(context, pages);
+			PDDocument document = PDFAcroForm.create(context, pages);
 			return pdf(model, document, response);
 		} catch (Exception e) {
 			return error(model, e.getMessage());
 		} finally {
-			PDFForm.close(pages);
+			PDFAcroForm.close(pages);
 		}
 	}
 
@@ -146,43 +160,73 @@ public class PlansController extends JSONBaseController {
 		return app(model, "/plans/print");
 	}
 	
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/sar/maps/pdf", method = RequestMethod.GET)
-	public void bulkPDF(Model model, HttpServletRequest request, @RequestParam(value="ids", required=true) String idstr, HttpServletResponse response) {
+	public String bulkPDF(Model model, @RequestParam("ids") String idstr, @RequestParam(value="colorby", required=false) String colorby, HttpServletRequest request, HttpServletResponse response) {
 		String[] ids = idstr.split(",");
-		try {
-			PDFDoc doc = new PDFDoc(Datum.WGS84, new String[] { "t" }, new float[] { 1f }, new boolean[] { true, false });
-			PDFPage[] pages = new PDFPage[ids.length];
-			for(int i = 0; i < ids.length; i++) {
-				Assignment assignment = dao.load(Assignment.class, Long.parseLong(ids[i]));
-				List<StyledGeoObject> markup = new ArrayList<StyledGeoObject>();
-				markup.add(assignment.toStyledGeo());
-				for(Clue clue : assignment.getClues()) {
-					markup.add(clue.toStyledGeo());
-				}
-				for(FieldTrack track : assignment.getFieldTracks()) {
-					StyledWay sway = (StyledWay) track.toStyledGeo();
-					sway.setColor("#FF8800");
-				}
-				for(FieldWaypoint fwpt : assignment.getFieldWaypoints()) {
-					StyledWaypoint swpt = (StyledWaypoint) fwpt.toStyledGeo();
-					swpt.setIcon("#FF8800");
-				}
-				
-				pages[i] = pdfmaker.makePage(doc, assignment.getNumber(), markup.toArray(new StyledGeoObject[markup.size()]), new float[] { 8.5f, 11f }, 24000);
-				
-			}
+		PDFForm form = new PDFForm(request);
+		
+		List<StyledGeoObject[]> styled = new ArrayList<StyledGeoObject[]>();
+		Assignment[] assignments = new Assignment[ids.length];
+		for(int i = 0; i < ids.length; i++) {
+			Assignment assignment = dao.load(Assignment.class, Long.parseLong(ids[i]));
+			assignments[i] = assignment;
+			List<StyledGeoObject> markup = new ArrayList<StyledGeoObject>();
+
+			String color = null;
+			if("id".equals(colorby)) color = Constants.colorsById[assignment.getId().intValue() % Constants.colorsById.length];
+			if("probability".equals(colorby)) color = Constants.colorsByProbability.get(assignment.getResponsivePOD());
+			if("status".equals(colorby)) color = Constants.colorsByStatus.get(assignment.getStatus());
+			if("type".equals(colorby)) color = Constants.colorsByResourceType.get(assignment.getResourceType());
+
+			StyledWay segment = (StyledWay) assignment.toStyledGeo();
+			if(color != null) segment.setColor(color);
+			markup.add(segment);
 			
-			response.setContentType("application/pdf");
-			response.setHeader("Cache-Control", "max-age=432000, public");
-			PDDocument document = pdfmaker.create(pages, false);
-			document.save(response.getOutputStream());
-			document.close();
-			return;
-		} catch(Exception e) {
-			e.printStackTrace();
+			for(Clue clue : assignment.getClues()) {
+				markup.add(clue.toStyledGeo());
+			}
+			for(FieldTrack track : assignment.getFieldTracks()) {
+				StyledWay sway = (StyledWay) track.toStyledGeo();
+				sway.setColor(color == null ? "#FF8800" : color);
+			}
+			for(FieldWaypoint fwpt : assignment.getFieldWaypoints()) {
+				StyledWaypoint swpt = (StyledWaypoint) fwpt.toStyledGeo();
+				swpt.setIcon(color == null ? "#FF8800" : color);
+			}
+
+			styled.add(markup.toArray(new StyledGeoObject[markup.size()]));
 		}
 		
-	// TODO handle error conditon or pdfmaker null
+		if(form.layers == null) {
+			form.layers = new String[] { "t" };
+			form.opacity = new float[] { 1f };
+		}
+		
+		try {
+			PDFDoc doc = new PDFDoc(form.datum, form.layers, form.opacity, form.grids);
+			if(form.sizes[0].bbox == null) {
+				PDFPage[] pages = new PDFPage[ids.length];
+				for(int i = 0; i < ids.length; i++) {
+					pages[i] = pdfmaker.makePage(doc, assignments[i].getNumber(), styled.get(i), form.sizes[0].pageSize, 24000);
+				}
+				return pdf(model, pdfmaker.create(pages, false), response);
+			} else {
+				PDFPage[] pages = new PDFPage[form.sizes.length];
+	
+				List<StyledGeoObject> markup = new ArrayList<StyledGeoObject>();
+				for(StyledGeoObject[] partial : styled) markup.addAll(Arrays.asList(partial));
+				StyledGeoObject[] marray = markup.toArray(new StyledGeoObject[markup.size()]);
+	
+				for(int i = 0; i < form.sizes.length; i++) {
+					String title = (form.sizes.length > 1 ? "Page " + (i+1) + "/" + form.sizes.length : "Mercator Projection");
+					pages[i] = new PDFPage(doc, title, marray, form.sizes[i].bbox, form.sizes[i].imgSize, form.sizes[i].pageSize);
+				}
+				return pdf(model, pdfmaker.create(pages, true), response);
+			}
+		} catch (Exception e) {
+			return error(model, e.getMessage());
+		}
 	}
 
 }
