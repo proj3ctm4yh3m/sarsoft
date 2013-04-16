@@ -38,6 +38,9 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 @Controller
 public class AdminController extends JSONBaseController {
+	
+	@Autowired
+	ServerInfo server;
 
 	@Autowired
 	@Qualifier("searchDataSource")
@@ -146,7 +149,7 @@ public class AdminController extends JSONBaseController {
 			tenant.setAccount(account);
 			tenant.setAllUserPermission(Tenant.Permission.READ);
 			tenant.setPasswordProtectedUserPermission(Tenant.Permission.NONE);
-		} else if(isHosted()) {
+		} else if(server.isHosted()) {
 			if(!oneoff) return "You do not appear to be logged in";
 		}
 

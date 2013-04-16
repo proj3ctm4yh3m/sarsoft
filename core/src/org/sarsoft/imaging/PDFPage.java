@@ -1,13 +1,6 @@
 package org.sarsoft.imaging;
 
-import java.util.List;
-
 import org.sarsoft.common.gpx.StyledGeoObject;
-import org.sarsoft.common.gpx.StyledWay;
-import org.sarsoft.common.gpx.StyledWaypoint;
-import org.sarsoft.common.model.Way;
-import org.sarsoft.common.model.Waypoint;
-import org.sarsoft.common.util.WebMercator;
 
 public class PDFPage {
 	

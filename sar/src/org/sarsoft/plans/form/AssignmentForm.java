@@ -87,7 +87,7 @@ public class AssignmentForm {
 	public String getIds() {
 		return ids;
 	}
-	public void setIds(String bulkIds) {
+	public void setIds(String ids) {
 		this.ids = ids;
 	}
 	public String getPreparedBy() {
