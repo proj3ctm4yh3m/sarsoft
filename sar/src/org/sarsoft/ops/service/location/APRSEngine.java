@@ -17,8 +17,10 @@ import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Way;
 import org.sarsoft.common.model.WayType;
 import org.sarsoft.common.model.Waypoint;
+import org.sarsoft.common.util.Hash;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.model.Assignment;
+import org.sarsoft.plans.model.FieldTrack;
 
 import com.google.api.client.googleapis.GoogleTransport;
 import com.google.api.client.googleapis.json.JsonCParser;
@@ -181,31 +183,38 @@ public abstract class APRSEngine extends AsyncTransactionalEngine {
 				Resource resource = dao.getByAttr(Resource.class, "callsign", from);
 				if(resource != null) {
 					logger.debug("Updating resource " + resource.getName() + "/" + resource.getAgency() + " based on APRS callsign " + from);
-					Waypoint oldPosition = resource.getPosition();
-					resource.setPosition(wpt);
+					Waypoint oldPosition = null;
+					if(resource.getPosition() != null) {
+						oldPosition = new Waypoint();
+						oldPosition.from(resource.getPosition());
+					} else {
+						resource.setPosition(new Waypoint());
+					}
+					resource.getPosition().from(wpt);
 					resource.setUpdated(new Date());
 					dao.superSave(resource);
 					if(resource.getAssignment() != null) {
 						Assignment assignment = resource.getAssignment();
 						boolean updated = false;
-/*						for(Way way : assignment.getWays()) {
-							if(way != null && from.equalsIgnoreCase(way.getName())) {
-								way.getWaypoints().add(wpt.clone());
-								dao.superSave(way);
-								dao.superSave(assignment);
+						for(FieldTrack track : assignment.getFieldTracks()) {
+							if(track != null && from.equalsIgnoreCase(track.getLabel())) {
+								track.getWay().getWaypoints().add(wpt);
+								dao.superSave(track);
 								updated = true;
 							}
-						}*/
+						}
 						if(!updated && oldPosition != null) {
-							Way way = new Way();
-							way.setType(WayType.TRACK);
-							way.setName(from);
-							way.setPolygon(false);
-							ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
-							waypoints.add(wpt.clone());
-							waypoints.add(oldPosition.clone());
-							way.setWaypoints(waypoints);
-//							assignment.getWays().add(way);
+							FieldTrack track = new FieldTrack();
+							track.setId(dao.generateID(FieldTrack.class));
+							track.setLabel(from);
+							track.setWay(new Way());
+							track.getWay().setType(WayType.TRACK);
+							track.getWay().setPolygon(false);
+							track.getWay().setWaypoints(new ArrayList<Waypoint>());
+							track.getWay().getWaypoints().add(wpt);
+							track.getWay().getWaypoints().add(oldPosition);
+							track.preSave();
+							assignment.addFieldTrack(track);
 							dao.superSave(assignment);
 						}
 					}

@@ -133,7 +133,7 @@ org.sarsoft.OperationalPeriodController.prototype.show = function(object) {
 	var that = this;
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
 	
-	var line = this.dn.add(object.id, object.description, function() { that.childDlg.show(object.id) });
+	var line = this.dn.add(object.id, object.description, function() { that.childDlg.show(object.id); return true });
 	var cb = this.cb[object.id] = $('<input type="checkbox" checked="checked">').appendTo('<div></div>').click(function(evt) { evt.stopPropagation() }).change(function() { that.handleSetupChange(true) });
 	line.prepend(cb.parent());
 	
@@ -186,7 +186,7 @@ org.sarsoft.AssignmentTable.prototype = new org.sarsoft.view.EntityTable();
 org.sarsoft.AssignmentDAO = function() {
 	org.sarsoft.WayObjectDAO.call(this, "Assignment", "/rest/assignment", "segment");
 	this.label = "number";
-	this.childTypes = { Clue : "assignmentId", FieldTrack: "assignmentId", FieldWaypoint: "assignmentId" }
+	this.childTypes = { Clue : "assignmentId", FieldTrack: "assignmentId", FieldWaypoint: "assignmentId", Resource: "assignmentId" }
 }
 
 org.sarsoft.AssignmentDAO.prototype = new org.sarsoft.WayObjectDAO();
@@ -206,9 +206,9 @@ org.sarsoft.AssignmentForm = function() {
 
 org.sarsoft.AssignmentForm.prototype.create = function(container) {
 	var that = this;
-	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(container)));
-	var left = $('<td width="50%" valign="top"></td>').appendTo(row);
-	var right = jQuery('<td width="50%" valign="top" style="padding-left: 20px"></td>').appendTo(row);
+	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0; width: 95%"></table>').appendTo(container)));
+	var left = $('<td width="35%" valign="top"></td>').appendTo(row);
+	var right = jQuery('<td width="60%" valign="top" style="padding-left: 20px"></td>').appendTo(row);
 	
 	var build = function(input, label) {
 		input = $(input);
@@ -223,9 +223,13 @@ org.sarsoft.AssignmentForm.prototype.create = function(container) {
 	this.fields.unresponsivePOD = build('<select><option>LOW</option><option>MEDIUM</option><option>HIGH</option></select>', 'Unresponsive POD');
 	this.fields.responsivePOD = build('<select><option>LOW</option><option>MEDIUM</option><option>HIGH</option></select>', 'Responsive POD');
 	this.fields.cluePOD = build('<select><option>LOW</option><option>MEDIUM</option><option>HIGH</option></select>', 'Clue POD');
-	this.fields.timeAllocated = build('<input type="text"/>', 'Time Allocated');
+	this.fields.timeAllocated = build('<input type="text"/>', 'Time (hours)');
+	this.fields.primaryFrequency = build('<input type="text"/>', 'Primary Freq');
+	this.fields.secondaryFrequency = build('<input type="text"/>', 'Secondary Freq');
 
-	this.fields.details = $('<textarea></textarea').appendTo($('<div>details</div>').appendTo(right));
+	this.fields.details = $('<textarea style="width: 100%" rows="3"></textarea').appendTo($('<div>Details</div>').appendTo(right));
+	this.fields.previousEfforts = $('<textarea style="width: 100%" rows="2"></textarea').appendTo($('<div>Previous Efforts</div>').appendTo(right));
+	this.fields.transportation = $('<textarea style="width: 100%" rows="2"></textarea').appendTo($('<div>Transportation</div>').appendTo(right));
 }
 
 org.sarsoft.AssignmentForm.prototype.read = function() {
@@ -265,8 +269,12 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 			window.open('/sar/maps/browser?ids=' + that.obj.id, '_blank');
 			return false;
 		});
-		$('<a href="#">Print PDF Map</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
+		$('<a href="#">Auto PDF Map</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
 			window.open('/sar/maps/pdf?ids=' + that.obj.id, '_blank');
+			return false;
+		});
+		$('<a href="#">Custom PDF Map</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
+			window.open('/sar/print?ids=' + that.obj.id, '_blank');
 			return false;
 		});
 	
@@ -321,14 +329,27 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 		{ key : "agency", label : "Agency", sortable : true},
 		{ key : "type", label : "Type", sortable : true},
 		{ key : "callsign", label : "Callsign"},
-		{ key : "spotId", label: "SPOT ID"},
 		{ key : "lastFix", label : "Last Update", sortable : true }]);
+	
+	var div = $('<div style="float: left">Add Resource: </div>').appendTo(this.tabs['Resource'].div);
+	this.s_resource = $('<select></select>').appendTo(div);
+	$('<button>Add</button>').appendTo(div).click(function() {
+		alert(that.s_resource.val());
+	});
 }
 
 org.sarsoft.AssignmentChildDialog.prototype = new org.sarsoft.MapObjectChildDialog();
 
 org.sarsoft.AssignmentChildDialog.prototype.show = function(id) {
 	if(this.imp) this.imp.importer.clear('/rest/assignment/' + id + '/in');
+
+	this.s_resource.empty();
+	var mine = this.controller.dao.children(this.controller.obj(id), "Resource");
+	var all = org.sarsoft.MapState.daos["Resource"].objs;
+	for(var i = 0; i < all.length; i++) {
+		var obj = all[i];
+		if(mine.indexOf(obj) < 0) this.s_resource.append('<option value="' + obj.id + '">' + obj.name + '</option>');
+	}
 
 	org.sarsoft.MapObjectChildDialog.prototype.show.call(this, id);
 }
@@ -548,16 +569,17 @@ org.sarsoft.ClueForm.prototype.create = function(container) {
 	org.sarsoft.AssignmentChildForm.prototype.create.call(this, container);
 	var that = this;
 
-	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0"></table>').appendTo(container)));
-	var left = $('<td width="50%" valign="top"></td>').appendTo(row);
-	var right = jQuery('<td width="50%" valign="top" style="padding-left: 20px"></td>').appendTo(row);
+	var row = jQuery('<tr></tr>').appendTo(jQuery('<tbody></tbody>').appendTo(jQuery('<table style="border: 0; width: 100%"></table>').appendTo(container)));
+	var left = $('<td width="35%" valign="top"></td>').appendTo(row);
+	var right = jQuery('<td width="60%" valign="top" style="padding-left: 20px"></td>').appendTo(row);
 	
 
 	this.fields.summary = this.build('<input type="text"/>', 'Summary', left);
 	this.fields.assignmentId = this.build('<select></select>', 'Assignment', left);
-	this.fields.instructions = this.build('<select><option>COLLECT</option><option>MARK</option><option>IGNORE</option>', 'Instructions', right);
+	this.fields.instructions = this.build('<select><option>COLLECT</option><option>MARK</option><option>IGNORE</option>', 'Instructions', left);
 
-	this.fields.description = $('<textarea></textarea').appendTo($('<div>Description</div>').appendTo(right));
+	this.fields.description = $('<textarea style="width: 100%" rows="3"></textarea').appendTo($('<div>Details</div>').appendTo(right));
+	this.fields.location = $('<textarea style="width: 100%" rows="2"></textarea').appendTo($('<div>Location</div>').appendTo(right));
 }
 
 org.sarsoft.ClueController = function(imap, background_load) {
@@ -565,7 +587,10 @@ org.sarsoft.ClueController = function(imap, background_load) {
 	org.sarsoft.WaypointObjectController.call(this, imap, {name: "Clue", dao: org.sarsoft.ClueDAO, label: "Clues", geo: true, waypoint: "position"}, background_load);
 	this.parentController = imap.registered["org.sarsoft.AssignmentController"];
 	this.parentController.childControllers["Clue"] = this;
-	
+
+	this.dn.tree.getTool().html('<img src="' + $.img('details.png') + '"/>CSV').
+	attr("title", "Export to CSV").click(function(evt) { evt.stopPropagation(); window.open('/sar/134', '_blank'); return false });
+
 	if(!org.sarsoft.iframe && org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Clue", function(point) {
 			that.dlg.show({url: "#FF0000"}, point);
@@ -616,6 +641,9 @@ org.sarsoft.ClueController.prototype.show = function(object) {
 	this.DNAddLine(object);
 	if((object.description || "").length > 0) this.dn.addComments(object.id, object.description);
 
+	this.dn.addIcon(object.id, "Sar 135 Form", '<img src="' + $.img('details.png') + '"/>', function() {
+		window.open('/sar/135?ids=' + object.id, '_blank');
+	});
 	if(org.sarsoft.writeable) {
 		this.DNAddEdit(object);
 		this.DNAddDelete(object);

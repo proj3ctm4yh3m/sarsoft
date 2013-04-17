@@ -44,6 +44,7 @@ public class Resource extends AssignmentChildObject {
 	
 	public void from(Resource updated) {
 		if(updated.getPosition() == null || updated.getName() != null) {
+			setAssignmentId(updated.getAssignmentId());
 			setName(updated.getName());
 			setAgency(updated.getAgency());
 			setCallsign(updated.getCallsign());

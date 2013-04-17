@@ -454,7 +454,7 @@ org.sarsoft.widget.Importer.prototype.clear = function (url) {
 
 org.sarsoft.widget.Importer.prototype.processImportedData = function(data) {
 	for(var name in org.sarsoft.MapState.daos) {
-		if(data[name]) org.sarsoft.MapState.daos[name].sideload(data[name]);
+		if(data[name] && data[name].length > 0) org.sarsoft.MapState.daos[name].sideload(data[name]);
 	}
 	$(this).triggerHandler('success');
 }
@@ -1443,7 +1443,7 @@ org.sarsoft.MapObjectDAO.prototype.del = function(id, handler) {
 }
 
 org.sarsoft.MapObjectDAO.prototype.load = function(id, handler) {
-	if(!this.offline) return org.sarsoft.BaseDAO.prototype.del.call(this, id, handler);
+	if(!this.offline) return org.sarsoft.BaseDAO.prototype.load.call(this, id, handler);
 
 	var that = this;
 	org.sarsoft.async(function() {

@@ -10,6 +10,7 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 
 public class PDFAcroForm {
 
@@ -22,20 +23,27 @@ public class PDFAcroForm {
 		this.values = values;
 	}
 	
-	public void write(ServletContext sc, PDDocument dest) throws IOException {
+	@SuppressWarnings("unchecked")
+	public int write(ServletContext sc, PDDocument dest, int id) throws IOException {
 		doc = PDDocument.load(sc.getResourceAsStream("/" + filename + ".pdf"));
 		PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
 		for(String name : values.keySet()) {
 			String value = values.get(name);
-			if(value != null) form.getField(name).setValue(value);
+			if(value != null && form.getField(name) != null) {
+				form.getField(name).setValue(value);
+				form.getField(name).setPartialName("_super_secret_id_" + (id++));
+			}
 		}
+		
 		((COSArray) form.getDictionary().getDictionaryObject("Fields")).clear();
 		PDPage from = (PDPage) doc.getDocumentCatalog().getAllPages().get(0);
 		PDPage to = dest.importPage(from);
+		
 		to.setCropBox(from.findCropBox()); 
 		to.setMediaBox(from.findMediaBox()); 
 		to.setResources(from.findResources()); 
-		to.setRotation(from.findRotation()); 
+		to.setRotation(from.findRotation());
+		return id;
 	}
 	
 	public void close() {
@@ -49,8 +57,9 @@ public class PDFAcroForm {
 	
 	public static PDDocument create(ServletContext sc, List<PDFAcroForm> pages) throws IOException {
 		PDDocument dest = new PDDocument();
+		int id = 0;
 		for(PDFAcroForm page : pages) {
-			page.write(sc, dest);
+			id = page.write(sc, dest, id);
 		}
 		return dest;
 	}

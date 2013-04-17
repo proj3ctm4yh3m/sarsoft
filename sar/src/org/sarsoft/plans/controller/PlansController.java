@@ -1,5 +1,6 @@
 package org.sarsoft.plans.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +9,12 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.sarsoft.PDFAcroForm;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.JSONBaseController;
@@ -16,6 +22,7 @@ import org.sarsoft.common.controller.ServerInfo;
 import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.gpx.StyledWaypoint;
+import org.sarsoft.common.model.Tenant;
 import org.sarsoft.common.util.Datum;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.imaging.IPDFMaker;
@@ -23,6 +30,7 @@ import org.sarsoft.imaging.PDFDoc;
 import org.sarsoft.imaging.PDFForm;
 import org.sarsoft.imaging.PDFPage;
 import org.sarsoft.imaging.PDFSize;
+import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.Action;
 import org.sarsoft.plans.Constants;
 import org.sarsoft.plans.form.AssignmentForm;
@@ -62,41 +70,56 @@ public class PlansController extends JSONBaseController {
 
 	@SuppressWarnings("deprecation")
 	@RequestMapping(value="/sar/104", method = RequestMethod.GET)
-	public String get104(Model model, @RequestParam(value="ids", required=false) String ids, HttpServletResponse response) {
+	public String get104(Model model, @RequestParam(value="ids", required=false) String ids, @RequestParam(value="copies", required=false) String copies, HttpServletResponse response) {
 		List<Assignment> assignments = new ArrayList<Assignment>();
 		if(ids != null && ids.length() > 0) {
 			for(String id : ids.split(",")) assignments.add(dao.load(Assignment.class, Long.parseLong(id)));
 		} else {
 			assignments = dao.loadAll(Assignment.class);
 		}
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+		
 		List<PDFAcroForm> pages = new ArrayList<PDFAcroForm>();
+		if(copies == null) copies = "";
 		for(Assignment assignment : assignments) {
-			Map<String, String> fields = new HashMap<String, String>();
-			fields.put("incident_name", RuntimeProperties.getTenant());
-			if(assignment.getOperationalPeriod() != null) fields.put("operational_period", assignment.getOperationalPeriod().getDescription());
-			fields.put("assignment_number", assignment.getNumber());
-			fields.put("resource_type", "" + assignment.getResourceType());
-			fields.put("asgn_description", "\n" + assignment.getDetails());
-			fields.put("previous_search_effort", assignment.getPreviousEfforts());
-			fields.put("time_allocated", assignment.getTimeAllocated() + " hours");
-			fields.put("size_of_assignment", assignment.getSegment().getFormattedSize());
-			fields.put("POD_" + assignment.getResponsivePOD().toString().toLowerCase().substring(0,1) + "_responsive", "X");
-			fields.put("POD_" + assignment.getUnresponsivePOD().toString().toLowerCase().substring(0,1) + "_unresponsive", "X");
-			fields.put("POD_" + assignment.getCluePOD().toString().toLowerCase().substring(0,1) + "_clues", "X");
-			fields.put("transport_instructions", assignment.getTransportation());
-			fields.put("freq_command", assignment.getPrimaryFrequency());
-			fields.put("freq_tactical", assignment.getSecondaryFrequency());
-			fields.put("prepared_by", assignment.getPreparedBy());
-			if(assignment.getPreparedOn() != null) fields.put("prepared_on", assignment.getPreparedOn().toGMTString());
-			fields.put("personnel_function_2", "M");
-			fields.put("personnel_function_3", "*");
-			pages.add(new PDFAcroForm("sar104", fields));
+			for(String copy : copies.split(",")) {
+				Map<String, String> fields = new HashMap<String, String>();
+				fields.put("incident_name", tenant.getDescription());
+				if(assignment.getOperationalPeriod() != null) fields.put("operational_period", assignment.getOperationalPeriod().getDescription());
+				fields.put("assignment_number", assignment.getNumber());
+				fields.put("resource_type", "" + assignment.getResourceType());
+				fields.put("asgn_description", assignment.getDetails());
+				fields.put("previous_search_effort", assignment.getPreviousEfforts());
+				fields.put("time_allocated", assignment.getTimeAllocated() + " hours");
+				fields.put("size_of_assignment", assignment.getSegment().getFormattedSize().replaceAll("&sup2;", "\u00B2"));
+				fields.put("POD_" + assignment.getResponsivePOD().toString().toLowerCase().substring(0,1) + "_responsive", "X");
+				fields.put("POD_" + assignment.getUnresponsivePOD().toString().toLowerCase().substring(0,1) + "_unresponsive", "X");
+				fields.put("POD_" + assignment.getCluePOD().toString().toLowerCase().substring(0,1) + "_clues", "X");
+				fields.put("transport_instructions", assignment.getTransportation());
+				fields.put("freq_command", assignment.getPrimaryFrequency());
+				fields.put("freq_tactical", assignment.getSecondaryFrequency());
+				fields.put("prepared_by", assignment.getPreparedBy());
+				if(assignment.getPreparedOn() != null) fields.put("prepared_on", assignment.getPreparedOn().toGMTString());
+	
+				int i = 1;
+				for(Resource resource : assignment.getResources()) {
+					if(resource.getType() == Resource.Type.PERSON) {
+						fields.put("personnel_name_" + i, resource.getName());
+						fields.put("personnel_agency_" + i, resource.getAgency());
+					}
+					i++;
+				}
+				
+				fields.put("copy_" + copy, "X");
+				pages.add(new PDFAcroForm("sar104", fields));
+			}
 		}
 		try {
 			PDDocument document = PDFAcroForm.create(context, pages);
-			return pdf(model, document, response);
+			return pdf(model, document, response, "sar104.pdf");
 		} catch (Exception e) {
-			return error(model, e.getMessage());
+			e.printStackTrace();
+			return error(model, e.toString());
 		} finally {
 			PDFAcroForm.close(pages);
 		}
@@ -112,7 +135,41 @@ public class PlansController extends JSONBaseController {
 			rows.add(new String[] { clue.getSummary(), clue.getDescription(), (clue.getAssignment() != null ? clue.getAssignment().getNumber() : ""), clue.getPosition().getFormattedUTM() });
 		}
 		
-		return csv(model, rows, response);
+		return csv(model, rows, response, "clue_log.csv");
+		
+	}
+	
+	@SuppressWarnings("deprecation")
+	@RequestMapping(value="/sar/135", method = RequestMethod.GET)
+	public String get135(Model model, @RequestParam(value="ids", required=false) String ids, HttpServletResponse response) {
+		List<Clue> clues = new ArrayList<Clue>();
+		if(ids != null && ids.length() > 0) {
+			for(String id : ids.split(",")) clues.add(dao.load(Clue.class, Long.parseLong(id)));
+		} else {
+			clues = dao.loadAll(Clue.class);
+		}
+		Tenant tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
+
+		List<PDFAcroForm> pages = new ArrayList<PDFAcroForm>();
+		for(Clue clue : clues) {
+			Map<String, String> fields = new HashMap<String, String>();
+			fields.put("incident_name", tenant.getDescription());
+			fields.put("summary", clue.getSummary());
+			if(clue.getFound() != null) fields.put("found", clue.getFound().toGMTString());
+			if(clue.getAssignment() != null) fields.put("assignment_number", clue.getAssignment().getNumber());
+			fields.put("description", clue.getDescription());
+			fields.put("location", clue.getLocation());
+			if(clue.getInstructions() != null) fields.put("disposition_" + clue.getInstructions().toString().toLowerCase(), "X");
+			pages.add(new PDFAcroForm("sar135", fields));
+		}
+		try {
+			PDDocument document = PDFAcroForm.create(context, pages);
+			return pdf(model, document, response, "sar135.pdf");
+		} catch (Exception e) {
+			return error(model, e.getMessage());
+		} finally {
+			PDFAcroForm.close(pages);
+		}
 	}
 	
 	
@@ -210,7 +267,7 @@ public class PlansController extends JSONBaseController {
 				for(int i = 0; i < ids.length; i++) {
 					pages[i] = pdfmaker.makePage(doc, assignments[i].getNumber(), styled.get(i), form.sizes[0].pageSize, 24000);
 				}
-				return pdf(model, pdfmaker.create(pages, false), response);
+				return pdf(model, pdfmaker.create(pages, false), response, "map.pdf");
 			} else {
 				PDFPage[] pages = new PDFPage[form.sizes.length];
 	
@@ -222,7 +279,7 @@ public class PlansController extends JSONBaseController {
 					String title = (form.sizes.length > 1 ? "Page " + (i+1) + "/" + form.sizes.length : "Mercator Projection");
 					pages[i] = new PDFPage(doc, title, marray, form.sizes[i].bbox, form.sizes[i].imgSize, form.sizes[i].pageSize);
 				}
-				return pdf(model, pdfmaker.create(pages, true), response);
+				return pdf(model, pdfmaker.create(pages, true), response, "map.pdf");
 			}
 		} catch (Exception e) {
 			return error(model, e.getMessage());

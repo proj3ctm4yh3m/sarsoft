@@ -113,7 +113,7 @@ public abstract class JSONBaseController {
 		return "/xsl/tokml";
 	}
 	
-	protected String csv(Model model, List<String[]> items, HttpServletResponse response) {
+	protected String csv(Model model, List<String[]> items, HttpServletResponse response, String filename) {
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < items.size(); i++) {
 			if(i > 0) sb.append("\n");
@@ -123,13 +123,14 @@ public abstract class JSONBaseController {
 				sb.append(row[j]);
 			}
 		}
-		response.setHeader("Content-Disposition", "attachment; filename=export.csv");
+		response.setHeader("Content-Disposition", "attachment; filename=" + filename);
 		model.addAttribute("echo", sb.toString());
 		return "/echo";
 	}
 	
-	protected String pdf(Model model, PDDocument document, HttpServletResponse response) {
-		response.setContentType("application/pdf");
+	protected String pdf(Model model, PDDocument document, HttpServletResponse response, String filename) {
+//		response.setContentType("application/pdf");
+		response.setHeader("Content-Disposition", "attachment; filename=" + filename);
 		try {
 			document.save(response.getOutputStream());
 			document.close();
