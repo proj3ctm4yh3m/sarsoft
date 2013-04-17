@@ -2,7 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
 <div>
-<h2>Bulk Operations - <c:choose><c:when test="not empty period">${period.description}</c:when><c:otherwise>All Assignments</c:otherwise></c:choose></h2>
+<h2>Bulk Operations - <c:choose><c:when test="${not empty period}">${period.description}</c:when><c:otherwise>All Assignments</c:otherwise></c:choose></h2>
 <p>Use shift+click and ctrl+click to select assignments from the list.</p>
 </div>
 

@@ -1709,7 +1709,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 
 org.sarsoft.InteractiveMap.prototype.checkID = function(obj) {
 	if(obj.id != null) {
-		this._nextID = Math.max(this._nextID, obj.id+1);
+		if(!isNaN(obj.id)) this._nextID = Math.max(this._nextID, obj.id+1);
 	} else {
 		obj.id = this._nextID++;
 	}
@@ -2908,6 +2908,7 @@ org.sarsoft.MapUtil.createIcon = function(url) {
 				size: new google.maps.Size(target_size, target_size), 
 				url: $.img('icons/sprite2.png') }
 	}
+	if(url.indexOf('#') == 0) return org.sarsoft.MapUtil.createFlatCircleImage(url);
 	return org.sarsoft.MapUtil.createImage(20, $.img(url));
 }
 org.sarsoft.MapUtil.createImage = function(size, url) {

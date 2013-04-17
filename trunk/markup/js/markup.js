@@ -151,6 +151,7 @@ org.sarsoft.controller.MarkerController.prototype._saveWaypoint = function(id, w
 }
 
 org.sarsoft.controller.MarkerController.getRealURLForMarker = function(url) {
+	if(url.url != null) url = url.url;
 	if(url == null || url.length == 0) {
 		url  = "#FF0000";
 	}
@@ -191,13 +192,10 @@ org.sarsoft.controller.MarkerController.prototype.show = function(object) {
 		
 		if(marker.url == null || marker.url.length == 0) {
 			config.color = "#FF0000";
-		} else if(marker.url.indexOf('#') == 0) {
-			config.color = marker.url;
-		} else if(marker.url.indexOf('/') == -1 && marker.url.indexOf('.') == -1) {
-			config.icon = org.sarsoft.MapUtil.createIcon(marker.url);
 		} else {
-			config.icon = org.sarsoft.MapUtil.createImage(20, marker.url);
+			config.icon = org.sarsoft.MapUtil.createIcon(marker.url);
 		}
+	
 		this.imap.addWaypoint(marker.position, config, tooltip, org.sarsoft.htmlescape(marker.label));
 	}
 }

@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.sarsoft.common.model.CollaborativeMap;
 import org.sarsoft.common.model.Waypoint;
 import org.sarsoft.plans.Constants;
 import org.sarsoft.common.util.RuntimeProperties;
@@ -38,14 +39,14 @@ public class APRSTier2Engine extends APRSEngine {
 		String filter = "#filter";
 		try {
 			if(createTransaction) beginTransaction();
-/*			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
-			if(wpt != null) {
-				String lat = Double.toString(wpt.getLat());
+			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", search);
+			if(map.getDefaultCenter() != null) {
+				String lat = Double.toString(map.getDefaultCenter().getLat());
 				if(lat.length() > 10) lat = lat.substring(0, 10);
-				String lng = Double.toString(wpt.getLng());
+				String lng = Double.toString(map.getDefaultCenter().getLng());
 				if(lng.length() > 10) lng = lng.substring(0, 10);
-				filter += " r/" + lat + "/" + lng + "/20";
-			}*/
+				filter += " r/" + lat + "/" + lng + "/30";
+			}
 			
 			boolean b = false;
 			List<Resource> resources = dao.loadAll(Resource.class);

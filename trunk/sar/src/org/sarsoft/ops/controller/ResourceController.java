@@ -56,7 +56,10 @@ public class ResourceController extends AssignmentChildController<Resource> {
 		Resource obj = make(params.JSON());
 		if(obj.getCallsign() != null) {
 			Waypoint wpt = location.getCallsignLocation(obj.getCallsign());
-			if(wpt != null) obj.setPosition(wpt);
+			if(wpt != null) {
+				obj.setPosition(new Waypoint());
+				obj.getPosition().from(wpt);
+			}
 		}
 		persist(obj);
 		return json(model, obj);
