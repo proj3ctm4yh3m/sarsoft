@@ -400,7 +400,7 @@ org.sarsoft.widget.Maps = function(imap, container) {
 				var center = imap.map.getCenter();
 				$('<input type="hidden" name="lat"/>').appendTo(newform).val(center.lat());
 				$('<input type="hidden" name="lng"/>').appendTo(newform).val(center.lng());
-				$('<input type="hidden" name="state"/>').appendTo(newform).val(YAHOO.lang.JSON.stringify(localDAO.getMap(browser_sync_from.val()).state));
+				$('<input type="hidden" name="state"/>').appendTo(newform).val(YAHOO.lang.JSON.stringify(localDAO.getState(browser_sync_from.val())));
 				
 				newform.submit();
 			});
