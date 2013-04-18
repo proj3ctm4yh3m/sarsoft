@@ -21,11 +21,15 @@
 function doload() {
 org.sarsoft.Loader.queue(function() {
 	
-	if(sarsoft.tenant == null && window.location.hash.length > 0) {
-		var id = Number(window.location.hash.substring(1));
-		var dao = new org.sarsoft.LocalMapDAO();
-		sarsoft.local = dao.getMap(id);
-		org.sarsoft.preload = dao.getState(id);
+	if(sarsoft.tenant == null) {
+		if(window.location.hash.length > 0) {
+			var id = Number(window.location.hash.substring(1));
+			var dao = new org.sarsoft.LocalMapDAO();
+			sarsoft.local = dao.getMap(id);
+			org.sarsoft.preload = dao.getState(id);
+		} else {
+			window.location="/map.html";
+		}
 	}
 	
 	page = new sarsoft.Page({
