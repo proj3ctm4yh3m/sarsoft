@@ -13,13 +13,13 @@ org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 	var ts = config.tilesize ? config.tilesize : 256;
 	if(config.type == "TILE"){
 		var template = config.template;
-		var type = new google.maps.ImageMapType({alt: "", maxZoom: 21, minZoom: config.minresolution, name: config.name, opacity: config.opacity == null ? 1 : config.opacity/100, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
+		var type = new google.maps.ImageMapType({alt: "", maxZoom: sarsoft.map.zoom_max || 21, minZoom: sarsoft.map.zoom_min || config.minresolution, name: config.name, opacity: config.opacity == null ? 1 : config.opacity/100, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
 			return (zoom > config.maxresolution ? '/resource/imagery/tilecache/' + config.alias + '/{Z}/{X}/{Y}.png' : template).replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
 		}});
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
 	    type._alias = config.alias;
-	    type._maxZoom = config.maxresolution;
+	    type._maxZoom = sarsoft.map.zoom_max || config.maxresolution;
 	    return type;
 	} else if(config.type == "WMS") {
 		var wm = new org.sarsoft.WebMercator();
@@ -2728,7 +2728,7 @@ org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
 }
 
 org.sarsoft.ThinLocationForm.prototype.clear = function() {
-	this.select.val('UTM').val('name').change();
+	this.select.val(this.select.find('value="name"').length > 0 ? 'name' : 'UTM').change();
 	this.utmform.write({zone : "", e : "", n : ""});
 	this.address.val("");
 	this.lat.val("");

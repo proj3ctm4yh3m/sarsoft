@@ -31,7 +31,7 @@ public class UserAccount {
 	}
 
 	@OneToMany(mappedBy="account")
-	@Cascade({org.hibernate.annotations.CascadeType.ALL,org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	public Set<Tenant> getTenants() {
 		return tenants;
 	}

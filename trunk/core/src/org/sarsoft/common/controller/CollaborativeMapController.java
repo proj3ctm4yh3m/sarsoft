@@ -101,6 +101,8 @@ public class CollaborativeMapController extends JSONBaseController {
 		String filename = (tenant.getDescription() != null && tenant.getDescription().length() > 0) ? tenant.getDescription() : tenant.getName();
 		filename = filename.replaceAll(" ", "_");
 		switch (format) {
+		case JSON:
+			return json(model, manager.toJSON(manager.fromDB()));
 		case GPX :
 			response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".gpx");
 			return gpx(model, GPX.toGPX(manager.toStyledGeo(manager.fromDB())));
@@ -180,7 +182,7 @@ public class CollaborativeMapController extends JSONBaseController {
 
 		return json(model, dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant()));
 	}
-
+	
 	@RequestMapping(value="/rest/since/{time}")
 	public String getSince(Model model, @PathVariable("time") Long time) {
 		return json(model, manager.toJSON(manager.fromDB(new Date(time))));
@@ -188,7 +190,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.DELETE)
 	public String delete(Model model, HttpServletRequest request, @PathVariable("id") String id) {
-		if(RuntimeProperties.getTenant() == null) {
+		if(RuntimeProperties.getTenant() == null || !RuntimeProperties.getTenant().equals(id)) {
 			String error = adminController.setTenant(id, CollaborativeMap.class, request);
 			if(error != null) return json(model, error);
 		}
@@ -206,11 +208,9 @@ public class CollaborativeMapController extends JSONBaseController {
 			UserAccount account = tenant.getAccount();
 			account.getTenants().remove(tenant);
 			tenant.setAccount(null);
-			// will delete tenant as well due to delete_orphan cascade
 			dao.save(account);
-		} else {
-			dao.delete(tenant);
 		}
+		dao.delete(tenant);
 		RuntimeProperties.setTenant(null);
 		request.getSession(true).removeAttribute("tenantid");
 
@@ -219,8 +219,10 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	@RequestMapping(value="/rest/map/{id}", method = RequestMethod.POST)
 	public String updateAdmin(Model model, JSONForm params, HttpServletRequest request, @PathVariable("id") String id) {
-		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
-
+		if(RuntimeProperties.getTenant() == null || !RuntimeProperties.getTenant().equals(id)) {
+			String error = adminController.setTenant(id, CollaborativeMap.class, request);
+			if(error != null) return json(model, error);
+		}
 		if(RuntimeProperties.getUserPermission() != Permission.ADMIN) {
 			return json(model, "You do not have admin rights to this map");
 		}
@@ -229,7 +231,14 @@ public class CollaborativeMapController extends JSONBaseController {
 			return json(model, "You are not currently working on this map, concerned this may be an accidental update");
 		}
 
-		Tenant updated = new CollaborativeMap(params.JSON());
+		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+		JSONObject json = params.JSON();
+		if(json.has("detach") && json.getBoolean("detach")) {
+			map.setAccount(null);
+			dao.save(map);
+			return json(model, map);
+		}
+		Tenant updated = new CollaborativeMap(json);
 		if(updated.getAllUserPermission() == null) {
 			map.setDescription(updated.getDescription());
 			map.setComments(updated.getComments());

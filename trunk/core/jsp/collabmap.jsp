@@ -25,7 +25,7 @@ org.sarsoft.Loader.queue(function() {
 		var id = Number(window.location.hash.substring(1));
 		var dao = new org.sarsoft.LocalMapDAO();
 		sarsoft.local = dao.getMap(id);
-		org.sarsoft.preload = sarsoft.local.state;
+		org.sarsoft.preload = dao.getState(id);
 	}
 	
 	page = new sarsoft.Page({
@@ -41,10 +41,12 @@ org.sarsoft.Loader.queue(function() {
 	});
 	
 	if(sarsoft.local) {
+		page.imap.controls.action.links.share.css('visibility', 'hidden');
+		if(sarsoft.local != null) page.imap.controls.action.links.save.css('visibility', 'hidden');
 		var listen_local = function(event) {
 			for(var type in org.sarsoft.MapState.daos) {
 				$(org.sarsoft.MapState.daos[type]).bind(event, function() {
-					dao.saveState(sarsoft.local.id, org.sarsoft.MapState.get());
+					dao.setState(sarsoft.local.id, org.sarsoft.MapState.get());
 					$(org.sarsoft.BaseDAO).trigger('success');
 				});
 			}
@@ -52,6 +54,10 @@ org.sarsoft.Loader.queue(function() {
 		listen_local('create');
 		listen_local('save');
 		listen_local('delete');
+
+		var _hash = window.location.hash;
+		window.setInterval(function() { if(window.location.hash != _hash) window.location.reload(); }, 500);
+
 		window.setTimeout(function() {listen_local('load') }, 5000); // for GPX imports
 	}
 

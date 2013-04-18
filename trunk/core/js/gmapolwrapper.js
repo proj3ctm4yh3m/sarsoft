@@ -163,7 +163,7 @@ google.maps.Map = function(node, opts) {
 	this.ol = new Object();
 	this._overlays = new Array();
 
-	this.ol.navigation = new OpenLayers.Control.Navigation();
+	this.ol.navigation = (org.sarsoft.touch ? new OpenLayers.Control.TouchNavigation() : new OpenLayers.Control.Navigation());
 	var options = {
             maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
             maxResolution: 156543.0339,
@@ -186,7 +186,7 @@ google.maps.Map = function(node, opts) {
 	this.overlayMapTypes = new google.maps.MVCArray();
 	this.currentMapType = null;
 
-	var dummy = new google.maps.ImageMapType({name: "dummy", maxZoom: 20, minZom: 0, getTileUrl: function(p, z) { return "/resource/imagery/tiles/dummy/" + p.z + "/" + p.x + "/" + p.y + ".png"}});	
+	var dummy = new google.maps.ImageMapType({name: "dummy", maxZoom: 20, minZoom: 0, getTileUrl: function(p, z) { return "/resource/imagery/tiles/dummy/" + p.z + "/" + p.x + "/" + p.y + ".png"}});	
 	this.mapTypes.set("dummy", dummy);
 	this.setMapTypeId("dummy");
 	
@@ -204,14 +204,38 @@ google.maps.Map = function(node, opts) {
 	this.ol.modifyControl.standalone = true;
 	this.ol.modifyControl.activate();
 	this.ol.modified = new Object();
+
 	this.ol.modify = function(feature) {
-		that.ol.modified[feature.id] = true;
-		that.ol.modifyControl.selectFeature(feature);
+		if(feature.goverlay && feature.goverlay.position) {
+			if(that.ol.modified[feature.id] != null) that.ol.unmodify(feature);
+			var mc = new OpenLayers.Control.ModifyFeature(that.ol.vectorLayer);
+			that.ol.map.addControl(mc);
+			mc.standalone = true;
+			mc.activate();
+			mc.dragControl.onComplete = function(obj) {
+				if(obj != null && obj.goverlay != null) google.maps.event.trigger(obj.goverlay, "dragend");
+			}
+			mc.dragControl.onDrag = function(obj) {
+//				if(obj != null && obj.goverlay != null) google.maps.event.trigger(obj.goverlay, "drag");
+			}
+			mc.selectFeature(feature);
+			that.ol.modified[feature.id] = mc;
+		} else {
+			that.ol.modified[feature.id] = true;
+			that.ol.modifyControl.selectFeature(feature);
+		}
 	}
+	
 	this.ol.unmodify = function(feature) {
-		if(that.ol.modified[feature.id]) {
+		if(that.ol.modified[feature.id] == true) {
 			delete that.ol.modified[feature.id];
 			that.ol.modifyControl.unselectFeature(feature);
+		} else if(that.ol.modified[feature.id] != null) {
+			var mc = that.ol.modified[feature.id];
+			mc.unselectFeature(feature);
+			mc.deactivate();
+			that.ol.map.removeControl(mc);
+			delete that.ol.modified[feature.id];
 		}
 	}
 	
@@ -261,7 +285,7 @@ google.maps.Map = function(node, opts) {
 	});
 
 	node.addEventListener('mousedown', function(e) {
-       if(e.which == 3 || e.ctrlKey || (Event.META_MASK || Event.CTRL_MASK)) {
+       if(e.which == 3 || e.ctrlKey) {
     	   var offset = $(node).offset();
     	   e.xy = new OpenLayers.Pixel(e.pageX-offset.left, e.pageY-offset.top);
     	   createEvent("rightclick", e);
@@ -337,7 +361,7 @@ google.maps.Map.prototype.setOptions = function(opts) {
 			$(this.ol.scaleControl.div).css('display', 'none');
 		}
 	}
-	if(opts.scrollwheel != null) {
+	if(opts.scrollwheel != null && !org.sarsoft.touch) {
 		if(opts.scrollwheel) {
 			this.ol.navigation.enableZoomWheel();
 		} else {
@@ -615,11 +639,15 @@ google.maps.Polygon = function(opts) {
 	this._closed=true;
 	this.ol = new Object();
 	this.ol.style = {strokeColor: opts.strokeColor, strokeWidth: opts.strokeWeight, strokeOpacity: opts.strokeOpacity, fillColor: opts.fillColor, fillOpacity: opts.fillOpacity};
-	this.setPaths(opts.paths);
+	this.setPaths(opts.paths || [opts.path]);
 	
 	if(opts.map != null) this.setMap(opts.map);
 }
 google.maps.Polygon.prototype = new google.maps.Poly();
+
+google.maps.Polygon.prototype.setPath = function(path) {
+	this.setPaths([path]);
+}
 
 google.maps.Polygon.prototype.setPaths = function(paths) {
 	var vertices = new Array();
@@ -640,10 +668,17 @@ google.maps.Polygon.prototype.setPaths = function(paths) {
 	if(this.ol.vector == null) {
 		this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Polygon([this.ol.geometry]), null, this.ol.style);
 		this.ol.vector.goverlay = this;
+	} else {
+		if(this.map != null) this.map.ol.vectorLayer.removeFeatures([this.ol.vector]);
+		this.ol.vector.geometry = new OpenLayers.Geometry.Polygon([this.ol.geometry]);
+		if(this.map != null) this.map.ol.vectorLayer.addFeatures([this.ol.vector]);
 	}
-	this.ol.vector.geometry = new OpenLayers.Geometry.Polygon([this.ol.geometry]);
 
 	if(this.map != null) this.map.ol.vectorLayer.redraw();
+}
+
+google.maps.Polygon.prototype.getPath = function() {
+	return this.getPaths().getAt(0);
 }
 
 google.maps.Polygon.prototype.getPaths = function() {
@@ -712,8 +747,8 @@ google.maps.Marker = function(opts) {
 	this.ol.marker = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(ll.lon, ll.lat), null, {externalGraphic: url, graphicWidth: size.w, graphicHeight: size.h});
 	
 	this.ol.marker.goverlay = this;
-	
 	if(opts.map != null) this.setMap(opts.map);
+	if(opts.draggable) this.setDraggable(true);
 }
 
 google.maps.Marker.prototype = new google.maps.OverlayView();
@@ -734,15 +769,10 @@ google.maps.Marker.prototype.setPosition = function(position) {
 }
 
 google.maps.Marker.prototype.setDraggable = function(val) {
-	var that = this;
 	if(val) {
 		this.map.ol.modify(this.ol.marker);
-		this.map.ol.modifyControl.dragControl.onComplete = function() {
-			google.maps.event.trigger(that, "dragend");
-		}
 	} else {
 		this.map.ol.unmodify(this.ol.marker);
-		this.map.ol.modifyControl.dragControl.onComplete = null;
 	}
 }
 

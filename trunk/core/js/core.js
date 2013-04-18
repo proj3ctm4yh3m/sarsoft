@@ -42,6 +42,31 @@ sarsoft.Page = function(opts) {
 	$(document).ready(function() { $(document).bind("contextmenu", function(e) { return false;})});
 }
 
+
+org.sarsoft.CacheSettings = function() {
+	this.cookie = "ct.offlinecache";
+}
+
+org.sarsoft.CacheSettings.prototype.get = function() {
+	if(YAHOO.util.Cookie.exists(this.cookie)) return YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get(this.cookie))[0];
+}
+
+org.sarsoft.CacheSettings.prototype.set = function(zoom, bounds, layers) {
+	YAHOO.util.Cookie.set(this.cookie, YAHOO.lang.JSON.stringify([{zoom : zoom, layers : layers, bounds : bounds}]));
+}
+
+org.sarsoft.CacheSettings.prototype.getLatLngBounds = function() {
+	var settings = this.get();	
+	if(settings == null) return null;
+	var wm = new org.sarsoft.WebMercator();
+	var p_ne = wm.pixelsToMeters((settings.bounds[2])*256, (settings.bounds[3])*256, settings.zoom);
+	var p_sw = wm.pixelsToMeters(settings.bounds[0]*256, settings.bounds[1]*256, settings.zoom);
+	var ll_ne = wm.metersToLatLng(p_ne[0], p_ne[1]);
+	var ll_sw = wm.metersToLatLng(p_sw[0], p_sw[1]);
+	return new google.maps.LatLngBounds(new google.maps.LatLng(ll_sw[0], ll_sw[1]), new google.maps.LatLng(ll_ne[0], ll_ne[1]));
+}
+
+
 org.sarsoft.SaveAsDialog = function(imap, offline) {
 	var that = this;
 	this.body = $('<div style="clear: both"></div>');
@@ -93,6 +118,8 @@ org.sarsoft.SaveAsDialog = function(imap, offline) {
 	if(offline) {
 		this.div[0].css('display', 'none');
 		this.div[1].css('display', 'none');
+		this.cb[0][0].checked=false;
+		this.cb[1][0].checked=false;
 		this.cb[2][0].checked=true;
 	}
 
@@ -119,7 +146,7 @@ org.sarsoft.SaveAsDialog = function(imap, offline) {
 			newform.submit();
 		} else {
 			var dao = new org.sarsoft.LocalMapDAO();
-			var id = dao.create({ name : name.val(), state : org.sarsoft.MapState.get(imap) });
+			var id = dao.create(name.val(), org.sarsoft.MapState.get(imap));
 			window.location="/map#" + id;
 		}
 	});
@@ -218,8 +245,13 @@ org.sarsoft.widget.Maps = function(imap, container) {
 	        	label : "",
 	        	formatter : function(cell, record, column, data) { 
 	        		var d1 = $('<div></div>').appendTo(cell);
-	        		var d2 = $('<div style="display: none; margin-left: 5px">Sure?</div>').appendTo(d1);
-	        		$('<span style="cursor: pointer; margin-left: 5px; color: red; font-weight: bold">Yes, Delete</span>').appendTo(d2).click(function(evt) {
+	        		var d2 = $('<div style="display: none; position: absolute; padding: 5px; background-color: white; border: 1px solid black">Delete ' + record.getData().description + ' - Are You Sure?</div>').appendTo(d1);
+	        		var d3 = $('<div></div>').appendTo(d2);
+	        		$('<span style="cursor: pointer; color: blue; font-weight: bold">Cancel</span>').appendTo(d3).click(function(evt) {
+	        			evt.stopPropagation();
+	        			d2.css('display', 'none');
+	        		});
+	        		$('<span style="cursor: pointer; color: red; font-weight: bold; margin-left: 20px">Delete</span>').appendTo(d3).click(function(evt) {
 	        			evt.stopPropagation();
 	        			dao.del(record.getData().name, function(r) {
 	        				if(r.error) {
@@ -229,8 +261,20 @@ org.sarsoft.widget.Maps = function(imap, container) {
 	        				}
 	        			});
 	        		});
+	        		$('<span style="cursor: pointer; color: red; font-weight: bold; margin-left: 20px">Detach</span>').prependTo($('<span> (will become a one-off map)</span>').appendTo(d3)).click(function(evt) {
+	        			evt.stopPropagation();
+	        			dao.save(record.getData().name, { detach : true}, function(r) {
+	        				if(r.error) {
+	        					alert(r.error);
+	        				} else {
+	        					var name = record.getData().name;
+	        					that.yourTable.table.deleteRow(record);
+	        					alert("This map is no longer attached to your account.  Read-only access is still available at \n\n" + sarsoft.server + "map?id=" + name);
+	        				}
+	        			});
+	        		});
 	        		var s1 = $('<span style="cursor: pointer; color: red; font-weight: bold">X</span>').prependTo(d1).click(function() {
-	        			d2.css('display', d2.css('display') == 'block' ? 'none' : 'block');
+	        			d2.css('display', 'block');
 	        		});
 	        	}
 	        },{
@@ -261,11 +305,27 @@ org.sarsoft.widget.Maps = function(imap, container) {
 			}
 		]);
 		this.yourTable.create(jQuery('<div class="growYUITable" style="clear: both"></div>').appendTo(bn)[0]);
+		
+		var div = $('<div>Copy <select></select> to a new browser map named </div>').appendTo(bn);
+		var mine_sync_from = $(div.find('select')[0]);
+		var mine_sync_to = $('<input type="text"/>').appendTo(div);
+		$('<button>Copy</button>').appendTo(div).click(function() {
+			var bdao = new org.sarsoft.BaseDAO();
+			bdao.baseURL = "/";
+			bdao._doGet("map?id=" + mine_sync_from.val() + "&format=JSON", function(state) {
+				var id = new org.sarsoft.LocalMapDAO().create(mine_sync_to.val(), state);
+				window.location="/map#" + id;
+				window.location.reload();
+			})
+		});
 	
 		// prioritize page loading
 		window.setTimeout(function() {
 			new org.sarsoft.CollaborativeMapDAO().getMaps(function(rows) {
 				that.yourTable.update(rows);
+				for(var i = 0; i < rows.length; i++) {
+					$('<option value="' + rows[i].name + '">' + rows[i].description + '</option>').appendTo(mine_sync_from);
+				}
 			});
 		}, 1000);
 
@@ -291,35 +351,62 @@ org.sarsoft.widget.Maps = function(imap, container) {
 		});		
 	}
 	
-	$('<div style="float: left; width: 90%; padding-bottom: 1em"></div>').appendTo(bn).append($('<div style="font-size: 150%; font-weight: bold">Maps Saved to Your Browser</div>').appendTo(header));
 	var localDAO = new org.sarsoft.LocalMapDAO();
-	this.browserTable = new org.sarsoft.view.EntityTable([
-	     {
-	       	key : "id",
-	       	label : "",
-	       	formatter : function(cell, record, column, data) { 
-	       		var d1 = $('<div></div>').appendTo(cell);
-	       		var d2 = $('<div style="display: none; margin-left: 5px">Sure?</div>').appendTo(d1);
-	       		$('<span style="cursor: pointer; margin-left: 5px; color: red; font-weight: bold">Yes, Delete</span>').appendTo(d2).click(function(evt) {
-	       			evt.stopPropagation();
-	       			localDAO.del(record.getData().id);
-   					that.browserTable.table.deleteRow(record);
-	       		});
-	       		var s1 = $('<span style="cursor: pointer; color: red; font-weight: bold">X</span>').prependTo(d1).click(function() {
-	       			d2.css('display', d2.css('display') == 'block' ? 'none' : 'block');
-	       		});
-	       	}
-	       },{
-			key : "name",
-			label : "Name",
-			sortable : true, 
-			formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap"}); cell.innerHTML = '<a href="/map#' + record.getData().id + '">' + org.sarsoft.htmlescape(data) + '</a>' },
-			sortOptions: {sortFunction: function(a, b, desc) { return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); }}
-		}
-	]);
-   	this.browserTable.create(jQuery('<div class="growYUITable" style="clear: both"></div>').appendTo(bn)[0]);
-	that.browserTable.update(localDAO.getMaps());
+	if(localDAO.getMaps().length > 0) {
+		$('<div style="float: left; width: 90%; padding-bottom: 1em; padding-top: 1em"></div>').appendTo(bn).append($('<div style="font-size: 150%; font-weight: bold">Maps Saved to Your Browser</div>'));
+		this.browserTable = new org.sarsoft.view.EntityTable([
+		     {
+		       	key : "id",
+		       	label : "",
+		       	formatter : function(cell, record, column, data) { 
+	        		var d1 = $('<div></div>').appendTo(cell);
+	        		var d2 = $('<div style="display: none; position: absolute; padding: 5px; background-color: white; border: 1px solid black">Delete ' + record.getData().name + ' - Are You Sure?</div>').appendTo(d1);
+	        		var d3 = $('<div></div>').appendTo(d2);
+	        		$('<span style="cursor: pointer; color: blue; font-weight: bold">Cancel</span>').appendTo(d3).click(function(evt) {
+	        			evt.stopPropagation();
+	        			d2.css('display', 'none');
+	        		});
+	        		$('<span style="cursor: pointer; color: red; font-weight: bold; margin-left: 20px">Delete</span>').appendTo(d3).click(function(evt) {
+		       			evt.stopPropagation();
+		       			localDAO.del(record.getData().id);
+	   					that.browserTable.table.deleteRow(record);
+	        		});
+	        		var s1 = $('<span style="cursor: pointer; color: red; font-weight: bold">X</span>').prependTo(d1).click(function() {
+	        			d2.css('display', 'block');
+	        		});
+		       	}
+		       },{
+				key : "name",
+				label : "Name",
+				sortable : true, 
+				formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap", "min-width": "200px"}); cell.innerHTML = '<a href="/map#' + record.getData().id + '">' + org.sarsoft.htmlescape(data) + '</a>' },
+				sortOptions: {sortFunction: function(a, b, desc) { return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); }}
+			}
+		]);
+	   	this.browserTable.create(jQuery('<div class="growYUITable" style="clear: both"></div>').appendTo(bn)[0]);
+		that.browserTable.update(localDAO.getMaps());
 	
+		if(sarsoft.account) {
+			var div = $('<div>Copy <select></select> to a new ' + sarsoft.version + ' map named </div>').appendTo(bn);
+			var browser_sync_from = $(div.find('select')[0]);
+			var maps = localDAO.getMaps();
+			for(var i = 0; i < maps.length; i++) {
+				if(maps[i] != null) $('<option value="' + maps[i].id + '">' + maps[i].name + '</option>').appendTo(browser_sync_from);
+			}
+			var browser_sync_to = $('<input type="text"/>').appendTo(div);
+			$('<button>Copy</button>').appendTo(div).click(function() {
+				var newform = $('<form action="/map" method="post" style="display: none"></form>').appendTo(document.body);
+		
+				$('<input type="hidden" name="name"/>').appendTo(newform).val(browser_sync_to.val());
+				var center = imap.map.getCenter();
+				$('<input type="hidden" name="lat"/>').appendTo(newform).val(center.lat());
+				$('<input type="hidden" name="lng"/>').appendTo(newform).val(center.lng());
+				$('<input type="hidden" name="state"/>').appendTo(newform).val(YAHOO.lang.JSON.stringify(localDAO.getMap(browser_sync_from.val()).state));
+				
+				newform.submit();
+			});
+		}
+	}
 }
 
 org.sarsoft.widget.BaseSharing = function(imap) {
@@ -874,6 +961,21 @@ org.sarsoft.view.CookieConfigWidget.prototype.loadConfig = function(overrides) {
 		this.imap.map.setCenter(new google.maps.LatLng(config.center.lat, config.center.lng));
 		this.imap.map.setZoom(config.zoom);
 	}
+}
+
+org.sarsoft.view.OfflineConfigWidget = function(imap, persist, saveCenter) {
+	org.sarsoft.view.BaseConfigWidget.call(this, imap, true, "Save map settings for future page loads?");
+	this.saveCenter = false;
+}
+
+org.sarsoft.view.OfflineConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
+
+org.sarsoft.view.OfflineConfigWidget.prototype.saveConfig = function(handler) {
+	this.saveBrowserSettings();
+	if(handler != null) handler();
+}
+
+org.sarsoft.view.OfflineConfigWidget.prototype.loadConfig = function(overrides) {
 }
 
 
