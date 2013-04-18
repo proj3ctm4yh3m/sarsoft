@@ -129,8 +129,11 @@ public abstract class JSONBaseController {
 	}
 	
 	protected String pdf(Model model, PDDocument document, HttpServletResponse response, String filename) {
-//		response.setContentType("application/pdf");
-		response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+		if(filename != null) {
+			response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+		} else {
+			response.setContentType("application/pdf");
+		}
 		try {
 			document.save(response.getOutputStream());
 			document.close();

@@ -89,8 +89,8 @@ org.sarsoft.SaveAsDialog = function(imap, offline) {
 	addBox('Save to Your Account', sarsoft.account != null);
 
 	addBox('Make a One Off Map', true);
-	this.div[1].append('Quickly share a map without tying it to your account.  If you want to edit it in the future, you\'ll need to enter a password below.');
-	var pw = $('<input type="password"/>').appendTo($('<div>Password: </div>').appendTo(this.div[1]));
+	this.div[1].append('Share this map without tying it to your account.  ' + (sarsoft.account != null ? 'You\'ll still be able to edit it when signed in.' : 'If you want to edit it in the future, you\'ll need to enter a password below.'));
+	var pw = $('<input type="password"/>').appendTo($('<div style="margin-top: 5px">Password: </div>').css('display', (sarsoft.account != null ? 'none' : 'block')).appendTo(this.div[1]));
 
 	addBox('Save to Your Browser', sarsoft.local == null);
 
@@ -108,7 +108,7 @@ org.sarsoft.SaveAsDialog = function(imap, offline) {
 	}
 	
 	if(sarsoft.local == null) {
-		this.div[2].append('Store this map in your browser\'s local storage for offline access.');
+		this.div[2].append('Save this map in your browser\'s local storage for offline access.  Data is not backed up to ' + sarsoft.version);
 	} else {
 		this.cb[2].attr("disabled", "disabled");
 		this.div[2].css('color', 'gray');
@@ -147,7 +147,7 @@ org.sarsoft.SaveAsDialog = function(imap, offline) {
 		} else {
 			var dao = new org.sarsoft.LocalMapDAO();
 			var id = dao.create(name.val(), org.sarsoft.MapState.get(imap));
-			window.location="/map#" + id;
+			window.location= (sarsoft.offline ? "/offline#" : "/map#") + id;
 		}
 	});
 
@@ -315,7 +315,6 @@ org.sarsoft.widget.Maps = function(imap, container) {
 			bdao._doGet("map?id=" + mine_sync_from.val() + "&format=JSON", function(state) {
 				var id = new org.sarsoft.LocalMapDAO().create(mine_sync_to.val(), state);
 				window.location="/map#" + id;
-				window.location.reload();
 			})
 		});
 	
@@ -379,7 +378,7 @@ org.sarsoft.widget.Maps = function(imap, container) {
 				key : "name",
 				label : "Name",
 				sortable : true, 
-				formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap", "min-width": "200px"}); cell.innerHTML = '<a href="/map#' + record.getData().id + '">' + org.sarsoft.htmlescape(data) + '</a>' },
+				formatter : function(cell, record, column, data) { $(cell).css({"white-space": "nowrap", "min-width": "200px"}); cell.innerHTML = '<a href="/' +  (sarsoft.offline ? 'offline#' : 'map#') + record.getData().id + '">' + org.sarsoft.htmlescape(data) + '</a>' },
 				sortOptions: {sortFunction: function(a, b, desc) { return YAHOO.util.Sort.compare(a.getData("publicName"), b.getData("publicName"), desc); }}
 			}
 		]);
@@ -775,8 +774,13 @@ org.sarsoft.OfflineDataNavigator = function(imap) {
 	this.account = this.addHeader("Offline", "account.png");
 	this.account.block.css('margin-bottom', '5px');
     new org.sarsoft.widget.Maps(imap, this.account.body);
+    if(navigator.onLine) {
+    	$('<div class="underlineOnHover"><div style="width: 16px; margin-right: 2px; float: left; color: red; font-weight: bold; text-align: center">X</div>Return to ' + sarsoft.version + ' Online</div>').appendTo(this.account.body).click(function() {
+    		window.location = "/map.html";
+    	});
+    }
 
-    this.tenant = this.addHeader((sarsoft.tenant ? sarsoft.tenant.publicName : (sarsoft.local ? sarsoft.local.name : "Unsaved Map")), "favicon.png");	
+    this.tenant = this.addHeader((sarsoft.tenant ? sarsoft.tenant.publicName : (sarsoft.local ? sarsoft.local.name : "Unsaved Map")), "favicon.png");
 	imap.controls.action = new org.sarsoft.widget.MapAction(this.tenant.body);
 	var saveAs = new org.sarsoft.SaveAsDialog(imap, true);
 	imap.controls.action.links.save.click(function() { saveAs.dlg.swap(); });

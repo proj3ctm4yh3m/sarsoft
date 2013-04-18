@@ -810,6 +810,7 @@ org.sarsoft.LocalMapDAO = function() {
 }
 
 org.sarsoft.LocalMapDAO.prototype.getMaps = function() {
+	if(typeof localStorage == "undefined") return [];
 	if(localStorage["maps"] == null) return [];
 	return YAHOO.lang.JSON.parse(localStorage["maps"]);
 }
@@ -834,6 +835,10 @@ org.sarsoft.LocalMapDAO.prototype.setState = function(id, state) {
 }
 
 org.sarsoft.LocalMapDAO.prototype.create = function(name, state) {
+	if(typeof localStorage == "undefined") {
+		alert("It doesn't look like your browser supports the HTML5 Local Storage feature.  Unable to save " + name + " to your browser.");
+		return;
+	}
 	var maps = this.getMaps();
 	var id = Math.max(1, maps.length);
 	maps[id] = { id : id, name : name }

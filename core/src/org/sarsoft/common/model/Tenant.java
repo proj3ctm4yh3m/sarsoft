@@ -39,6 +39,7 @@ public abstract class Tenant {
 	private String comments;
 	private String layers;
 	private UserAccount account;
+	private Boolean detached;
 	private String mapConfig;
 	private Boolean shared;
 	private Long cfgUpdated;
@@ -131,7 +132,15 @@ public abstract class Tenant {
 	public void setAccount(UserAccount account) {
 		this.account = account;
 	}
-
+	
+	public Boolean isDetached() {
+		return detached;
+	}
+	
+	public void setDetached(Boolean detached) {
+		this.detached = detached;
+	}
+	
 	public void setMapConfig(String mapConfig) {
 		this.mapConfig = mapConfig;
 	}

@@ -164,8 +164,10 @@ public class CollaborativeMapController extends JSONBaseController {
 		UserAccount account = null;
 		if(user != null) account = dao.getByPk(UserAccount.class, user);
 		if(server.isHosted()) {
-			if(account != null) {
-				if(account.getTenants() != null) tenants.addAll(account.getTenants());
+			if(account != null && account.getTenants() != null) {
+				for(Tenant tenant : account.getTenants()) {
+					if(Boolean.TRUE != tenant.isDetached()) tenants.add(tenant);
+				}
 			}
 		} else {
 			tenants = dao.getAllTenants();
@@ -234,7 +236,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
 		JSONObject json = params.JSON();
 		if(json.has("detach") && json.getBoolean("detach")) {
-			map.setAccount(null);
+			map.setDetached(true);
 			dao.save(map);
 			return json(model, map);
 		}
