@@ -131,7 +131,7 @@ public class AdminController extends JSONBaseController {
 		tenant.setComments(request.getParameter("comments"));
 
 		boolean oneoff = Boolean.parseBoolean(request.getParameter("oneoff"));
-		if(oneoff) {
+		if(oneoff && account == null) {
 			tenant.setAllUserPermission(Tenant.Permission.READ);
 			tenant.setPasswordProtectedUserPermission(Tenant.Permission.WRITE);
 			String password = request.getParameter("password");
@@ -140,8 +140,9 @@ public class AdminController extends JSONBaseController {
 			tenant.setAccount(account);
 			tenant.setAllUserPermission(Tenant.Permission.READ);
 			tenant.setPasswordProtectedUserPermission(Tenant.Permission.NONE);
+			tenant.setDetached(oneoff);
 		} else if(server.isHosted()) {
-			if(!oneoff) return "You do not appear to be logged in";
+			return "You do not appear to be logged in";
 		}
 
 		synchronized(this) {

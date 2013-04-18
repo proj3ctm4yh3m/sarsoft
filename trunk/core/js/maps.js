@@ -55,7 +55,7 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 			var type = org.sarsoft.EnhancedGMap.createMapType(config, map);
 			map.mapTypes.set(config.alias, type);
 		}
-		if(bkgset == false) {
+		if(bkgset == false && sarsoft.map.layers_visible.indexOf(config.alias) >= 0) {
 			map.setMapTypeId(config.alias);
 			bkgset = true;
 		}
@@ -2728,7 +2728,7 @@ org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
 }
 
 org.sarsoft.ThinLocationForm.prototype.clear = function() {
-	this.select.val(this.select.find('value="name"').length > 0 ? 'name' : 'UTM').change();
+	this.select.val(this.select.find('[value="name"]').length > 0 ? 'name' : 'UTM').change();
 	this.utmform.write({zone : "", e : "", n : ""});
 	this.address.val("");
 	this.lat.val("");
