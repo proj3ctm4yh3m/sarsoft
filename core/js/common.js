@@ -810,48 +810,49 @@ org.sarsoft.LocalMapDAO = function() {
 }
 
 org.sarsoft.LocalMapDAO.prototype.getMaps = function() {
-	var maps = [];
-	for(var key in localStorage) {
-		if(key.indexOf("map") == 0) {
-			var id = Number(key.substr(3));
-			maps[id] = YAHOO.lang.JSON.parse(localStorage[key]);
-			maps[id].id = id;
-		}
+	if(localStorage["maps"] == null) return [];
+	return YAHOO.lang.JSON.parse(localStorage["maps"]);
+}
+
+org.sarsoft.LocalMapDAO.prototype._setMaps = function(maps) {
+	while(maps.length > 0 && maps[maps.length-1] == null) {
+		maps = maps.slice(0, maps.length-1);
 	}
-	return maps;
+	localStorage["maps"] = YAHOO.lang.JSON.stringify(maps);
 }
 
 org.sarsoft.LocalMapDAO.prototype.getMap = function(id) {
-	var map = YAHOO.lang.JSON.parse(localStorage["map" + id]);
-	map.id = id;
-	return map;
+	return this.getMaps()[id];
 }
 
-org.sarsoft.LocalMapDAO.prototype.create = function(map) {
+org.sarsoft.LocalMapDAO.prototype.getState = function(id) {
+	return YAHOO.lang.JSON.parse(localStorage["map" + id]);
+}
+
+org.sarsoft.LocalMapDAO.prototype.setState = function(id, state) {
+	localStorage["map" + id] = YAHOO.lang.JSON.stringify(state);
+}
+
+org.sarsoft.LocalMapDAO.prototype.create = function(name, state) {
 	var maps = this.getMaps();
-	var min = 0;
-	for(var id in maps) {
-		min = Math.min(id, min);
-	}
-	min = min + 1;
-	localStorage["map" + min] = YAHOO.lang.JSON.stringify(map);
-	return min;
-}
-
-org.sarsoft.LocalMapDAO.prototype.saveState = function(id, state) {
-	var map = YAHOO.lang.JSON.parse(localStorage["map" + id]);
-	map.state = state;
-	localStorage["map" + id] = YAHOO.lang.JSON.stringify(map);
+	var id = Math.max(1, maps.length);
+	maps[id] = { id : id, name : name }
+	this._setMaps(maps);
+	this.setState(id, state);
+	return id;
 }
 
 org.sarsoft.LocalMapDAO.prototype.del = function(id) {
+	var maps = this.getMaps();
+	delete maps[id];
+	this._setMaps(maps);
 	delete localStorage["map" + id];
 }
 
 org.sarsoft.LocalMapDAO.prototype.listen = function(event) {
 	var that = this;
 	for(var type in org.sarsoft.MapState.daos) {
-		$(org.sarsoft.MapState.daos[type]).bind(event, function() { that.saveState(sarsoft.local.id, org.sarsoft.MapState.get()); });
+		$(org.sarsoft.MapState.daos[type]).bind(event, function() { that.setState(sarsoft.local.id, org.sarsoft.MapState.get()); });
 	}
 }
 
