@@ -314,7 +314,7 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 	this.addChildTab("FieldWaypoint", "Waypoints", [
 		{ key : "id", label : ""},
 		{ key : "name", label : "Name"},
-		{ key : "updated", label : "Uploaded", formatter2 : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}], true);
+		{ key : "updated", label : "Uploaded", formatter : function(cell, record, column, data) { var date = new Date(1*data); cell.innerHTML = date.toUTCString();}}], true);
 	
 	this.addChildTab("Clue", "Clues", [
  	      { key : "id", label : "Clue #"},
@@ -324,23 +324,34 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 		  { key : "instructions", label: "Instructions"}]);
 
 	this.addChildTab("Resource", "Resources", [
-   	    { key : "id", label : ""},
 		{ key : "name", label : "Name", sortable : true},
 		{ key : "agency", label : "Agency", sortable : true},
 		{ key : "type", label : "Type", sortable : true},
 		{ key : "callsign", label : "Callsign"},
 		{ key : "lastFix", label : "Last Update", sortable : true }]);
 	
-	var div = $('<div style="float: left">Add Resource: </div>').appendTo(this.tabs['Resource'].div);
+	var container = this.tabs['Resource'].div;
+	$(container.children()[1]).css('float', 'left');
+	var div = $('<div style="float: left; padding-left: 10px">Add Resource: </div>').appendTo(container);
+	container.append('<div style="clear: both"></div>');
 	this.s_resource = $('<select></select>').appendTo(div);
 	$('<button>Add</button>').appendTo(div).click(function() {
-		alert(that.s_resource.val());
+		var id = that.s_resource.val();
+		var resource = org.sarsoft.MapState.daos["Resource"].getObj(id);
+		resource.assignmentId = that.obj.id;
+		org.sarsoft.MapState.daos["Resource"].save(resource.id, resource, function(r) {
+			that.tabs["Resource"].table.update([r]);
+			that.tabs["Resource"].message.css('display', 'none');
+			that.tabs["Resource"].content.css('display', 'block');
+			that.s_resource.find('[value="' + r.id + '"]').remove();
+		});
 	});
 }
 
 org.sarsoft.AssignmentChildDialog.prototype = new org.sarsoft.MapObjectChildDialog();
 
 org.sarsoft.AssignmentChildDialog.prototype.show = function(id) {
+	var that = this;
 	if(this.imp) this.imp.importer.clear('/rest/assignment/' + id + '/in');
 
 	this.s_resource.empty();
@@ -348,7 +359,7 @@ org.sarsoft.AssignmentChildDialog.prototype.show = function(id) {
 	var all = org.sarsoft.MapState.daos["Resource"].objs;
 	for(var i = 0; i < all.length; i++) {
 		var obj = all[i];
-		if(mine.indexOf(obj) < 0) this.s_resource.append('<option value="' + obj.id + '">' + obj.name + '</option>');
+		if(obj != null && mine.indexOf(obj) < 0) this.s_resource.append('<option value="' + obj.id + '">' + obj.name + (obj.assignmentId ? ' (' + that.controller.dao.getObj(obj.assignmentId).number  + ')' : '') + '</option>');
 	}
 
 	org.sarsoft.MapObjectChildDialog.prototype.show.call(this, id);
