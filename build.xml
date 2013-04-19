@@ -40,8 +40,20 @@
 		<delete file="build/lib/sarsoft.jar"/>
 		<jar jarfile="build/lib/sarsoft.jar" basedir="build/classes"/>
 	</target>
+		
+	<target name="winstone">
+		<delete dir="winstone/build"/>
+		<mkdir dir="winstone/build"/>
+		<mkdir dir="winstone/build/classes"/>
+		<javac debug="on" source="1.5" target="1.5" deprecation="on" destdir="winstone/build/classes">
+			<classpath>
+				<fileset dir="" includes="winstone-jsp.jar"/>
+			</classpath>
+			<src path="winstone/src"/>
+		</javac>
+	</target>
 
-	<target name="build" depends="jar">
+	<target name="build" depends="jar,winstone">
 		<delete file="build/jar/embedded.war"/>
 		<war destfile="build/jar/embedded.war" webxml="server/config/web.xml">
 			<classes dir="build/classes"/>
@@ -70,6 +82,8 @@
 		<delete file="runtime/sar.jar"/>
 		<copy file="winstone-jsp.jar" tofile="runtime/sar.jar"/>
 		<jar destfile="runtime/sar.jar" update="true" basedir="build/jar" includes="*.war"/>
+		<jar destfile="runtime/sar.jar" update="true" basedir="winstone/build/classes" includes="**/*.class"/>
+		<jar destfile="runtime/sar.jar" update="true" manifest="winstone/config/MANIFEST.MF" basedir="winstone/config" includes="embedded.properties"/>
 	</target>
 
 </project>

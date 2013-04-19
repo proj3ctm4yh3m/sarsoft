@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="core/src"/>
+	<classpathentry kind="src" path="winstone/src"/>
 	<classpathentry kind="src" path="server/src"/>
 	<classpathentry kind="src" path="sar/src"/>
 	<classpathentry kind="src" path="markup/src"/>
@@ -55,5 +56,6 @@
 	<classpathentry kind="lib" path="lib/org.springframework.web-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/org.springframework.web.servlet-3.0.6.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/pdfbox-1.7.1.jar"/>
+	<classpathentry kind="lib" path="winstone-jsp.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
