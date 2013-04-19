@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
@@ -46,8 +47,16 @@ public abstract class JSONBaseController {
 		return RuntimeProperties.getProperty(name);
 	}
 	
-	protected String error(Model model, String error) {
-		model.addAttribute("message", error);
+	protected String error(Model model, Exception e) {
+		String id = Long.toString(System.currentTimeMillis());
+		System.out.println("Logged Exception Trace " + id);
+		e.printStackTrace();
+		model.addAttribute("errorid", id);
+		return error(model, e.getMessage());
+	}
+	
+	protected String error(Model model, String message) {
+		model.addAttribute("message", message);
 		return "error";
 	}
 	
@@ -138,7 +147,7 @@ public abstract class JSONBaseController {
 			document.save(response.getOutputStream());
 			document.close();
 		} catch (Exception e) {
-			return error(model, e.getMessage());
+			return error(model, e);
 		}
 		return null;
 	}
