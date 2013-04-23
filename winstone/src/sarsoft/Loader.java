@@ -13,7 +13,7 @@ public class Loader {
 		if(file.isDirectory() && file.list().length > 0){
 			String files[] = file.list();
 			for (String name : files) {
-				delete(new File(name));
+				delete(new File(file.getAbsolutePath() + "/" + name));
 			}
 		}
 		file.delete();

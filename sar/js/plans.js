@@ -270,7 +270,7 @@ org.sarsoft.AssignmentChildDialog = function(imap, controller) {
 			return false;
 		});
 		$('<a href="#">Auto PDF Map</a>').appendTo($('<li></li>').appendTo(left)).click(function() {
-			window.open('/sar/maps/pdf?ids=' + that.obj.id, '_blank');
+			window.open('/sar/maps/pdf?ids=' + that.obj.id + '&layer=' + org.sarsoft.EnhancedGMap.toLayerStr(imap.getConfig()), '_blank');
 			return false;
 		});
 		$('<a href="#">Custom PDF Map</a>').appendTo($('<li></li>').appendTo(left)).click(function() {

@@ -174,7 +174,7 @@ google.maps.Map = function(node, opts) {
             controls: [this.ol.navigation]
 		};
 	
-	var d = $('<div style="position: absolute; left: 0; top: 0; z-index: 1003; top: 8px; left: 8px; background: rgba(255,255,255,0.4); border-radius: 4px; padding: 2px; color: white; font-family: Lucida Grande, Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;"></div>').appendTo(node);
+	var d = $('<div class="noprint" style="position: absolute; left: 0; top: 0; z-index: 1003; top: 8px; left: 8px; background: rgba(255,255,255,0.4); border-radius: 4px; padding: 2px; color: white; font-family: Lucida Grande, Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;"></div>').appendTo(node);
 	var zin = $('<div style="cursor: pointer; background: rgba(0, 60, 136, 0.5); display: block; margin: 1px; padding: 0; font-size: 18px; font-weight: bold; text-align: center; height: 22px; width: 22px; line-height: 19px; border-radius: 4px 4px 0 0">+</div>').appendTo(d).
 		hover(function() { zin.css('background', 'rgba(0, 60, 136, 0.7)') }, function() { zin.css('background', 'rgba(0, 60, 136, 0.5)') }).click(function() { that.ol.map.zoomIn() });
 	var zout = $('<div style="cursor: pointer; background: rgba(0, 60, 136, 0.5); display: block; margin: 1px; padding: 0; font-size: 18px; font-weight: bold; text-align: center; height: 22px; width: 22px; line-height: 19px; border-radius: 0 0 4px 4px">-</div>').appendTo(d).

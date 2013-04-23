@@ -70,6 +70,17 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 	return map;
 }
 
+org.sarsoft.EnhancedGMap.toLayerStr = function(config) {
+	var layers = config.base;
+	for(var i = 0; i < config.layers.length; i++) {
+		layers = layers + "," + config.layers[i] + "@" + (config.opacity[i]*100);
+	}
+	if(config.alphas != null) {
+		layers = layers + "," + config.alphas.join(",");
+	}
+	return layers;
+}
+
 org.sarsoft.MapOverlayManager = function(map) {
 	this.map = map;
 	this.map._overlaymanager = this;
