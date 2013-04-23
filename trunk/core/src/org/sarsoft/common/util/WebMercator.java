@@ -9,6 +9,10 @@ public class WebMercator {
     public static double Resolution(int zoom) {
         return initialresolution / Math.pow(2, zoom);
     }
+    
+    public static int Zoom(double resolution) {
+    	return (int) Math.round(Math.log(initialresolution / resolution) / Math.log(2));
+    }
 
     public static double[] LatLngToMeters(double lat, double lng) {
         double mx = lng * originshift / 180;
@@ -77,7 +81,15 @@ public class WebMercator {
     	int[] tile = PixelsToTile(pixels[0], pixels[1]);
     	return new int[] {tile[0], tile[1], (int) pixels[0] - (tile[0] * tilesize), (int) pixels[1] - (tile[1] * tilesize)};
     }
-    	
+    
+    public static int[] getParentTile(int tx, int ty, int dz) {
+		int pow = (int) Math.pow(2, dz);
+		int px = (int) Math.floor(tx/pow);
+		int py = (int) Math.floor(ty/pow);
+		int dx = (tx - pow * px);
+		int dy = (ty - pow * py);
+    	return new int[] { px, py, dx, dy };
+    }
 }
 
 
