@@ -10,10 +10,13 @@
 </div>
 
 <div style="margin-top: 20px">
-<a href="javascript:submitbulkprint()">Print These Assignments</a><a href="javascript:submitbulkpdf()">Print These Assignments to PDF</a><a style="margin-left: 20px" href="javascript:$('#bulkupdate').css('display', 'block')">Update These Assignments</a>
+<a href="javascript:submitbulkprint()">Print (Browser)</a><a style="margin-left: 20px" href="javascript:showbulkpdf();">Print (Auto PDF)</a><a style="margin-left: 20px" href="javascript:custompdf();">Print (Custom PDF)</a><a style="margin-left: 20px" href="javascript:showbulkupdate()">Update</a>
 </div>
 
-<div id="bulkupdate" style="display: none; margin-top: 40px">
+<div id="bulkpdf" style="display: none; margin-top: 20px">
+</div>
+
+<div id="bulkupdate" style="display: none; margin-top: 20px">
 Fill in all fields you want to update.  Blank fields will be ignored; you can not clear fields through bulk update.
 
 			<form name="assignment" action="/sar/bulk" method="post">
@@ -95,6 +98,8 @@ org.sarsoft.Loader.queue(function() {
 <c:if test="${not empty period}">if(assignment.operationalPeriodId != ${period.id}) return;</c:if>
 	datatable.table.addRow(assignment);
   });
+  if(org.sarsoft.PDFLayerControl != null) window.plc = new org.sarsoft.PDFLayerControl($('#bulkpdf'));
+  $('<a style="margin-top: 20px" href="javascript:submitbulkpdf()">Generate PDF</a>').appendTo($('#bulkpdf'));
 });
 
 function submitbulkupdate(finalize) {
@@ -121,6 +126,7 @@ function submitbulkprint() {
 		for(var i = 0; i < data.length; i++) {
 			value = value + data[i].id + ",";
 		}
+		
 		window.location="/sar/maps/browser?ids=" + value;
 	}
 }
@@ -130,12 +136,39 @@ function submitbulkpdf() {
 	if(data.length == 0) {
 		alert("Please select at least one assignment to print.");
 	} else {
-		var value = "";
+		var url = '/sar/maps/pdf?ids=';
 		for(var i = 0; i < data.length; i++) {
-			value = value + data[i].id + ",";
+			url = url + data[i].id + ",";
 		}
-		window.open('/sar/maps/pdf?ids=' + value, '_blank');
+		var config = window.plc.read();
+		if(config != null) url = url + "&layer=" + org.sarsoft.EnhancedGMap.toLayerStr(config);
+		window.open(url, '_blank');
 	}
+}
+
+function custompdf() {
+	var data = datatable.getSelectedData();
+	if(data.length == 0) {
+		alert("Please select at least one assignment to print.");
+	} else {
+		var url = '/sar/print?ids=';
+		for(var i = 0; i < data.length; i++) {
+			url = url + data[i].id + ",";
+		}
+		window.open(url, '_blank');
+	}
+}
+
+function showbulkpdf() {
+	$('#bulkpdf').css('display', 'block');
+	$('#bulkupdate').css('display', 'none');
+	return false;
+}
+
+function showbulkupdate() {
+	$('#bulkpdf').css('display', 'none');
+	$('#bulkupdate').css('display', 'block');
+	return false;
 }
 
 </script>

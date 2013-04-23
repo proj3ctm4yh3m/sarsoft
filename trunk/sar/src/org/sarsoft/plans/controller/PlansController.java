@@ -1,6 +1,5 @@
 package org.sarsoft.plans.controller;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +8,11 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSDictionary;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.sarsoft.PDFAcroForm;
 import org.sarsoft.common.controller.DataManager;
 import org.sarsoft.common.controller.JSONBaseController;
@@ -22,14 +20,13 @@ import org.sarsoft.common.controller.ServerInfo;
 import org.sarsoft.common.gpx.StyledGeoObject;
 import org.sarsoft.common.gpx.StyledWay;
 import org.sarsoft.common.gpx.StyledWaypoint;
+import org.sarsoft.common.model.CollaborativeMap;
 import org.sarsoft.common.model.Tenant;
-import org.sarsoft.common.util.Datum;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.imaging.IPDFMaker;
 import org.sarsoft.imaging.PDFDoc;
 import org.sarsoft.imaging.PDFForm;
 import org.sarsoft.imaging.PDFPage;
-import org.sarsoft.imaging.PDFSize;
 import org.sarsoft.ops.model.Resource;
 import org.sarsoft.plans.Action;
 import org.sarsoft.plans.Constants;
@@ -220,6 +217,7 @@ public class PlansController extends JSONBaseController {
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/sar/maps/pdf", method = RequestMethod.GET)
 	public String bulkPDF(Model model, @RequestParam("ids") String idstr, @RequestParam(value="colorby", required=false) String colorby, HttpServletRequest request, HttpServletResponse response) {
+		if(pdfmaker == null) return error(model, "PDF generation not installed.  Contact info@caltopo.com for a PDF-enabled version.");
 		String[] ids = idstr.split(",");
 		PDFForm form = new PDFForm(request);
 		
@@ -256,8 +254,39 @@ public class PlansController extends JSONBaseController {
 		}
 		
 		if(form.layers == null) {
-			form.layers = new String[] { "t" };
-			form.opacity = new float[] { 1f };
+			CollaborativeMap map = dao.getByAttr(CollaborativeMap.class, "name", RuntimeProperties.getTenant());
+			if(map.getMapConfig() != null) {
+				JSONObject config = (JSONObject) JSONSerializer.toJSON(map.getMapConfig());
+				ArrayList<String> layers = new ArrayList<String>();
+				ArrayList<Float> opacity = new ArrayList<Float>();
+				layers.add(config.getString("base"));
+				opacity.add(1f);
+				if(config.has("layers")) {
+					JSONArray jlayers = config.getJSONArray("layers");
+					JSONArray jopacity = config.getJSONArray("opacity");
+					for(int i = 0; i < jlayers.size(); i++) {
+						layers.add(jlayers.getString(i));
+						opacity.add((float) jopacity.getDouble(i));
+					}
+				}
+				if(config.has("alphas")) {
+					if(config.get("alphas") instanceof JSONArray) {
+						JSONArray jlayers = config.getJSONArray("alphas");
+						for(int i = 0; i < jlayers.size(); i++) {
+							layers.add(jlayers.getString(i));
+							opacity.add(1f);
+						}
+					}
+				}
+				form.layers = layers.toArray(new String[layers.size()]);
+				form.opacity = new float[opacity.size()];
+				for(int i = 0; i < opacity.size(); i++) {
+					form.opacity[i] = opacity.get(i);
+				}
+			} else {
+				form.layers = new String[] { "t" };
+				form.opacity = new float[] { 1f };
+			}
 		}
 		
 		try {
@@ -267,7 +296,7 @@ public class PlansController extends JSONBaseController {
 				for(int i = 0; i < ids.length; i++) {
 					pages[i] = pdfmaker.makePage(doc, assignments[i].getNumber(), styled.get(i), form.sizes[0].pageSize, 24000);
 				}
-				return pdf(model, pdfmaker.create(pages, false), response, "map.pdf");
+				return pdf(model, pdfmaker.create(pages, false), response, null);
 			} else {
 				PDFPage[] pages = new PDFPage[form.sizes.length];
 	
@@ -279,7 +308,7 @@ public class PlansController extends JSONBaseController {
 					String title = (form.sizes.length > 1 ? "Page " + (i+1) + "/" + form.sizes.length : "Mercator Projection");
 					pages[i] = new PDFPage(doc, title, marray, form.sizes[i].bbox, form.sizes[i].imgSize, form.sizes[i].pageSize);
 				}
-				return pdf(model, pdfmaker.create(pages, true), response, "map.pdf");
+				return pdf(model, pdfmaker.create(pages, true), response, null);
 			}
 		} catch (Exception e) {
 			return error(model, e.getMessage());
