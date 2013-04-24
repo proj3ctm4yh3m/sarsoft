@@ -791,6 +791,15 @@ google.maps.geometry.spherical.computeDistanceBetween = function(from, to) {
 	return R * c * 1000;
 }
 
+google.maps.geometry.spherical.computeHeading = function(from, to) {
+	var dlng = GeoUtil.DegToRad(to.lng()-from.lng());
+	var lat1 = GeoUtil.DegToRad(from.lat());
+	var lat2 = GeoUtil.DegToRad(to.lat());
+	var y = Math.sin(dlng) * Math.cos(lat2);
+	var x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dlng);
+	return GeoUtil.RadToDeg(Math.atan2(y, x));	
+}
+
 google.maps.geometry.spherical.computeLength = function(path) {
 	if(path.array != null) path = path.array;
 	var distance = 0;
@@ -835,8 +844,8 @@ google.maps.drawing.DrawingManager.prototype.setOptions = function(opts) {
 	}
 	if(typeof opts["drawingMode"] != "undefined") this.setDrawingMode(opts["drawingMode"])
 	
-	this.map.ol.drawPolygonControl.handler.style = {strokeColor: this.opts.polygonOptions.strokeColor, strokeOpacity: this.opts.polygonOptions.strokeOpacity, strokeWidth: this.opts.polygonOptions.strokeWeight, fillColor: this.opts.polygonOptions.fillColor, fillOpacity: this.opts.polygonOptions.fillOpacity}
-	this.map.ol.drawLineControl.handler.style = {strokeColor: this.opts.polylineOptions.strokeColor, strokeOpacity: this.opts.polylineOptions.strokeOpacity, strokeWidth: this.opts.polylineOptions.strokeWeight}
+	if(this.opts.polygonOptions) this.map.ol.drawPolygonControl.handler.style = {strokeColor: this.opts.polygonOptions.strokeColor, strokeOpacity: this.opts.polygonOptions.strokeOpacity, strokeWidth: this.opts.polygonOptions.strokeWeight, fillColor: this.opts.polygonOptions.fillColor, fillOpacity: this.opts.polygonOptions.fillOpacity}
+	if(this.opts.polylineOptions) this.map.ol.drawLineControl.handler.style = {strokeColor: this.opts.polylineOptions.strokeColor, strokeOpacity: this.opts.polylineOptions.strokeOpacity, strokeWidth: this.opts.polylineOptions.strokeWeight}
 }
 
 google.maps.drawing.DrawingManager.prototype.setDrawingMode = function(type) {

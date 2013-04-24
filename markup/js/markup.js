@@ -288,6 +288,49 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	}
 }
 
+org.sarsoft.view.BearingForm = function() {
+}
+
+org.sarsoft.view.BearingForm.prototype.create = function(container) {
+	var that = this;
+	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"><table style="border: 0"><tbody><tr></tr></tbody></table></form>').appendTo(container);
+	var left = $('<td width="50%"></td>').appendTo(form.find('tr'));
+	var right = $('<td width="50%"></td>').appendTo(form.find('tr'));
+	
+	this.labelInput = jQuery('<input name="label" type="text" size="15"/>').appendTo(jQuery('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left));	
+
+	var div = jQuery('<div class="item" style="clear: both"><label for="color" style="width: 80px">Weight:</label></div>').appendTo(left);
+	this.weightInput = jQuery('<select name="weight"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>').appendTo(div);
+
+	div = jQuery('<div class="item"><label for="color" style="width: 80px">Color:</label></div>').appendTo(left);
+	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left"></div>').appendTo(div);
+	div.append('<span style="float: left; margin-left: 5px">Click below or color code:</span>');
+	this.colorInput = jQuery('<input name="color" type="text" size="6" style="float: left; margin-left: 5px"/>').appendTo(div);
+	this.colorInput.change(function() {colorSwatch.css('background-color', '#' + that.colorInput.val())});
+	
+	var colorContainer = jQuery('<div style="clear: both; margin-top: 5px"></div>').appendTo(left);
+	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
+	for(var i = 0; i < colors.length; i++) {
+		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
+		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j].substr(1)); that.colorInput.trigger('change');}}());
+	}	
+	
+	this.bearingInput = $('<input type="text" size="10"/>').appendTo(jQuery('<div class="item"><label for="label" style="width: 120px">Bearing (true):</label></div>').appendTo(right));
+	this.lengthInput = $('<input type="text" size="10"/>').appendTo(jQuery('<div class="item"><label for="label" style="width: 120px">Distance (km):</label></div>').appendTo(right));
+}
+
+org.sarsoft.view.BearingForm.prototype.read = function() {
+	return {label : this.labelInput.val(), color : "#" + this.colorInput.val(), weight: Number(this.weightInput.val()), bearing: Number(this.bearingInput.val()), length: Number(this.lengthInput.val())*1000};
+}
+
+org.sarsoft.view.BearingForm.prototype.write = function(obj) {
+	this.colorInput.val("FF0000");
+	this.colorInput.trigger('change');
+	this.weightInput.val(2);
+	this.labelInput.val("");
+	this.bearingInput.val("0");
+	this.lengthInput.val("5");
+}
 
 
 org.sarsoft.controller.ShapeController = function(imap, background_load) {
@@ -319,6 +362,38 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 		this.sizewarning = $('<div style="font-weight: bold; color: red; display: none"></div>').prependTo(this.dlg.body);
 		this.dlg.dialog.dialog.hideEvent.subscribe(function() {
 			that.sizewarning.css('display', 'none');
+		});
+		
+		var bearingDiv = $('<div></div>');
+		var bearingForm = new org.sarsoft.view.BearingForm();
+		bearingForm.create(bearingDiv);
+		this.bearingDlg = new org.sarsoft.view.MapDialog(imap, "New Bearing", bearingDiv, "Create", "Cancel", function() {
+			var point = that.bearingDlg.point;
+			var s1 = bearingForm.read();
+			var shape = { label : s1.label, weight: s1.weight, color: s1.color, way : {polygon: false}, comments: (s1.length/1000) + "km at " + s1.bearing + "deg" }
+
+			var wpt = that.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(that.bearingDlg.point.x, that.bearingDlg.point.y));
+			shape.way.waypoints = [{lat: wpt.lat(), lng: wpt.lng()}];
+			var bearing = (90 - Number(s1.bearing))*Math.PI/180;
+			var length = Number(s1.length)/Math.cos(wpt.lat()*Math.PI/180);
+			if(isNaN(bearing)) {
+				alert("Bearing is not a number");
+				return;
+			}
+			if(isNaN(length)) {
+				alert("Length is not a number");
+				return;
+			}
+			
+			var wm = new org.sarsoft.WebMercator();
+			var m1 = wm.latLngToMeters(wpt.lat(), wpt.lng());
+			var m2 = [m1[0] + length*Math.cos(bearing), m1[1] + length*Math.sin(bearing) ];
+			var ll2 = wm.metersToLatLng(m2[0], m2[1]);
+			shape.way.waypoints.push({ lat: ll2[0], lng: ll2[1]});
+			
+			that.dao.create(shape, function(obj) {
+				that.show(obj);
+			})
 		});
 		
 		this.joinSelect = $('<select style="margin-left: 1ex"></select>');
@@ -370,6 +445,7 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 			this.imap.addContextMenuItems([
 				{text : "New Line", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: false}, fill: 0}, data.point); }},
 				{text : "New Polygon", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({create: true, weight: 2, color: "#FF0000", way : {polygon: true}, fill: 10}, data.point); }},
+				{text : "New Line From Bearing", applicable : this.cm.a_none, handler: function(data) { that.bearingDlg.point = data.point; bearingForm.write(); that.bearingDlg.show(); }},
 	    		{text : "Details", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_details},
 	    		{text : "Profile", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_profile},
 	    		{text: "Modify \u2192", precheck: pc, applicable: that.cm.a_noedit, items:
@@ -480,6 +556,7 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 		[{text: "Distance", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, false);}},
 		 {text: "Area", applicable : function(obj) { return obj == null }, handler: function(data) { that.measure(data.point, true);}},
 		 {text: "Profile", applicable : function(obj) { return obj == null}, handler: function(data) { that.profile(data.point)}},
+		 {text: "Take Bearing", applicable : function(obj) { return obj == null }, handler: function(data) { that.bearing(data.point);}},
 		 {text: "Point Info", applicable : function(obj) { return obj == null}, handler: function(data) { that.pointdata(data.point)}}]
 	}];
 	
@@ -542,6 +619,52 @@ org.sarsoft.controller.MapToolsController.prototype.pointdata = function(point) 
 			alert("An error occurred while retrieving profile data from CalTopo: " + status);
 		}
 	});
+}
+
+org.sarsoft.controller.MapToolsController.prototype.bearing = function(point) {
+	var that = this;
+	this.imap.lockContextMenu();
+	
+	this.imap.drawingManager.setOptions({polylineOptions: {strokeColor: "#000000", strokeOpacity: 1, strokeWeight: 1}});
+	this.imap.drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
+	
+	var handler = function(poly) {
+		google.maps.event.removeListener(that.complete);
+		that.imap.unlockContextMenu();
+		that.imap.drawingManager.setOptions({drawingMode: null});
+		$(that.imap.map.getDiv()).unbind('click', that.bearingHandler);
+		var path = that.imap._getPath(poly);
+		poly.setMap(null);
+		var message = (path.getLength() > 2 ? "Measurements reflect a single line and ignore all intermediate points<br/><br/>" : "");
+		
+		var heading = google.maps.geometry.spherical.computeHeading(path.getAt(0), path.getAt(path.getLength()-1));
+		if(heading < 0) heading = 360 + heading;
+		var magnetic = heading - GeoUtil.Declination.compute(path.getAt(0));
+		if(magnetic > 360) magnetic = magnetic - 360;
+		if(magnetic < 0) magnetic = 360 + magnetic;
+
+		var distance = google.maps.geometry.spherical.computeDistanceBetween(path.getAt(0), path.getAt(path.getLength()-1));
+		message += "Bearing " + Math.round(heading*10)/10 + "\u00B0 True " + Math.round(magnetic*10)/10 + "\u00B0 Magnetic<br/>";
+		message += "Distance " + (Math.round(distance)/1000) + " km / " + (Math.round(distance*0.62137)/1000) + " mi";
+		that.alertDiv.innerHTML = message;
+		that.dlg.show();
+	}
+	
+	if(this.bearingHandler == null) this.bearingHandler = function() {
+		if(that.clickcheck == 0) {
+			that.clickcheck = 1;
+			return;
+		}
+		that.clickcheck = null;
+		that.imap.drawingManager.setOptions({drawingMode: null});
+	};
+	this.clickcheck = 0;
+	$(this.imap.map.getDiv()).bind('click', this.bearingHandler);
+
+	this.complete = google.maps.event.addListener(this.imap.drawingManager, "polylinecomplete", function(poly) {
+		window.setTimeout(function() { handler(poly) }, 100);
+	});
+
 }
 	
 org.sarsoft.controller.MapToolsController.prototype.measure = function(point, polygon) {
