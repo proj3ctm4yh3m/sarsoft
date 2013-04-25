@@ -1,10 +1,8 @@
 package org.sarsoft.markup.model;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Entity;
@@ -22,7 +20,6 @@ import org.sarsoft.common.json.JSONSerializable;
 import org.sarsoft.common.model.GeoMapObject;
 import org.sarsoft.common.model.IPreSave;
 import org.sarsoft.common.model.Way;
-import org.sarsoft.common.model.Waypoint;
 
 @JSONAnnotatedEntity
 @Entity
@@ -92,6 +89,9 @@ public class Shape extends GeoMapObject implements IPreSave {
 		sway.setWeight(getWeight());
 		sway.setFill(getFill());
 		sway.setWay(getWay());
+		sway.setAttr("weight", "" + getWeight());
+		sway.setAttr("color", getColor());
+		sway.setAttr("fill", "" + getFill());
 		sway.setAttr("comments", getComments());
 		
 		return sway;
