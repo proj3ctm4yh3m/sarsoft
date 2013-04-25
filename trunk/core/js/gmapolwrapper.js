@@ -216,7 +216,7 @@ google.maps.Map = function(node, opts) {
 				if(obj != null && obj.goverlay != null) google.maps.event.trigger(obj.goverlay, "dragend");
 			}
 			mc.dragControl.onDrag = function(obj) {
-//				if(obj != null && obj.goverlay != null) google.maps.event.trigger(obj.goverlay, "drag");
+				if(obj != null && obj.goverlay != null) google.maps.event.trigger(obj.goverlay, "drag");
 			}
 			mc.selectFeature(feature);
 			that.ol.modified[feature.id] = mc;
@@ -368,6 +368,13 @@ google.maps.Map.prototype.setOptions = function(opts) {
 			this.ol.navigation.disableZoomWheel();
 		}
 	}
+	if(opts.draggable != null && this.ol.navigation.dragPan) {
+		if(opts.draggable) {
+			this.ol.navigation.activate();
+		} else {
+			this.ol.navigation.deactivate();
+		}
+	}
 }
 
 google.maps.Map.prototype.getBounds = function() {
@@ -460,6 +467,10 @@ google.maps.Map.prototype.setZoom = function(zoom) {
 	this.ol.map.zoomTo(zoom);
 }
 
+google.maps.Map.prototype.panBy = function(x, y) {
+	this.ol.map.pan(x, y, { animate : false });
+}
+
 google.maps.OverlayView = function() {
 }
 
@@ -541,6 +552,10 @@ google.maps.LatLng.prototype.lng = function() {
 	return this._lng;
 }
 
+google.maps.LatLng.prototype.equals = function(other) {
+	return this._lat == other.lat() && this._lng == other.lng();
+}
+
 google.maps.LatLng.fromPoint = function(point) {
 	point = point.clone().transform(google.maps.Map.ol.mercator, google.maps.Map.ol.geographic);
 	return new google.maps.LatLng(point.y, point.x);
@@ -601,15 +616,6 @@ google.maps.Poly = function() {
 }
 
 google.maps.Poly.prototype = new google.maps.OverlayView();
-google.maps.Poly.prototype.getVertexCount = function() {
-	if(this._closed) return this.ol.vector.geometry.getVertices().length+1;
-	return this.ol.vector.geometry.getVertices().length;
-}
-google.maps.Poly.prototype.getVertex = function(idx) {
-	if(this._closed && idx == this.ol.vector.geometry.getVertices().length)
-		idx = 0;
-	return google.maps.LatLng.fromPoint(this.ol.vector.geometry.getVertices()[idx]);
-}
 
 google.maps.Poly.prototype.setEditable = function(editable) {
 	if(editable) {
@@ -617,12 +623,49 @@ google.maps.Poly.prototype.setEditable = function(editable) {
 		this.map.ol.modify(this.ol.vector);
 	} else {
 		this._editable = false;
-		this.map.ol.unmodify(this.ol.vector);
+		if(this.map != null) this.map.ol.unmodify(this.ol.vector);
+		this.path.array = [];
+		var vertices = this.ol.vector.geometry.getVertices();
+		for(var i = 0; i < vertices.length; i++) {
+			this.path.array[i] = google.maps.LatLng.fromPoint(vertices[i]);
+		}
 	}
 }
 
 google.maps.Poly.prototype.getEditable = function() {
 	return this._editable;
+}
+
+google.maps.Poly.prototype.setPath = function(path) {
+	if(this.path != null) {
+		if(this.map != null) this.map.ol.vectorLayer.removeFeatures([this.ol.vector]);
+		this.ol.vector = null;
+	}
+	var that = this;
+	var latlngs = path;
+	if(latlngs.array != null) latlngs = latlngs.array; // It's an MVCArray
+	
+	this.path = new google.maps.MVCArray();
+	this.vertices = new Array();
+	for(var i = 0; i < latlngs.length; i++) {
+		this.path.push(latlngs[i]);
+		var ll = google.maps.LatLng.toLonLat(latlngs[i]);
+		this.vertices.push(new OpenLayers.Geometry.Point(ll.lon, ll.lat));
+	}
+
+	google.maps.event.addListener(this.path, "insert_at", function(i) { 
+		var ll = google.maps.LatLng.toLonLat(that.path.getAt(i));
+		that.vertices[i] = new OpenLayers.Geometry.Point(ll.lon, ll.lat);
+		that.updateGeometry();
+	});
+	google.maps.event.addListener(this.path, "remove_at", function(i) {
+		that.vertices.splice(i);
+		that.updateGeometry();
+	});
+}
+
+google.maps.Poly.prototype.getPath = function() {
+	return this.path;
 }
 
 google.maps.Poly.prototype.setOptions = function(opts) {
@@ -636,94 +679,77 @@ google.maps.Poly.prototype.setOptions = function(opts) {
 }
 
 google.maps.Polygon = function(opts) {
-	this._closed=true;
 	this.ol = new Object();
 	this.ol.style = {strokeColor: opts.strokeColor, strokeWidth: opts.strokeWeight, strokeOpacity: opts.strokeOpacity, fillColor: opts.fillColor, fillOpacity: opts.fillOpacity};
-	this.setPaths(opts.paths || [opts.path]);
+	if(opts.paths || opts.path) this.setPaths(opts.paths || [opts.path]);
 	
 	if(opts.map != null) this.setMap(opts.map);
 }
 google.maps.Polygon.prototype = new google.maps.Poly();
 
 google.maps.Polygon.prototype.setPath = function(path) {
-	this.setPaths([path]);
-}
+	google.maps.Poly.prototype.setPath.call(this, path);
 
-google.maps.Polygon.prototype.setPaths = function(paths) {
-	var vertices = new Array();
-	var latlngs = paths;
-	if(latlngs.array != null) latlngs = latlngs.array; // It's an MVCArray
-	if(latlngs[0].lat == null) {
-		latlngs = latlngs[0];
-		if(latlngs.array != null) latlngs = latlngs.array; // First path is an MVCArray
-	}
-
-	for(var i = 0; i < latlngs.length; i++) {
-		var ll = google.maps.LatLng.toLonLat(latlngs[i]);
-		vertices.push(new OpenLayers.Geometry.Point(ll.lon, ll.lat));
-	}
-	
-	this.ol.geometry = new OpenLayers.Geometry.LinearRing(vertices);
+	this.ol.geometry = new OpenLayers.Geometry.LinearRing(this.vertices);
 	
 	if(this.ol.vector == null) {
 		this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Polygon([this.ol.geometry]), null, this.ol.style);
 		this.ol.vector.goverlay = this;
-	} else {
-		if(this.map != null) this.map.ol.vectorLayer.removeFeatures([this.ol.vector]);
-		this.ol.vector.geometry = new OpenLayers.Geometry.Polygon([this.ol.geometry]);
-		if(this.map != null) this.map.ol.vectorLayer.addFeatures([this.ol.vector]);
 	}
-
-	if(this.map != null) this.map.ol.vectorLayer.redraw();
+	
+	this.updateGeometry();
 }
 
-google.maps.Polygon.prototype.getPath = function() {
-	return this.getPaths().getAt(0);
+google.maps.Polygon.prototype.setPaths = function(paths) {
+	if(paths.array != null) paths = paths.array;
+	if(paths[0].lat == null) {
+		paths = paths[0];
+	}
+	this.setPath(paths);
 }
 
 google.maps.Polygon.prototype.getPaths = function() {
-	var path = [];
-	for(var i = 0; i < this.ol.vector.geometry.getVertices().length; i++) {
-		path[i] = google.maps.LatLng.fromPoint(this.ol.vector.geometry.getVertices()[i]);
+	return new google.maps.MVCArray([this.getPath()]);
+}
+
+google.maps.Polygon.prototype.updateGeometry = function() {
+	this.ol.geometry.points = this.vertices.slice(0, this.vertices.length);
+	this.ol.geometry.components = this.vertices.slice(0, this.vertices.length);
+	if(this.vertices.length > 1 && !this.ol.geometry.points[0].equals(this.ol.geometry.points[this.ol.geometry.points.length-1])) {
+		this.ol.geometry.points.push(this.ol.geometry.points[0]);
+		this.ol.geometry.components.push(this.ol.geometry.components[0]);
 	}
-	return new google.maps.MVCArray([new google.maps.MVCArray(path)]);
+	this.ol.vector.geometry = this.ol.geometry;
+	if(this.map != null) this.map.ol.vectorLayer.drawFeature(this.ol.vector);
 }
 
 google.maps.Polyline = function(opts) {
 	this.ol = new Object();
 	this.ol.style = {strokeColor: opts.strokeColor, strokeWidth: opts.strokeWeight, strokeOpacity: opts.strokeOpacity};
-	this.setPath(opts.path);
+	if(opts.path != null) this.setPath(opts.path);
 	
 	if(opts.map != null) this.setMap(opts.map);
 }
 google.maps.Polyline.prototype = new google.maps.Poly();
 
 google.maps.Polyline.prototype.setPath = function(path) {
-	var vertices = new Array();
-	var latlngs = path;
-	if(latlngs.array != null) latlngs = latlngs.array; // It's an MVCArray
+	google.maps.Poly.prototype.setPath.call(this, path);
 
-	for(var i = 0; i < latlngs.length; i++) {
-		var ll = google.maps.LatLng.toLonLat(latlngs[i]);
-		vertices.push(new OpenLayers.Geometry.Point(ll.lon, ll.lat));
-	}
-	this.ol.geometry = new OpenLayers.Geometry.LineString(vertices);
+	this.ol.geometry = new OpenLayers.Geometry.LineString(this.vertices);
 	
 	if(this.ol.vector == null) {
 		this.ol.vector = new OpenLayers.Feature.Vector(this.ol.geometry, null, this.ol.style);
 		this.ol.vector.goverlay = this;
 	}
 	
-	this.ol.vector.geometry = this.ol.geometry;
-	if(this.map != null) this.map.ol.vectorLayer.redraw();
+	this.updateGeometry();
 }
 
-google.maps.Polyline.prototype.getPath = function() {
-	var path = [];
-	for(var i = 0; i < this.ol.vector.geometry.getVertices().length; i++) {
-		path[i] = google.maps.LatLng.fromPoint(this.ol.vector.geometry.getVertices()[i]);
-	}
-	return new google.maps.MVCArray(path);
+google.maps.Polyline.prototype.updateGeometry = function() {
+	this.ol.geometry.points = this.vertices;
+	this.ol.geometry.components = this.vertices;
+	this.ol.vector.geometry = this.ol.geometry;
+	if(this.map != null) this.map.ol.vectorLayer.drawFeature(this.ol.vector);
 }
 
 google.maps.Marker = function(opts) {
@@ -762,6 +788,7 @@ google.maps.Marker.prototype.getPosition = function() {
 }
 
 google.maps.Marker.prototype.setPosition = function(position) {
+	if(position == null) return;
 	var ll = google.maps.LatLng.toLonLat(position);
 	this.map.ol.vectorLayer.removeFeatures([this.ol.marker]);
 	this.ol.marker.geometry = new OpenLayers.Geometry.Point(ll.lon, ll.lat)
@@ -871,11 +898,12 @@ google.maps.drawing.DrawingManager.prototype.setDrawingMode = function(type) {
 
 		var poly = null;
 		if(type == google.maps.drawing.OverlayType.POLYGON) {
-			poly = new google.maps.Polygon({paths: [[]]});
+			poly = new google.maps.Polygon({path : []});
 		} else {
-			poly = new google.maps.Polyline({path: []});
+			poly = new google.maps.Polyline({path : []});
 		}
 		poly.ol.vector = e.feature;
+		poly.setEditable(false);
 		google.maps.event.trigger(that, type == google.maps.drawing.OverlayType.POLYGON ? "polygoncomplete" : "polylinecomplete", poly);
 		return false; // required to prevent OpenLayers from re-adding feature.
 	});

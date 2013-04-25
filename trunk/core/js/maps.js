@@ -1325,6 +1325,8 @@ org.sarsoft.PositionInfoControl = function(imap, container) {
 		var div = this.div = jQuery('<div style="position: absolute; right: 0; top: ' + imap.map._overlaycontrol.div.height() + 'px; z-index: 1001" class="noprint"></div>').prependTo(container || this.map.getDiv());
 		var imgholder = $('<div style="position: absolute; right: 0; top; 0; width: 16px"><img style="position: absolute; right: 0; top: 0" src="' + $.img('left.png') + '"/></div>').appendTo(div);
 		this.display = jQuery('<div style="text-align: right; background-color: white; padding-top: 3px; font-weight: bold; white-space: nowrap"></div>').appendTo(div);
+		this.myinfo = $('<div></div>').appendTo(this.display);
+		this.extras = $('<div></div>').appendTo(this.display);
 				
 		this.minmax = $(imgholder.children()[0]).css({'cursor': 'pointer', 'display': 'none'}).attr("title", "click to show coordinates").click(function() {
 			that.setValue(that._restoreto);
@@ -1373,7 +1375,7 @@ org.sarsoft.PositionInfoControl.prototype.update = function(gll) {
 			message = message + GeoUtil.formatDDMMSS(datumll.lat()) + ", " + GeoUtil.formatDDMMSS(datumll.lng());
 		}
 	}
-	this.display.html(message);
+	this.myinfo.html(message);
 }
 
 org.sarsoft.PositionInfoControl.prototype.setValue = function(value) {
@@ -1632,6 +1634,191 @@ org.sarsoft.view.MapRightPane.prototype.hide = function() {
 	if(org.sarsoft.touch) $(this.imap.map.getDiv()).css('visibility', 'visible');
 }
 
+org.sarsoft.FreehandDrawingManager = function(options, imap) {
+	var that = this;
+	this.imap = imap;
+	this.opts = new Object();
+	this.setOptions(options);
+	this.mode = null;
+	this.polyline = null;
+	this.isdown = false;
+	this.isshift = false;
+	this.ptdrag = null;
+
+	this.handler_keydown = function(e) {
+		if(e.which == 27) that.undo();
+	}
+	this.handlers = {
+		mousedown : function(e) {
+			if(that.mode == null) return;
+			if(e.shiftKey) {
+				that.ptdrag = { x: e.pageX, y : e.pageY };
+			} else {
+				that.justdown = true;
+				that.isdown = true;
+			}
+		},
+		mouseup : function(e) {
+			if(that.mode == null) return;
+			if(that.ptdrag) that.justup = true;
+			that.isdown = false;
+			that.ptdrag = null;
+		},
+		mousemove : function(e) {
+			if(that.ptdrag != null) {
+				map.panBy(that.ptdrag.x - e.pageX, that.ptdrag.y - e.pageY);
+				that.ptdrag = { x: e.pageX, y : e.pageY };
+			} else {
+				that.handle("mousemove", e);
+			}
+		},
+		click : function(e) {
+			that.handle("click", e);
+		},
+		dblclick : function(e) {
+			that.handle("dblclick", e);
+		}
+	}
+}
+
+org.sarsoft.FreehandDrawingManager.prototype.setOptions = function(options) {
+	if(options.map) {
+		this.map = options.map;
+		this.div = $(this.map.getDiv());
+	}
+	if(options.polygonOptions) this.opts.polygon = options.polygonOptions;
+	if(options.polylineOptions) this.opts.polyline = options.polylineOptions;
+	
+	if(typeof options.drawingMode != "undefined") this.setDrawingMode(options.drawingMode);
+}
+
+org.sarsoft.FreehandDrawingManager.prototype.setDrawingMode = function(mode) {
+	var that = this;
+	this.mode = mode;
+	if(mode == null) {
+		if(this.polyline != null) this._complete();
+		org.sarsoft.async(function() { that.map.setOptions({draggable: true, disableDoubleClickZoom: false}) });
+		this.actions = null;
+		this.map.setOptions({draggableCursor: null});
+		if(this.imap.registered["org.sarsoft.PositionInfoControl"] != null) this.imap.registered["org.sarsoft.PositionInfoControl"].extras.html("");
+		
+		var div = $(map.getDiv());
+		for(var key in this.handlers) div.unbind(key, this.handlers[key]);
+		$(document.body).unbind("keydown", this.handler_keydown);
+	} else {
+		this.imap.message("Click=draw, ESC=undo, Shift Click=drag, Double Click=end", 8000);
+		this.map.setOptions({draggable: false, disableDoubleClickZoom: true});
+		this.map.setOptions({draggableCursor: 'crosshair'});
+
+		var div = $(map.getDiv());
+		for(var key in this.handlers) {
+			div.bind(key, this.handlers[key]);
+		}
+		$(document.body).bind("keydown", this.handler_keydown);
+	}
+}
+
+org.sarsoft.FreehandDrawingManager.prototype.undo = function() {
+	if(this.actions != null && this.actions.length > 0) {
+		var idx = this.actions.pop();
+		var path = this.polyline.getPath();
+		while(path.getLength() > idx + 1) {
+			path.removeAt(idx);
+		}
+	}
+}
+
+org.sarsoft.FreehandDrawingManager.prototype._addPoint = function(gll, check) {
+	var that = this;
+	if(this.polyline == null) {
+		var opts = new Object();
+		var defaults = this.mode == google.maps.drawing.OverlayType.POLYGON ? this.opts.polygon : this.opts.polyline;
+		for(var key in defaults) opts[key] = defaults[key];
+		opts.map = this.map;
+		opts.path  = [gll, gll];
+		opts.clickable = false;
+		this.polyline = new google.maps.Polyline(opts);
+
+		this.actions = [];
+		return;
+	}
+	var path = this.polyline.getPath();
+	if(check) {
+		var p1 = imap.projection.fromLatLngToContainerPixel(path.getAt(path.getLength()-2));
+		var p2 = imap.projection.fromLatLngToContainerPixel(gll);
+		if(Math.pow(p1.x-p2.x, 2) + Math.pow(p1.y-p2.y, 2) < 8) return;
+	}
+	path.setAt(path.getLength()-1, gll);
+	var lastAction = (this.actions.length > 0 ? this.actions[this.actions.length-1] : 0);
+	if(!check || this.actions.length == 0 || path.getLength() - lastAction > 50) this.actions.push(path.getLength()-1);
+	path.push(gll);
+}
+
+org.sarsoft.FreehandDrawingManager.prototype._updateLast = function(gll) {
+	if(this.polyline == null) return;
+	var path = this.polyline.getPath();
+	var last = path.getAt(path.getLength()-2);
+	path.setAt(path.getLength()-1, gll);
+	if(this.imap.registered["org.sarsoft.PositionInfoControl"]) {
+		var heading = google.maps.geometry.spherical.computeHeading(last, gll);
+		if(heading < 0) heading = 360 + heading;
+		var magnetic = heading - GeoUtil.Declination.compute(last);
+		if(magnetic > 360) magnetic = magnetic - 360;
+		if(magnetic < 0) magnetic = 360 + magnetic;
+
+		var distance = google.maps.geometry.spherical.computeDistanceBetween(last, gll);
+		var message = '<div style="margin-top: 1em">' + Math.round(heading*10)/10 + "\u00B0TN " + Math.round(magnetic*10)/10 + "\u00B0MN<br/>";
+		message += (Math.round(distance/100)/10) + " km / " + (Math.round(distance*0.62137/100)/10) + " mi</div>";
+		this.imap.registered["org.sarsoft.PositionInfoControl"].extras.html(message);
+	}
+
+}
+
+org.sarsoft.FreehandDrawingManager.prototype._complete = function() {
+	if(this.polyline == null) return;
+	var path = this.polyline.getPath();
+	while(path.getLength() > 1 && path.getAt(0).equals(path.getAt(1))) path.removeAt(0);
+	while(path.getLength() > 1 && path.getAt(path.getLength()-2).equals(path.getAt(path.getLength()-1))) path.removeAt(path.getLength()-1);
+	if(this.mode == google.maps.drawing.OverlayType.POLYGON) {
+		var polygon = new google.maps.Polygon(this.opts.polygon);
+		polygon.setPath(path);
+		this.polyline.setMap(null);
+		polygon.setMap(this.map);
+		this.polyline = null;
+		google.maps.event.trigger(this, "polygoncomplete", polygon);
+	} else {
+		var polyline = this.polyline;
+		this.polyline = null;
+		google.maps.event.trigger(this, "polylinecomplete", polyline);
+	}
+}
+
+org.sarsoft.FreehandDrawingManager.prototype.handle = function(type, evt) {
+	var that = this;
+	if(this.mode == null) return;
+	
+	var offset = this.div.offset();
+	var gll = this.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(evt.pageX-offset.left, evt.pageY-offset.top));
+	
+	if(type == "click") {
+		if(this.justup) {
+			this.justup = false;
+			return;
+		}
+		this._addPoint(gll, false);
+	} else if(type == "mousemove" && this.isdown) {
+		this._addPoint(gll, !this.justdown);
+		if(this.justdown) this.justdown = false;
+		if(this.polyline.getPath().getLength() > 2000) {
+			alert("2000 waypoint limit exceeded.  Drawing has been stopped.");
+			this._complete();
+		}
+	} else if(type == "mousemove") {
+		this._updateLast(gll);
+	} else if(type == "dblclick") {
+		this._complete();
+	}
+}
 
 org.sarsoft.ProjectionCaptureOverlay = function(imap) {
 	this.imap = imap;
@@ -1672,7 +1859,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 
 	this.projection = false;
 	var pco = new org.sarsoft.ProjectionCaptureOverlay(this);
-	this.drawingManager = new google.maps.drawing.DrawingManager({map: map, drawingMode: null, drawingControl: false});
+	this.drawingManager = (org.sarsoft.touch || ($.browser.msie && google.maps._openlayers)) ? new google.maps.drawing.DrawingManager({map: map, drawingMode: null, drawingControl: false}) : new org.sarsoft.FreehandDrawingManager({map: map, drawingMode: null, drawingControl: false}, this);
 	
 	google.maps.event.addListener(map, "rightclick", function(evt) {
 		that.click(evt);
@@ -2149,17 +2336,9 @@ org.sarsoft.InteractiveMap.prototype.redraw = function(id, onEnd, onCancel) {
 	var release = function() {
 		google.maps.event.removeListener(that.complete);
 		that.unlockContextMenu();
-		$(document).unbind("keydown", that.fn);
 		that.drawingManager.setOptions({drawingMode: null});
 	}
 
-	this.fn = function(e) {
-		if(e.which == 27) {
-			that.drawingManager.setOptions({drawingMode: null});
-		}
-	}
-	$(document).bind("keydown", this.fn);
-	
 	this.complete = google.maps.event.addListener(this.drawingManager, this.polys[id].way.polygon ? "polygoncomplete" : "polylinecomplete", function(poly) {
 		release();
 		var path = that._getPath(poly);

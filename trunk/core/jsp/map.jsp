@@ -21,7 +21,7 @@ org.sarsoft.Loader.queue(function() {
 		position: true,
 		size: true,
 		find: true,
-		label: true,
+		label: true
 		});
 
 	page.imap.dn.tenant.addClose("Close Unsaved Map", function() {
