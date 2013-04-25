@@ -949,7 +949,7 @@ google.maps.ElevationService.prototype.getElevationAlongPath = function(obj, han
 	var path = this.resamplePath(obj.path, obj.samples);
 	var url = "/resource/elevation?locations=";
 	for(var i = 0; i < path.length; i++) {
-		url = url + (i > 0 ? "|" : "") + path[i].lat() + "," + path[i].lng();
+		url = url + (i > 0 ? "|" : "") + (Math.round(path[i].lat()*10000)/10000) + "," + (Math.round(path[i].lng()*10000)/10000);
 	}
 	YAHOO.util.Connect.asyncRequest('GET', url, { success : function(response) {
 		var obj = YAHOO.lang.JSON.parse(response.responseText);
