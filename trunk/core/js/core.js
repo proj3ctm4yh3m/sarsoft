@@ -2365,10 +2365,14 @@ org.sarsoft.DemShadingDlg = function(imap, handler) {
 	var table = $('<table><tbody><tr><td style="padding-right: 5px; vertical-align: top">Name</td><td><input type="text"/></td><td rowspan="2" style="width: 60%; vertical-align: top">' + 
 			'Each line should have a set of conditions, a space, and then an RGB hex color code.  Conditions include s for slope, a for aspect, and e for elevation.' + 
 			'  For more information, see <a href="http://caltopo.blogspot.com/2013/02/custom-dem-shading.html" target="_new">this blog post</a>.' + 
-			' <table style="margin-top: 5px"><tbody><tr><td>s15-30 FF0000</td><td>Shade all slopes between 15 and 30 degrees red</td></tr>' +
-			' <tr><td>e1000-3000 FF0000-0000FF</td><td>Red-blue gradient for elevations between 1k meters and 3k meters</td></tr>' + 
-			' <tr><td>s30-45a270-90e6000f-14000f FF8000</td><td>Color north facing slopes 30-45&deg; steep and above 6,000\' orange</td></tr></tbody></table>' + 
+			' <table style="margin-top: 5px"><tbody><tr><td></td><td>Shade all slopes between 15 and 30 degrees red</td></tr>' +
+			' <tr><td></td><td>Red-blue gradient for elevations between 1k meters and 3k meters</td></tr>' + 
+			' <tr><td></td><td>Color north facing slopes 30-45&deg; steep and above 6,000\' orange</td></tr></tbody></table>' + 
 			+ '</td></tr></tbody></table>');
+	
+	$('<span style="color: blue" class="underlineOnHover">s15-30 FF0000</span>').appendTo(table.find('table').find('td')[0]).click(function() { that.ta.val('s15-30 FF0000') });
+	$('<span style="color: blue" class="underlineOnHover">e1000-3000 FF0000-0000FF</span>').appendTo(table.find('table').find('td')[2]).click(function() { that.ta.val('e1000-3000 FF0000-0000FF') });
+	$('<span style="color: blue" class="underlineOnHover">s30-45a270-90e6000f-14000f FF8000</span>').appendTo(table.find('table').find('td')[4]).click(function() { that.ta.val('s30-45a270-90e6000f-14000f FF8000') });
 	
 	$('<tr><td style="padding-right: 5px; vertical-align: top">Shading</td><td><textarea style="width: 95%; height: 6em"></textarea></td></tr>').appendTo(table.children()[0]);
 	
@@ -2563,6 +2567,37 @@ org.sarsoft.view.ProfileGraph = function() {
 	this.service = new google.maps.ElevationService();
 }
 
+org.sarsoft.view.ProfileGraph.prototype.resample = function(path, samples) {
+	var length = google.maps.geometry.spherical.computeLength(path);
+	var interval = length / (samples - 1);
+	
+	var s_index = 1;
+	var leg = 0;
+	var rpt = path[0];
+	var resampled = []
+	resampled.push(path[0])
+
+	while(resampled.length < samples) {
+		var d = google.maps.geometry.spherical.computeDistanceBetween(rpt, path[s_index]);
+		if(d + leg < interval) {
+			leg += d;
+			rpt = path[s_index];
+			s_index++;
+			if(s_index >= path.length) {
+				resampled.push(path[path.length-1]);
+				return resampled;
+			}
+		} else {
+			var ratio = (interval-leg)/d;
+			rpt = new google.maps.LatLng(rpt.lat()*(1-ratio) + path[s_index].lat()*ratio, rpt.lng()*(1-ratio) + path[s_index].lng()*ratio);
+			resampled.push(rpt);
+			leg = 0;
+		}
+	}
+	
+	return resampled;
+}
+
 org.sarsoft.view.ProfileGraph.prototype.profile = function(way, color, callback) {
 	var that = this;
 	var path = [];
@@ -2574,6 +2609,7 @@ org.sarsoft.view.ProfileGraph.prototype.profile = function(way, color, callback)
 	} else {
 		path = way;
 	}
+	if(path.length > 300) path = this.resample(path, 300);
 	this.service.getElevationAlongPath({path: path, samples: 200}, function(result, status) {
 		if(status == google.maps.ElevationStatus.OK) {
 			if(callback != null) callback();
