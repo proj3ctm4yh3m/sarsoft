@@ -31,7 +31,7 @@ import org.springframework.web.multipart.support.StringMultipartFileEditor;
 @Controller
 public class ElevationController extends JSONBaseController {
 		
-	private static String EXTERNAL_TILE_DIR = "sardata/ned/elevation";
+	private static String EXTERNAL_TILE_DIR = "sardata/elevation";
 	private Logger logger = Logger.getLogger(ImageryController.class);
 	
 	@Autowired

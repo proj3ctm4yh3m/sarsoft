@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
@@ -34,7 +33,7 @@ public abstract class JSONBaseController {
 
 	protected ServerInfo server;
 
-	@Value("${sarsoft.map.viewer}")
+	@Value(value="${sarsoft.map.viewer:}")
 	String mapViewer = "google";
 
 	@Autowired

@@ -29,10 +29,15 @@ public class Loader {
 			System.out.println("Clearing Winstone TMP directory " + tmpname + " . . .");
 			delete(tmpdir);
 		}
-				
-		System.out.println("Checking HSQLDB permissions for default location of .sarsoft/hsqldb/ . . .");
+		
+		File script = new File(".sarsoft/hsqldb/searches.script");
+		if(script.exists()) {
+			System.out.println("\n\n*****\nDatabase file from an old (0.9 and lower) version found at .sarsoft/hsqldb/.\nYou will need to back these maps up to GPX using sarsoft 0.9 and then reimport them.\n*****\n\n");
+		}
+
+		System.out.println("Checking HSQLDB permissions for default location of sardata/db.* . . .");
 		for(String suffix : new String[] { "script", "properties", "log" } ) {
-			File file = new File(".sarsoft/hsqldb/searches." + suffix);
+			File file = new File("sardata/db." + suffix);
 			if(file.exists()) {
 				file.setReadable(true, false);
 				file.setWritable(true, false);
