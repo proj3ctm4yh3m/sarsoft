@@ -2882,6 +2882,7 @@ org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
 		var lat = this.lat.val();
 		var lng = this.lng.val();
 		if(lat != null && lat.length > 0 && lng != null && lng.length > 0) {
+			if(lng > 0) alert("Longitude is greater than zero.  If you're in the United States, this should probably be a negative number.")
 			callback(new google.maps.LatLng(1*lat, 1*lng));
 		} else {
 			return false;

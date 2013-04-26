@@ -16,6 +16,7 @@
 <meta content='True' name='HandheldFriendly' />
 <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 <meta name="format-detection" content="telephone=no" />
+<title>${version} - ${tenant.description}</title>
 <%@include file="head.jsp" %>
 <script type="text/javascript">
 function doload() {
@@ -135,7 +136,10 @@ org.sarsoft.Loader.queue(function() {
  <div id="map_left">
  </div>
  <div id="map_right" style="height: 100%">
-  <div id="map_canvas" style="width: 100%; height: 100%"></div>
+  <div id="map_canvas" style="width: 100%; height: 100%">
+<h1>${tenant.description}</h1>
+<div>${tenant.comments}</div>
+</div>
  </div>
 </div>
 

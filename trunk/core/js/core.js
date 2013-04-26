@@ -1,6 +1,7 @@
 sarsoft.Controllers = {}
 
 sarsoft.Page = function(opts) {
+	$('#map_canvas').empty();
 	map = this.map = org.sarsoft.EnhancedGMap.createMap(document.getElementById('map_canvas'), opts.center, opts.zoom);
 	
 	var map_opts = {UTM: true, switchableDatum: true, dn: (opts.dnclass || org.sarsoft.DataNavigator)}

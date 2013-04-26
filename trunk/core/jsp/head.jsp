@@ -3,7 +3,6 @@
 <%@ taglib uri="http://packtag.sf.net" prefix="pack" %>
 <%@page import="org.sarsoft.common.util.RuntimeProperties"%>
 <% pageContext.setAttribute("pack", Boolean.parseBoolean(RuntimeProperties.getProperty("sarsoft.js.pack"))); %>
-<title>${version}</title>
 
 <script>
 sarsoft=${js_sarsoft}
