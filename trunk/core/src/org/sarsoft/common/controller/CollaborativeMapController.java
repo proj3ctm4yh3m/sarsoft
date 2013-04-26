@@ -28,6 +28,7 @@ import org.sarsoft.common.util.Hash;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.model.CollaborativeMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -49,7 +50,7 @@ public class CollaborativeMapController extends JSONBaseController {
 	
 	@Autowired
 	DataManager manager;
-
+	
 	@InitBinder
 	public void initBinder(HttpServletRequest request, ServletRequestDataBinder binder) throws ServletException {
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
@@ -70,6 +71,7 @@ public class CollaborativeMapController extends JSONBaseController {
 			request.getSession().removeAttribute("client_state");
 			model.addAttribute("preload", clientState);
 		}
+		model.addAttribute("welcomeMessage", RuntimeProperties.getProperty("sarsoft.message"));
 		return app(model, "/map");
 	}
 	

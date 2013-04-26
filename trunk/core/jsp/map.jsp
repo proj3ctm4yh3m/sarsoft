@@ -32,7 +32,7 @@ org.sarsoft.Loader.queue(function() {
 	});
 
 	new org.sarsoft.widget.URLSharing(page.imap, 'map.html');
-	if(!org.sarsoft.iframe && !org.sarsoft.mobile) imap.message('<a href="http://bamru.info/caltopo" target="_new">Please donate</a> to Bay Area Mountain Rescue', 5000);
+<c:if test="${not empty welcomeMessage}">	if(!org.sarsoft.iframe && !org.sarsoft.mobile) imap.message('${welcomeMessage}', 5000);</c:if>
 
 });
 }

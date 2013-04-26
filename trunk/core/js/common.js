@@ -59,6 +59,7 @@ org.sarsoft.async = function(fn) {
 }
 
 $.img = function(url) {
+	if(url.indexOf("http://") == 0) return;
 	if(url.indexOf("/") != 0) url = "/" + url;
 	return sarsoft.imgprefix + url;
 }
