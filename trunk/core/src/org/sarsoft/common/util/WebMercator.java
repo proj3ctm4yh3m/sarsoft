@@ -90,6 +90,12 @@ public class WebMercator {
 		int dy = (ty - pow * py);
     	return new int[] { px, py, dx, dy };
     }
+    
+    public static double getScaleFactor(double my) {
+        double lat = (my / originshift) * Math.PI;
+        lat = (2 * Math.atan(Math.exp(lat)) - Math.PI / 2);
+        return Math.cos(lat);
+    }
 }
 
 
