@@ -1642,8 +1642,8 @@ org.sarsoft.FreehandDrawingManager = function(options, imap) {
 	this.mode = null;
 	this.polyline = null;
 	this.isdown = false;
-	this.isshift = false;
 	this.ptdrag = null;
+	this.ignorenextclick = false;
 
 	this.handler_keydown = function(e) {
 		if(e.which == 27) that.undo();
@@ -1651,23 +1651,21 @@ org.sarsoft.FreehandDrawingManager = function(options, imap) {
 	this.handlers = {
 		mousedown : function(e) {
 			if(that.mode == null) return;
-			if(e.shiftKey) {
-				that.ptdrag = { x: e.pageX, y : e.pageY };
-			} else {
-				that.justdown = true;
-				that.isdown = true;
-			}
+			that.ptdrag = (e.shiftKey ? null : { x: e.pageX, y : e.pageY });
+			that.justdown = true;
+			that.isdown = true;
+			that.ignorenextclick = false;
 		},
 		mouseup : function(e) {
 			if(that.mode == null) return;
-			if(that.ptdrag) that.justup = true;
-			that.isdown = false;
 			that.ptdrag = null;
+			that.isdown = false;
 		},
 		mousemove : function(e) {
-			if(that.ptdrag != null) {
+			if(that.ptdrag) {
 				map.panBy(that.ptdrag.x - e.pageX, that.ptdrag.y - e.pageY);
 				that.ptdrag = { x: e.pageX, y : e.pageY };
+				that.ignorenextclick = true;
 			} else {
 				that.handle("mousemove", e);
 			}
@@ -1725,6 +1723,17 @@ org.sarsoft.FreehandDrawingManager.prototype.undo = function() {
 		while(path.getLength() > idx + 1) {
 			path.removeAt(idx);
 		}
+	} else if(this.actions == null || this.actions.length == 0) {
+		if(this.polyline == null) {
+			if(this.mode == google.maps.drawing.OverlayType.POLYGON) {
+				google.maps.event.trigger(this, "polygoncomplete", new google.maps.Polygon(this.opts.polygon));
+			} else {
+				google.maps.event.trigger(this, "polylinecomplete", new google.maps.Polyline(this.opts.polyline));
+			}
+		} else {
+			this.polyline.setMap(null);
+			this.polyline = null;
+		}
 	}
 }
 
@@ -1750,7 +1759,7 @@ org.sarsoft.FreehandDrawingManager.prototype._addPoint = function(gll, check) {
 	}
 	path.setAt(path.getLength()-1, gll);
 	var lastAction = (this.actions.length > 0 ? this.actions[this.actions.length-1] : 0);
-	if(!check || this.actions.length == 0 || path.getLength() - lastAction > 50) this.actions.push(path.getLength()-1);
+	if(!check || this.actions.length == 0 || path.getLength() - lastAction > 35) this.actions.push(path.getLength()-1);
 	path.push(gll);
 }
 
@@ -1801,14 +1810,14 @@ org.sarsoft.FreehandDrawingManager.prototype.handle = function(type, evt) {
 	var gll = this.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(evt.pageX-offset.left, evt.pageY-offset.top));
 	
 	if(type == "click") {
-		if(this.justup) {
-			this.justup = false;
-			return;
+		if(this.ignorenextclick) {
+			this.ignorenextclick = false;
+		} else {
+			this._addPoint(gll, false);
 		}
-		this._addPoint(gll, false);
 	} else if(type == "mousemove" && this.isdown) {
 		this._addPoint(gll, !this.justdown);
-		if(this.justdown) this.justdown = false;
+		this.justdown = false;
 		if(this.polyline.getPath().getLength() > 2000) {
 			alert("2000 waypoint limit exceeded.  Drawing has been stopped.");
 			this._complete();
