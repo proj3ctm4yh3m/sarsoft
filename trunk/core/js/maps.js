@@ -1726,9 +1726,13 @@ org.sarsoft.FreehandDrawingManager.prototype.undo = function() {
 	} else if(this.actions == null || this.actions.length == 0) {
 		if(this.polyline == null) {
 			if(this.mode == google.maps.drawing.OverlayType.POLYGON) {
-				google.maps.event.trigger(this, "polygoncomplete", new google.maps.Polygon(this.opts.polygon));
+				var poly = new google.maps.Polygon(this.opts.polygon);
+				poly.path = new google.maps.MVCArray([]);
+				google.maps.event.trigger(this, "polygoncomplete", poly);
 			} else {
-				google.maps.event.trigger(this, "polylinecomplete", new google.maps.Polyline(this.opts.polyline));
+				var poly = new google.maps.Polyline(this.opts.polyline);
+				poly.path = new google.maps.MVCArray([]);
+				google.maps.event.trigger(this, "polylinecomplete", poly);
 			}
 		} else {
 			this.polyline.setMap(null);
