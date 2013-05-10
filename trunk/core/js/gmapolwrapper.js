@@ -807,7 +807,7 @@ google.maps.geometry = new Object();
 google.maps.geometry.spherical = new Object();
 
 google.maps.geometry.spherical.computeDistanceBetween = function(from, to) {
-	var R = 6371;
+	var R = 6378137;
     var pi = 3.14159265358979323;
 	var dLat = (to.lat()-from.lat())/180*pi;
 	var dLon = (to.lng()-from.lng())/180*pi; 
@@ -815,7 +815,7 @@ google.maps.geometry.spherical.computeDistanceBetween = function(from, to) {
 	        Math.cos(from.lat()/180*pi) * Math.cos(to.lat()/180*pi) * 
 	        Math.sin(dLon/2) * Math.sin(dLon/2); 
 	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-	return R * c * 1000;
+	return R * c;
 }
 
 google.maps.geometry.spherical.computeHeading = function(from, to) {
@@ -834,6 +834,17 @@ google.maps.geometry.spherical.computeLength = function(path) {
 		distance = distance + google.maps.geometry.spherical.computeDistanceBetween(path[i-1], path[i]);
 	}
 	return distance;
+}
+
+google.maps.geometry.spherical.computeOffset = function(from, distance, heading) {
+	var R = 6378137;
+    var lat1 = from.lat()*Math.PI/180;
+    var lng1 = from.lng()*Math.PI/180;
+    var bearing = heading*Math.PI/180;
+    
+    var lat2 = Math.asin( Math.sin(lat1)*Math.cos(distance/R) + Math.cos(lat1)*Math.sin(distance/R)*Math.cos(bearing));
+    var lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(distance/R)*Math.cos(lat1), Math.cos(distance/R)-Math.sin(lat1)*Math.sin(lat2));
+    return new google.maps.LatLng(lat2*180/Math.PI, lng2*180/Math.PI);
 }
 
 google.maps.geometry.spherical.computeArea = function(path) {
