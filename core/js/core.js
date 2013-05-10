@@ -2404,6 +2404,71 @@ org.sarsoft.DemShadingDlg.prototype.show = function(dem) {
 	this.write(dem);
 }
 
+org.sarsoft.ViewshedDlg = function(imap, handler) {
+	var that = this;
+	this.imap = imap;
+
+	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm" style="width: 90%"><table style="border: 0; width: 100%"><tbody><tr></tr></tbody></table></form>');
+	var left = $('<td style="width: 40%"></td>').appendTo(form.find('tr'));
+	var right = $('<td style="padding-left: 20px">A viewshed analysis shows all areas that are visible from a certain point.  Simply drag the </td>').appendTo(form.find('tr'));
+	$('<img src="' + $.img('icons/target.png') + '"/>').appendTo(right);
+	right.append(' icon to the location you want to generate a viewshed for ' +
+			'and click save.  You can also specify an eye altitude to adjust how high above ground the viewshed is run from.  Because it\'s difficult to drop the marker exactly at a high point, a value in the 10-30 meter range ' +
+			'gives the best results.');
+	
+	this.name = jQuery('<input name="label" type="text" size="15"/>').appendTo(jQuery('<div class="item"><label style="width: 80px">Name:</label></div>').appendTo(left));	
+	this.alt = jQuery('<input name="label" type="text" size="15"/>').prependTo($('<div><br/><span class="hint">meters above ground.  optional, default is 20.</span></div>').appendTo(jQuery('<div class="item"><label style="width: 80px">Eye Altitude:</label></div>').appendTo(left)));
+	
+	div = jQuery('<div class="item"><label for="color" style="width: 80px">Color:</label></div>').appendTo(left);
+	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left"></div>').appendTo(div);
+	div.append('<span style="float: left; margin-left: 5px">Click below or color code:</span>');
+	this.color = jQuery('<input name="color" type="text" size="6" style="float: left; margin-left: 5px"/>').appendTo(div);
+	this.color.change(function() {colorSwatch.css('background-color', '#' + that.color.val())});
+
+	var colorContainer = jQuery('<div style="clear: both; margin-top: 5px"></div>').appendTo(left);
+	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
+	for(var i = 0; i < colors.length; i++) {
+		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
+		swatch.click(function() { var j = i; return function() {that.color.val(colors[j].substr(1)); that.color.trigger('change');}}());
+	}	
+	
+	this.dlg = new org.sarsoft.view.MapDialog(imap, "Viewshed Analysis", form, "Save", "Cancel", function() {
+		var gll = that.marker.getPosition();
+		that.marker.setMap(null);
+		that.marker = null;
+		var cfg = (Math.round(gll.lat()*10000)/10000) + "b" + (Math.round(gll.lng()*10000)/10000);
+		var alt = that.alt.val();
+		if((alt || "").length > 0) cfg = cfg + "e" + alt;
+		cfg = cfg + "c" + that.color.val().toUpperCase();
+		handler({name: that.name.val(), alias: "vs_" + cfg});
+	});
+
+	this.dlg.dialog.hideEvent.subscribe(function() {
+		if(that.marker != null) {
+			that.marker.setMap(null);
+			that.marker = null;
+		}
+	});
+}
+
+org.sarsoft.ViewshedDlg.prototype.show = function(vs) {
+	var that = this;
+	this.id = null;
+	this.name.val(vs.name || '');
+	var p1 = vs.alias.replace("vs_", "").split("c");
+	var p2 = p1[0].split("e");
+	var ll = p2[0].split("b");
+	
+	this.color.val(p1.length > 1 ? p1[1] : '#FF0000');
+	this.color.trigger('change');
+	if(p2.length > 1) this.alt.val(p2[1]);
+	
+	this.marker = new google.maps.Marker({ map: that.imap.map, draggable: true, icon : org.sarsoft.MapUtil.createIcon("target"), position: new google.maps.LatLng(Number(ll[0]), Number(ll[1])) });
+	
+	this.dlg.show();
+}
+
+
 org.sarsoft.ConfigurableLayerDAO = function(errorHandler, baseURL) {
 	org.sarsoft.MapObjectDAO.call(this, "ConfiguredLayer");
 	if(typeof baseURL == "undefined") baseURL = "/rest/cfglayer";
@@ -2415,13 +2480,19 @@ org.sarsoft.ConfigurableLayerDAO.prototype = new org.sarsoft.MapObjectDAO();
 
 org.sarsoft.controller.ConfiguredLayerController = function(imap, background_load) {
 	var that = this;
-	org.sarsoft.MapObjectController.call(this, imap, {name: "ConfiguredLayer", dao: org.sarsoft.ConfigurableLayerDAO, label: "DEM Shading"}, background_load);
+	org.sarsoft.MapObjectController.call(this, imap, {name: "ConfiguredLayer", dao: org.sarsoft.ConfigurableLayerDAO, label: "Terrain Modeling"}, background_load);
 	this.imap.register("org.sarsoft.controller.ConfiguredLayerController", this);
 	this.dn.cb.css('display', 'none');
 	
 	if(org.sarsoft.writeable) {
-		this.buildAddButton(1, "DEM Shading", function(point) {
+		
+		if(imap.map._overlaymanager.getConfigFromAlias('sc') != null) this.buildAddButton(1, "DEM Shading", function(point) {
 			that.demDlg.show(null, point);
+		});
+
+		if(imap.map._overlaymanager.getConfigFromAlias('vs') != null) this.buildAddButton(1, "Viewshed Analysis", function(point) {
+			var gll = that.imap.map.getCenter();
+			that.viewshedDlg.show({alias : ("vs_" + gll.lat() + "b" + gll.lng() + "cFF0000")}, point);
 		});
 	}
 	
@@ -2434,6 +2505,20 @@ org.sarsoft.controller.ConfiguredLayerController = function(imap, background_loa
 			});
 		} else {
 			that.dao.save(dem.id, dem, function(obj) {
+				that.addToMap(obj);
+			});
+		}
+	});
+	
+	this.viewshedDlg = new org.sarsoft.ViewshedDlg(imap, function(vs) {
+		vs.id = that.viewshedDlg.id;
+		that.viewshedDlg.id = null;
+		if(vs.id == null) {
+			that.dao.create(vs, function(obj) {
+				that.addToMap(obj);
+			});
+		} else {
+			that.dao.save(vs.id, vs, function(obj) {
 				that.addToMap(obj);
 			});
 		}
@@ -2486,8 +2571,9 @@ org.sarsoft.controller.ConfiguredLayerController.prototype.show = function(objec
 	if(org.sarsoft.writeable) {	
 		this.dn.addIconEdit(object.id, function() {
 			that.removeFromMap(object);
-			that.demDlg.show(object);
-			that.demDlg.id = object.id;
+			var dlg = (object.alias.indexOf("vs_") == 0 ? that.viewshedDlg : that.demDlg);
+			dlg.show(object);
+			dlg.id = object.id;
 		});
 		this.dn.addIconDelete(object.id, function() {
 			that.del(function() { that.dao.del(object.id); });

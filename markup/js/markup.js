@@ -111,6 +111,23 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.handleChange();
 }
 
+org.sarsoft.RangeRingForm = function() {
+}
+
+org.sarsoft.RangeRingForm.prototype.create = function(container) {
+	var div = $('<div>Add a range ring at</div>').appendTo(container);
+	this.input = $('<input type="text" size="8" style="margin-left: 1ex"/>').appendTo(div);
+	div.append('meters');
+}
+
+org.sarsoft.RangeRingForm.prototype.write = function() {
+	this.input.val("");
+}
+
+org.sarsoft.RangeRingForm.prototype.read = function() {
+	return (this.input.val() || '').split(',');
+}
+
 org.sarsoft.controller.MarkerController = function(imap, background_load) {
 	var that = this;
 	org.sarsoft.WaypointObjectController.call(this, imap, {name: "Marker", dao : org.sarsoft.MarkerDAO, label: "Markers", geo: true, waypoint: "position"}, background_load);
@@ -128,6 +145,19 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 			marker.position = {lat: wpt.lat(), lng: wpt.lng()};
 			that.dao.create(marker);
 		}
+		
+		this.rrDlg = new org.sarsoft.view.MapEntityDialog(imap, "Add Range Ring", new org.sarsoft.RangeRingForm(), function(rr) {
+			for(var i = 0; i < rr.length; i++) {
+				var distance = Number(rr[i]);
+				var center = GeoUtil.wpt2gll(that.rrDlg.position);
+				var waypoints = [];
+				for(var bearing = 180; bearing <= 540; bearing +=5) {
+					var gll = google.maps.geometry.spherical.computeOffset(center, distance, bearing);
+					waypoints.push({lat: gll.lat(), lng: gll.lng()});
+				}
+				org.sarsoft.MapState.daos["Shape"].create({ label: distance + "m", color: "#000000", weight: 2, way: { polygon: false, waypoints: waypoints } });
+			}
+		}, "OK");
 
 		var pc = function(obj) { return that._contextMenuCheck(obj) }
 		
@@ -136,6 +166,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 			    {text : "New Marker", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({url: "#FF0000"}, data.point); }},
 	    		{text : "Details", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_details },
 	    		{text : "Drag to New Location", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_drag},
+	    		{text : "Add Range Ring", precheck: pc, applicable : that.cm.a_noedit, handler: function(data) { that.rrDlg.show(null, data.point); that.rrDlg.position = data.pc.obj.position }},
 	    		{text : "Delete Marker", precheck: pc, applicable : that.cm.a_noedit, handler:  that.cm.h_del}
 	    		]);
 		}

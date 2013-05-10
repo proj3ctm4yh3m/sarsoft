@@ -1853,7 +1853,6 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this.options = options;
 	this.polys = new Object();
 	this.overlays = new Array();
-	this.rangerings = new Array();
 	this.text = new Array();
 	this.markers = new Object();
 	this.controls = { settings: $('<div></div>'), settings_browser: $('<div></div>') }
@@ -2133,28 +2132,6 @@ org.sarsoft.InteractiveMap.prototype.addWay = function(way, config, label) {
 	this.checkID(way);
 	this.removeWay(way);
 	this.polys[way.id] = { way: way, overlay: this._addOverlay(way, config, label), config: config};
-}
-
-org.sarsoft.InteractiveMap.prototype.addRangeRing = function(center, radius, vertices) {
-	var glls = new Array();
-	var centerUTM = GeoUtil.GLatLngToUTM(new google.maps.LatLng(center.lat, center.lng));
-	for(var i = 0; i <= vertices; i++) {
-		var vertexUTM = new UTM(centerUTM.e + radius*Math.sin(i*2*Math.PI/vertices), centerUTM.n + radius*Math.cos(i*2*Math.PI/vertices), centerUTM.zone);
-		glls.push(GeoUtil.UTMToGLatLng(vertexUTM));
-	}
-	var poly = new google.maps.Polyline({map: this.map, path: glls, strokeColor: "#000000", strokeOpacity: 1, strokeWeight: 1});
-	this.rangerings.push(poly);
-
-	var labelUTM = new UTM(centerUTM.e, 1*centerUTM.n + 1*radius, centerUTM.zone);
-	var label = new Label(this.map, GeoUtil.UTMToGLatLng(labelUTM), "<span class='maplabel'>" + radius + "m</span>", "", new google.maps.Size(-6, -4));
-	this.rangerings.push(label);
-}
-
-org.sarsoft.InteractiveMap.prototype.removeRangeRings = function() {
-	for(var i = 0; i < this.rangerings.length; i++) {
-		this.rangerings[i].setMap(null);
-	}
-	this.rangerings = new Array();
 }
 
 org.sarsoft.InteractiveMap.prototype._removeMarker = function(waypoint) {
