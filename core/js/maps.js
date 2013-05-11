@@ -1704,7 +1704,7 @@ org.sarsoft.FreehandDrawingManager.prototype.setDrawingMode = function(mode) {
 		for(var key in this.handlers) div.unbind(key, this.handlers[key]);
 		$(document.body).unbind("keydown", this.handler_keydown);
 	} else {
-		this.imap.message("Click=draw, ESC=undo, Shift Click=drag, Double Click=end", 8000);
+		this.imap.message("Click=draw, ESC=undo, Shift Click=freehand, Double Click=end", 8000);
 		this.map.setOptions({draggable: false, disableDoubleClickZoom: true});
 		this.map.setOptions({draggableCursor: 'crosshair'});
 
