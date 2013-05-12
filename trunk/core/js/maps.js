@@ -13,8 +13,9 @@ org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 	var ts = config.tilesize ? config.tilesize : 256;
 	if(config.type == "TILE"){
 		var template = config.template;
+		var v = config._v;
 		var type = new google.maps.ImageMapType({alt: "", maxZoom: sarsoft.map.zoom_max || 21, minZoom: sarsoft.map.zoom_min || config.minresolution, name: config.name, opacity: config.opacity == null ? 1 : config.opacity/100, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
-			return (zoom > config.maxresolution ? '/resource/imagery/tilecache/' + config.alias + '/{Z}/{X}/{Y}.png' : template).replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
+			return (zoom > config.maxresolution ? '/resource/imagery/tiles/' + config.alias + (v  ? '_' + v : '') + '/{Z}/{X}/{Y}.png' : template).replace(/{Z}/, zoom).replace(/{X}/, point.x).replace(/{Y}/, point.y);
 		}});
 	    if(config.alphaOverlay) type._alphaOverlay = true;
 	    type._info = config.info;
@@ -127,9 +128,11 @@ org.sarsoft.MapOverlayManager.prototype.addCfgTypeIfNecessary = function(id) {
 	if(cfg != null) {
 		cfg._vtemplate = cfg.template;
 		cfg.template = cfg.template.replace(/{V}/,parts[1]);
+		cfg._v = parts[1];
 		this.map.mapTypes.set(id, org.sarsoft.EnhancedGMap.createMapType(cfg, map));
 		cfg.template = cfg._vtemplate;
 		delete cfg._vtemplate;
+		delete cfg._v;
 	}
 }
 

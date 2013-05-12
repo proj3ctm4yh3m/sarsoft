@@ -75,9 +75,9 @@ public class ElevationController extends JSONBaseController {
 				
 		double[] bounds = WebMercator.TileLatLngBounds(x, y, z);
 		
-		BufferedImage elevation = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("elevation").getTemplate(), z, x, y);
-		BufferedImage slope = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("slope").getTemplate(), z, x, y);
-		BufferedImage aspect = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("aspect").getTemplate(), z, x, y);
+		BufferedImage elevation = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("elevation"), null, z, x, y);
+		BufferedImage slope = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("slope"), null, z, x, y);
+		BufferedImage aspect = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("aspect"), null, z, x, y);
 		return new int[] {elevation.getData().getSample(px_x, px_y, 0), slope.getData().getSample(px_x, px_y, 0), aspect.getData().getSample(px_x, px_y, 0)};
 	}
 	
