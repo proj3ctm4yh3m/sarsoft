@@ -5,17 +5,16 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.imageio.ImageIO;
+
+import org.sarsoft.common.model.MapSource;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -30,47 +29,17 @@ public class TileService {
 		this.localTileStore = localTileStore;
 	}
 	
-	public InputStream getRemoteImageStream(String url) {
-		Cache cache = CacheManager.getInstance().getCache("tileCache");
-
-		byte[] array = null;
-		Element element = cache.get(url);
-		if(element != null) {
-			return new ByteArrayInputStream((byte[]) element.getValue()); 
-		}
+	private InputStream getRemoteImageStream(String url) {
 		try {
-			URLConnection connection = new URL(url).openConnection();
-			InputStream in = connection.getInputStream();
-			ByteArrayOutputStream out = new ByteArrayOutputStream(connection.getContentLength() == -1 ? 40000 : connection.getContentLength());
-			byte[] bytes = new byte[512];
-			while(true) {
-				int len = in.read(bytes);
-				if(len == -1) break;
-				out.write(bytes, 0, len);
-			}
-			in.close();
-			array = out.toByteArray();
-			element = new Element(url, array);
-			cache.put(element);
-			return new ByteArrayInputStream(array);
+			return new URL(url).openConnection().getInputStream();
 		} catch (Exception e) {
+			return null;
 		}
-		return null;		
 	}
 	
-	public InputStream getRemoteTileInputStream(String url, int z, int x, int y) {
-		url = url.replaceAll("\\{Z\\}", Integer.toString(z));
-		url = url.replaceAll("\\{X\\}", Integer.toString(x));
-		url = url.replaceAll("\\{Y\\}", Integer.toString(y));
-		url = url.replaceAll("\\{V\\}", "a-11111111");
-		
-		return getRemoteImageStream(url);
-	}
-	
-	public InputStream getLocalTileInputStream(String layer, int z, int x, int y) {
+	private InputStream getLocalImageStream(String url) {
 		InputStream in = null;
-		String tile =  layer + "/" + z + "/" + x + "/" + y + ".png";
-		File file = new File(localTileStore + "/" + tile);
+		File file = new File(localTileStore + "/" + url);
 		if(file.exists()) {
 			try {
 				in = new FileInputStream(file);
@@ -79,12 +48,12 @@ public class TileService {
 			}
 		}
 		String parentDir = localTileStore;
-		while(in == null && tile.contains("/")) {
-			parentDir = parentDir + "/" + tile.substring(0, tile.indexOf("/"));
-			tile = tile.substring(tile.indexOf("/") + 1);
+		while(in == null && url.contains("/")) {
+			parentDir = parentDir + "/" + url.substring(0, url.indexOf("/"));
+			url = url.substring(url.indexOf("/") + 1);
 			try {
 				ZipFile zipFile = new ZipFile(parentDir + ".zip");
-				ZipEntry entry = zipFile.getEntry(tile);
+				ZipEntry entry = zipFile.getEntry(url);
 				in = zipFile.getInputStream(entry);
 			} catch (Exception e) {
 				in = null;
@@ -92,38 +61,51 @@ public class TileService {
 		}
 		return in;
 	}
-
-	public BufferedImage streamToImage(InputStream stream) {
-		try {
-			return ImageIO.read(stream);
-		} catch (Exception e) {
-			// missing overzoom tiles clutter the system log
-		}
-		return null;
-	}
-
-	public BufferedImage getTile(String url, int z, int x, int y) {
-		if(url.indexOf("/resource/imagery/tiles/") == 0) {
-			url = url.substring(24, url.length() - 16);
-			return streamToImage(getLocalTileInputStream(url, z, x, y));
-		} else if(url.indexOf("/") == 0) {
-			url = "http://localhost:" + RuntimeProperties.getServerPort() + url;
-			return streamToImage(getRemoteTileInputStream(url, z, x, y));
-		} else {
-			return streamToImage(getRemoteTileInputStream(url, z, x, y));
-		}
-	}
-
-	public BufferedImage getTile(String url, int z, int x, int y, int max_z) {
-		if(z <= max_z) {
-			return getTile(url, z, x, y);
-		} else {
-			int dz = z - max_z;
+	
+	public BufferedImage getTile(MapSource source, String cfg, int z, int x, int y) {
+		if(z > source.getMaxresolution()) {
+			int dz = z - source.getMaxresolution();
 			int pow = (int) Math.pow(2, dz);
-			BufferedImage img = getTile(url, max_z, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+			BufferedImage img = getTile(source, cfg, source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
 			int dx = (x - pow * (int) Math.floor(x/pow));
 			int dy = (y - pow * (int) Math.floor(y/pow));
 			return zoom(img, dz, dx, dy);
+		}
+		
+		Cache cache = CacheManager.getInstance().getCache("tileCache");
+		String url = source.getTemplate().replaceAll("\\{Z\\}", Integer.toString(z)).replaceAll("\\{X\\}", Integer.toString(x)).replaceAll("\\{Y\\}", Integer.toString(y)).replaceAll("\\{V\\}", cfg);
+		Element element = cache.get(url);
+		if(element != null) return (BufferedImage) element.getObjectValue();
+		
+		BufferedImage image = null;
+		if(url.indexOf("/resource/imagery/tiles/") == 0) {
+			image = streamToImage(getLocalImageStream(url.substring(24, url.length() - 16)));
+		} else if(url.indexOf("/") == 0) {
+			image = streamToImage(getRemoteImageStream("http://localhost:" + RuntimeProperties.getServerPort() + url));
+		} else {
+			image = streamToImage(getRemoteImageStream(url));
+		}
+		
+		if(image != null) cache.put(new Element(url, image));
+		return image;
+	}
+	
+	public BufferedImage getImage(String url) {
+		Cache cache = CacheManager.getInstance().getCache("tileCache");
+		Element element = cache.get(url);
+		if(element != null) return (BufferedImage) element.getValue();
+		
+		BufferedImage image = streamToImage(getRemoteImageStream(url));
+		if(image != null) cache.put(new Element(url, image));
+		
+		return image;
+	}
+
+	private BufferedImage streamToImage(InputStream stream) {
+		try {
+			return ImageIO.read(stream);
+		} catch (Exception e) {
+			return null;
 		}
 	}
 

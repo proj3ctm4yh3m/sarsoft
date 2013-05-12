@@ -140,13 +140,11 @@ public class ImageryController extends JSONBaseController {
 				layer = layer.split("_")[0];
 			}
 			MapSource source = RuntimeProperties.getMapSourceByAlias(layer);
-			String template = source.getTemplate();
-			template = template.replaceAll("\\{V\\}", cfg);
 			
 			for(int dx = 0; dx < 4; dx++) {
 				for(int dy = 0; dy < 4; dy++) {
 					try {
-						BufferedImage tile = tileservice.getTile(template, z+2, x*4+dx, y*4+dy, source.getMaxresolution());
+						BufferedImage tile = tileservice.getTile(source, cfg, z+2, x*4+dx, y*4+dy);
 						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
 						graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
 					} catch (Exception e) {
@@ -241,9 +239,7 @@ public class ImageryController extends JSONBaseController {
 				if(y == Math.floor(t_sw[1])) sy2 = (int) ((t_sw[1] - (double) y) * 256);
 
 				for(int i = 0; i < layers.length; i++) {
-					String template = sources[i].getTemplate();
-					template = template.replaceAll("\\{V\\}", cfg[i]);
-					BufferedImage tile = tileservice.getTile(template, z, x, y, sources[i].getMaxresolution());
+					BufferedImage tile = tileservice.getTile(sources[i], cfg[i], z, x, y);
 					if(tile != null) {
 						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sources[i].isAlphaOverlay() ? opacity[i] * sources[i].getOpacity() / 100 : opacity[i])); 
 						graphics.drawImage(tile, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
@@ -256,40 +252,16 @@ public class ImageryController extends JSONBaseController {
 	}
 
 
-	@RequestMapping(value="/resource/imagery/tiles/{layer}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getTile(HttpServletResponse response, @PathVariable("layer") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		InputStream in = tileservice.getLocalTileInputStream(layer, z, x, y);
-		if(in != null) {
-			respond(in, response);
-			return;
+	@RequestMapping(value="/resource/imagery/tiles/{alias}/{z}/{x}/{y}.png", method = RequestMethod.GET)
+	public void getTile(HttpServletResponse response, @PathVariable("alias") String alias, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
+		String cfg = null;
+		if(alias.indexOf("_") > 0) {
+			cfg = alias.split("_")[1];
+			alias = alias.split("_")[0];
 		}
-		for(int dz = 1; dz < 5; dz++) {
-			int pow = (int) Math.pow(2, dz);
-			in = tileservice.getLocalTileInputStream(layer, z-dz, (int) Math.floor(x/pow), (int) Math.floor(y/pow));
-			if(in != null) {
-				int dx = (x - pow * (int) Math.floor(x/pow));
-				int dy = (y - pow * (int) Math.floor(y/pow));
-				respond(tileservice.zoom(tileservice.streamToImage(in), dz, dx, dy), response);
-				return;
-			}
-		}
-	}
-
-	@RequestMapping(value="/resource/imagery/tilecache/{alias}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getCachedTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("alias") String alias, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		MapSource source = RuntimeProperties.getMapSourceByAlias(alias);
-		InputStream in = null;
-		if(source != null && Boolean.valueOf(getProperty("sarsoft.map.overzoom.enabled")) && z > source.getMaxresolution()) {
-			if(z <= source.getMaxresolution()) {
-				respond(tileservice.getRemoteTileInputStream(source.getTemplate(), z, x, y), response);
-			} else {
-				int dz = z - source.getMaxresolution();
-				int pow = (int) Math.pow(2, dz);
-				BufferedImage img = tileservice.getTile(source.getTemplate(), source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
-				int dx = (x - pow * (int) Math.floor(x/pow));
-				int dy = (y - pow * (int) Math.floor(y/pow));
-				respond(tileservice.zoom(img, dz, dx, dy), response);
-			}
+		if(source != null && ((Boolean.valueOf(getProperty("sarsoft.map.overzoom.enabled")) && z > source.getMaxresolution()) || source.getTemplate().startsWith("/"))) {
+			respond(tileservice.getTile(source, cfg, z, x, y), response);
 		}
 	}
 	
@@ -316,9 +288,7 @@ public class ImageryController extends JSONBaseController {
 		BufferedImage[] images = new BufferedImage[layers.length];
 		for(int i = 0; i < layers.length; i++) {
 			MapSource source = RuntimeProperties.getMapSourceByAlias(layers[i]);
-			String template = source.getTemplate();
-			template = template.replaceAll("\\{V\\}", cfg[i]);
-			images[i] = tileservice.getTile(template, z, x, y, source.getMaxresolution());
+			images[i] = tileservice.getTile(source, cfg[i], z, x, y);
     		if(source.isAlphaOverlay()) opacity[i] = opacity[i] * source.getOpacity() / 100;  		
 		}
 		respond(tileservice.composite(images, opacity, 256, 256), response);
