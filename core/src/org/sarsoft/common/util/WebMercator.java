@@ -1,46 +1,51 @@
 package org.sarsoft.common.util;
 
 public class WebMercator {
-
+	
 	private static int tilesize = 256;
 	private static double initialresolution = 2 * Math.PI * 6378137 / tilesize;
 	private static double originshift = 2 * Math.PI * 6378137 / 2;
+	private static double deg_originshift = originshift / 180;
+	private static double[] resolutions = new double[32];
+	
+	static {
+		for(int i = 0; i < 32; i++) {
+			resolutions[i] = initialresolution / Math.pow(2, i);
+		}
+	}
 	
     public static double Resolution(int zoom) {
-        return initialresolution / Math.pow(2, zoom);
+    	return resolutions[zoom];
     }
     
     public static int Zoom(double resolution) {
+    	for(int i = 0; i < 31; i++) {
+    		if(resolution > resolutions[i]) return (resolution/resolutions[i]) < 1.5 ? i : i+1;
+    	}
     	return (int) Math.round(Math.log(initialresolution / resolution) / Math.log(2));
     }
 
     public static double[] LatLngToMeters(double lat, double lng) {
-        double mx = lng * originshift / 180;
+        double mx = lng * deg_originshift;
         double my = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
         my = my * originshift / 180;
         return new double[] {mx, my};
 	}
 	
     public static double[] MetersToLatLng(double mx, double my) {
-        double lng = (mx / originshift) * 180;
-        double lat = (my / originshift) * 180;
+        double lng = mx / deg_originshift;
+        double lat = my / deg_originshift;
 
         lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
         return new double[] {lat, lng};
 	}
 	
     public static double[] PixelsToMeters(double px, double py, int zoom) {
-        double res = Resolution(zoom);
-        double mx = px * res - originshift;
-        double my = py * res - originshift;
-        return new double[] {mx, my};
+        return new double[] {px * resolutions[zoom] - originshift, py * resolutions[zoom] - originshift};
 	}
 	
     public static double[] MetersToPixels(double mx, double my, int zoom) {
-        double res = Resolution(zoom);
-        double px = (mx + originshift) / res;
-        double py = (my + originshift) / res;
-        return new double[] {px, py};
+        return new double[] {(mx + originshift) / resolutions[zoom], (my + originshift) / resolutions[zoom]};
 	}
 	
     public static int[] PixelsToTile(double px, double py) {
