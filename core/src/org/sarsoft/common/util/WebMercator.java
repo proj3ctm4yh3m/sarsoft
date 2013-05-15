@@ -49,14 +49,14 @@ public class WebMercator {
 	}
 	
     public static int[] PixelsToTile(double px, double py) {
-        int tx = (int) Math.ceil(px / tilesize) - 1;
-        int ty = (int) Math.ceil(py / tilesize) - 1;
+        int tx = (int) Math.floor(px / tilesize);
+        int ty = (int) Math.floor(py / tilesize);
         return new int[] {tx, ty};
 	}
     
     public static double[] PixelsToDecimalTile(double px, double py) {
         double tx = (px / tilesize);
-        double ty = (py / tilesize) - 1;
+        double ty = (py / tilesize);
         return new double[] {tx, ty};
     }
 	

@@ -5,8 +5,11 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.zip.ZipEntry;
@@ -23,6 +26,10 @@ import net.sf.ehcache.Element;
 public class TileService {
 	
 	private String localTileStore = null;
+	
+	public TileService() {
+		this(null);
+	}
 	
 	public TileService(String localTileStore) {
 		if(localTileStore == null) localTileStore = RuntimeProperties.getProperty("sarsoft.map.localTileStore");
@@ -72,33 +79,41 @@ public class TileService {
 			return zoom(img, dz, dx, dy);
 		}
 		
-		Cache cache = CacheManager.getInstance().getCache("tileCache");
 		String url = source.getTemplate().replaceAll("\\{Z\\}", Integer.toString(z)).replaceAll("\\{X\\}", Integer.toString(x)).replaceAll("\\{Y\\}", Integer.toString(y)).replaceAll("\\{V\\}", cfg);
-		Element element = cache.get(url);
-		if(element != null) return (BufferedImage) element.getObjectValue();
-		
-		BufferedImage image = null;
-		if(url.indexOf("/resource/imagery/tiles/") == 0) {
-			image = streamToImage(getLocalImageStream(url.substring(24, url.length() - 16)));
-		} else if(url.indexOf("/") == 0) {
-			image = streamToImage(getRemoteImageStream("http://localhost:" + RuntimeProperties.getServerPort() + url));
-		} else {
-			image = streamToImage(getRemoteImageStream(url));
-		}
-		
-		if(image != null) cache.put(new Element(url, image));
-		return image;
+		return getImage(url);
 	}
 	
 	public BufferedImage getImage(String url) {
 		Cache cache = CacheManager.getInstance().getCache("tileCache");
 		Element element = cache.get(url);
-		if(element != null) return (BufferedImage) element.getValue();
+		if(element != null) return streamToImage(new ByteArrayInputStream((byte[]) element.getValue()));
 		
-		BufferedImage image = streamToImage(getRemoteImageStream(url));
-		if(image != null) cache.put(new Element(url, image));
-		
-		return image;
+		InputStream stream = null;
+		if(url.indexOf("/resource/imagery/tiles/") == 0) {
+			stream = getLocalImageStream(url.substring(24, url.length() - 16));
+		} else if(url.indexOf("/") == 0) {
+			stream = getRemoteImageStream("http://localhost:" + RuntimeProperties.getServerPort() + url);
+		} else {
+			stream = getRemoteImageStream(url);
+		}
+		if(stream == null) return null;
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			byte[] bytes = new byte[512];
+			while(true) {
+				int len = stream.read(bytes);
+				if(len == -1) break;
+				out.write(bytes, 0, len);
+			}
+			stream.close();
+		} catch (IOException e) {
+			return null;
+		}
+		 
+		byte[] data = out.toByteArray();
+		cache.put(new Element(url, data));
+		return streamToImage(new ByteArrayInputStream(data));
 	}
 
 	private BufferedImage streamToImage(InputStream stream) {
