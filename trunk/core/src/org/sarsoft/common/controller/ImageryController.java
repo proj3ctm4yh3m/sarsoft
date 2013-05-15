@@ -74,28 +74,8 @@ public class ImageryController extends JSONBaseController {
 		return (a << 24) | (r << 16) | (g << 8) | b;
 	}
 
-	public InputStream imageToInputStream(BufferedImage image) {
-		return imageToInputStream(image, "png");
-	}
-	
-	public InputStream imageToInputStream(BufferedImage image, String format) {
-		try {
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ImageIO.write(image, format, out);
-			return new ByteArrayInputStream(out.toByteArray());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
 	public void respond(BufferedImage image, HttpServletResponse response) {
-		respond(imageToInputStream(image), response);
-		image.getGraphics().dispose();
-	}
-
-	public void respond(InputStream in, HttpServletResponse response) {
-		if(in == null) {
+		if(image == null) {
 			try {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
@@ -104,22 +84,14 @@ public class ImageryController extends JSONBaseController {
 		}
 
 		response.setContentType("image/png");
-		OutputStream out = null;
-		byte[] bytes = new byte[512];
-		int bytesRead;
 		response.setHeader("Cache-Control", "max-age=432000, public");
 
 		try {
-			out = response.getOutputStream();
-			while ((bytesRead = in.read(bytes)) != -1) {
-			    out.write(bytes, 0, bytesRead);
-			}
+			ImageIO.write(image, "png", response.getOutputStream());
 		} catch (Exception e) {
 			if(e.getClass() != java.net.SocketException.class) logger.error("Error sending image response", e);
 		} finally {
-			try { if(in != null) in.close(); } catch(Exception e) {
-				logger.error("Doubly bad error closing inputstream for image response", e);
-			}
+			image.getGraphics().dispose();
 		}
 	}
 	
