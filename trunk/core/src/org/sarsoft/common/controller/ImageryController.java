@@ -170,8 +170,8 @@ public class ImageryController extends JSONBaseController {
 		double[] t_ne = WebMercator.PixelsToDecimalTile(px_ne[0], px_ne[1]);
 		double[] t_sw = WebMercator.PixelsToDecimalTile(px_sw[0], px_sw[1]);
 		
-    	t_ne[1] = Math.pow(2, z) - 1 - t_ne[1];
-    	t_sw[1] = Math.pow(2, z) - 1 - t_sw[1];
+    	t_ne[1] = Math.pow(2, z) - t_ne[1];
+    	t_sw[1] = Math.pow(2, z) - t_sw[1];
 
 		double p_dx = ((t_ne[0] - t_sw[0])*256);
 		double p_dy = ((t_sw[1] - t_ne[1])*256);

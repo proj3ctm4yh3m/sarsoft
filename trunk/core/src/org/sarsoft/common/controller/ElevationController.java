@@ -66,7 +66,7 @@ public class ElevationController extends JSONBaseController {
 		double[] pixels = WebMercator.MetersToPixels(meters[0], meters[1], z);
 		double[] t = WebMercator.PixelsToDecimalTile(pixels[0], pixels[1]);
 		
-    	t[1] = Math.pow(2, z) - 1 - t[1];
+    	t[1] = Math.pow(2, z) - t[1];
 		int px_x = (int) Math.min(Math.round((t[0]-Math.floor(t[0]))*256), 255);
 		int px_y = (int) Math.min(Math.round((t[1]-Math.floor(t[1]))*256), 255);
 		
