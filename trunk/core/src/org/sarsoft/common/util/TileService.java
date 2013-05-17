@@ -21,6 +21,7 @@ import org.sarsoft.common.model.MapSource;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
 public class TileService {
@@ -92,9 +93,10 @@ public class TileService {
 	}
 	
 	public BufferedImage getImage(String url, boolean cache) {
-		Cache tilecache = CacheManager.getInstance().getCache("image");
+		Cache tilecache = CacheManager.getInstance().getCache("tile");
 		Element element = tilecache.get(url);
 		if(element != null) return streamToImage(new ByteArrayInputStream((byte[]) element.getObjectValue()));
+		System.out.println(tilecache.getKeys().size() + " keys");
 		
 		InputStream stream = null;
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {

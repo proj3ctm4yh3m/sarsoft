@@ -13,13 +13,11 @@ import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.CacheConfiguration;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.sarsoft.common.controller.JSONBaseController;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.model.Tenant;
 
@@ -150,16 +148,11 @@ public class RuntimeProperties {
 			}
 			
 			CacheManager manager = CacheManager.getInstance();
-			CacheConfiguration image = manager.getCache("image").getCacheConfiguration();
-			image.setMaxBytesLocalHeap(properties.getProperty("cache.image.maxBytesLocalHeap"));
-			image.setMaxBytesLocalDisk(properties.getProperty("cache.image.maxBytesLocalDisk"));
-			image.setTimeToIdleSeconds(Long.parseLong(properties.getProperty("cache.image.timeToIdleSeconds")));
-			image.setTimeToLiveSeconds(Long.parseLong(properties.getProperty("cache.image.timeToLiveSeconds")));
-			CacheConfiguration dem = manager.getCache("dem").getCacheConfiguration();
-			dem.setMaxBytesLocalHeap(properties.getProperty("cache.dem.maxBytesLocalHeap"));
-			dem.setMaxBytesLocalDisk(properties.getProperty("cache.dem.maxBytesLocalDisk"));
-			dem.setTimeToIdleSeconds(Long.parseLong(properties.getProperty("cache.dem.timeToIdleSeconds")));
-			dem.setTimeToLiveSeconds(Long.parseLong(properties.getProperty("cache.dem.timeToLiveSeconds")));
+			CacheConfiguration cache = manager.getCache("tile").getCacheConfiguration();
+			cache.setMaxBytesLocalHeap(properties.getProperty("sarsoft.tilecache.maxBytesLocalHeap"));
+			cache.setMaxBytesLocalDisk(properties.getProperty("sarsoft.tilecache.maxBytesLocalDisk"));
+			cache.setTimeToIdleSeconds(Long.parseLong(properties.getProperty("sarsoft.tilecache.timeToIdleSeconds")));
+			cache.setTimeToLiveSeconds(Long.parseLong(properties.getProperty("sarsoft.tilecache.timeToLiveSeconds")));
 		}
 	}
 	
