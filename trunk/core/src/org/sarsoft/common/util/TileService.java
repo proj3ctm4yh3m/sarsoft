@@ -96,7 +96,6 @@ public class TileService {
 		Cache tilecache = CacheManager.getInstance().getCache("tile");
 		Element element = tilecache.get(url);
 		if(element != null) return streamToImage(new ByteArrayInputStream((byte[]) element.getObjectValue()));
-		System.out.println(tilecache.getKeys().size() + " keys");
 		
 		InputStream stream = null;
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {
