@@ -5,38 +5,18 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.model.MapSource;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.util.TileService;
 import org.sarsoft.common.util.WebMercator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -79,8 +59,8 @@ public class ImageryController extends JSONBaseController {
 			try {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
-				} catch (Exception e2) {}
-				logger.error("Unable to send SC_NOT_FOUND to client");
+			} catch (Exception e2) {}
+			logger.error("Unable to send SC_NOT_FOUND to client");
 		}
 
 		response.setContentType("image/png");

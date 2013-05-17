@@ -13,6 +13,10 @@ import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.config.CacheConfiguration;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.sarsoft.common.controller.JSONBaseController;
@@ -144,6 +148,18 @@ public class RuntimeProperties {
 			} catch (IOException e) {
 				Logger.getLogger(RuntimeProperties.class).error("IOException encountered reading from " + propertiesFileName + " or " + sarsoftPropertyName, e);
 			}
+			
+			CacheManager manager = CacheManager.getInstance();
+			CacheConfiguration image = manager.getCache("image").getCacheConfiguration();
+			image.setMaxBytesLocalHeap(properties.getProperty("cache.image.maxBytesLocalHeap"));
+			image.setMaxBytesLocalDisk(properties.getProperty("cache.image.maxBytesLocalDisk"));
+			image.setTimeToIdleSeconds(Long.parseLong(properties.getProperty("cache.image.timeToIdleSeconds")));
+			image.setTimeToLiveSeconds(Long.parseLong(properties.getProperty("cache.image.timeToLiveSeconds")));
+			CacheConfiguration dem = manager.getCache("dem").getCacheConfiguration();
+			dem.setMaxBytesLocalHeap(properties.getProperty("cache.dem.maxBytesLocalHeap"));
+			dem.setMaxBytesLocalDisk(properties.getProperty("cache.dem.maxBytesLocalDisk"));
+			dem.setTimeToIdleSeconds(Long.parseLong(properties.getProperty("cache.dem.timeToIdleSeconds")));
+			dem.setTimeToLiveSeconds(Long.parseLong(properties.getProperty("cache.dem.timeToLiveSeconds")));
 		}
 	}
 	
