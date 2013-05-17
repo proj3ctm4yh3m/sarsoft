@@ -1,31 +1,22 @@
 <ehcache>
 	<diskStore path="java.io.tmpdir"/>
 
-	<defaultCache
+ <defaultCache
 		maxElementsInMemory="5000"
 		eternal="false"
-		timeToIdleSeconds="129600"
-		timeToLiveSeconds="129600"
+		timeToIdleSeconds="3600"
+		timeToLiveSeconds="3600"
 		overflowToDisk="false"
 		diskPersistent="false"
 		memoryStoreEvictionPolicy="LRU"/>
 		
-	<cache name="image"
-		maxBytesLocalHeap="10000000"
-		maxBytesLocalDisk="1"
+	<cache name="tile"
 		timeToIdleSeconds="129600"
 		timeToLiveSeconds="129600"
+		maxBytesLocalHeap="10M"
+		maxBytesLocalDisk="10M"
 		overflowToDisk="true"
 		diskPersistent="false"
 		memoryStoreEvictionPolicy="LRU"/>
 
-	<cache name="dem"
-		maxBytesLocalHeap="10000000"
-		maxBytesLocalDisk="1"
-		timeToIdleSeconds="129600"
-		timeToLiveSeconds="129600"
-		overflowToDisk="true"
-		diskPersistent="false"
-		memoryStoreEvictionPolicy="LRU"/>
-		
 </ehcache>
