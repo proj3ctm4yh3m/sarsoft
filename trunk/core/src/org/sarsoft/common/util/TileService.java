@@ -70,23 +70,31 @@ public class TileService {
 	}
 	
 	public BufferedImage getTile(MapSource source, String cfg, int z, int x, int y) {
+		return getTile(source, cfg, z, x, y, true);
+	}
+	
+	public BufferedImage getTile(MapSource source, String cfg, int z, int x, int y, boolean cache) {
 		if(z > source.getMaxresolution()) {
 			int dz = z - source.getMaxresolution();
 			int pow = (int) Math.pow(2, dz);
-			BufferedImage img = getTile(source, cfg, source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow));
+			BufferedImage img = getTile(source, cfg, source.getMaxresolution(), (int) Math.floor(x/pow), (int) Math.floor(y/pow), cache);
 			int dx = (x - pow * (int) Math.floor(x/pow));
 			int dy = (y - pow * (int) Math.floor(y/pow));
 			return zoom(img, dz, dx, dy);
 		}
 		
 		String url = source.getTemplate().replaceAll("\\{Z\\}", Integer.toString(z)).replaceAll("\\{X\\}", Integer.toString(x)).replaceAll("\\{Y\\}", Integer.toString(y)).replaceAll("\\{V\\}", cfg);
-		return getImage(url);
+		return getImage(url, cache);
 	}
 	
 	public BufferedImage getImage(String url) {
-		Cache cache = CacheManager.getInstance().getCache("tileCache");
-		Element element = cache.get(url);
-		if(element != null) return streamToImage(new ByteArrayInputStream((byte[]) element.getValue()));
+		return getImage(url, true);
+	}
+	
+	public BufferedImage getImage(String url, boolean cache) {
+		Cache tilecache = CacheManager.getInstance().getCache("image");
+		Element element = tilecache.get(url);
+		if(element != null) return streamToImage(new ByteArrayInputStream((byte[]) element.getObjectValue()));
 		
 		InputStream stream = null;
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {
@@ -112,7 +120,7 @@ public class TileService {
 		}
 		 
 		byte[] data = out.toByteArray();
-		cache.put(new Element(url, data));
+		tilecache.put(new Element(url, data));
 		return streamToImage(new ByteArrayInputStream(data));
 	}
 

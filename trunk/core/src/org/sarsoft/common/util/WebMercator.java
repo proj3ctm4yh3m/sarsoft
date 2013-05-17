@@ -20,7 +20,7 @@ public class WebMercator {
     
     public static int Zoom(double resolution) {
     	for(int i = 0; i < 31; i++) {
-    		if(resolution > resolutions[i]) return (resolution/resolutions[i]) < 1.5 ? i : i+1;
+    		if(resolution >= resolutions[i]) return (resolution/resolutions[i]) < 1.5 ? i : i+1;
     	}
     	return (int) Math.round(Math.log(initialresolution / resolution) / Math.log(2));
     }
