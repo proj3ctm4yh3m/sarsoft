@@ -407,6 +407,16 @@ org.sarsoft.widget.Maps = function(imap, container) {
 			});
 		}
 	}
+
+	if(!sarsoft.offline) {
+		$('<div style="float: left; width: 90%; padding-bottom: 1em; padding-top: 1em"></div>').appendTo(bn).append($('<div style="font-size: 150%; font-weight: bold">Offline Access</div>'));
+		var cs = new org.sarsoft.CacheSettings();
+		var cached = cs.get();
+		var div = $('<div style="clear: both"><a href="/togo">Visit ' + sarsoft.version + ' To Go</a> for off-the-grid map access anytime, anywhere.  Save layers to your browser using HTML5 application caching.</div>').appendTo(bn);
+		if(cached != null) {
+			div.append('  You currently have ' + cached.layers.split(",").length + ' layers saved.');
+		}
+	}
 }
 
 org.sarsoft.widget.BaseSharing = function(imap) {
