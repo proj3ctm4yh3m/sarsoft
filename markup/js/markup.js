@@ -149,7 +149,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 		this.rrDlg = new org.sarsoft.view.MapEntityDialog(imap, "Add Range Ring", new org.sarsoft.RangeRingForm(), function(rr) {
 			for(var i = 0; i < rr.length; i++) {
 				var distance = Number(rr[i]);
-				var center = GeoUtil.wpt2gll(that.rrDlg.position);
+				var center = that.rrDlg.position;
 				var waypoints = [];
 				for(var bearing = 180; bearing <= 540; bearing +=5) {
 					var gll = google.maps.geometry.spherical.computeOffset(center, distance, bearing);
@@ -166,7 +166,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 			    {text : "New Marker", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({url: "#FF0000"}, data.point); }},
 	    		{text : "Details", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_details },
 	    		{text : "Drag to New Location", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_drag},
-	    		{text : "Add Range Ring", precheck: pc, applicable : that.cm.a_noedit, handler: function(data) { that.rrDlg.show(null, data.point); that.rrDlg.position = data.pc.obj.position }},
+	    		{text : "Add Range Ring", precheck: pc, applicable : that.cm.a_noedit, handler: function(data) { that.rrDlg.show(null, data.point); that.rrDlg.position = GeoUtil.wpt2gll(data.pc.obj.position) }},
 	    		{text : "Delete Marker", precheck: pc, applicable : that.cm.a_noedit, handler:  that.cm.h_del}
 	    		]);
 		}
