@@ -95,17 +95,23 @@ public class TileService {
 	public BufferedImage getImage(String url, boolean cache) {
 		Cache tilecache = CacheManager.getInstance().getCache("tile");
 		Element element = tilecache.get(url);
-		if(element != null) return streamToImage(new ByteArrayInputStream((byte[]) element.getObjectValue()));
+		if(element != null) {
+			if(element.getObjectValue() == null) return null;
+			return streamToImage(new ByteArrayInputStream((byte[]) element.getObjectValue()));
+		}
 		
 		InputStream stream = null;
 		if(url.indexOf("/resource/imagery/tiles/") == 0) {
-			stream = getLocalImageStream(url.substring(24, url.length() - 16));
+			stream = getLocalImageStream(url.substring(24));
 		} else if(url.indexOf("/") == 0) {
 			stream = getRemoteImageStream("http://localhost:" + RuntimeProperties.getServerPort() + url);
 		} else {
 			stream = getRemoteImageStream(url);
 		}
-		if(stream == null) return null;
+		if(stream == null) {
+			tilecache.put(new Element(url, null));
+			return null;
+		}
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
