@@ -3156,6 +3156,8 @@ Label.prototype.draw = function() {
 		} else {
 			h = w+h;  
 		}	  
+	} else if(this.style.indexOf("rotate(315") > 0) {
+		h = w/2.8+h;
 	}
 
 	this.div2_.style.left = Math.round(p.x + this.pixelOffset.width + w * this.centerOffset.width) + "px";
