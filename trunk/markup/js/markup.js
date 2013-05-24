@@ -528,7 +528,7 @@ org.sarsoft.controller.MapToolsController.prototype._profileHandler = function(p
 
 	this.pg.profile(this.imap._getPath(poly).getArray(), "#000000", function() {
 		that.profileDlg.show();
-	});
+	}, "One-Off Profile");
 }
 
 org.sarsoft.controller.MapToolsController.prototype.profile = function() {

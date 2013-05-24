@@ -2022,7 +2022,7 @@ org.sarsoft.WayObjectController.prototype.profile = function(obj) {
 	var config = this.getConfig(obj);
 	this.pg.profile(obj[this.type.way], config.color, function() {
 		that.profileDlg.show();
-	});
+	}, obj[this.dao.label] || "Unnamed Shape");
 }
 
 org.sarsoft.WayObjectController.prototype.removeFromMap = function(obj) {
@@ -2658,10 +2658,11 @@ org.sarsoft.DEMService.prototype.getElevationAlongPath = function(obj, handler) 
 
 org.sarsoft.DEMStatus = { OK : "OK" }
 
-org.sarsoft.view.ProfileGraph = function() {
+org.sarsoft.view.ProfileGraph = function(standalone) {
 	this.height=120;
 	this.div = jQuery('<div style="height: ' + (this.height+20) + 'px; position: relative"></div>');
 	this.service = new google.maps.ElevationService();
+	this.standalone = standalone;
 }
 
 org.sarsoft.view.ProfileGraph.prototype.resample = function(path, samples) {
@@ -2695,7 +2696,7 @@ org.sarsoft.view.ProfileGraph.prototype.resample = function(path, samples) {
 	return resampled;
 }
 
-org.sarsoft.view.ProfileGraph.prototype.profile = function(way, color, callback) {
+org.sarsoft.view.ProfileGraph.prototype.profile = function(way, color, callback, title) {
 	var that = this;
 	var path = [];
 	if(way.waypoints != null) {
@@ -2710,14 +2711,14 @@ org.sarsoft.view.ProfileGraph.prototype.profile = function(way, color, callback)
 	this.service.getElevationAlongPath({path: path, samples: 200}, function(result, status) {
 		if(status == google.maps.ElevationStatus.OK) {
 			if(callback != null) callback();
-			that.draw(result, color);
+			that.draw(result, color, title);
 		} else {
 			alert("An error occurred while retrieving profile data from Google Maps: " + status);
 		}
 	});
 }
 
-org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
+org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color, title) {
 	var that = this;
 	this.div.empty();
 	if(this.marker != null) this.marker.setMap(null);
@@ -2755,7 +2756,12 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	var total_dist = (google.maps.geometry.spherical.computeLength(glls));
 	var exaggeration = (120/this.div.width())*total_dist/(max-min);
 	var info = jQuery('<div stype="height: 20px"></div>').appendTo(this.div);
-	var ele = jQuery('<span></span>').appendTo(jQuery('<div style="display: inline-block; min-width: 20ex"></div>').appendTo(jQuery('<div style="display: inline-block; padding-left: 1ex">cursor: </div>').appendTo(info)));
+	if(!this.standalone) {
+		info.append('<div style="float: right; font-weight: bold; color: #5a8ed7" class="underlineOnHover">print</div>').click(function() { org.sarsoft.view.ProfileGraph.print(series, color, title) });
+		var ele = jQuery('<span></span>').appendTo(jQuery('<div style="display: inline-block; min-width: 20ex"></div>').appendTo(jQuery('<div style="display: inline-block; padding-left: 1ex">cursor: </div>').appendTo(info)));
+	} else if(title != null) {
+		$('<span style="padding-right: 10px">' + title + '</span>').appendTo(info);
+	}
 	
 	this.stats = jQuery('<span>range: <span style="font-weight: bold">' + Math.round(min*3.2808399) + '\'</span> to <span style="font-weight: bold">' + Math.round(max*3.2808399) + '\'</span> <span style="padding-left: 10px">gross: <span style="color: green; font-weight: bold">+' + Math.round(gross_gain*3.2808399) + '\'</span> <span style="color: red; font-weight: bold">-' + Math.round(gross_loss*3.2808399) + '\'</span> <span style="padding-left: 10px">sampling interval <span style="font-weight: bold">' + Math.round(total_dist*3.2808399/series.length) + '\'</span> w/ <span style="font-weight: bold">' + (Math.round(exaggeration*10)/10) + 'x</span> vertical exaggeration</span></span>').appendTo(info);
 	
@@ -2822,25 +2828,27 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color) {
 	svg = svg + '</svg>';
 	svg = jQuery(svg).appendTo(jQuery('<div style="background-color: white; position: relative; height: ' + this.height + 'px"></div>').appendTo(this.div));
 	
-	var icon =org.sarsoft.MapUtil.createFlatCircleImage(color);
-	this.marker = new google.maps.Marker({icon: icon, position: series[0].location, map: map, shape: icon.shape });
-	this.trace = jQuery('<div style="position: absolute; left: 0; top: 0px; width: 1px; border-left: 1px solid black; height: ' + this.height + 'px"></div>').appendTo(svg.parent());
-	
-	svg.mousemove(function(evt) {
-		if(that.marker != null) {
-			var x = (evt.pageX - svg.parent().offset().left)*(series.length-1)/width;
-			x = Math.max(0, Math.min(x, series.length-1));
-			var f = x - Math.floor(x);
-			var elevation = series[Math.floor(x)].elevation*(1-f) + series[Math.ceil(x)].elevation*f;
-			ele.html('<span><span style="font-weight: bold">' + Math.round(elevation*3.2808399) + '\'</span> at <span style="font-weight: bold">' + (Math.round((x/(series.length-1))*total_dist/16.0934)/100) + "mi</span> ");
+	if(!this.standalone) {
+		var icon = org.sarsoft.MapUtil.createFlatCircleImage(color);
+		this.marker = new google.maps.Marker({icon: icon, position: series[0].location, map: map, shape: icon.shape });
+		this.trace = jQuery('<div style="position: absolute; left: 0; top: 0px; width: 1px; border-left: 1px solid black; height: ' + this.height + 'px"></div>').appendTo(svg.parent());
+		
+		svg.mousemove(function(evt) {
+			if(that.marker != null) {
+				var x = (evt.pageX - svg.parent().offset().left)*(series.length-1)/width;
+				x = Math.max(0, Math.min(x, series.length-1));
+				var f = x - Math.floor(x);
+				var elevation = series[Math.floor(x)].elevation*(1-f) + series[Math.ceil(x)].elevation*f;
+				ele.html('<span><span style="font-weight: bold">' + Math.round(elevation*3.2808399) + '\'</span> at <span style="font-weight: bold">' + (Math.round((x/(series.length-1))*total_dist/16.0934)/100) + "mi</span> ");
 
-			var l = series[Math.floor(x)].location;
-			var r = series[Math.ceil(x)].location;
-			
-			that.marker.setPosition(new google.maps.LatLng(l.lat()*(1-f) + r.lat()*f, l.lng()*(1-f) + r.lng()*f));
-			that.trace.css('left', (evt.pageX - svg.parent().offset().left) + 'px');
-		}
-	});
+				var l = series[Math.floor(x)].location;
+				var r = series[Math.ceil(x)].location;
+				
+				that.marker.setPosition(new google.maps.LatLng(l.lat()*(1-f) + r.lat()*f, l.lng()*(1-f) + r.lng()*f));
+				that.trace.css('left', (evt.pageX - svg.parent().offset().left) + 'px');
+			}
+		});
+	}
 	
 }
 
@@ -2852,3 +2860,13 @@ org.sarsoft.view.ProfileGraph.prototype.hide = function() {
 	}
 }
 
+org.sarsoft.view.ProfileGraph.print = function(series, color, title) {
+	var pg = org.sarsoft.view.ProfileGraph;
+	if(pg.window == null || pg.window.window == null) pg.window = window.open('/profile');
+	if(pg.window.document.body.profile != null) {
+		pg.window.document.body.profile(series, color, title);		
+		pg.window.focus();
+	} else {
+		window.setTimeout(function() { org.sarsoft.view.ProfileGraph.print(series, color, title) }, 500);
+	}
+}

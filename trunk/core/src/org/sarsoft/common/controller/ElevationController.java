@@ -13,6 +13,7 @@ import javax.media.jai.JAI;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
 import org.sarsoft.common.model.Waypoint;
@@ -24,6 +25,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.multipart.support.StringMultipartFileEditor;
@@ -140,6 +142,11 @@ public class ElevationController extends JSONBaseController {
 		r.put("results", results);
 		r.put("status", "OK");
 		return json(model, r);
+	}
+	
+	@RequestMapping(value="/profile", method=RequestMethod.GET)
+	public String profile(Model model, HttpServletRequest request) {
+		return app(model, "/profile");
 	}
 
 }
