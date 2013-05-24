@@ -24,14 +24,15 @@ org.sarsoft.EnhancedGMap.createMapType = function(config, map) {
 	    return type;
 	} else if(config.type == "WMS") {
 		var wm = new org.sarsoft.WebMercator();
-		var type = new google.maps.ImageMapType({alt: "", maxZoom: config.maxresolution, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: new google.maps.Size(ts,ts), getTileUrl: function(point, zoom) {
-			var bounds = wm.tileLatLngBounds(point.x, wm.tileY(point.y, zoom), zoom);
+		var type = new google.maps.ImageMapType({alt: "", maxZoom: config.maxresolution, minZoom: config.minresolution, name: config.name, opacity: 1, tileSize: google.maps._openlayers ? new google.maps.Size(ts,ts) : new google.maps.Size(512,512), getTileUrl: function(point, zoom) {
+			var z = google.maps._openlayers ? zoom : zoom - 1;
+			var bounds = wm.tileLatLngBounds(point.x, wm.tileY(point.y, z), z);
 		    var url = config.template;
 		    url = url.replace(/\{left\}/g, bounds[1]);
 		    url = url.replace(/\{bottom\}/g, bounds[0]);
 		    url = url.replace(/\{right\}/g, bounds[3]);
 		    url = url.replace(/\{top\}/g, bounds[2]);
-		    url = url.replace(/\{tilesize\}/g, config.tilesize ? config.tilesize : 256);
+		    url = url.replace(/\{tilesize\}/g, config.tilesize ? config.tilesize : 512);
 		    return url;
 		}});
 	    if(config.alphaOverlay) type._alphaOverlay = true;
