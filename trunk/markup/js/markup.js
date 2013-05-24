@@ -237,12 +237,11 @@ org.sarsoft.ShapeDAO = function(errorHandler, baseURL) {
 
 org.sarsoft.ShapeDAO.prototype = new org.sarsoft.WayObjectDAO();
 
-org.sarsoft.ShapeDAO.prototype.validate = function(obj) {
-	obj = org.sarsoft.WayObjectDAO.prototype.validate.call(this, obj);
+org.sarsoft.ShapeDAO.prototype.validate = function(obj, override) {
+	obj = org.sarsoft.WayObjectDAO.prototype.validate.call(this, obj, override);
 
-	if(obj.lastUpdated == null) obj.lastUpdated = new Date().getTime();
-	if(obj.way.boundingBox == null) this.addBoundingBox(obj.way);
-	if(obj.formattedSize == null) {
+	if(obj.lastUpdated == null || override) obj.lastUpdated = new Date().getTime();
+	if(obj.formattedSize == null || override) {
 		if(obj.way.polygon) {
 			var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(obj.way.waypoints))/1000000;
 			obj.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
