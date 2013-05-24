@@ -1957,7 +1957,8 @@ org.sarsoft.WayObjectDAO.prototype.addBoundingBox = function(way) {
 	way.boundingBox=bb;
 }
 
-org.sarsoft.WayObjectDAO.prototype.validate = function(obj) {
+org.sarsoft.WayObjectDAO.prototype.validate = function(obj, override) {
+	if(obj.way.boundingBox == null || override) this.addBoundingBox(obj.way);
 	return org.sarsoft.MapObjectDAO.prototype.validate.call(this, obj);
 }
 
@@ -1967,7 +1968,7 @@ org.sarsoft.WayObjectDAO.prototype.saveWay = function(obj, waypoints, handler) {
 		org.sarsoft.async(function() {
 			var way = that.getObj(obj.id)[that.wname];
 			way.waypoints = waypoints;
-			that.addBoundingBox(way);
+			that.validate(obj, true);
 			$(that).triggerHandler('save', obj);
 			if(handler != null) handler(way);
 		});
