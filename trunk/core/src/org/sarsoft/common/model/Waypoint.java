@@ -23,8 +23,21 @@ public class Waypoint extends SarModelObject {
 	private Date time;
 	private Datum datum = Datum.WGS84;
 
-    private static double UTMScaleFactor = 0.9996;    
-    private static String[] zoneLetters = new String[] {"C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X"};
+    private static double UTMScaleFactor = 0.9996;
+    private static String[] UTMZoneLetters = new String[] {"C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X"};
+    private static String[] MGRSZoneLetters = new String[] {"A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X","Y","Z"};
+    
+    public static void main(String[] args) {
+    	Waypoint wpt = new Waypoint(20,-114);
+    	System.out.println(wpt.getUTMZone() + wpt.getUTMLetter() + " " + wpt.getMGRSZone());
+    	int[] xy = wpt.getMGRSXY();
+    	System.out.println(xy[0] + " " + xy[1]);
+    	
+    	
+    	double[] mxy = MapLatLonToXY(20*Math.PI/180, -114*Math.PI/180, UTMCentralMeridian(11), Datum.WGS84);
+    	System.out.println(mxy[0] + " " + mxy[1]);
+    	System.out.println(ArcLengthOfMeridian(-114*Math.PI/180, Datum.WGS84));
+    }
     
 	public Waypoint() {
 	}
@@ -152,8 +165,21 @@ public class Waypoint extends SarModelObject {
 	@Transient
 	public String getUTMLetter() {
 		int idx = (int) Math.floor((80+lat)/8);
-		idx = Math.max(Math.min(idx, zoneLetters.length-1), 0);
-		return zoneLetters[idx];
+		idx = Math.max(Math.min(idx, UTMZoneLetters.length-1), 0);
+		return UTMZoneLetters[idx];
+	}
+	
+	@Transient
+	public String getMGRSZone() {
+		int zone = getUTMZone();
+		double[] xy = getUTMXY();
+		return MGRSZoneLetters[ ((int) ((zone-1)%3)*8 + (int) Math.floor(xy[0]/100000) - 1) % 24] + MGRSZoneLetters[ ((int) (zone % 2 == 1 ? 0 : 5) + (int) Math.floor(xy[1]/100000)) % 20];
+	}
+	
+	@Transient
+	public int[] getMGRSXY() {
+		double[] xy = getUTMXY();
+		return new int[] { (int) Math.floor(xy[0] % 100000), (int) Math.floor(xy[1] % 100000) };
 	}
 
 	public double[] offsetFrom(Waypoint wpt) {
@@ -165,11 +191,11 @@ public class Waypoint extends SarModelObject {
 
     private static double ArcLengthOfMeridian(double phi, Datum datum) {
         double n = (datum.a - datum.b) / (datum.a + datum.b);
-        double alpha = (datum.a + datum.b)/2 * (1 + Math.pow(n, 2)/4 + Math.pow (n, 4)/64);
-        double beta = -3*n/2 + 9/16*Math.pow (n, 3) - 3/32*Math.pow (n, 5);
-        double gamma = 15/16 * Math.pow (n, 2)- 15/32 * Math.pow (n, 4);
-        double delta = -35/48 * Math.pow (n, 3) + 105/256 * Math.pow (n, 5.0);
-        double epsilon = 315/512 * Math.pow (n, 4);
+        double alpha = (datum.a + datum.b)/2 * (1 + Math.pow(n, 2)/4d + Math.pow (n, 4)/64d);
+        double beta = -3d*n/2d + 9d/16d*Math.pow (n, 3) - 3d/32d*Math.pow (n, 5);
+        double gamma = 15d/16d * Math.pow (n, 2)- 15d/32d * Math.pow (n, 4);
+        double delta = -35d/48d * Math.pow (n, 3) + 105d/256d * Math.pow (n, 5.0);
+        double epsilon = 315d/512d * Math.pow (n, 4);
 
         return alpha * (phi + (beta * Math.sin (2 * phi)) + (gamma * Math.sin (4 * phi)) + (delta * Math.sin (6 * phi)) + (epsilon * Math.sin (8 * phi)));
     }

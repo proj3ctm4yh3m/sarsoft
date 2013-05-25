@@ -11,12 +11,14 @@ public class PDFDoc {
 	private String[] layers;
 	private float[] opacity;
 	private boolean[] grids;
+	private String mgrid;
 	
-	public PDFDoc(Datum datum, String[] layers, float[] opacity, boolean[] grids) throws IOException {
+	public PDFDoc(Datum datum, String[] layers, float[] opacity, boolean[] grids, String mgrid) throws IOException {
 		this.datum = datum;
 		this.layers = layers.clone();
 		this.opacity = opacity.clone();
 		this.grids = grids.clone();
+		this.mgrid = mgrid;
 	}
 	
 	public Datum getDatum() {
@@ -33,6 +35,10 @@ public class PDFDoc {
 	
 	public boolean[] getGrids() {
 		return grids;
+	}
+	
+	public String getMGrid() {
+		return mgrid;
 	}
 	
 }

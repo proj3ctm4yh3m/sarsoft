@@ -4,6 +4,7 @@ if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Ob
 
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = new Object();
 org.sarsoft.EnhancedGMap._coordinates = "DD";
+org.sarsoft.EnhancedGMap._grid = "UTM";
 org.sarsoft.EnhancedGMap.nativeAliases = {};
 
 sarsoft.map.layers_configured = sarsoft.map.layers_configured || [];
@@ -701,7 +702,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 		var div = $('<div></div>').appendTo(imap.controls.settings);
 		var line = $('<div></div>').appendTo(div);
 		this.cb = $('<input style="float: left" type="checkbox"/>').prependTo(line).change(function() { that.setValue(that.cb[0].checked) });
-		var line = $('<div style="float: left" title="Univeral Transverse Mercator grid.  One grid unit = 1 meter.">Show UTM Grid</div>').appendTo(line);
+		var line = $('<div style="float: left" title="Univeral Transverse Mercator grid.  One grid unit = 1 meter.">Show Grid</div>').appendTo(line);
 		var line = $('<div><div style="float: left">Intensity:</div></div>').appendTo(line);
 		this.slider = org.sarsoft.view.CreateSlider($('<div style="float: left"></div>').appendTo(line), 50);
 		this.slider.subscribe('slideEnd', function() {
@@ -1030,6 +1031,7 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	var west = GeoUtil.getWestBorder(zone);
 
 	function createText(meters) {
+		if(org.sarsoft.EnhancedGMap._grid == "USNG") return "<div style=\"height: 10px; font-size: 10px; color:#0000FF; background-color: white\">" + (meters % 100000) + "</div>";
 		var major = Math.floor(meters/1000);
 		var minor = meters - major*1000;
 		if(minor == 0) minor = "000";
@@ -1369,7 +1371,7 @@ org.sarsoft.PositionInfoControl.prototype.update = function(gll) {
 	if(gll == null) return;
 	var datumll = GeoUtil.fromWGS84(gll);
 	var utm = GeoUtil.GLatLngToUTM(datumll);
-	var message = utm.toHTMLString() + "<br/>";
+	var message = utm.toHTMLString(org.sarsoft.EnhancedGMap._grid == "USNG") + "<br/>";
 	if(this.imap != null && this.imap.registered["org.sarsoft.UTMGridControl"] != null) {
 		if(org.sarsoft.EnhancedGMap._coordinates == "DD") {
 			message = message + GeoUtil.formatDD(datumll.lat()) + ", " + GeoUtil.formatDD(datumll.lng());
