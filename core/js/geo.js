@@ -88,10 +88,12 @@ org.sarsoft.WebMercator.prototype.tileY = function(y, z) {
 	return (Math.pow(2, z)) - 1 - y;
 }
 
-function UTM(e, n, zone) {
+function UTM(e, n, zone, letter, usngzone) {
 	this.e = Math.round(e);
 	this.n = Math.round(n);
 	this.zone = zone;
+	this.letter = letter;
+	this.usngzone = usngzone;
 }
 
 UTM.prototype.distanceFrom = function(other) {
@@ -101,18 +103,22 @@ UTM.prototype.distanceFrom = function(other) {
 }
 
 UTM.prototype.toString = function() {
-	return this.zone + " " + Math.round(this.e) + "E  " + Math.round(this.n) + "N";
+	return this.zone + (this.letter || "") + " " + Math.round(this.e) + "E  " + Math.round(this.n) + "N";
 }
 
-UTM.prototype.toHTMLString = function() {
-	var e = "" + Math.round(this.e);
-	var n = "" + Math.round(this.n);
-	var e1 = e.substring(0, e.length-3);
-	var e2 = e.substring(e.length-3, e.length);
-	var n1 = n.substring(0, n.length-3);
-	var n2 = n.substring(n.length-3, n.length);
+UTM.prototype.toHTMLString = function(usng) {
+	if(usng) {
+		return this.zone + this.letter + " " + this.usngzone + " " + (Math.round(this.e) % 100000) + " " + (Math.round(this.n) % 100000);
+	} else {
+		var e = "" + Math.round(this.e);
+		var n = "" + Math.round(this.n);
+		var e1 = e.substring(0, e.length-3);
+		var e2 = e.substring(e.length-3, e.length);
+		var n1 = n.substring(0, n.length-3);
+		var n2 = n.substring(n.length-3, n.length);
 
-	return this.zone + " " + e1 + "<span style=\"font-size: smaller\">" + e2 + "E</span> " + n1 + "<span style=\"font-size: smaller\">" + n2 + "N</span>";
+		return this.zone + this.letter + " " + e1 + "<span style=\"font-size: smaller\">" + e2 + "E</span> " + n1 + "<span style=\"font-size: smaller\">" + n2 + "N</span>";
+	}
 }
 
 GeoUtil = new Object();
@@ -178,11 +184,17 @@ GeoUtil.UTMToGLatLng = function(utm) {
 	return new google.maps.LatLng(GeoUtil.RadToDeg(ll[0]),GeoUtil.RadToDeg(ll[1]));
 }
 
+GeoUtil._UTMZoneLetters = ["C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X"];
+GeoUtil._MGRSZoneLetters = ["A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X","Y","Z"];
+
 GeoUtil.GLatLngToUTM = function(gll, zone) {
 	var xy = new Object();
 	if(typeof zone == "undefined") zone = Math.floor ((gll.lng() + 180.0) / 6) + 1;
 	var zone = GeoUtil.LatLonToUTMXY (GeoUtil.DegToRad(gll.lat()), GeoUtil.DegToRad(gll.lng()), zone, xy);
-	return new UTM(xy[0], xy[1], zone);
+	var letter = GeoUtil._UTMZoneLetters[Math.max(Math.min(Math.floor((80 + gll.lat())/8), GeoUtil._UTMZoneLetters.length-1), 0)];
+	var usngzone = GeoUtil._MGRSZoneLetters[ (((zone-1)%3)*8 + Math.floor(xy[0]/100000) - 1) % 24] + GeoUtil._MGRSZoneLetters[ ((zone % 2 == 1 ? 0 : 5) + Math.floor(xy[1]/100000)) % 20];
+
+	return new UTM(xy[0], xy[1], zone, letter, usngzone);
 }
 
 GeoUtil.getWestBorder = function(zone) {

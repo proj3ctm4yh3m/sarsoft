@@ -14,6 +14,7 @@ public class PDFForm {
 	public float[] opacity;
 	public PDFSize[] sizes;
 	public boolean[] grids;
+	public String mgrid;
 	public Datum datum;
 	public boolean show_labels = true;
 	public boolean fill_polygons = true;
@@ -37,7 +38,8 @@ public class PDFForm {
 		datum = "NAD27".equals(request.getParameter("datum")) ? Datum.NAD27 : Datum.WGS84;
 		
 		String p_grids = request.getParameter("grids");
-		grids = (p_grids == null ? new boolean[] { false, false} : new boolean[] { p_grids.indexOf("utm") >= 0, p_grids.indexOf("dd") >= 0});
+		grids = (p_grids == null ? new boolean[] { false, false} : new boolean[] { p_grids.indexOf("utm") >= 0 || p_grids.indexOf("usng") >= 0, p_grids.indexOf("dd") >= 0});
+		mgrid = (p_grids == null ? null : (p_grids.indexOf("utm") >= 0 ? "utm" : "usng"));
 		
 		String p_cfg = request.getParameter("cfg");
 		if(p_cfg != null && p_cfg.length() > 0) {
