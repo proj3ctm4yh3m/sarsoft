@@ -1496,9 +1496,7 @@ org.sarsoft.MapFindWidget.prototype.setState = function(state) {
 		this.f2.css('display', 'inline');
 		this.f1.css('display', 'none');
 		this.locationEntryForm.clear();
-		if(typeof google.maps.Geocoder != 'undefined' && !org.sarsoft.touch) {
-			this.locationEntryForm.address.focus();
-		}
+		this.locationEntryForm.input.focus();
 	} else {
 		this.f1.css('display', 'inline');
 		this.f2.css('display', 'none');
@@ -2761,179 +2759,116 @@ org.sarsoft.widget.MapLayers = function(imap) {
 	}, 1000);	
 }
 
-org.sarsoft.UTMEditForm = function() {	
-}
+org.sarsoft.Location = new Object();
 
-org.sarsoft.UTMEditForm.prototype.create = function(container) {
-	this.zone = jQuery('<input type="text" size="2"/>').appendTo(container);
-	jQuery('<span class="hint">zone</span>').appendTo(container);
-	$(container).append(" ");
+org.sarsoft.Location.parse = function(str, callback) {
+	if((str || "").lenth == 0) return null;
+	str = str.trim();
+
+	if(str.match(/^[-+]?([0-9]*\.[0-9]+|[0-9]+)[d|\u00B0]?,[ ]*[-+]?([0-9]*\.[0-9]+|[0-9]+)[d|\u00B0]?$/g) != null) {
+		var parts = str.match(/[-+]?([0-9]*\.[0-9]+|[0-9]+)/g);
+		var lat = Number(parts[0]);
+		var lng = Number(parts[1]);
+		if(!isNaN(lat) && !isNaN(lng) && lat > -90 && lat < 90 && lng >= -180 && lng <= 180) {
+			callback(new google.maps.LatLng(lat, lng));
+			return;
+		}
+	}
+	if(str.match(/^[-+]?([0-9]*\.[0-9]+|[0-9]+)[d|\u00B0]([0-9]*\.[0-9]+|[0-9]+)[m|'],[ ]*[-+]?([0-9]*\.[0-9]+|[0-9]+)[d|\u00B0]([0-9]*\.[0-9]+|[0-9]+)[m|']$/g)) {
+		var parts = str.match(/[-+]?([0-9]*\.[0-9]+|[0-9]+)/g);
+		var d1 = Number(parts[0]);
+		var m1 = Number(parts[1]);
+		var d2 = Number(parts[2]);
+		var m2 = Number(parts[3]);
+		
+		var lat = (Math.abs(d1) + (m1/60)) * (Math.abs(d1)/d1);
+		var lng = (Math.abs(d2) + (m2/60)) * (Math.abs(d2)/d2);
+		if(!isNaN(lat) && !isNaN(lng) && lat > -90 && lat < 90 && lng >= -180 && lng <= 180) {
+			callback(new google.maps.LatLng(lat, lng));
+			return;
+		}
+	}
+	if(str.match(/^[-+]?([0-9]*\.[0-9]+|[0-9]+)[d|\u00B0]([0-9]*\.[0-9]+|[0-9]+)[m|']([0-9]*\.[0-9]+|[0-9]+)[s|"],[ ]*[-+]?([0-9]*\.[0-9]+|[0-9]+)[d|\u00B0]([0-9]*\.[0-9]+|[0-9]+)[m|']([0-9]*\.[0-9]+|[0-9]+)[s|"]$/g)) {
+		var parts = str.match(/[-+]?([0-9]*\.[0-9]+|[0-9]+)/g);
+		var d1 = Number(parts[0]);
+		var m1 = Number(parts[1]);
+		var s1 = Number(parts[2]);
+		var d2 = Number(parts[3]);
+		var m2 = Number(parts[4]);
+		var s2 = Number(parts[5]);
+		
+		var lat = (Math.abs(d1) + (m1/60) + s1/3600) * (Math.abs(d1)/d1);
+		var lng = (Math.abs(d2) + (m2/60) + s2/3600) * (Math.abs(d2)/d2);
+		if(!isNaN(lat) && !isNaN(lng) && lat > -90 && lat < 90 && lng >= -180 && lng <= 180) {
+			callback(new google.maps.LatLng(lat, lng));
+			return;
+		}
+	}
+	if(str.match(/^[0-9]{1,2}[a-zA-Z]?[ ]*[0-9]+[eE]?[ ]*[0-9]+[nN]?$/)) {
+		var parts = str.match(/[0-9]+/g);
+		callback(GeoUtil.UTMToGLatLng(new UTM(Number(parts[1]), Number(parts[2]), Number(parts[0]))));
+		return;
+	}
+	if(str.match(/^[0-9]{1,2}[a-zA-Z][ ]?[a-zA-Z]{2}[ ]?[0-9]+/)) {
+		var numbers = str.match(/[0-9]+/g);
+		var letters = str.match(/[a-zA-Z]+/g);
+		var utm_zone = Number(numbers[0]);
+		var utm_y = letters[0].substr(0,1);
+		var usng_x = (letters.length == 1 ? letters[0].substr(1, 1) : letters[1].substr(0,1));
+		var usng_y = (letters.length == 1 ? letters[0].substr(2, 1) : letters[1].substr(1,1));
+		
+		var utm_yoff = GeoUtil._UTMZoneLetters.indexOf(utm_y.toUpperCase());
+		var usng_xoff = GeoUtil._MGRSZoneLetters.indexOf(usng_x.toUpperCase());
+		var usng_yoff = GeoUtil._MGRSZoneLetters.indexOf(usng_y.toUpperCase());
+		
+		var base_lat = 8*utm_yoff - 80;
+		var easting = ((usng_xoff % 8) + 1) *100000;
+		var northing = ((usng_yoff - (utm_zone % 2 == 1 ? 0 : 5)) % 8)*100000;
+		if(northing < 0) northing += 20*100000;
+		
+		var size = numbers[1].length/2;
+		var subeasting = numbers[1].substr(0,size);
+		var subnorthing = numbers[1].substr(size,size);
+		while(subeasting.length < 5) subeasting = subeasting + "0";
+		while(subnorthing.length < 5) subnorthing = subnorthing + "0";
+		
+		easting = easting + Number(subeasting);
+		northing = northing + Number(subnorthing);
+		
+		while(GeoUtil.UTMToGLatLng(new UTM(easting, northing, utm_zone)).lat() < base_lat) {
+			northing = northing + 2000000;
+		}
+		
+		callback(GeoUtil.UTMToGLatLng(new UTM(easting, northing, utm_zone)));
+		return;
+	}
 	
-	this.e = jQuery('<input type="text" size="9"/>').appendTo(container);
-	jQuery('<span class="hint">E</span>').appendTo(container);
-	$(container).append(" ");
+	if(typeof google.maps.Geocoder != 'undefined') {
+		var gcg = new google.maps.Geocoder();
+		gcg.geocode({address: str}, function(result, status) { if(status!=google.maps.GeocoderStatus.OK) return; callback(result[0].geometry.location); });
+	}
 
-	this.n = jQuery('<input type="text" size="9"/>').appendTo(container);
-	jQuery('<span class="hint">N</span>').appendTo(container);
-}
-
-org.sarsoft.UTMEditForm.prototype.write = function(utm) {
-	if(utm == null) utm = {zone : null, e: null, n : null};
-	this.zone.val(utm.zone);
-	this.e.val(utm.e);
-	this.n.val(utm.n);
-}
-
-org.sarsoft.UTMEditForm.prototype.read = function() {
-	var zone = this.zone.val();	
-	if(zone == null || zone.length == 0) return null;
-	if(zone.length > 2) zone = zone.substring(0, 2);
-	return new UTM(this.e.val()*1, this.n.val()*1, zone*1);
 }
 
 org.sarsoft.ThinLocationForm = function() {
 }
 
-org.sarsoft.ThinLocationForm.prototype.create = function(container, handler, noLookup) {
+org.sarsoft.ThinLocationForm.prototype.create = function(container, handler) {
 	var that = this;
 
-	var geocode = !(typeof google.maps.Geocoder == 'undefined' || noLookup);
-	this.select = jQuery('<select style="margin-left: 5px">' + (geocode ? '<option value="name">Place Name</option>' : '') + '<option value="UTM">UTM</option><option value="DD">DD</option><option value="DMS">DMS</option><option value="DMH">DMH</option></select>');
-	this.select.appendTo(container);
-	this.containers = {
-			name : jQuery('<span' + (geocode ? '' : ' style="display: none"') + '></span>').appendTo(container),
-			UTM : jQuery('<span' + (geocode ? ' style="display: none"' : '') + '></span>').appendTo(container),
-			DD : jQuery('<span style="display: none"></span>').appendTo(container),
-			DMH : jQuery('<span style="display: none"></span>').appendTo(container),
-			DMS : jQuery('<span style="display: none"></span>').appendTo(container)
-	}
-	
-	var hints = {
-		name : 'e.g. "Mount Rainier" or "Castle Peak near Truckee, CA"',
-		UTM : 'UTM',
-		DD : 'WGS84 decimal degrees, e.g. 39.3422, -120.2036',
-		DMH : 'WGS84 degree minutes, e.g. 39\u00B020.66\', -120\u00B012.32\'',
-		DMS : 'WGS84 degree minute seconds, e.g. 39\u00B020\'39\'\', -120\u00B012\'19\'\''
-	}
-	
-	this.select.change(function() {
-		var type = that.select.val();
-		for (var key in that.containers) {
-			that.containers[key].css("display", "none");
-		}
-		that.containers[type].css("display", "inline");
-		container.attr("title", hints[type]);
+	this.input = jQuery('<input type="text" size="24"/>').appendTo(container).attr('title', 'examples:\nTruckee, CA\n39.328,-120.183\n39d19.68m,-120d11m\n 39\u00B019\'41",-120\u00B011"0\'\n10S 738932E 4356264N');
+
+	this.input.keydown(function(event) {
+		if(event.keyCode == 13) handler();
 	});
-
-	this.utmform = new org.sarsoft.UTMEditForm();
-	this.utmform.create(this.containers["UTM"]);
-
-	var dd = this.containers["DD"];
-	this.lat = jQuery('<input type="text" size="8" placeholder="Latitude"/>').appendTo(dd);
-	dd.append(", ");
-	this.lng = jQuery('<input type="text" size="8" placeholder="Longitude"/>').appendTo(dd);
-	
-	var ddmmhh = this.containers["DMH"];
-	this.DDMMHH = new Object();
-	this.DDMMHH.latDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmhh);
-	ddmmhh.append("\u00B0");
-	this.DDMMHH.latMM = jQuery('<input type="text" size="5" placeholder="Min"/>').appendTo(ddmmhh);
-	ddmmhh.append("', ");
-	this.DDMMHH.lngDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmhh);
-	ddmmhh.append("\u00B0");
-	this.DDMMHH.lngMM = jQuery('<input type="text" size="5" placeholder="Min"/>').appendTo(ddmmhh);
-
-	var ddmmss = this.containers["DMS"];
-	this.DDMMSS = new Object();
-	this.DDMMSS.latDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmss);
-	ddmmss.append("\u00B0");
-	this.DDMMSS.latMM = jQuery('<input type="text" size="2" placeholder="Min"/>').appendTo(ddmmss);
-	ddmmss.append("'");
-	this.DDMMSS.latSS = jQuery('<input type="text" size="2" placeholder="Sec"/>').appendTo(ddmmss);
-	ddmmss.append("'', ");
-	this.DDMMSS.lngDD = jQuery('<input type="text" size="4" placeholder="Deg"/>').appendTo(ddmmss);
-	ddmmss.append("\u00B0");
-	this.DDMMSS.lngMM = jQuery('<input type="text" size="2" placeholder="Min"/>').appendTo(ddmmss);
-	ddmmss.append("'");
-	this.DDMMSS.lngSS = jQuery('<input type="text" size="2" placeholder="Sec"/>').appendTo(ddmmss);
-	
-	var name = this.containers["name"];
-	this.address = jQuery('<input type="text" size="16"/>').appendTo(name);
-	
-	if(handler != null) {
-		this.lng.keydown(function(event) {
-			if(event.keyCode == 13 && that.lat.val() != null) handler();
-		});
-		this.address.keydown(function(event) {
-			if(event.keyCode == 13) handler();
-		});
-	}
 }
 
 org.sarsoft.ThinLocationForm.prototype.read = function(callback) {
-	var type = this.select.val();
-	if(type == "UTM") {
-		var utm = this.utmform.read();
-		callback(GeoUtil.UTMToGLatLng(utm));
-	} else if(type == "name") {
-		var gcg = new google.maps.Geocoder();
-		gcg.geocode({address: this.address.val()}, function(result, status) { if(status!=google.maps.GeocoderStatus.OK) return; callback(result[0].geometry.location); });
-	} else if(type == "DD") {
-		var lat = this.lat.val();
-		var lng = this.lng.val();
-		if(lat != null && lat.length > 0 && lng != null && lng.length > 0) {
-			if(lng > 0) alert("Longitude is greater than zero.  If you're in the United States, this should probably be a negative number.")
-			callback(new google.maps.LatLng(1*lat, 1*lng));
-		} else {
-			return false;
-		}
-	} else if(type == "DMH") {
-		var latdd = this.DDMMHH.latDD.val();
-		var lngdd = this.DDMMHH.lngDD.val();
-		if(latdd == null || latdd.length == 0 || lngdd == null || lngdd.length == 0) return false; 
-
-		var latneg = (1*latdd < 0) ? true : false;
-		var lngneg = (1*lngdd < 0) ? true : false;		
-		var lat = Math.abs(latdd) + (this.DDMMHH.latMM.val()/60);
-		var lng = Math.abs(lngdd) + (this.DDMMHH.lngMM.val()/60);
-		if(isNaN(lat) || isNaN(lng)) return false;
-		if(latneg) lat = -1*lat;
-		if(lngneg) lng = -1*lng;
-		callback(new google.maps.LatLng(lat, lng));
-	} else {
-		var latdd = this.DDMMSS.latDD.val();
-		var lngdd = this.DDMMSS.lngDD.val();
-		if(latdd == null || latdd.length == 0 || lngdd == null || lngdd.length == 0) return false; 
-
-		var latneg = (1*latdd < 0) ? true : false;
-		var lngneg = (1*lngdd < 0) ? true : false;
-
-		var lat = Math.abs(latdd) + (this.DDMMSS.latMM.val()/60) + (this.DDMMSS.latSS.val()/3600);
-		var lng = Math.abs(lngdd) + (this.DDMMSS.lngMM.val()/60) + (this.DDMMSS.lngSS.val()/3600);
-		if(isNaN(lat) || isNaN(lng)) return false;
-		if(latneg) lat = -1*lat;
-		if(lngneg) lng = -1*lng;
-		callback(new google.maps.LatLng(lat, lng));
-	}
-	return true;
+	org.sarsoft.Location.parse(this.input.val(), callback);
 }
 
 org.sarsoft.ThinLocationForm.prototype.clear = function() {
-	this.select.val(this.select.find('[value="name"]').length > 0 ? 'name' : 'UTM').change();
-	this.utmform.write({zone : "", e : "", n : ""});
-	this.address.val("");
-	this.lat.val("");
-	this.lng.val("");
-	this.DDMMHH.latDD.val("");
-	this.DDMMHH.latMM.val("");
-	this.DDMMHH.lngDD.val("");
-	this.DDMMHH.lngMM.val("");
-	this.DDMMSS.latDD.val("");
-	this.DDMMSS.latMM.val("");
-	this.DDMMSS.latSS.val("");
-	this.DDMMSS.lngDD.val("");
-	this.DDMMSS.lngMM.val("");
-	this.DDMMSS.lngSS.val("");
+	this.input.val('');
 }
 
 org.sarsoft.GeoRefImageOverlay = function(map, name, url, p1, p2, ll1, ll2, opacity, top) {
