@@ -108,7 +108,11 @@ UTM.prototype.toString = function() {
 
 UTM.prototype.toHTMLString = function(usng) {
 	if(usng) {
-		return this.zone + this.letter + " " + this.usngzone + " " + (Math.round(this.e) % 100000) + " " + (Math.round(this.n) % 100000);
+		var e = "" + (Math.round(this.e) % 100000);
+		var n = "" + (Math.round(this.n) % 100000);
+		while(e.length < 5) e = "0" + e;
+		while(n.length < 5) n = "0" + n;
+		return this.zone + this.letter + " " + this.usngzone + " " + e + " " + n;
 	} else {
 		var e = "" + Math.round(this.e);
 		var n = "" + Math.round(this.n);

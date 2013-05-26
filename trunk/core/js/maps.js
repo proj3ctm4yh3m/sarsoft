@@ -1031,7 +1031,11 @@ org.sarsoft.UTMGridControl.prototype._drawUTMGridForZone = function(zone, spacin
 	var west = GeoUtil.getWestBorder(zone);
 
 	function createText(meters) {
-		if(org.sarsoft.EnhancedGMap._grid == "USNG") return "<div style=\"height: 10px; font-size: 10px; color:#0000FF; background-color: white\">" + (meters % 100000) + "</div>";
+		if(org.sarsoft.EnhancedGMap._grid == "USNG") {
+			var m = "" + (meters % 100000);
+			while(m.length < 5) m = "0" + m;
+			return "<div style=\"height: 10px; font-size: 10px; color:#0000FF; background-color: white\">" + m + "</div>";
+		}
 		var major = Math.floor(meters/1000);
 		var minor = meters - major*1000;
 		if(minor == 0) minor = "000";
