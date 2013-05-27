@@ -2055,7 +2055,7 @@ org.sarsoft.InteractiveMap.prototype._addOverlay = function(way, config, label) 
 			if(way.waypoints.length < 3) i = 0;
 			labelwpt = {lat : (way.waypoints[i].lat + way.waypoints[i+1].lat)/2, lng : (way.waypoints[i].lng + way.waypoints[i+1].lng)/2};
 		}
-		if(label != null) {
+		if(label != null && labelwpt != null) {
 			labelOverlay = new Label(this.map, new google.maps.LatLng(labelwpt.lat, labelwpt.lng), "<span class='maplabel'>" + label + "</span>", style, null, new google.maps.Size(-0.5, -0.5));
 		}
 	}
