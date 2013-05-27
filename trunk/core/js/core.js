@@ -2048,6 +2048,7 @@ org.sarsoft.WayObjectController.prototype.focus = function(obj) {
 
 org.sarsoft.WayObjectController.prototype.growmap = function(object) {
 		var bb = object[this.type.way].boundingBox;
+		if(bb[0].lat == 90 && bb[0].lng == 180 && bb[1].lat == -90 && bb[1].lng == -180) return;
 		this.imap.growInitialMap(new google.maps.LatLng(bb[0].lat, bb[0].lng));
 		this.imap.growInitialMap(new google.maps.LatLng(bb[1].lat, bb[1].lng));
 }
