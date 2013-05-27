@@ -2875,8 +2875,8 @@ org.sarsoft.view.ProfileGraph.prototype.hide = function() {
 
 org.sarsoft.view.ProfileGraph.print = function(series, color, title) {
 	var pg = org.sarsoft.view.ProfileGraph;
-	if(pg.window == null || pg.window.window == null) pg.window = window.open('/profile');
-	if(pg.window.document.body.profile != null) {
+	if(pg.window == null || pg.window.closed) pg.window = window.open('/profile');
+	if(pg.window.document != null && pg.window.document.body != null && pg.window.document.body.profile != null) {
 		pg.window.document.body.profile(series, color, title);		
 		pg.window.focus();
 	} else {
