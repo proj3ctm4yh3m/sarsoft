@@ -510,7 +510,12 @@ org.sarsoft.controller.MapToolsController = function(imap) {
 		 {text: "Profile", applicable : function(obj) { return obj == null}, handler: function(data) { that.profile(data.point)}},
 		 {text: "Take Bearing", applicable : function(obj) { return obj == null }, handler: function(data) { that.bearing(data.point);}},
 		 {text: "Point Info", applicable : function(obj) { return obj == null}, handler: function(data) { that.pointdata(data.point)}}]
-	}];
+	},
+		{text: "View From Here", applicable: function(obj) { return obj == null}, handler: function(data) {
+			var gll = that.imap.projection.fromContainerPixelToLatLng(data.point);
+			window.open('/view#ll=' + gll.lat() + ',' + gll.lng() + '&e=30&t=&z=3&c=0,0', '_blank');
+		}}
+	];
 	
 	this.imap.addContextMenuItems(items);
 }
