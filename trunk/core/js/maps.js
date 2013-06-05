@@ -1708,7 +1708,7 @@ org.sarsoft.FreehandDrawingManager.prototype.setDrawingMode = function(mode) {
 		this.map.setOptions({draggableCursor: null});
 		if(this.imap.registered["org.sarsoft.PositionInfoControl"] != null) this.imap.registered["org.sarsoft.PositionInfoControl"].extras.html("");
 		
-		var div = $(map.getDiv());
+		var div = $(this.map.getDiv());
 		for(var key in this.handlers) div.unbind(key, this.handlers[key]);
 		$(document.body).unbind("keydown", this.handler_keydown);
 	} else {
