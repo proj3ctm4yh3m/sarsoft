@@ -11,9 +11,12 @@ public class PDFPage {
 	private String[] layers;
 	private float[] opacity;
 	
+	public float pdf_dpi = 72f;
+	public float img_dpi = 200f;
+	public int px_limit = 3800;
+	public float in_base_height = 0.75f;
+	
 	public float px_multiplier;
-	public float pdf_dpi;
-	public float img_dpi;
 	public int px_border;
 	public float in_border;
 	public float[] imageSize;
@@ -38,19 +41,22 @@ public class PDFPage {
 		this.imageSize = imageSize.clone();
 		this.pageSize = pageSize.clone();
 		
-		pdf_dpi = 72f;
-		img_dpi = 200f;		
+		calc();
+	}
+	
+	public void calc() {
 		px_multiplier = img_dpi/100;
-		px_border = 60;
+		px_border = 30;
 		boolean[] grids = doc.getGrids();
 		if(!grids[0] && !grids[1]) px_border = 0;
-		else if((grids[0] || grids[1]) && !(grids[0] && grids[1])) px_border = 40;
+		else if((grids[0] || grids[1]) && !(grids[0] && grids[1])) px_border = 20;
+		px_border = (int) Math.round(px_border * px_multiplier);
 		
 		in_border = px_border/img_dpi;
-		if(imageSize[0] * img_dpi > 3800) img_dpi = 3800 / imageSize[0];
-		if(imageSize[1] * img_dpi > 3800) img_dpi = 3800 / imageSize[1];
+		if(imageSize[0] * img_dpi > px_limit) img_dpi = px_limit / imageSize[0];
+		if(imageSize[1] * img_dpi > px_limit) img_dpi = px_limit / imageSize[1];
 		
-		in_base = new float[] { imageSize[0] + in_border*2, 0.75f };
+		in_base = new float[] { imageSize[0] + in_border*2, in_base_height };
 		px_base = new int[] { Math.round(in_base[0] * img_dpi), Math.round(in_base[1] * img_dpi)};
 		in_margin = new float[] { (pageSize[0]-imageSize[0]-in_border*2)/2, (pageSize[1]-imageSize[1]-in_base[1]-in_border*2)/2 };
 		px_img = new int[] { Math.round(imageSize[0] * img_dpi), Math.round(imageSize[1] * img_dpi) };

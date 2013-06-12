@@ -1,8 +1,5 @@
 package org.sarsoft.imaging;
 
-import java.io.IOException;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.sarsoft.common.util.Datum;
 
 public class PDFDoc {
@@ -13,7 +10,7 @@ public class PDFDoc {
 	private boolean[] grids;
 	private String mgrid;
 	
-	public PDFDoc(Datum datum, String[] layers, float[] opacity, boolean[] grids, String mgrid) throws IOException {
+	public PDFDoc(Datum datum, String[] layers, float[] opacity, boolean[] grids, String mgrid) {
 		this.datum = datum;
 		this.layers = layers.clone();
 		this.opacity = opacity.clone();
