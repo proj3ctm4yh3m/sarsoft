@@ -2,6 +2,7 @@ package org.sarsoft.imaging;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,28 +21,38 @@ public class PDFForm {
 	public boolean fill_polygons = true;
 	
 	public PDFForm(HttpServletRequest request) {
-		String p_layer = request.getParameter("layer");
-		if(p_layer != null && p_layer.length() > 0) {
-			layers = p_layer.split(",");
-			opacity = new float[layers.length];
-			for(int i = 0; i < layers.length; i++) {
-				int idx = layers[i].indexOf("@");
-				if(idx > 0) {
-					opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
-					layers[i] = layers[i].substring(0, idx);
-				} else {
-					opacity[i] = 1f;
+		init(request.getParameterMap());
+	}
+	
+	public PDFForm(Map parameters) {
+		init(parameters);
+	}
+	
+	private void init(Map parameters) {
+		if(parameters.containsKey("layer")) {
+			String p_layer = (String) parameters.get("layer");
+			if(p_layer != null && p_layer.length() > 0) {
+				layers = p_layer.split(",");
+				opacity = new float[layers.length];
+				for(int i = 0; i < layers.length; i++) {
+					int idx = layers[i].indexOf("@");
+					if(idx > 0) {
+						opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
+						layers[i] = layers[i].substring(0, idx);
+					} else {
+						opacity[i] = 1f;
+					}
 				}
 			}
 		}
 		
-		datum = "NAD27".equals(request.getParameter("datum")) ? Datum.NAD27 : Datum.WGS84;
+		datum = "NAD27".equals(parameters.get("datum")) ? Datum.NAD27 : Datum.WGS84;
 		
-		String p_grids = request.getParameter("grids");
+		String p_grids = (String) parameters.get("grids");
 		grids = (p_grids == null ? new boolean[] { false, false} : new boolean[] { p_grids.indexOf("utm") >= 0 || p_grids.indexOf("usng") >= 0, p_grids.indexOf("dd") >= 0});
 		mgrid = (p_grids == null ? null : (p_grids.indexOf("utm") >= 0 ? "utm" : "usng"));
 		
-		String p_cfg = request.getParameter("cfg");
+		String p_cfg = (String) parameters.get("cfg");
 		if(p_cfg != null && p_cfg.length() > 0) {
 			String[] cfgs = p_cfg.split(",");
 			for(String cfg : cfgs) {
@@ -52,11 +63,11 @@ public class PDFForm {
 		
 		int i = 0;
 		List<PDFSize> sizelist = new ArrayList<PDFSize>();
-		while(request.getParameter("bbox" + (i == 0 ? "" : i)) != null && i < 15) {
+		while((String) parameters.get("bbox" + (i == 0 ? "" : i)) != null && i < 15) {
 			String suffix = (i == 0 ? "" : Integer.toString(i)); 
-			String p_bbox = request.getParameter("bbox" + suffix);
-			String p_pageSize = request.getParameter("pageSize" + suffix);
-			String p_imgSize = request.getParameter("imgSize" + suffix);
+			String p_bbox = (String) parameters.get("bbox" + suffix);
+			String p_pageSize = (String) parameters.get("pageSize" + suffix);
+			String p_imgSize = (String) parameters.get("imgSize" + suffix);
 			String[] bb = p_bbox.split(",");
 			
 			sizelist.add(new PDFSize(new float[] { Float.parseFloat(p_pageSize.split(",")[0]), Float.parseFloat(p_pageSize.split(",")[1])},
@@ -66,7 +77,7 @@ public class PDFForm {
 			i++;
 		}
 		
-		String p_pageSize = request.getParameter("pageSize");
+		String p_pageSize = (String) parameters.get("pageSize");
 		if(sizelist.size() == 0) {
 			if(p_pageSize != null && p_pageSize.length() > 0) {
 				sizelist.add(new PDFSize(new float[] { Float.parseFloat(p_pageSize.split(",")[0]), Float.parseFloat(p_pageSize.split(",")[1])}, null, null));
