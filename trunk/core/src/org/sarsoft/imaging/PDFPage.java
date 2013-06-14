@@ -13,6 +13,7 @@ public class PDFPage {
 	
 	public float pdf_dpi = 72f;
 	public float img_dpi = 200f;
+	public float img_dpi_target = 200f;
 	public int px_limit = 3800;
 	public float in_base_height = 0.75f;
 	
@@ -45,7 +46,12 @@ public class PDFPage {
 	}
 	
 	public void calc() {
+		img_dpi = img_dpi_target;
+		
+		if(imageSize[0] * img_dpi > px_limit) img_dpi = px_limit / imageSize[0];
+		if(imageSize[1] * img_dpi > px_limit) img_dpi = px_limit / imageSize[1];
 		px_multiplier = img_dpi/100;
+		
 		px_border = 30;
 		boolean[] grids = doc.getGrids();
 		if(!grids[0] && !grids[1]) px_border = 0;
@@ -53,8 +59,6 @@ public class PDFPage {
 		px_border = (int) Math.round(px_border * px_multiplier);
 		
 		in_border = px_border/img_dpi;
-		if(imageSize[0] * img_dpi > px_limit) img_dpi = px_limit / imageSize[0];
-		if(imageSize[1] * img_dpi > px_limit) img_dpi = px_limit / imageSize[1];
 		
 		in_base = new float[] { imageSize[0] + in_border*2, in_base_height };
 		px_base = new int[] { Math.round(in_base[0] * img_dpi), Math.round(in_base[1] * img_dpi)};

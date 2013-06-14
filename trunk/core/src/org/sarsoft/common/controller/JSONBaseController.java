@@ -1,12 +1,14 @@
 package org.sarsoft.common.controller;
 
 import java.io.StringReader;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSON;
@@ -39,6 +41,18 @@ public abstract class JSONBaseController {
 	@Autowired
 	public void setServerInfo(ServerInfo server) {
 		this.server = server;
+	}
+	
+	// request.getParameterMap breaks comma-separated values into arrays
+	@SuppressWarnings("unchecked")
+	protected Map<String, String> getParameterMap(HttpServletRequest request) {
+		Map<String, String> parameters = new HashMap<String, String>();
+		Enumeration<String> names = (Enumeration<String>) request.getParameterNames();
+		while(names.hasMoreElements()) {
+			String name = names.nextElement();
+			parameters.put(name, request.getParameter(name));
+		}
+		return parameters;
 	}
 
 	protected String getProperty(String name) {

@@ -20,10 +20,6 @@ public class PDFForm {
 	public boolean show_labels = true;
 	public boolean fill_polygons = true;
 	
-	public PDFForm(HttpServletRequest request) {
-		init(request.getParameterMap());
-	}
-	
 	public PDFForm(Map parameters) {
 		init(parameters);
 	}
