@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import org.sarsoft.common.json.JSONAnnotatedPropertyFilter;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 public abstract class StyledGeoObject extends StyledGPXObject {
@@ -20,6 +21,7 @@ public abstract class StyledGeoObject extends StyledGPXObject {
 		super(gpx);
 		name = gpx.getString("name");
 		if(name != null && name.startsWith("-")) name = null;
+		if(gpx.get("name") instanceof JSONArray) name = null; // jsonlib will translate empty name tag to [] for some reason
 	}
 
 	public String getName() {

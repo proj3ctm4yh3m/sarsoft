@@ -102,12 +102,12 @@ public abstract class JSONBaseController {
 	}
 	
 	protected String jsonframe(Model model, Object obj) {
-		if(obj != null) model.addAttribute("json", toJSON(obj));
+		if(obj != null) model.addAttribute("json", (obj instanceof JSON) ? obj : toJSON(obj));
 		return "/jsonframe";
 	}
 
 	protected String json(Model model, Object obj) {
-		if(obj != null) model.addAttribute("json", toJSON(obj));
+		if(obj != null) model.addAttribute("json", (obj instanceof JSON) ? obj : toJSON(obj));
 		return "/json";
 	}
 	
