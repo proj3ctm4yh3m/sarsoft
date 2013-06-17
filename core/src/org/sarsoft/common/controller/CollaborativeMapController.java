@@ -288,7 +288,7 @@ public class CollaborativeMapController extends JSONBaseController {
 		dao.save(map);
 		return json(model, map.getDefaultCenter());
 	}
-	
+
 	@RequestMapping(value="/rest/out")
 	public String download(Model model, @RequestParam("state") String clientstate, HttpServletRequest request, HttpServletResponse response) {		
 		Format format = (request.getParameter("format") != null) ? Format.valueOf(request.getParameter("format").toUpperCase()) : Format.GPX;

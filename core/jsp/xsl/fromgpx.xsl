@@ -10,17 +10,17 @@
 	<e class="object">
 		<type type="string">null</type>
 	</e>
-	<xsl:for-each select="*[local-name()='Placemark' and count(*[local-name()='LineString']) &gt; 0]">
+	<xsl:for-each select=".//*[local-name()='Placemark' and count(*[local-name()='LineString']) &gt; 0]">
 		<e class="object">
 		<xsl:call-template name="PlacemarkToTrack"/>
 		</e>
 	</xsl:for-each>
-	<xsl:for-each select="*[local-name()='Placemark' and count(*[local-name()='Polygon']) &gt; 0]">
+	<xsl:for-each select=".//*[local-name()='Placemark' and count(*[local-name()='Polygon']) &gt; 0]">
 		<e class="object">
 		<xsl:call-template name="PlacemarkToPolygon"/>
 		</e>
 	</xsl:for-each>
-	<xsl:for-each select="*[local-name()='Placemark' and count(*[local-name()='Point']) &gt; 0]">
+	<xsl:for-each select=".//*[local-name()='Placemark' and count(*[local-name()='Point']) &gt; 0]">
 		<e class="object">
 		<xsl:call-template name="PlacemarkToWaypoint"/>
 		</e>
