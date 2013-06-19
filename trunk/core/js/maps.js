@@ -2355,6 +2355,47 @@ org.sarsoft.InteractiveMap.prototype.redraw = function(id, onEnd, onCancel) {
 	});
 }
 
+org.sarsoft.InteractiveMap.prototype.extend = function(id, onEnd, onCancel) {
+	var that = this;
+	this.unselect(this.polys[id].way);
+	var config = this.polys[id].config;
+	this.drawingManager.setOptions({polygonOptions: {strokeColor: config.color, strokeOpacity: config.opacity/100, strokeWeight: config.weight, fillColor: config.color, fillOpacity: config.fill/100},
+		polylineOptions: {strokeColor: config.color, strokeOpacity: config.opacity/100, strokeWeight: config.weight}});
+	this.drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
+	
+	this.lockContextMenu();
+	
+	var release  = function() {
+		google.maps.event.removeListener(that.complete);
+		that.unlockContextMenu();
+		that.drawingManager.setOptions({drawingMode: null});
+	}
+	
+	this.complete = google.maps.event.addListener(this.drawingManager, "polylinecomplete", function(poly) {
+		release();
+		var path = that._getPath(poly);
+		poly.setMap(null);
+		if(path.getLength() < 2) {
+			window.setTimeout(onCancel, 200);
+		} else {
+			var dest = that.polys[id].overlay.getPath();
+			var w1 = dest.getAt(0);
+			var w2 = dest.getAt(dest.getLength()-1);
+			var gll = path.getAt(0);
+			var end = (google.maps.geometry.spherical.computeDistanceBetween(gll, w1) > google.maps.geometry.spherical.computeDistanceBetween(gll, w2));
+			for(var i = 0; i < path.getLength(); i++) {
+				if(end) {
+					dest.push(path.getAt(i));
+				} else {
+					dest.insertAt(0, path.getAt(i));
+				}
+			}
+			window.setTimeout(onEnd, 200);
+		}
+	});
+	
+}
+
 org.sarsoft.InteractiveMap.prototype.save = function(id) {
 	var poly = this.polys[id];
 	poly.overlay.setEditable(false);

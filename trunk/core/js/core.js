@@ -1850,7 +1850,7 @@ org.sarsoft.WaypointObjectController.prototype._contextMenuCheck = function(mapo
 	if(mapobj == null) return {}
 	var obj = that.dao.getObj(that.getObjectIdFromWpt(mapobj));
 	var inedit = (obj != null && that.attr(obj, "inedit"));
-	return { obj: obj, inedit: inedit}
+	return { obj: obj, inedit: inedit }
 }
 
 org.sarsoft.WaypointObjectController.prototype.focus = function(obj) {
@@ -2009,6 +2009,7 @@ org.sarsoft.WayObjectController = function(imap, type, background_load) {
 			h_details : function(data) { that.dlg.show(data.pc.obj, data.point) },
 			h_profile : function(data) { that.profile(data.pc.obj) },
 			h_drag : function(data) { that.edit(data.pc.obj) },
+			h_extend : function(data) { that.extend(data.pc.obj) },
 			h_save : function(data) { that.save(data.pc.obj) },
 			h_discard : function(data) { that.discard(data.pc.obj) },
 			h_del : function(data) { that.del(function() { that.dao.del(data.pc.obj.id) }) }
@@ -2017,12 +2018,12 @@ org.sarsoft.WayObjectController = function(imap, type, background_load) {
 
 org.sarsoft.WayObjectController.prototype = new org.sarsoft.MapObjectController();
 
-org.sarsoft.WayObjectController.prototype._contextMenuCheck = function(mapobj) {
+org.sarsoft.WayObjectController.prototype._contextMenuCheck = function(mapobj, data) {
 	var that = this;
 	if(mapobj == null) return {}
 	var obj = that.dao.getObj(that.getObjectIdFromWay(mapobj));
 	var inedit = (obj != null && that.attr(obj, "inedit"));
-	return { obj: obj, inedit: inedit}
+	return { obj: obj, inedit: inedit }
 }
 
 org.sarsoft.WayObjectController.prototype.getConfig = function(obj) {
@@ -2090,6 +2091,21 @@ org.sarsoft.WayObjectController.prototype.edit = function(obj) {
 		return;
 	}
 	this.imap.edit(obj[this.type.way].id);
+	this.attr(obj, "inedit", true);
+}
+
+org.sarsoft.WayObjectController.prototype.extend = function(obj) {
+	var that = this;
+	obj = this.obj(obj);
+	this.imap.extend(obj[this.type.way].id, function() {
+		var way = obj[that.type.way];
+		way.waypoints = that.imap.save(way.id);
+		that._saveWay(obj, way.waypoints, function(newobj) { obj[that.type.way] = newobj; that.show(obj); });
+		that.attr(obj, "inedit", false);
+	}, function() {
+		that.attr(obj, "inedit", false);
+	});
+	
 	this.attr(obj, "inedit", true);
 }
 

@@ -655,7 +655,11 @@ google.maps.Poly.prototype.setPath = function(path) {
 
 	google.maps.event.addListener(this.path, "insert_at", function(i) { 
 		var ll = google.maps.LatLng.toLonLat(that.path.getAt(i));
-		that.vertices[i] = new OpenLayers.Geometry.Point(ll.lon, ll.lat);
+		if(i == 0 && that.vertices.length > 0) {
+			that.vertices.unshift(new OpenLayers.Geometry.Point(ll.lon, ll.lat));
+		} else {
+			that.vertices[i] = new OpenLayers.Geometry.Point(ll.lon, ll.lat);
+		}
 		that.updateGeometry();
 	});
 	google.maps.event.addListener(this.path, "remove_at", function(i) {
