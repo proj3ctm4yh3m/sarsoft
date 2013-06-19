@@ -219,7 +219,7 @@ public class PlansController extends JSONBaseController {
 	public String bulkPDF(Model model, @RequestParam("ids") String idstr, @RequestParam(value="colorby", required=false) String colorby, HttpServletRequest request, HttpServletResponse response) {
 		if(pdfmaker == null) return error(model, "PDF generation not installed.  Contact info@caltopo.com for a PDF-enabled version.");
 		String[] ids = idstr.split(",");
-		PDFForm form = new PDFForm(request);
+		PDFForm form = new PDFForm(getParameterMap(request));
 		
 		List<StyledGeoObject[]> styled = new ArrayList<StyledGeoObject[]>();
 		Assignment[] assignments = new Assignment[ids.length];
