@@ -402,6 +402,7 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 	    		{text : "Profile", precheck: pc, applicable : this.cm.a_noedit, handler: this.cm.h_profile},
 	    		{text: "Modify \u2192", precheck: pc, applicable: that.cm.a_noedit, items:
 	    			[{text : "Drag Vertices", precheck: pc2, applicable : function(obj) { return obj.obj.way.waypoints.length <= 500 }, handler : this.cm.h_drag },
+	    			{text : "Extend", precheck: pc2, applicable : function(obj) { return !obj.obj.way.polygon }, handler : this.cm.h_extend},
 		    		{text : "Split Here", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.splitLineAt(data.pc.obj, that.imap.projection.fromContainerPixelToLatLng(data.point)); }},
 		    		{text : "Join Lines", precheck: pc2, applicable: function(obj) { return !obj.obj.way.polygon}, handler: function(data) { that.joinDlg.show(data.pc.obj); }}]},
 	    		{text : "Save Changes", precheck: pc, applicable : this.cm.a_editnodlg, handler: this.cm.h_save },
