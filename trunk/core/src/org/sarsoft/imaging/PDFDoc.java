@@ -7,14 +7,16 @@ public class PDFDoc {
 	private Datum datum;
 	private String[] layers;
 	private float[] opacity;
+	private int gridsize = 0;
 	private boolean[] grids;
 	private String mgrid;
 	
-	public PDFDoc(Datum datum, String[] layers, float[] opacity, boolean[] grids, String mgrid) {
+	public PDFDoc(Datum datum, String[] layers, float[] opacity, boolean[] grids, int gridsize, String mgrid) {
 		this.datum = datum;
 		this.layers = layers.clone();
 		this.opacity = opacity.clone();
 		this.grids = grids.clone();
+		this.gridsize = gridsize;
 		this.mgrid = mgrid;
 	}
 	
@@ -36,6 +38,10 @@ public class PDFDoc {
 	
 	public String getMGrid() {
 		return mgrid;
+	}
+	
+	public int getGridSize() {
+		return gridsize;
 	}
 	
 }

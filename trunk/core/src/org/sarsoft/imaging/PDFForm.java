@@ -15,6 +15,7 @@ public class PDFForm {
 	public float[] opacity;
 	public PDFSize[] sizes;
 	public boolean[] grids;
+	public int gridsize = 0;
 	public String mgrid;
 	public Datum datum;
 	public boolean show_labels = true;
@@ -47,6 +48,9 @@ public class PDFForm {
 		String p_grids = (String) parameters.get("grids");
 		grids = (p_grids == null ? new boolean[] { false, false} : new boolean[] { p_grids.indexOf("utm") >= 0 || p_grids.indexOf("usng") >= 0, p_grids.indexOf("dd") >= 0});
 		mgrid = (p_grids == null ? null : (p_grids.indexOf("utm") >= 0 ? "utm" : "usng"));
+		
+		String p_gridsize = (String) parameters.get("gridsize");
+		gridsize = (p_gridsize == null ? 0 : Integer.parseInt(p_gridsize));
 		
 		String p_cfg = (String) parameters.get("cfg");
 		if(p_cfg != null && p_cfg.length() > 0) {

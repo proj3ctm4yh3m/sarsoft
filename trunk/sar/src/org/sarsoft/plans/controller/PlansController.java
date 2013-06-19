@@ -290,7 +290,7 @@ public class PlansController extends JSONBaseController {
 		}
 		
 		try {
-			PDFDoc doc = new PDFDoc(form.datum, form.layers, form.opacity, form.grids, form.mgrid);
+			PDFDoc doc = new PDFDoc(form.datum, form.layers, form.opacity, form.grids, 0, form.mgrid);
 			if(form.sizes[0].bbox == null) {
 				PDFPage[] pages = new PDFPage[ids.length];
 				for(int i = 0; i < ids.length; i++) {
