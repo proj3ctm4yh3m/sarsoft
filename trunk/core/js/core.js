@@ -861,12 +861,13 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 		this.position = $('<select><option value="1">At Cursor</option><option value="2">At Center</option></select>').appendTo($('<div>Show Location </div>').appendTo(container)).change(function() {
 			var pic = imap.registered["org.sarsoft.PositionInfoControl"]; if(pic) pic.setValue(Number(that.position.val()));
 		}).val(org.sarsoft.touch ? 2 : 1);
-		this.grid_format = $('<select><option value="UTM">UTM</option><option value="USNG">USNG</option></select>').appendTo($('<div>In </div>').appendTo(container)).change(function() {
+		var div = $('<div>In </div>').appendTo(container);
+		this.grid_format = $('<select><option value="UTM">UTM</option><option value="USNG">USNG</option></select>').appendTo(div).change(function() {
 			org.sarsoft.EnhancedGMap._grid = that.grid_format.val();
 			if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
 			if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
 		});
-		this.coord_format = $('<select><option value="DD">Decimal Degrees</option><option value="DMH">Degrees Minutes</option><option value="DMS">Deg Min Sec</option></select>').appendTo($('<div>And </div>').appendTo(container)).change(function() {
+		this.coord_format = $('<select><option value="DD">Degrees</option><option value="DMH">Deg Min</option><option value="DMS">Deg Min Sec</option></select>').appendTo(div.append('+')).change(function() {
 			org.sarsoft.EnhancedGMap._coordinates = that.coord_format.val();
 			if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
 			if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
