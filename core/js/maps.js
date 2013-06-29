@@ -2587,7 +2587,7 @@ org.sarsoft.MapURLHashWidget.parseConfigStr = function(hash, imap) {
 		var prop = props[i].split("=");
 		if(prop[0] == "center" || prop[0] == "ll") {
 			var latlng = prop[1].split(",");
-			map.setCenter(new google.maps.LatLng(latlng[0], latlng[1]));
+			imap.setCenter(new google.maps.LatLng(latlng[0], latlng[1]));
 		}
 		if((prop[0] == "zoom" || prop[0] == "z") && imap != null) imap.map.setZoom(1*prop[1]);
 		if(prop[0] == "base" || prop[0] == "b") config.base = decodeURIComponent(prop[1]);
