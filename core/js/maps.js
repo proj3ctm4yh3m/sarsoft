@@ -2,6 +2,29 @@ if(typeof org == "undefined") org = new Object();
 if(typeof org.sarsoft == "undefined") org.sarsoft = new Object();
 if(typeof org.sarsoft.controller == "undefined") org.sarsoft.controller = new Object();
 
+org.sarsoft.BrowserSettings = new Object();
+
+org.sarsoft.BrowserSettings.load = function() {
+	if(org.sarsoft.BrowserSettings._obj != null) return org.sarsoft.BrowserSettings._obj;
+	var obj = {}
+	if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
+		obj = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
+	}
+	org.sarsoft.BrowserSettings._obj = obj;
+	return obj;
+}
+
+org.sarsoft.BrowserSettings.get = function(name) {
+	if(org.sarsoft.BrowserSettings._obj == null) org.sarsoft.BrowserSettings.load();
+	return org.sarsoft.BrowserSettings._obj[name];
+}
+
+org.sarsoft.BrowserSettings.set = function(name, value) {
+	if(org.sarsoft.BrowserSettings._obj == null) org.sarsoft.BrowserSettings.load();
+	org.sarsoft.BrowserSettings._obj[name] = value;
+	YAHOO.util.Cookie.set("org.sarsoft.browsersettings", YAHOO.lang.JSON.stringify(org.sarsoft.BrowserSettings._obj), { path: "/"});
+}
+
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = new Object();
 org.sarsoft.EnhancedGMap._coordinates = "DD";
 org.sarsoft.EnhancedGMap._grid = "UTM";
@@ -691,7 +714,13 @@ org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
 org.sarsoft.UTMGridControl = function(imap) {
 	var that = this;
 	this._showUTM = false;
-	this.style = {major : 0.8, minor : 0.4, crosshatch : 100, latlng : "DD", scale : false}
+	this.style = {major : 0.8, crosshatch : 100}
+	
+	var config = org.sarsoft.BrowserSettings.get('utmgrid');
+	if(config != null) {
+		this.style.major = Number(config.major);
+		this._showUTM = config.show;
+	}
 
 	this.utmgridlines = new Array();
 	this.text = new Array();
@@ -707,8 +736,7 @@ org.sarsoft.UTMGridControl = function(imap) {
 		this.slider = org.sarsoft.view.CreateSlider($('<div style="float: left"></div>').appendTo(line), 50);
 		this.slider.subscribe('slideEnd', function() {
 			that.style.major = that.slider.getValue()/50;
-			that.style.minor = that.style.major*0.5;
-			that._drawUTMGrid(true);
+			that.setValue(that._showUTM);
 		});
 		$('<div style="clear: both"></div>').appendTo(div);
 		
@@ -730,7 +758,9 @@ org.sarsoft.UTMGridControl = function(imap) {
 					for(var i = 0; i < 4; i++) that.borders[i].clear();
 				});
 				that.utminitialized=true;
+				that._inSliderSet = true;
 				that.slider.setValue(that.style.major*50);
+				that._inSliderSet = false;
 			}
 		}
 	
@@ -757,31 +787,9 @@ org.sarsoft.UTMGridControl.prototype.hidePrintBorder = function() {
 
 org.sarsoft.UTMGridControl.prototype.setValue = function(value) {
 	this._showUTM = value;
+	org.sarsoft.BrowserSettings.set('utmgrid', { major : this.style.major, show: this._showUTM });
 	this._drawUTMGrid(true);
 	this.cb[0].checked = this._showUTM;
-}
-
-org.sarsoft.UTMGridControl.prototype.setConfig = function(config) {
-	if(config.UTMGridControl == null) return;
-	this.setValue(config.UTMGridControl.showUTM);
-	if(config.UTMGridControl.major != null) {
-		this.style.major = config.UTMGridControl.major;
-		this.slider.setValue(this.style.major*50);
-	}
-	this.style.crosshatch = 100;
-	if(config.UTMGridControl.minor != null) {
-		this.style.minor = config.UTMGridControl.minor;
-	}
-	this._drawUTMGrid(true);
-}
-
-org.sarsoft.UTMGridControl.prototype.getConfig = function(config) {
-	if(config.UTMGridControl == null) config.UTMGridControl = new Object();
-	config.UTMGridControl.showUTM = this._showUTM;
-	config.UTMGridControl.major = this.style.major;
-	config.UTMGridControl.minor = this.style.minor;
-	config.UTMGridControl.crosshatch = this.style.crosshatch;
-	return config;
 }
 
 org.sarsoft.UTMGridControl.prototype._drawUTMGrid = function(force) {
@@ -1016,7 +1024,7 @@ org.sarsoft.UTMGridControl.prototype._drawGridLine = function(start_utm, end_utm
 	vertices.push(start_ll);
 	vertices.push(end_ll);
 	
-	var overlay = new google.maps.Polyline({map: this.map, path: vertices, strokeColor: "#0000FF", strokeOpacity: 1, strokeWeight: primary ? this.style.major : this.style.minor});
+	var overlay = new google.maps.Polyline({map: this.map, path: vertices, strokeColor: "#0000FF", strokeOpacity: 1, strokeWeight: primary ? this.style.major : this.style.major * 0.5});
 	this.utmgridlines.push(overlay);
 }
 
@@ -1227,12 +1235,10 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 		});
 		closer.append('<div style="float: right">X</div>').append('<div style="float: left">X</div>').append('<div style="text-align: center">Close</div>');
 	} else {
-		if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
-			var config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"))
-			if(config.datanavstate != null) {
-				this.state = config.datanavstate;
-				this.offset = config.datanavoffset || this.offset;
-			}
+		var config = org.sarsoft.BrowserSettings.load();
+		if(config.datanavstate != null) {
+			this.state = config.datanavstate;
+			this.offset = config.datanavoffset || this.offset;
 		}
 
 		this.dragbar = jQuery('<div style="visibility: hidden; top: 0; left: 0; position: absolute; z-index: 2000; height: 100%; width: 8px; background-color: black; opacity: 0.4; filter: alpha(opacity=40)"></div>').appendTo(this.imap.container.top);
@@ -1271,10 +1277,8 @@ org.sarsoft.DataNavigatorToggleControl = function(imap) {
 
 org.sarsoft.DataNavigatorToggleControl.prototype.setCookie = function() {
 	if(this.mobile) return;
-	var config = (YAHOO.util.Cookie.exists("org.sarsoft.browsersettings") ? YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings")) : {});
-	config.datanavstate = this.state;
-	config.datanavoffset = this.offset;
-	YAHOO.util.Cookie.set("org.sarsoft.browsersettings", YAHOO.lang.JSON.stringify(config));
+	org.sarsoft.BrowserSettings.set('datanavstate', this.state);
+	org.sarsoft.BrowserSettings.set('datanavoffset', this.offset);
 }
 
 org.sarsoft.DataNavigatorToggleControl.prototype.showDataNavigator = function(skipCookie) {
@@ -1409,6 +1413,8 @@ org.sarsoft.MapLabelWidget = function(imap) {
 	var that = this;
 	this.imap = imap;
 	this.label = "backlit";
+	var val = org.sarsoft.BrowserSettings.get('maplabel');
+	if(val != null) this.label = val;
 	var div = $('<div title="Applies to labeled map objects like markers and shapes">Show Labels</div>').appendTo(imap.controls.settings);
 	this.cb1 = $('<input type="checkbox"/>').prependTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
 	this.cb2 = $('<input type="checkbox"/>').appendTo(div).change(function() { that.readCBs(); that.handleConfigChange() });
@@ -1436,19 +1442,7 @@ org.sarsoft.MapLabelWidget.prototype.handleConfigChange = function() {
 	YAHOO.util.Dom.removeClass(container, "maplabelbacklit");
 	YAHOO.util.Dom.removeClass(container, "maplabelhidden");
 	YAHOO.util.Dom.addClass(container, "maplabel" + this.label);
-}
-
-org.sarsoft.MapLabelWidget.prototype.setConfig = function(config) {
-	if(config.MapLabelWidget == null) return;
-	this.label = config.MapLabelWidget.label;
-	this.writeCBs();
-	this.handleConfigChange();
-}
-
-org.sarsoft.MapLabelWidget.prototype.getConfig = function(config) {
-	if(config.MapLabelWidget == null) config.MapLabelWidget = new Object();
-	config.MapLabelWidget.label = this.label;
-	return config;
+	org.sarsoft.BrowserSettings.set('maplabel', this.label);
 }
 
 org.sarsoft.MapFindWidget = function(imap) {
@@ -1952,11 +1946,9 @@ org.sarsoft.InteractiveMap.prototype.click = function(evt, obj) {
 	}
 }
 
-org.sarsoft.InteractiveMap.prototype.loadBrowserSettings = function(config) {
-	if(config == null && YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
-		config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
-	}
-	if(config != null) this.map.setOptions({scrollwheel: config.scrollwheelzoom, scaleControl: config.scalebar});
+org.sarsoft.InteractiveMap.prototype.loadBrowserSettings = function() {
+	var config = org.sarsoft.BrowserSettings.load();
+	if(config.scrollwheelzoom != null || config.scalebar != null) this.map.setOptions({scrollwheel: config.scrollwheelzoom, scaleControl: config.scalebar});
 }
 
 org.sarsoft.InteractiveMap.prototype.updateDatum = function() {
@@ -2515,21 +2507,23 @@ org.sarsoft.MapURLHashWidget = function(imap, readonce) {
 	this.ignorehash = false;
 	this.lasthash = "";
 	this.track = !org.sarsoft.mobile;
+	var val = org.sarsoft.BrowserSettings.get('urlhashupdate');
+	if(val != null) this.track = val;
 	
 	if(!readonce) {
 		imap.register("org.sarsoft.MapURLHashWidget", this);
 		if(!org.sarsoft.mobile) {
 			this.cb = $('<input type="checkbox"/>').prependTo($('<div title="The page URL will update to reflect the map center and layers, but not unsaved data.">Update URL on Map Move</div>').appendTo(imap.controls.settings)).change(function() {
 				that.track = that.cb[0].checked;
+				org.sarsoft.BrowserSettings.set('urlhashupdate', that.track);
 				if(!that.track) {
 					window.location.hash="";
 				} else {
 					that.saveMap();
 				}
-			})
+			});
 			this.cb[0].checked = this.track;
 		}
-
 	}
 
 	org.sarsoft.async(function() {
@@ -2629,18 +2623,6 @@ org.sarsoft.MapURLHashWidget.prototype.checkhashupdate = function() {
 	if(this.lasthash != window.location.hash) {
 		this.loadMap();
 	}
-}
-
-org.sarsoft.MapURLHashWidget.prototype.setConfig = function(config) {
-	if(config.MapURLHashWidget == null) return;
-	this.track = config.MapURLHashWidget.track;
-	if(this.cb != null) this.cb[0].checked = this.track
-}
-
-org.sarsoft.MapURLHashWidget.prototype.getConfig = function(config) {
-	if(config.MapURLHashWidget == null) config.MapURLHashWidget = new Object();
-	config.MapURLHashWidget.track = this.track;
-	return config;
 }
 
 org.sarsoft.MapInfoControl = function(map) {

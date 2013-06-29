@@ -852,32 +852,39 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 		}
 		var container = imap.controls.settings_browser;
 		this.sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(container)).change(function() {
-			imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
+			var val = that.sb[0].checked;
+			imap.map.setOptions({ scaleControl: val });
+			org.sarsoft.BrowserSettings.set('scalebar', val);
 		});
 		this.swz = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;" title="Use your mouse\'s scroll wheel to zoom in and out.">Enable Scroll Wheel Zoom</div>').appendTo(container)).change(function() {
-			imap.loadBrowserSettings({ scrollwheelzoom: that.swz[0].checked, scalebar: that.sb[0].checked});
+			var val = that.swz[0].checked;
+			imap.map.setOptions({ scrollwheel: val });
+			org.sarsoft.BrowserSettings.set('scrollwheelzoom', val);
 		});
 		
 		this.position = $('<select><option value="1">At Cursor</option><option value="2">At Center</option></select>').appendTo($('<div>Show Location </div>').appendTo(container)).change(function() {
-			var pic = imap.registered["org.sarsoft.PositionInfoControl"]; if(pic) pic.setValue(Number(that.position.val()));
+			var val = Number(that.position.val());
+			var pic = imap.registered["org.sarsoft.PositionInfoControl"];
+			if(pic) pic.setValue(val);
+			org.sarsoft.BrowserSettings.set('position', val);
 		}).val(org.sarsoft.touch ? 2 : 1);
 		var div = $('<div>In </div>').appendTo(container);
 		this.grid_format = $('<select><option value="UTM">UTM</option><option value="USNG">USNG</option></select>').appendTo(div).change(function() {
-			org.sarsoft.EnhancedGMap._grid = that.grid_format.val();
+			var val = that.grid_format.val();
+			org.sarsoft.EnhancedGMap._grid = val;
+			org.sarsoft.BrowserSettings.set('grid', val);
 			if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
 			if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
 		});
 		this.coord_format = $('<select><option value="DD">Degrees</option><option value="DMH">Deg Min</option><option value="DMS">Deg Min Sec</option></select>').appendTo(div.append('+')).change(function() {
-			org.sarsoft.EnhancedGMap._coordinates = that.coord_format.val();
+			var val = that.coord_format.val();
+			org.sarsoft.EnhancedGMap._coordinates = val;
+			org.sarsoft.BrowserSettings.set('coordinates', val);
 			if(imap.registered["org.sarsoft.UTMGridControl"] != null) imap.registered["org.sarsoft.UTMGridControl"]._drawUTMGrid(true);
 			if(imap.registered["org.sarsoft.PositionInfoControl"] != null) imap.registered["org.sarsoft.PositionInfoControl"].update(imap.map.getCenter());
 		});
-		
-		var config = {}
-		if(YAHOO.util.Cookie.exists("org.sarsoft.browsersettings")) {
-			config = YAHOO.lang.JSON.parse(YAHOO.util.Cookie.get("org.sarsoft.browsersettings"));
-		}
-		
+
+		var config = org.sarsoft.BrowserSettings.load();
 		this.swz[0].checked = (config.scrollwheelzoom == false ? false : true);
 		this.sb[0].checked = config.scalebar;
 		if(config.position != null) {
@@ -901,11 +908,11 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 
 org.sarsoft.view.BaseConfigWidget.prototype.saveBrowserSettings = function() {
 	if(this.sb != null)  {
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scalebar", this.sb[0].checked);
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "scrollwheelzoom", this.swz[0].checked);
-		if(imap.registered["org.sarsoft.PositionInfoControl"] != null) org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "position", imap.registered["org.sarsoft.PositionInfoControl"].value);
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "coordinates", org.sarsoft.EnhancedGMap._coordinates);
-		org.sarsoft.setCookieProperty("org.sarsoft.browsersettings", "grid", org.sarsoft.EnhancedGMap._grid);
+		org.sarsoft.BrowserSettings.set('scalebar', this.sb[0].checked);
+		org.sarsoft.BrowserSettings.set('scrollwheelzoom', this.swz[0].checked);
+		if(imap.registered["org.sarsoft.PositionInfoControl"] != null) org.sarsoft.BrowserSettings.set('position', imap.registered["org.sarsoft.PositionInfoControl"].value);
+		org.sarsoft.BrowserSettings.set('coordinates', org.sarsoft.EnhancedGMap._coordinates);
+		org.sarsoft.BrowserSettings.set('grid', org.sarsoft.EnhancedGMap._grid);
 	}
 }
 
