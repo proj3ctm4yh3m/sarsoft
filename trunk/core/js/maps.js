@@ -25,6 +25,14 @@ org.sarsoft.BrowserSettings.set = function(name, value) {
 	YAHOO.util.Cookie.set("org.sarsoft.browsersettings", YAHOO.lang.JSON.stringify(org.sarsoft.BrowserSettings._obj), { path: "/"});
 }
 
+if(org.sarsoft.BrowserSettings.get('datum') != null) {
+	var datum = org.sarsoft.BrowserSettings.get('datum');
+	if(datum != null) {
+		sarsoft.map.datum = datum;
+		GeoUtil.datum = org.sarsoft.map.datums[sarsoft.map.datum];
+	}
+}
+
 if(typeof org.sarsoft.EnhancedGMap == "undefined") org.sarsoft.EnhancedGMap = new Object();
 org.sarsoft.EnhancedGMap._coordinates = "DD";
 org.sarsoft.EnhancedGMap._grid = "UTM";
@@ -698,17 +706,7 @@ org.sarsoft.MapDatumWidget.prototype.setDatum = function(datum) {
 	GeoUtil.datum = org.sarsoft.map.datums[sarsoft.map.datum];
 	this.datumDisplay.html(datum + '.');
 	this.imap.updateDatum();
-}
-
-org.sarsoft.MapDatumWidget.prototype.setConfig = function(config) {
-	if(config.MapDatumWidget == null) return;
-	this.setDatum(config.MapDatumWidget.datum);
-}
-
-org.sarsoft.MapDatumWidget.prototype.getConfig = function(config) {
-	if(config.MapDatumWidget == null) config.MapDatumWidget = new Object();
-	config.MapDatumWidget.datum = sarsoft.map.datum;
-	return config;
+	org.sarsoft.BrowserSettings.set('datum', datum);
 }
 
 org.sarsoft.UTMGridControl = function(imap) {
