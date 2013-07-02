@@ -93,14 +93,21 @@ public class ImageryController extends JSONBaseController {
 			}
 			MapSource source = RuntimeProperties.getMapSourceByAlias(layer);
 			
-			for(int dx = 0; dx < 4; dx++) {
-				for(int dy = 0; dy < 4; dy++) {
-					try {
-						BufferedImage tile = tileservice.getTile(source, cfg, z+2, x*4+dx, y*4+dy);
-						graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
-						graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
-					} catch (Exception e) {
-						// don't write missing or corrupted tiles
+			if(source.getType() == MapSource.Type.WMS) {
+				double[] bounds = WebMercator.TileLatLngBounds(x, WebMercator.GoogleY(y, z), z);
+				BufferedImage tile = tileservice.getWMS(source, bounds, 1024, true);
+				graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
+				graphics.drawImage(tile, 0, 0, 1024, 1024, 0, 0, 1024, 1024, null);
+			} else {
+				for(int dx = 0; dx < 4; dx++) {
+					for(int dy = 0; dy < 4; dy++) {
+						try {
+							BufferedImage tile = tileservice.getTile(source, cfg, z+2, x*4+dx, y*4+dy);
+							graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
+							graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
+						} catch (Exception e) {
+							// don't write missing or corrupted tiles
+						}
 					}
 				}
 			}
