@@ -2762,6 +2762,7 @@ org.sarsoft.widget.MapLayers = function(imap) {
 			}
 			imap.map._overlaycontrol.resetMapTypes(true);
 			layerpane.hide();
+			YAHOO.util.Cookie.set("org.sarsoft.mapLayers", org.sarsoft.MapState.getLayers().join(","));
 		}
 		ok1.click(okhandler);
 		ok2.click(okhandler);

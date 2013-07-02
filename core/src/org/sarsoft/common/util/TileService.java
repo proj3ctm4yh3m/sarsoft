@@ -74,6 +74,11 @@ public class TileService {
 		return getTile(source, cfg, z, x, y, true);
 	}
 	
+	public BufferedImage getWMS(MapSource source, double[] bounds, int size, boolean cache) {
+	    String url = source.getTemplate().replaceAll("\\{left\\}", Double.toString(bounds[1])).replaceAll("\\{bottom\\}", Double.toString(bounds[0])).replaceAll("\\{right\\}", Double.toString(bounds[3])).replaceAll("\\{top\\}", Double.toString(bounds[2])).replaceAll("\\{tilesize\\}", Integer.toString(size));
+	    return getImage(url, cache);
+	}
+	
 	public BufferedImage getTile(MapSource source, String cfg, int z, int x, int y, boolean cache) {
 		if(z > source.getMaxresolution()) {
 			int dz = z - source.getMaxresolution();
@@ -84,8 +89,15 @@ public class TileService {
 			return zoom(img, dz, dx, dy);
 		}
 		
-		String url = source.getTemplate().replaceAll("\\{Z\\}", Integer.toString(z)).replaceAll("\\{X\\}", Integer.toString(x)).replaceAll("\\{Y\\}", Integer.toString(y)).replaceAll("\\{V\\}", cfg);
-		return getImage(url, cache);
+		if(source.getType() == MapSource.Type.TILE) {
+			String url = source.getTemplate().replaceAll("\\{Z\\}", Integer.toString(z)).replaceAll("\\{X\\}", Integer.toString(x)).replaceAll("\\{Y\\}", Integer.toString(y)).replaceAll("\\{V\\}", cfg);
+			return getImage(url, cache);
+		} else if(source.getType() == MapSource.Type.WMS) {
+			double[] bounds = WebMercator.TileLatLngBounds(x, WebMercator.GoogleY(y, z), z);
+			return getWMS(source, bounds, 256, cache);
+		}
+		
+		return null;
 	}
 	
 	public BufferedImage getImage(String url) {

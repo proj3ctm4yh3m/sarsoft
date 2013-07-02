@@ -946,7 +946,13 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 			config[key] = overrides[key];
 		}
 		org.sarsoft.MapState.setConfig(that.imap, config);
-		if(state.MapLayers != null) org.sarsoft.MapState.setLayers(that.imap, state.MapLayers, (sarsoft.tenant ? (sarsoft.tenant.cfgUpdated || 0) : 0) / (1000*60*60*24));
+		if(YAHOO.util.Cookie.exists("org.sarsoft.mapLayers")) {
+			var date = YAHOO.util.Cookie.exists("org.sarsoft.updated") ? Math.round(YAHOO.util.Cookie.get("org.sarsoft.updated", Number)/(1000*60*60*24)) : 0;
+			org.sarsoft.MapState.setLayers(that.imap, YAHOO.util.Cookie.get("org.sarsoft.mapLayers").split(","), date);
+			var config = imap.getConfig();
+			imap.map._overlaycontrol.resetMapTypes();
+			imap.setConfig(config);
+		}
 	})
 }
 
@@ -967,7 +973,6 @@ org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function(handler) {
 		YAHOO.util.Cookie.set("org.sarsoft.mapCenter", YAHOO.lang.JSON.stringify({center: {lat: center.lat(), lng: center.lng()}, zoom: zoom}));
 	}
 
-	YAHOO.util.Cookie.set("org.sarsoft.mapLayers", org.sarsoft.MapState.getLayers().join(","));
 	YAHOO.util.Cookie.set("org.sarsoft.updated", new Date().getTime());
 	if(handler != null) handler();
 }
@@ -1459,7 +1464,14 @@ org.sarsoft.MapState.setLayers = function(imap, layers, date) {
 			}
 		}
 	}
-	imap.map._overlaycontrol.resetMapTypes(true);
+	if(imap != null) imap.map._overlaycontrol.resetMapTypes(true);
+}
+
+org.sarsoft.MapState.setLayersFromBrowserSettings = function() {
+	if(YAHOO.util.Cookie.exists("org.sarsoft.mapLayers")) {
+		var date = YAHOO.util.Cookie.exists("org.sarsoft.updated") ? Math.round(YAHOO.util.Cookie.get("org.sarsoft.updated", Number)/(1000*60*60*24)) : 0;
+		org.sarsoft.MapState.setLayers(null, YAHOO.util.Cookie.get("org.sarsoft.mapLayers").split(","), date);
+	}
 }
 
 org.sarsoft.MapObjectDAO = function(type) {
