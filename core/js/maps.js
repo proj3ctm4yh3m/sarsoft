@@ -532,6 +532,20 @@ org.sarsoft.MapOverlayControl.prototype.setConfig = function(config) {
 	this.updateMap(config.base, config.layers, config.opacity, config.alphas);
 }
 
+org.sarsoft.MapOverlayControl.ConfigEquals = function(c1, c2) {
+	if(c1 == null || c2 == null) return false;
+	if(c1.base != c2.base) return false;
+	if(c1.layers.length != c2.layers.length) return false;
+	for(var i = 0; i < c1.layers.length; i++) if(c1.layers[i] != c2.layers[i]) return false;
+	for(var i = 0; i < c1.opacity.length; i++) if(c1.opacity[i] != c2.opacity[i]) return false;
+	if(c1.alphas != null || c2.alphas != null) {
+		if(c1.alphas == null || c2.alphas == null) return false;
+		if(c1.alphas.length != c2.alphas.length) return false;
+		for(var i = 0; i < c1.alphas.length; i++) if(c1.alphas[i] != c2.alphas[i]) return false;
+	}
+	return true;
+}
+
 
 org.sarsoft.MapOverlayControl.prototype.updateMap = function(base, layers, opacity, alphas) {
 	layers = (layers || []);
@@ -2763,6 +2777,7 @@ org.sarsoft.widget.MapLayers = function(imap) {
 			imap.map._overlaycontrol.resetMapTypes(true);
 			layerpane.hide();
 			YAHOO.util.Cookie.set("org.sarsoft.mapLayers", org.sarsoft.MapState.getLayers().join(","));
+			YAHOO.util.Cookie.set("org.sarsoft.updated", new Date().getTime());
 		}
 		ok1.click(okhandler);
 		ok2.click(okhandler);

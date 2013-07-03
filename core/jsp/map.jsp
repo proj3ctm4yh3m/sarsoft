@@ -27,7 +27,12 @@ org.sarsoft.Loader.queue(function() {
 		});
 
 	page.imap.dn.tenant.addClose("Close Unsaved Map", function() {
-		window.location.hash = "";
+		var draft = page.imap.controls.action.draftmode;
+		if(draft) {
+			window.location.hash = org.sarsoft.MapURLHashWidget.createConfigStr(page.imap);
+		} else {
+			window.location.hash = "ll=" + sarsoft.map.default_lat + "," + sarsoft.map.default_lng + "&z=" + sarsoft.map.default_zoom + "&b=" + sarsoft.map.layers_visible[0];
+		}
 		window.location.reload();
 	});
 
