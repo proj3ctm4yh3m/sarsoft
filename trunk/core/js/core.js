@@ -755,7 +755,6 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 		imap.controls.settings_browser.css('display', 'block');
 	}));
 	imap.controls.settings_browser = $('<div style="display: none"></div>').appendTo(settings.body);
-	imap.controls.settings.save = settings.getTool().css({'display': 'none'}).html('<img src="' + $.img('save.png') + '" style="cursor: pointer; vertical-align: middle"/>Save').attr("title", 'Save These and Other Map Settings for Future Visits');
 	imap.controls.settings.less = $('<div style="padding-top: 5px; display: none"></div>').appendTo(settings.body).append($('<span style="color: #666666; cursor: pointer">Show Less</span>').click(function() {
 		imap.controls.settings.more.css('display', 'block');
 		imap.controls.settings.less.css('display', 'none');
@@ -820,7 +819,6 @@ org.sarsoft.OfflineDataNavigator = function(imap) {
 		imap.controls.settings_browser.css('display', 'block');
 	}));
 	imap.controls.settings_browser = $('<div style="display: none"></div>').appendTo(settings.body);
-	imap.controls.settings.save = settings.getTool().css({'display': 'none'}).html('<img src="' + $.img('save.png') + '" style="cursor: pointer; vertical-align: middle"/>Save').attr("title", 'Save These and Other Map Settings for Future Visits');
 	imap.controls.settings.less = $('<div style="padding-top: 5px; display: none"></div>').appendTo(settings.body).append($('<span style="color: #666666; cursor: pointer">Show Less</span>').click(function() {
 		imap.controls.settings.more.css('display', 'block');
 		imap.controls.settings.less.css('display', 'none');
@@ -843,13 +841,6 @@ org.sarsoft.view.BaseConfigWidget = function(imap, persist) {
 	var that = this;
 	if(imap != null) {
 		this.imap = imap;
-		if(persist) {
-			imap.controls.settings.save.css('display', 'block').click(function(evt) {
-				that.saveConfig(function() { alert('In addition to these settings, the following have been saved for the next time you come back:\n\n - Map Center and Zoom Level\n - Current and Available Layers\n - Datum\n');});
-				evt.stopPropagation();
-			});
-			
-		}
 		var container = imap.controls.settings_browser;
 		this.sb = jQuery('<input type="checkbox"/>').prependTo(jQuery('<div style="white-space: nowrap;">Show Scale Bar</div>').appendTo(container)).change(function() {
 			var val = that.sb[0].checked;
@@ -917,9 +908,21 @@ org.sarsoft.view.BaseConfigWidget.prototype.saveBrowserSettings = function() {
 }
 
 org.sarsoft.view.PersistedConfigWidget = function(imap, persist, saveCenter) {
+	var that = this;
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, persist);
 	this.dao = new org.sarsoft.CollaborativeMapDAO();
 	this.saveCenter = saveCenter;
+	if(persist) google.maps.event.addListener(imap.map, "idle", function() {
+		var cfg = imap.getConfig();
+		if(!that._lastcfg) {
+			that._lastcfg = cfg;
+		} else {
+			if(!org.sarsoft.MapOverlayControl.ConfigEquals(that._lastcfg, cfg)) {
+				that._lastcfg = cfg;
+				that.saveConfig();
+			}
+		}
+	});
 }
 
 org.sarsoft.view.PersistedConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
@@ -957,8 +960,17 @@ org.sarsoft.view.PersistedConfigWidget.prototype.loadConfig = function(overrides
 }
 
 org.sarsoft.view.CookieConfigWidget = function(imap, persist, saveCenter) {
+	var that = this;
+	this._idled = false;
 	org.sarsoft.view.BaseConfigWidget.call(this, imap, true, "Save map settings for future page loads?");
 	this.saveCenter = saveCenter;
+	if(persist) google.maps.event.addListener(imap.map, "idle", function() {
+		if(!that._idled) {
+			that._idled = true;
+		} else {
+			that.saveConfig();
+		}
+	});
 }
 
 org.sarsoft.view.CookieConfigWidget.prototype = new org.sarsoft.view.BaseConfigWidget();
@@ -973,7 +985,6 @@ org.sarsoft.view.CookieConfigWidget.prototype.saveConfig = function(handler) {
 		YAHOO.util.Cookie.set("org.sarsoft.mapCenter", YAHOO.lang.JSON.stringify({center: {lat: center.lat(), lng: center.lng()}, zoom: zoom}));
 	}
 
-	YAHOO.util.Cookie.set("org.sarsoft.updated", new Date().getTime());
 	if(handler != null) handler();
 }
 
