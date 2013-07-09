@@ -416,6 +416,7 @@ org.sarsoft.widget.Maps = function(imap, container) {
 		if(cached != null) {
 			div.append('  You currently have ' + cached.layers.split(",").length + ' layers saved.');
 		}
+		$('<div style="height: 2em"></div>').appendTo(bn);
 	}
 }
 

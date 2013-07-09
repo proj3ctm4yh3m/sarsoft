@@ -23,7 +23,6 @@ public class MapSource {
 	private int minresolution;
 	private int maxresolution;
 	private int opacity;
-	private boolean png;
 	private boolean alphaOverlay;
 	private boolean data;
 	private String template;
@@ -73,13 +72,6 @@ public class MapSource {
 	}
 	public void setOpacity(int opacity) {
 		this.opacity = opacity;
-	}
-	@JSONSerializable
-	public boolean isPng() {
-		return png;
-	}
-	public void setPng(boolean png) {
-		this.png = png;
 	}
 	@JSONSerializable
 	public boolean isAlphaOverlay() {
