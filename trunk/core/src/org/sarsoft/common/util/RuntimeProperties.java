@@ -99,6 +99,58 @@ public class RuntimeProperties {
 					logger.error("Error with map layer " + name, e);
 				}
 			}
+			File dir = new File(getProperty("sarsoft.map.localTileStore"));
+			if(dir.exists()) {
+				String[] layers = dir.list();
+				for(String layer : layers) {
+					boolean match = false;
+					String template = "/resource/imagery/local/" + layer + "/{Z}/{X}/{Y}.png";
+					for(MapSource source : mapSources) {
+						if(source.getAlias().equals(layer) || template.equals(source.getTemplate())) match = true;
+					}
+					if(!match) {
+						System.out.println("Auto detecting local layer " + layer + " . . .");
+						MapSource source = new MapSource();
+						source.setName(layer);
+						source.setAlias(layer);
+						source.setTemplate(template);
+						source.setType(MapSource.Type.TILE);
+						source.setDescription(layer);
+						File ldir = new File(getProperty("sarsoft.map.localTileStore") + "/" + layer);
+						String[] levels = ldir.list();
+						int max = 0;
+						int min = 32;
+						for(String level : levels) {
+							try {
+								int i = Integer.parseInt(level);
+								max = Math.max(max, i);
+								min = Math.min(min, i);
+							} catch (Exception e) {
+							}
+						}
+						source.setMaxresolution(max);
+						source.setMinresolution(min);
+						source.setDate(32000);
+						Properties lprops = new Properties();
+						try {
+							lprops.load(new FileInputStream(getProperty("sarsoft.map.localTileStore") + "/" + layer + "/layer.properties"));
+							source.setAlphaOverlay(Boolean.valueOf(lprops.getProperty("alphaOverlay")));
+							source.setData(Boolean.valueOf(lprops.getProperty("data")));
+							source.setInfo(lprops.getProperty("info"));
+							if(source.isAlphaOverlay()) {
+								int opacity = 100;
+								String opacitystr = lprops.getProperty("opacity");
+								if(opacitystr != null) opacity = Integer.parseInt(opacitystr);
+								source.setOpacity(opacity);
+							}
+							String name = lprops.getProperty("name");
+							if(name != null && name.length() > 0) source.setName(name);
+						} catch (Exception e) {
+						}
+						mapSources.add(source);
+					}
+				}
+			}
 			mapSources = Collections.unmodifiableList(mapSources);
 			mapSourcesByName = new HashMap<String, MapSource>();
 			mapSourcesByAlias = new HashMap<String, MapSource>();
