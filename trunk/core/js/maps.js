@@ -2441,6 +2441,7 @@ org.sarsoft.InteractiveMap.prototype.setCenter = function(center, zoom) {
 }
 
 org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
+	var that = this;
 	if(this._boundsInitialized) return;
 	if(typeof this._boundsInitialized == "undefined") {
 		this._boundsInitialized = false;
@@ -2450,6 +2451,8 @@ org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
 	} else {
 		this._bounds.extend(gll);
 		this.map.fitBounds(this._bounds);
+		if(this._boundsTimer != null) window.cancelTimeout(this._boundsTimer);
+		this._boundsTimer = window.setTimeout(function() { that.map.setZoom(Math.min(15, that.map.getZoom())) }, 100);
 	}
 }
 
