@@ -58,6 +58,7 @@ public class ServerInfo {
 	private Map getAttrMap() {
 		if(common == null) synchronized(this) {
 			common = new HashMap<String, Object>();
+			common.put("hosted", isHosted());
 			common.put("server", RuntimeProperties.getServerUrl());
 			common.put("version", getProperty("sarsoft.version"));
 			common.put("imgprefix", getProperty("sarsoft.images.url"));
@@ -92,6 +93,13 @@ public class ServerInfo {
 
 		if(RuntimeProperties.getTenant() != null) m.put("tenant", dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant()));
 		if(RuntimeProperties.getUsername() != null) m.put("account", dao.getByPk(UserAccount.class, RuntimeProperties.getUsername()));
+		if(!isHosted()) {
+			Map account = new HashMap<String, String>();
+			account.put("alias", "Offline User");
+			account.put("email", "N/A");
+			account.put("handle", "Offline User");
+			m.put("account", account);
+		}
 		m.put("permission", RuntimeProperties.getUserPermission());
 		
 		return m;

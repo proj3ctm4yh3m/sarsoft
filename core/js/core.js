@@ -97,14 +97,14 @@ org.sarsoft.SaveAsDialog = function(imap, offline) {
 
 	this.body.append('<div style="clear: both"></div>');
 
-	if(sarsoft.account == null) {
+	if(sarsoft.account == null && sarsoft.hosted) {
 		this.cb[0].attr("disabled", "disabled");
 		this.div[0].css('color', 'gray');
 		this.cb[1][0].checked=true;
 		this.div[0].append('In order to save editable maps to your Google or Yahoo account, please sign in:');
 		new org.sarsoft.widget.Login(imap, this.div[0]);
 	} else {
-		this.div[0].append('Save an editable map to your ' + sarsoft.account.email + ' account.');
+		this.div[0].append('Save an editable map to your ' + (sarsoft.account != null ? sarsoft.account.email : '') + ' account.');
 		this.cb[0][0].checked=true;
 	}
 	
@@ -718,7 +718,7 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 
 	this.account = this.addHeader(sarsoft.account == null ? "Not Signed In" : (sarsoft.account.alias ? sarsoft.account.alias : sarsoft.account.email), "account.png");
 	this.account.block.css('margin-bottom', '5px');
-	if(sarsoft.account != null) {
+	if(sarsoft.account != null || sarsoft.hosted) {
 	    new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
 	    new org.sarsoft.widget.Maps(imap, this.account.body);
 	} else {
@@ -1358,8 +1358,10 @@ org.sarsoft.view.MapObjectEntityDialog = function(imap, title, entityform, contr
 	this.controller = controller;
 	
 	org.sarsoft.view.MapEntityDialog.call(this, imap, title, entityform, function(obj) { that.ok(obj) }, "OK");
+	this.notice = $('<div style="padding-bottom: 1em; color: black; display: none; padding-left: 2px"></div>').prependTo(this.body);
 	
 	this.dialog.dialog.hideEvent.subscribe(function() {
+		that.notice.css('display', 'none');
 		if(that.hasGeoInfo) that.discardGeoInfo();
 		if(that.live) that.live = false;
 	});
@@ -1395,6 +1397,11 @@ org.sarsoft.view.MapObjectEntityDialog.prototype.show = function(obj, point, has
 	this.object = obj;
 	this.point = point;
 	this.hasGeoInfo = hasGeoInfo;
+	if(obj.create) {
+		if(this.notice.create) this.notice.html(this.notice.create).css('display', 'block');
+	} else {
+		if(this.notice.update) this.notice.html(this.notice.update).css('display', 'block');
+	}
 	org.sarsoft.view.MapEntityDialog.prototype.show.call(this, obj);
 }
 

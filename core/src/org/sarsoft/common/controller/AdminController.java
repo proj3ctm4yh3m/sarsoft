@@ -71,7 +71,9 @@ public class AdminController extends JSONBaseController {
 
 		Permission permission = Permission.NONE;
 		UserAccount account = dao.getByAttr(UserAccount.class, "name", RuntimeProperties.getUsername());
-		if(tenant.getAccount() == null) {
+		if(!this.server.isHosted()) {
+			permission = Permission.ADMIN;
+		} else if(tenant.getAccount() == null) {
 			permission = Permission.READ;
 		} else {
 			if(account != null && account.getAdmin() != null && account.getAdmin()) permission = Permission.ADMIN;
