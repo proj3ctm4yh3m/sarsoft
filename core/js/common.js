@@ -969,7 +969,7 @@ org.sarsoft.view.CreateDialog = function(title, bodynode, yes, no, handler, styl
 }
 
 org.sarsoft.view.AlertDialog = function(title, bodynode, style) {
-	var dlgStyle = {width: "350px", position: "absolute", top: "100px", left: "100px", "z-index": "2500"};
+	var dlgStyle = {"min-width": "350px", position: "absolute", top: "100px", left: "100px", "z-index": "2500"};
 	if(style != null) for(var key in style) {
 		dlgStyle[key] = style[key];
 	}
@@ -983,10 +983,49 @@ org.sarsoft.view.AlertDialog = function(title, bodynode, style) {
 	
 	var dialog = null;
 	var buttons = [{ text : "OK", handler: function() { dialog.hide(); }, isDefault: true}];
-	dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons});
+	dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons, draggable: true, constraintoviewport: true});
 	dialog.render(document.body);
 	dialog.hide();
 	return dialog;
+}
+
+org.sarsoft.ColorPicker = function(container, handler) {
+	var that = this;
+	var dlg = $('<div style="z-index: 2500"><div class="hd">Choose a Color</div></div>');
+	var bd = $('<div class="bd"></div>').appendTo(dlg);
+	
+	var dialog = null;
+	var buttons = [{ text : "OK", handler: function() {
+		dialog.hide();
+		}, isDefault: true}];
+	dialog = new YAHOO.widget.Dialog(dlg[0], {buttons: buttons, draggable: true, constraintoviewport: true});
+	dialog.renderEvent.subscribe(function() {
+		dlg.parent().css('z-index', '2500');
+		if(!that.picker) {
+			that.picker = new YAHOO.widget.ColorPicker($('<div style="position: relative; min-width: 350px; min-height: 200px"></div>').appendTo(bd)[0], { showwebsafe: false, showhexcontrols: true, showhsvcontrols: false, images: {PICKER_THUMB: "/static/images/picker_thumb.png", HUE_THUMB: "static/images/hue_thumb.png"} });
+			that.picker.on("rgbChange", function(obj) {
+				that.link.css('background-color', '#' + that.getValue());
+				if(handler != null) handler();
+			});
+		}
+	});
+	
+	dialog.render(document.body);
+	dialog.hide();
+
+	this.link = $('<div style="width: 20px; height: 20px; display: inline-block; cursor: pointer"></div>').appendTo(container).click(function(evt) {
+		dialog.moveTo(evt.pageX-20, evt.pageY-300);
+		dialog.show();
+	});
+
+}
+
+org.sarsoft.ColorPicker.prototype.setValue = function(value) {
+	this.picker.set(this.picker.OPT.HEX, value);
+}
+
+org.sarsoft.ColorPicker.prototype.getValue = function() {
+	return this.picker.get(this.picker.OPT.HEX);
 }
 
 org.sarsoft.ToggleControl = function(label, tooltip, handler, states) {

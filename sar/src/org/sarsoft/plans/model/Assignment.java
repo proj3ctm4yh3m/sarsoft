@@ -427,4 +427,20 @@ public class Assignment extends GeoMapObject {
 		this.previousEfforts = previousEfforts;
 	}
 
+	@Transient
+	@JSONSerializable
+	public String getFormattedSize() {
+		if(segment.isPolygon()) {
+			double area = segment.getArea();
+			return area + " km&sup2; / " + (((double) Math.round(area*38.61))/100) + "mi&sup2;";
+		} else {
+			double distance = segment.getDistance();
+			return distance + " km / " + (((double) Math.round(distance*62.137))/100) + " mi";
+		}
+	}
+	
+	public void setFormattedSize(String size) {
+		// just here to make JSON-lib happy
+	}
+	
 }
