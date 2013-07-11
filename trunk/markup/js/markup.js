@@ -24,7 +24,7 @@ org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	
 	this.labelInput = $('<input name="label" type="text" size="15"/>').appendTo($('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left));
 
-	var div = $('<div class="item" style="padding-top: 10px">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(left);
+	var div = $('<div class="item" style="padding-top: 10px">Comments</span></div>').appendTo(left);
 	this.comments = $('<textarea rows="5" cols="50"></textarea>').appendTo(left);
 	this.specsDiv = $('<div class="item" style="padding-top: 10px"></div>').appendTo(left);
 	
@@ -103,11 +103,6 @@ org.sarsoft.view.MarkerForm.prototype.write = function(obj) {
 	this.imageInput.val((this.imageUrl != null && (this.imageUrl.indexOf("#")==0 || this.imageUrl.indexOf("http")==0)) ? this.imageUrl : "");
 
 	this.comments.val(obj.comments);
-	if(obj.lastUpdated != null) {
-		this.specsDiv.html("Last updated on " + new Date(1*obj.lastUpdated).toDateString());
-	} else {
-		this.specsDiv.html("");
-	}
 	this.handleChange();
 }
 
@@ -134,12 +129,13 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 	
 	if(org.sarsoft.writeable && !background_load) {
 		this.buildAddButton(0, "Marker", function(point) {
-			that.dlg.show({url: "#FF0000"}, point);
+			that.dlg.show({create: true, url: "#FF0000"}, point);
 		});
 	}
 
 	if(!org.sarsoft.iframe && !this.bgload) {
 		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker Details",  new org.sarsoft.view.MarkerForm(), this);
+		this.dlg.notice.create = "Marker will be placed at center of map";
 		this.dlg.create = function(marker) {
 			var wpt = that.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(this.point.x, this.point.y));
 			marker.position = {lat: wpt.lat(), lng: wpt.lng()};
@@ -163,7 +159,7 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 		
 		if(org.sarsoft.writeable) {
 			this.imap.addContextMenuItems([
-			    {text : "New Marker", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({url: "#FF0000"}, data.point); }},
+			    {text : "New Marker", applicable : this.cm.a_none, handler: function(data) { that.dlg.show({create: true, url: "#FF0000"}, data.point); }},
 	    		{text : "Details", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_details },
 	    		{text : "Drag to New Location", precheck: pc, applicable : that.cm.a_noedit, handler: that.cm.h_drag},
 	    		{text : "Add Range Ring", precheck: pc, applicable : that.cm.a_noedit, handler: function(data) { that.rrDlg.show(null, data.point); that.rrDlg.position = GeoUtil.wpt2gll(data.pc.obj.position) }},
@@ -293,7 +289,7 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j].substr(1)); that.colorInput.trigger('change');}}());
 	}	
 	
-	div = jQuery('<div class="item" style="clear: both">Comments <span class="hint" style="padding-left: 1ex">(not displayed on map)</span></div>').appendTo(right);
+	div = jQuery('<div class="item" style="clear: both">Comments</span></div>').appendTo(right);
 	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(right);
 
 	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(right);
@@ -311,11 +307,6 @@ org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
 	this.labelInput.val(obj.label);
 	this.comments.val(obj.comments);
 	if(obj.way != null) this.fillDiv.css("display", (obj.way.polygon ? "block" : "none"));
-	if(obj.formattedSize != null) {
-		this.specsDiv.html("Size is " + obj.formattedSize + "<br/>" + "Last updated on " + new Date(1*obj.lastUpdated).toDateString());
-	} else {
-		this.specsDiv.html("");
-	}
 }
 
 org.sarsoft.controller.ShapeController = function(imap, background_load) {
@@ -335,6 +326,8 @@ org.sarsoft.controller.ShapeController = function(imap, background_load) {
 	if(!org.sarsoft.iframe && !this.bgload) {
 	
 		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Shape Details", new org.sarsoft.view.ShapeForm(), this);
+		this.dlg.notice.create = "Click OK to begin drawing: ESC to undo, shift-click for continuous drawing, double click to end";
+		this.dlg.notice.update = "You can also extend, split and join lines.  Right-click on a line and choose Modify.";
 		
 		this.dlg.create = function(shape) {
 			shape.way = {polygon: this.object.way.polygon};

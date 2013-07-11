@@ -385,11 +385,12 @@ org.sarsoft.MapOverlayControl.prototype.handleLayerChange = function() {
 
 org.sarsoft.MapOverlayControl.prototype.addAlphaType = function(alias) {
 	var that = this;
+	var config = this.manager.getConfigFromAlias(alias);
+	if(config == null) return false;
 	if(sarsoft.map.layers_visible.indexOf(alias) < 0) sarsoft.map.layers_visible.push(alias);
 	var idx = this.alphaOverlayBoxes.length;
 	this.alphaOverlayTypes[idx] = alias;
 	if(idx > 0) this.aDiv.append(document.createElement("br"));
-	var config = this.manager.getConfigFromAlias(alias);
 	var name = config.name;
 	if(config.template.indexOf("{V}") > 0) {
 		for(var i = 0; i < sarsoft.map.layers_configured.length; i++) {
@@ -403,6 +404,7 @@ org.sarsoft.MapOverlayControl.prototype.addAlphaType = function(alias) {
 	
 	$(this.alphaOverlayBoxes[idx]).change(function() { that.handleLayerChange() });
 	this.hasAlphaOverlays = true;
+	return true;
 }
 
 org.sarsoft.MapOverlayControl.prototype.addBaseTypeIfNecessary = function(alias) {
@@ -508,7 +510,7 @@ org.sarsoft.MapOverlayControl.prototype.getConfig = function(config) {
 	if(ao.length > 0) {
 		for(var i = 0; i < ao.length; i++) {
 			var type = this.map.mapTypes.get(ao[i]);
-			if(type._cfgvalue != null) ao[i] = ao[i] + "_" + type._cfgvalue;
+			if(type != null && type._cfgvalue != null) ao[i] = ao[i] + "_" + type._cfgvalue;
 		}
 	}
 	config.alphas = (ao.length > 0 ? ao : null);
@@ -614,7 +616,13 @@ org.sarsoft.MapOverlayControl.prototype.updateMap = function(base, layers, opaci
 	}
 	
 	for(var i = 0; i < alphas.length; i++) {
-		if(this.alphaOverlayTypes.indexOf(alphas[i]) < 0) this.addAlphaType(alphas[i]);
+		if(this.alphaOverlayTypes.indexOf(alphas[i]) < 0) {
+			this.addAlphaType(alphas[i]);
+//			if(result == false) {
+//				alphas.splice(i, 1);
+//				i--;
+//			}
+		}
 	}
 
 	if(alphas != null) for(var i = 0; i < this.alphaOverlayTypes.length; i++) {
@@ -2451,7 +2459,7 @@ org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
 	} else {
 		this._bounds.extend(gll);
 		this.map.fitBounds(this._bounds);
-		if(this._boundsTimer != null) window.cancelTimeout(this._boundsTimer);
+		if(this._boundsTimer != null) window.clearTimeout(this._boundsTimer);
 		this._boundsTimer = window.setTimeout(function() { that.map.setZoom(Math.min(15, that.map.getZoom())) }, 100);
 	}
 }
