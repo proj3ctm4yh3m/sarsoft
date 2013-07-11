@@ -18,14 +18,14 @@ org.sarsoft.view.MarkerForm = function() {
 
 org.sarsoft.view.MarkerForm.prototype.create = function(container) {
 	var that = this;
-	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"><table style="border: 0"><tbody><tr></tr></tbody></table></form>').appendTo(container);
+	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"><table style="border: 0; width: 100%"><tbody><tr></tr></tbody></table></form>').appendTo(container);
 	var left = $('<td width="50%"></td>').appendTo(form.find('tr'));
 	var right = $('<td width="50%"></td>').appendTo(form.find('tr'));
 	
 	this.labelInput = $('<input name="label" type="text" size="15"/>').appendTo($('<div class="item"><label for="label" style="width: 80px">Label:</label></div>').appendTo(left));
 
 	var div = $('<div class="item" style="padding-top: 10px">Comments</span></div>').appendTo(left);
-	this.comments = $('<textarea rows="5" cols="50"></textarea>').appendTo(left);
+	this.comments = $('<textarea rows="5" style="width: 90%"></textarea>').appendTo(left);
 	this.specsDiv = $('<div class="item" style="padding-top: 10px"></div>').appendTo(left);
 	
 	div = $('<div class="item" style="min-height: 20px; vertical-align: bottom">Image:</div>').appendTo(right);
@@ -135,7 +135,6 @@ org.sarsoft.controller.MarkerController = function(imap, background_load) {
 
 	if(!org.sarsoft.iframe && !this.bgload) {
 		this.dlg = new org.sarsoft.view.MapObjectEntityDialog(imap, "Marker Details",  new org.sarsoft.view.MarkerForm(), this);
-		this.dlg.notice.create = "Marker will be placed at center of map";
 		this.dlg.create = function(marker) {
 			var wpt = that.imap.projection.fromContainerPixelToLatLng(new google.maps.Point(this.point.x, this.point.y));
 			marker.position = {lat: wpt.lat(), lng: wpt.lng()};
@@ -261,7 +260,7 @@ org.sarsoft.view.ShapeForm = function() {
 
 org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 	var that = this;
-	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"><table style="border: 0"><tbody><tr></tr></tbody></table></form>').appendTo(container);
+	var form = $('<form name="EntityForm_' + org.sarsoft.view.EntityForm._idx++ + '" className="EntityForm"><table style="border: 0; width: 95%"><tbody><tr></tr></tbody></table></form>').appendTo(container);
 	var left = $('<td width="50%"></td>').appendTo(form.find('tr'));
 	var right = $('<td width="50%"></td>').appendTo(form.find('tr'));
 	
@@ -277,31 +276,27 @@ org.sarsoft.view.ShapeForm.prototype.create = function(container) {
 			'<option value="100">Solid</option>/select>').appendTo(this.fillDiv);
 
 	div = jQuery('<div class="item"><label for="color" style="width: 80px">Color:</label></div>').appendTo(left);
-	var colorSwatch = jQuery('<div style="width: 20px; height: 20px; float: left"></div>').appendTo(div);
-	div.append('<span style="float: left; margin-left: 5px">Click below or color code:</span>');
-	this.colorInput = jQuery('<input name="color" type="text" size="6" style="float: left; margin-left: 5px"/>').appendTo(div);
-	this.colorInput.change(function() {colorSwatch.css('background-color', '#' + that.colorInput.val())});
+	this.picker = new org.sarsoft.ColorPicker($('<div style="float: left; margin-right: 10px"></div>').appendTo(div));
+	$('<div style="float: left; margin-right: 10px">or click:</div>').appendTo(div);
 	
-	var colorContainer = jQuery('<div style="clear: both; margin-top: 5px"></div>').appendTo(left);
-	var colors = ["#FFFFFF", "#C0C0C0", "#808080", "#000000", "#FF0000", "#800000", "#FF5500", "#FFAA00", "#FFFF00", "#808000", "#00FF00", "#008000", "#00FFFF", "#008080", "#0000FF", "#000080", "#FF00FF", "#800080"];
+	var colorContainer = jQuery('<div style="float: left"></div>').appendTo(div);
+	var colors = ["#000000", "#FF0000", "#FFAA00", "#FFFF00", "#00FF00", "#0000FF"];
 	for(var i = 0; i < colors.length; i++) {
-		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
-		swatch.click(function() { var j = i; return function() {that.colorInput.val(colors[j].substr(1)); that.colorInput.trigger('change');}}());
-	}	
+		var swatch = jQuery('<div style="width: 20px; height: 20px; float: left; cursor: pointer; background-color: ' + colors[i] + '"></div>').appendTo(colorContainer);
+		swatch.click(function() { var j = i; return function() {that.picker.setValue(colors[j].substr(1));}}());
+	}
 	
-	div = jQuery('<div class="item" style="clear: both">Comments</span></div>').appendTo(right);
-	this.comments = jQuery('<textarea rows="5" cols="50"></textarea>').appendTo(right);
-
-	this.specsDiv = jQuery('<div class="item" style="padding-top: 10px"></div>').appendTo(right);
+	this.comments = jQuery('<textarea rows="5" style="width: 100%"></textarea>').appendTo(right);
+	div = jQuery('<div class="item" style="float: right">Comments</span></div>').appendTo(right);
+	
 }
 
 org.sarsoft.view.ShapeForm.prototype.read = function() {
-	return {label : this.labelInput.val(), color : "#" + this.colorInput.val(), fill: Number(this.fillInput.val()), weight: Number(this.weightInput.val()), comments: this.comments.val()};
+	return {label : this.labelInput.val(), color : "#" + this.picker.getValue(), fill: Number(this.fillInput.val()), weight: Number(this.weightInput.val()), comments: this.comments.val()};
 }
 
 org.sarsoft.view.ShapeForm.prototype.write = function(obj) {
-	this.colorInput.val(obj.color != null ? obj.color.substr(1) : "");
-	this.colorInput.trigger('change');
+	this.picker.setValue(obj.color != null ? obj.color.substr(1) : "");
 	this.fillInput.val(obj.fill);
 	this.weightInput.val(obj.weight);
 	this.labelInput.val(obj.label);
@@ -554,7 +549,7 @@ org.sarsoft.controller.MapToolsController.prototype.pointdata = function(point) 
 			that.pointinfo.append('<span>' + Math.round(result[0].location.lat()*10000)/10000 + ', ' + Math.round(result[0].location.lng()*10000)/10000 + ': Elevation <b>' + Math.round(result[0].elevation*3.2808399) + '</b>\' Slope <b>' + result[0].slope + '</b>\u00B0 Aspect <b>' + result[0].aspect + '</b>\u00B0</span>');
 			that.pointDlg.show();
 		} else {
-			alert("An error occurred while retrieving profile data from CalTopo: " + status);
+			alert("An error occurred while retrieving profile data from " + sarsoft.version + ": " + status);
 		}
 	});
 }

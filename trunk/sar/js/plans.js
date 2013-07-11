@@ -120,9 +120,9 @@ org.sarsoft.OperationalPeriodController = function(imap, background_load) {
 			if(period.id == null) {
 				that.dao.create(period);
 			} else {
-				that.dao.dave(period.id, period);
+				that.dao.save(period.id, period);
 			}
-		});
+		}, "OK");
 	}
 }
 
@@ -191,9 +191,19 @@ org.sarsoft.AssignmentDAO = function() {
 
 org.sarsoft.AssignmentDAO.prototype = new org.sarsoft.WayObjectDAO();
 
-org.sarsoft.AssignmentDAO.prototype.validate = function(obj) {
-	obj = org.sarsoft.WayObjectDAO.prototype.validate.call(this, obj);
-	if(obj.segment.boundingBox == null) this.addBoundingBox(obj.segment);
+org.sarsoft.AssignmentDAO.prototype.validate = function(obj, override) {
+	obj = org.sarsoft.WayObjectDAO.prototype.validate.call(this, obj, override);
+
+	if(obj.formattedSize == null || override) {
+		if(obj.segment.polygon) {
+			var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(obj.segment.waypoints))/1000000;
+			obj.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
+		} else {
+			var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(obj.segment.waypoints))/1000;
+			obj.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
+		}
+	}
+	
 	return obj;
 }
 
@@ -523,7 +533,7 @@ org.sarsoft.AssignmentController.prototype.show = function(assignment) {
 	
 	this.attr(assignment, "clickable", config.active);
 	if(this.dn.visible && config.visible) {
-		this.imap.addWay(assignment.segment, {displayMessage: org.sarsoft.htmlescape(assignment.id) + " (" + assignment.type + ")", clickable : config.active, fill: config.fill, color: config.color, weight: config.weight}, org.sarsoft.htmlescape(assignment.number));
+		this.imap.addWay(assignment.segment, {displayMessage: org.sarsoft.htmlescape(assignment.number) + " " + assignment.resourceType + " (" + assignment.formattedSize + ")", clickable : config.active, fill: config.fill, color: config.color, weight: config.weight}, org.sarsoft.htmlescape(assignment.number));
 	}
 }
 

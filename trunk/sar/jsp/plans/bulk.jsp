@@ -111,7 +111,7 @@ function submitbulkupdate(finalize) {
 		for(var i = 0; i < data.length; i++) {
 			value = value + data[i].id + ",";
 		}
-		document.getElementById("bulkIds").value=value;
+		document.getElementById("ids").value=value;
 		if(finalize) document.getElementById("action").value="FINALIZE";
 		document.forms['assignment'].submit();
 	}

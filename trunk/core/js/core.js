@@ -718,7 +718,7 @@ org.sarsoft.StructuredDataNavigator = function(imap) {
 
 	this.account = this.addHeader(sarsoft.account == null ? "Not Signed In" : (sarsoft.account.alias ? sarsoft.account.alias : sarsoft.account.email), "account.png");
 	this.account.block.css('margin-bottom', '5px');
-	if(sarsoft.account != null || sarsoft.hosted) {
+	if(sarsoft.account != null) {
 	    new org.sarsoft.widget.Account(imap, this.account.body, this.account.header);
 	    new org.sarsoft.widget.Maps(imap, this.account.body);
 	} else {
@@ -2009,7 +2009,7 @@ org.sarsoft.WayObjectDAO.prototype.addBoundingBox = function(way) {
 }
 
 org.sarsoft.WayObjectDAO.prototype.validate = function(obj, override) {
-	if(obj.way.boundingBox == null || override) this.addBoundingBox(obj.way);
+	if(obj[this.wname].boundingBox == null || override) this.addBoundingBox(obj[this.wname]);
 	return org.sarsoft.MapObjectDAO.prototype.validate.call(this, obj);
 }
 
