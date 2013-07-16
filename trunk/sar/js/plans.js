@@ -102,7 +102,8 @@ org.sarsoft.OperationalPeriodController = function(imap, background_load) {
 	var that = this;
 	imap.register("org.sarsoft.OperationalPeriodController", this);
 	org.sarsoft.MapObjectController.call(this, imap, {name: "OperationalPeriod", dao: org.sarsoft.OperationalPeriodDAO, label: "Operational Periods"}, background_load);
-	this.dn.cb.css('display', 'none');	
+	this.dn.sortable = true;
+	this.dn.cb.css('display', 'none');
 	this.cb = new Array();
 	
 	this.childDlg = new org.sarsoft.OperationalPeriodChildDialog(imap, this);
@@ -153,6 +154,12 @@ org.sarsoft.OperationalPeriodController.prototype.getChildConfig = function(id) 
 	if(!this.cb[id]) return { active : true, visible: true }
 	var visible = this.cb[id][0].checked;
 	if(!visible) return { active : false, visible : false}
+	var found = false;
+	for(var i = 0; i < this.dn.sorted.length; i++) {
+		if(found && this.dn.sorted[i].find('input')[0].checked) return { active : false, visible : true }
+		if(this.dn.sorted[i] == this.dn.lines[id]) found = true;
+	}
+	return { active : true, visible : true}
 	for(var i = id + 1; i < this.cb.length; i++) {
 		if(this.cb[i] != null && this.cb[i][0].checked) return { active : false, visible : true }
 	}
@@ -254,8 +261,12 @@ org.sarsoft.AssignmentForm.prototype.write = function(obj) {
 	this.fields.operationalPeriodId.empty();
 	if(obj.operationalPeriodId == null) this.fields.operationalPeriodId.append('<option value="">N/A</option>');
 	var periods = org.sarsoft.MapState.daos["OperationalPeriod"].objs;
+	periods = periods.slice(0, periods.length).sort(function(a, b) {
+		if((a.description || "") == (b.description || "")) return 0;
+		return ((a.description || "") < (b.description || "")) ? -1 : 1;
+	});
 	for(var i = 0; i < periods.length; i++) {
-		if(periods[i] != null) this.fields.operationalPeriodId.append('<option value="' + i + '">' + periods[i].description + '</option>');
+		if(periods[i] != null) this.fields.operationalPeriodId.append('<option value="' + periods[i].id + '">' + periods[i].description + '</option>');
 	}
 	for(var key in this.fields) {
 		this.fields[key].val(obj[key]);
@@ -411,6 +422,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 	this.config = { show : "NA", color: "NA" }
 
 	org.sarsoft.WayObjectController.call(this, imap, {name: "Assignment", dao: org.sarsoft.AssignmentDAO, label: "Assignments", geo: true, way : "segment"}, background_load);
+	this.dn.sortable = true;
 
 	this.childDlg = new org.sarsoft.AssignmentChildDialog(imap, this);
 	
