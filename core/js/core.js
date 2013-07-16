@@ -1687,6 +1687,21 @@ org.sarsoft.MapObjectDN.prototype.setDNVisible = function(visible) {
 	this.tree.block.css('display', visible ? 'block' : 'none');
 }
 
+org.sarsoft.MapObjectDN.prototype.sort = function() {
+	var that = this;
+	this.sorted = [];
+	for(var key in this.lines) {
+		if(this.lines[key] != null) this.sorted.push(this.lines[key]);
+	}
+	this.sorted.sort(function(a, b) {
+		if((a.name || "") == (b.name || "")) return 0;
+		return ((a.name || "") < (b.name || "")) ? -1 : 1;
+	});
+	$.each(this.sorted, function(id, obj) {
+		that.div.append(obj);
+	});
+}
+
 org.sarsoft.MapObjectDN.prototype.add = function(id, name, fn) {
 	var that = this;
 
@@ -1702,12 +1717,14 @@ org.sarsoft.MapObjectDN.prototype.add = function(id, name, fn) {
 			this.lines[id].prependTo(this.div);
 		}
 	}
+	this.lines[id].name = name;
 	this.lines[id].html('<div class="dn-obj-left"></div><div class="dn-obj-right"></div>');
-	
+	if(this.sortable) this.sort();
+
 	return this.get(id, 0).click(function() {
 		if(org.sarsoft.mobile) that.imap.dn.hideDataNavigator();
 		fn();
-	}).append((name || "").length == 0 ? '<span style="color: #CCCCCC">N/A</span>' : org.sarsoft.htmlescape(name))
+	}).append((name || "").length == 0 ? '<span style="color: #CCCCCC">N/A</span>' : org.sarsoft.htmlescape(name));
 }
 
 org.sarsoft.MapObjectDN.prototype.get = function(id, child) {
