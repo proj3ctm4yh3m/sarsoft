@@ -63,6 +63,9 @@ public class RuntimeProperties {
 	public static List<MapSource> getMapSources() {
 		if(mapSources != null) return mapSources;
 		synchronized(RuntimeProperties.class) {
+			if(getProperty("garmin.key." + getServerName()) == null) {
+				System.out.println("No Garmin device key registered for hostname " + getServerName() + ".  Visit http://www8.garmin.com/products/communicator/ to get a device key.");
+			}
 			if(mapSources != null) return mapSources;
 			mapSources = new ArrayList<MapSource>();
 			String[] names = getProperty("sarsoft.map.backgrounds").split(",");
@@ -109,7 +112,7 @@ public class RuntimeProperties {
 						if(source.getAlias().equals(layer) || template.equals(source.getTemplate())) match = true;
 					}
 					if(!match) {
-						System.out.println("Auto detecting local layer " + layer + " . . .");
+						System.out.println("Local map layer \"" + layer + "\" not in sarsoft.properties, adding it automatically.");
 						MapSource source = new MapSource();
 						source.setName(layer);
 						source.setAlias(layer);
@@ -192,8 +195,11 @@ public class RuntimeProperties {
 					FileInputStream fis = new FileInputStream(sarsoftPropertyName);
 					properties.load(fis);
 					fis.close();
+				} else {
+					System.out.println("No properties file found at " + sarsoftPropertyName + ".  Resorting to default configuration.");
 				}
 				PropertyConfigurator.configure(properties);
+				
 			} catch (IOException e) {
 				Logger.getLogger(RuntimeProperties.class).error("IOException encountered reading from " + propertiesFileName + " or " + sarsoftPropertyName, e);
 			}
