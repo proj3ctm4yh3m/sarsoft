@@ -84,6 +84,7 @@
 		<jar destfile="runtime/sar.jar" update="true" basedir="build/jar" includes="*.war"/>
 		<jar destfile="runtime/sar.jar" update="true" basedir="winstone/build/classes" includes="**/*.class"/>
 		<jar destfile="runtime/sar.jar" update="true" manifest="winstone/config/MANIFEST.MF" basedir="winstone/config" includes="embedded.properties"/>
+		<jar destfile="runtime/sar.jar" update="true" basedir="winstone/config" includes="welcome.txt"/>
 	</target>
 
 </project>
