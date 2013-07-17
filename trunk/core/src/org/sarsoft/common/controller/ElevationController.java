@@ -58,12 +58,22 @@ public class ElevationController extends JSONBaseController {
 			int x = Math.max(Math.min(10800 - (int) Math.round(olng*10800), 10799), 0);
 			return img.getData(new Rectangle(x, y, 1, 1)).getSampleFloat(x, y, 0);
 		} catch (Exception e) {
-			// return 0 if unable to read elevation
+			try {
+				int[] tilexy = getTileXY(lat, -1*lng, 14);
+				int x = tilexy[0];
+				int y = tilexy[1];
+				int px_x = tilexy[2];
+				int px_y = tilexy[3];
+				BufferedImage elevation = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("elevation"), null, 14, x, y);
+				return elevation.getData().getSample(px_x, px_y, 0);
+			} catch (Exception e2) {
+			}
 		}
+		// return 0 if unable to read elevation
 		return 0F;
 	}
 	
-	private int[] getDEM(double lat, double lng, int z) {
+	private int[] getTileXY(double lat, double lng, int z) {
 		double[] meters = WebMercator.LatLngToMeters(lat, lng);
 		double[] pixels = WebMercator.MetersToPixels(meters[0], meters[1], z);
 		double[] t = WebMercator.PixelsToDecimalTile(pixels[0], pixels[1]);
@@ -74,9 +84,17 @@ public class ElevationController extends JSONBaseController {
 		
 		int x = (int) Math.floor(t[0]);
 		int y = (int) Math.floor(t[1]);
-				
-		double[] bounds = WebMercator.TileLatLngBounds(x, y, z);
 		
+		return new int[] { x, y, px_x, px_y };
+	}
+	
+	private int[] getDEM(double lat, double lng, int z) {
+		int[] tilexy = getTileXY(lat, lng, z);
+		int x = tilexy[0];
+		int y = tilexy[1];
+		int px_x = tilexy[2];
+		int px_y = tilexy[3];
+		    
 		BufferedImage elevation = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("elevation"), null, z, x, y);
 		BufferedImage slope = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("slope"), null, z, x, y);
 		BufferedImage aspect = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("aspect"), null, z, x, y);
