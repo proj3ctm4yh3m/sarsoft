@@ -84,7 +84,7 @@ org.sarsoft.EnhancedGMap.createMap = function(element, center, zoom) {
 		var config = sarsoft.map.layers[i];
 		if(config.type == "NATIVE") {
 			// default google layers are loaded asynchronously, not available yet
-			org.sarsoft.EnhancedGMap.nativeAliases[config.alias] = eval(config.template);
+			if(google.maps.Map.ol == null) org.sarsoft.EnhancedGMap.nativeAliases[config.alias] = eval(config.template);
 		} else {
 			var type = org.sarsoft.EnhancedGMap.createMapType(config, map);
 			map.mapTypes.set(config.alias, type);
