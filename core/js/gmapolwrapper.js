@@ -186,7 +186,7 @@ google.maps.Map = function(node, opts) {
 	this.overlayMapTypes = new google.maps.MVCArray();
 	this.currentMapType = null;
 
-	var dummy = new google.maps.ImageMapType({name: "dummy", maxZoom: 20, minZoom: 0, getTileUrl: function(p, z) { return "/resource/imagery/tiles/dummy/" + p.z + "/" + p.x + "/" + p.y + ".png"}});	
+	var dummy = new google.maps.ImageMapType({name: "dummy", maxZoom: 20, minZoom: 0, getTileUrl: function(p, z) { return "/static/images/blank.gif"}});	
 	this.mapTypes.set("dummy", dummy);
 	this.setMapTypeId("dummy");
 	
@@ -390,6 +390,7 @@ google.maps.Map.prototype.setMapTypeId = function(name) {
 		this.currentMapType = null;
 	}
 	// set map type before adding layers so that it's available to event listeners
+	if(this.mapTypes.registry[name] == null) return;
 	this.currentMapType = this.mapTypes.registry[name];
 	this.currentMapType.ol.blayer.numZoomLevels = this.currentMapType.opts.maxZoom;
 	this.ol.map.addLayer(this.currentMapType.ol.blayer);
