@@ -13,7 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.sarsoft.common.model.GeoRef;
 import org.sarsoft.common.model.MapSource;
+import org.sarsoft.common.util.ImageMercator;
 import org.sarsoft.common.util.RuntimeProperties;
 import org.sarsoft.common.util.TileService;
 import org.sarsoft.common.util.WebMercator;
@@ -210,6 +212,42 @@ public class ImageryController extends JSONBaseController {
 		}
 		graphics.dispose();
 		image.flush();
+	}
+	
+	public BufferedImage projectGeoRef(GeoRef gr, BufferedImage src, double[] sw, double[] ne, int[] dest_size) {
+		int[] src_size = new int[] { src.getWidth(), src.getHeight() };
+		ImageMercator projection = new ImageMercator(dest_size, WebMercator.MetersToLatLng(sw[0], sw[1]), WebMercator.MetersToLatLng(ne[0], ne[1]));
+		double[] transform = gr.transform(src_size, projection);
+		
+		BufferedImage dest = new BufferedImage(dest_size[0], dest_size[1], BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = dest.createGraphics();
+		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		graphics.setBackground(new Color(255, 255, 255, 0));
+		graphics.clearRect(0, 0, dest_size[0], dest_size[1]);
+		
+		graphics.translate((int) transform[2], (int) transform[3]);
+		graphics.rotate(transform[0], (int) (src_size[0]*transform[1]/2), (int) (src_size[1]*transform[1]/2));
+		graphics.scale(transform[1], transform[1]);
+		
+		graphics.drawImage(src, 0, 0, src_size[0], src_size[1], null);
+		return dest;
+//		{ mapAngle - imageAngle, scale, px_nw[0], px_nw[1] };
+//		this.div.css({left: this.px_nw.x + "px", top: this.px_nw.y + "px", width: (this.size.w*scale) + "px", height: (this.size.h*scale) + "px"});
+	}
+	
+	@RequestMapping(value="/resource/imagery/georef/", method = RequestMethod.GET)
+	public void getGeoTile(HttpServletRequest request, HttpServletResponse response) {
+		GeoRef gr = new GeoRef();
+		gr.setUrl("http://mattj.net/mb.jpg");
+		gr.setLat1(37.31491);
+		gr.setLng1(-122.18716);
+		gr.setLat2(37.32473);
+		gr.setLng2(-122.16778);
+		gr.setX1(542);
+		gr.setY1(534);
+		gr.setX2(2461);
+		gr.setY2(2606);
 	}
 	
 }

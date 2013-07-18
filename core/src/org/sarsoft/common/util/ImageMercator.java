@@ -34,5 +34,13 @@ public class ImageMercator {
 		double my = m_sw[1] + (y/h)*(m_ne[1] - m_sw[1]);
 		return WebMercator.MetersToLatLng(mx, my);
 	}
+	
+	public int getWidth() {
+		return w;
+	}
+	
+	public int getHeight() {
+		return h;
+	}
 
 }
