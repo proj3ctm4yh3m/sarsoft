@@ -12,10 +12,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.MemoryCacheImageInputStream;
 
 import org.sarsoft.common.model.MapSource;
 
@@ -27,6 +30,7 @@ import net.sf.ehcache.Element;
 public class TileService {
 	
 	private String localTileStore = null;
+	int limit = 0;
 	
 	public TileService() {
 		this(null);
@@ -125,6 +129,7 @@ public class TileService {
 			return null;
 		}
 
+		int i = 0;
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
 			byte[] bytes = new byte[512];
@@ -132,6 +137,11 @@ public class TileService {
 				int len = stream.read(bytes);
 				if(len == -1) break;
 				out.write(bytes, 0, len);
+				i++;
+				if(i > 40960) {
+					tilecache.put(new Element(url, null));
+					return null;
+				}
 			}
 			stream.close();
 		} catch (IOException e) {
@@ -139,16 +149,37 @@ public class TileService {
 		}
 		 
 		byte[] data = out.toByteArray();
+		
+		
 		tilecache.put(new Element(url, data));
 		return streamToImage(new ByteArrayInputStream(data));
 	}
-
+	
 	private BufferedImage streamToImage(InputStream stream) {
+		if(limit == 0) limit = Integer.parseInt(RuntimeProperties.getProperty("sarsoft.image.limit"));
 		try {
-			return ImageIO.read(stream);
-		} catch (Exception e) {
-			return null;
+			MemoryCacheImageInputStream mis = new MemoryCacheImageInputStream(stream);
+			final Iterator readers = ImageIO.getImageReaders(mis);
+			if (readers.hasNext()) {
+				ImageReader reader = (ImageReader) readers.next();
+				try {
+					reader.setInput(mis);
+					if(reader.getWidth(0)*reader.getHeight(0) > limit) return null;
+					return reader.read(0);
+				} finally {
+					reader.dispose();
+				}
+			} else {
+				return ImageIO.read(stream);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+			stream.close();
+			} catch (IOException e2) {}
 		}
+		return null;
 	}
 
 	public BufferedImage zoom(BufferedImage original, int dz, int dx, int dy) {
