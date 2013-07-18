@@ -232,8 +232,6 @@ public class ImageryController extends JSONBaseController {
 		
 		graphics.drawImage(src, 0, 0, src_size[0], src_size[1], null);
 		return dest;
-//		{ mapAngle - imageAngle, scale, px_nw[0], px_nw[1] };
-//		this.div.css({left: this.px_nw.x + "px", top: this.px_nw.y + "px", width: (this.size.w*scale) + "px", height: (this.size.h*scale) + "px"});
 	}
 	
 	@RequestMapping(value="/resource/imagery/georef/", method = RequestMethod.GET)
