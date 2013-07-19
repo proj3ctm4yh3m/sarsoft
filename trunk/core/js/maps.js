@@ -2962,10 +2962,6 @@ org.sarsoft.GeoRefImageOverlay.prototype._calc = function() {
 	
 	this.div.css({"-webkit-transform": "rotate(" + this.angle + "deg)", "-moz-transform": "rotate(" + this.angle + "deg)", "-ms-transform": "rotate(" + this.angle + "deg)"});
 	
-	var s = Math.cos(this.ll1.lat());
-	var r = Math.sqrt(Math.pow(this.size.w/2 - this.p1.x, 2) + Math.pow(this.size.h/2 - this.p1.y, 2)) / Math.sqrt(Math.pow(this.p2.x - this.p1.x, 2) + Math.pow(this.p2.y - this.p1.y, 2));
-	var d = r*Math.sqrt(Math.pow(dLat, 2) + Math.pow(dLng, 2));
-
 	var x1 = this.p1.x - this.size.w/2;
 	var y1 = -1*(this.p1.y - this.size.h/2);
 	var x2 = this.p2.x - this.size.w/2;

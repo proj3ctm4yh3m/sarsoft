@@ -234,6 +234,11 @@ public class ImageryController extends JSONBaseController {
 		return dest;
 	}
 	
+	public BufferedImage projectGeoRefTile(GeoRef gr, BufferedImage src, int z, int x, int y) {
+		double[] bounds = WebMercator.TileBounds(x, WebMercator.GoogleY(y, z), z);
+		return projectGeoRef(gr, src, new double[] { bounds[0], bounds[1] }, new double[] { bounds[2], bounds[3] }, new int[] { 256, 256 });
+	}
+	
 	@RequestMapping(value="/resource/imagery/georef/", method = RequestMethod.GET)
 	public void getGeoTile(HttpServletRequest request, HttpServletResponse response) {
 		GeoRef gr = new GeoRef();
