@@ -2793,18 +2793,19 @@ org.sarsoft.view.ProfileGraph.prototype.profile = function(way, color, callback,
 	} else {
 		path = way;
 	}
+	var original = path;
 	if(path.length > 300) path = this.resample(path, 300);
 	this.service.getElevationAlongPath({path: path, samples: 200}, function(result, status) {
 		if(status == google.maps.ElevationStatus.OK) {
 			if(callback != null) callback();
-			that.draw(result, color, title);
+			that.draw(result, color, title, original);
 		} else {
 			alert("An error occurred while retrieving profile data from Google Maps: " + status);
 		}
 	});
 }
 
-org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color, title) {
+org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color, title, path) {
 	var that = this;
 	this.div.empty();
 	if(this.marker != null) this.marker.setMap(null);
@@ -2835,11 +2836,12 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color, title) {
 			}
 		}
 	}
+	path = path || glls;
 	
 	var xscale = width/(series.length-1);
 	var yscale = this.height/(max-min);
 	
-	var total_dist = (google.maps.geometry.spherical.computeLength(glls));
+	var total_dist = (google.maps.geometry.spherical.computeLength(path));
 	var exaggeration = (120/this.div.width())*total_dist/(max-min);
 	var info = jQuery('<div stype="height: 20px"></div>').appendTo(this.div);
 	if(!this.standalone) {
@@ -2894,7 +2896,7 @@ org.sarsoft.view.ProfileGraph.prototype.draw = function(series, color, title) {
 				svg = svg + '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x1 + '" y2="' + y2 + '" style="stroke:rgb(128,128,128);stroke-width:1" />';
 				svg = svg + '<line x1="' + x1 + '" y1="' + y2 + '" x2="' + x2 + '" y2="' + y2 + '" style="stroke:rgb(128,128,128);stroke-width:1" />';
 				de = Math.round(Math.abs(series[testpoint].elevation-series[startpoint].elevation));
-				dist = google.maps.geometry.spherical.computeLength(glls.slice(startpoint, testpoint));
+				dist = ((testpoint-startpoint)/(series.length-1))*total_dist;
 				dist = (Math.round(dist/160.934)/10);
 				if(y2 > y1) {
 					svg = svg + '<text style="text-anchor: middle; stroke:rgb(128,128,128); fill: rgb(128,128,128); stroke-width: 0.1" x="' + ((x1+x2)/2) + '" y="' + (y2-2) + '">' + dist + '\mi</text>';
