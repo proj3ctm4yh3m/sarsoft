@@ -17,5 +17,9 @@
 	<definition name="Pages.About" extends="App.Base">
 		<put-attribute name="content" value="/splash.jsp"/>
 	</definition>
+
+	<definition name="Pages.Content" extends="App.Base">
+		<put-attribute name="content" value="/usercontent.jsp"/>
+	</definition>
 	
 </tiles-definitions>
