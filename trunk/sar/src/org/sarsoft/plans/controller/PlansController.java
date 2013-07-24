@@ -294,7 +294,9 @@ public class PlansController extends JSONBaseController {
 			if(form.sizes[0].bbox == null) {
 				PDFPage[] pages = new PDFPage[ids.length];
 				for(int i = 0; i < ids.length; i++) {
-					pages[i] = pdfmaker.makePage(doc, assignments[i].getNumber(), styled.get(i), form.sizes[0].pageSize, 24000);
+					String title = assignments[i].getNumber();
+					if(title == null || title.length() == 0) title = "N/A";
+					pages[i] = pdfmaker.makePage(doc, title, styled.get(i), form.sizes[0].pageSize, 24000);
 				}
 				return pdf(model, pdfmaker.create(pages, false), response, null);
 			} else {
