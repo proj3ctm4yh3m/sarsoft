@@ -10,7 +10,8 @@
 </div>
 
 <div style="margin-top: 20px">
-<a href="javascript:submitbulkprint()">Print (Browser)</a><a style="margin-left: 20px" href="javascript:showbulkpdf();">Print (Auto PDF)</a><a style="margin-left: 20px" href="javascript:custompdf();">Print (Custom PDF)</a><a style="margin-left: 20px" href="javascript:showbulkupdate()">Update</a>
+<a href="javascript:submitbulkforms()">Print 104 Forms</a><a style="margin-left: 20px" href="javascript:submitbulkprint()">Print Maps (Browser)</a>
+<a style="margin-left: 20px" href="javascript:showbulkpdf();">Print Maps (Auto PDF)</a><a style="margin-left: 20px" href="javascript:custompdf();">Print Maps (Custom PDF)</a><a style="margin-left: 20px" href="javascript:showbulkupdate()">Update</a>
 </div>
 
 <div id="bulkpdf" style="display: none; margin-top: 20px">
@@ -128,6 +129,19 @@ function submitbulkprint() {
 		}
 		
 		window.location="/sar/maps/browser?ids=" + value;
+	}
+}
+
+function submitbulkforms() {
+	var data = datatable.getSelectedData();
+	if(data.length == 0) {
+		alert("Please select at least one assignment to print.");
+	} else {
+		var url = '/sar/104?ids=';
+		for(var i = 0; i < data.length; i++) {
+			url = url + data[i].id + ",";
+		}
+		window.open(url, '_blank');
 	}
 }
 
