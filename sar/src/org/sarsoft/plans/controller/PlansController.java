@@ -163,7 +163,7 @@ public class PlansController extends JSONBaseController {
 			PDDocument document = PDFAcroForm.create(context, pages);
 			return pdf(model, document, response, "sar135.pdf");
 		} catch (Exception e) {
-			return error(model, e.getMessage());
+			return error(model, e);
 		} finally {
 			PDFAcroForm.close(pages);
 		}
@@ -311,7 +311,7 @@ public class PlansController extends JSONBaseController {
 				return pdf(model, pdfmaker.create(pages, true), response, null);
 			}
 		} catch (Exception e) {
-			return error(model, e.getMessage());
+			return error(model, e);
 		}
 	}
 
