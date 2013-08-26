@@ -585,21 +585,17 @@ google.maps.LatLngBounds.prototype.intersects = function(other) {
 	var other_sw = GeoUtil.GLatLngToUTM(other.getSouthWest(), utm_sw.zone);
 	var other_ne = GeoUtil.GLatLngToUTM(other.getNorthEast(), utm_sw.zone);
 	
-	if(this.containsLatLng(other.getSouthWest()) || this.containsLatLng(other.getNorthEast())) return true;
-	if(other.containsLatLng(this.getSouthWest()) || other.containsLatLng(this.getNorthEast())) return true;
+	if(this.contains(other.getSouthWest()) || this.contains(other.getNorthEast())) return true;
+	if(other.contains(this.getSouthWest()) || other.contains(this.getNorthEast())) return true;
 
 	if(!((other_ne.n <= utm_ne.n && other_ne.n >= utm_sw.s) || (other_sw.s <= utm_ne.n && other_sw.s >= utm_sw.s))) intersects = false;
 	if(!((other_ne.e >= utm_ne.e && other_ne.e <= utm_sw.w) || (other_sw.w >= utm_ne.e && other_sw.w <= utm_sw.w))) intersects = false;
 	
 }
 
-google.maps.LatLngBounds.prototype.containsLatLng = function(latlng) {
+google.maps.LatLngBounds.prototype.contains = function(latlng) {
 	return ((this._sw.lat() < latlng.lat() && latlng.lat() < this._ne.lat()) &&
 	   (this._sw.lng() < latlng.lng() && latlng.lng() < this._ne.lng()));
-}
-
-google.maps.LatLngBounds.prototype.containsBounds = function(other) {
-	return (this.containsLatLng(other.getSouthWest()) && this.containsLatLng(other.getNorthEast()));
 }
 
 google.maps.LatLngBounds.prototype.extend = function(gll) {
