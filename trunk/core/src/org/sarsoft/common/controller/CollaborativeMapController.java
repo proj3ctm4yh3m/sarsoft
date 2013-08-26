@@ -1,5 +1,7 @@
 package org.sarsoft.common.controller;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -102,6 +104,11 @@ public class CollaborativeMapController extends JSONBaseController {
 		if(tenant == null) tenant = dao.getByAttr(Tenant.class, "name", RuntimeProperties.getTenant());
 		String filename = (tenant.getDescription() != null && tenant.getDescription().length() > 0) ? tenant.getDescription() : tenant.getName();
 		filename = filename.replaceAll(" ", "_");
+		try {
+			filename = URLEncoder.encode(filename, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			System.out.println("UnsupportedEncodingException while trying to URLEncode export filename.  This should never, ever happen as Java explicity advises you to use UTF-8.");
+		}
 		switch (format) {
 		case JSON:
 			return json(model, manager.toJSON(manager.fromDB()));
