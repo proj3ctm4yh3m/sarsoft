@@ -342,7 +342,7 @@ google.maps.Map = function(node, opts) {
 	});
 	google.maps.event.addListener(this.overlayMapTypes, "insert_at", function(i) { 
 		var type = that.overlayMapTypes.getAt(i);
-		that.ol.map.addLayer(type.ol.olayer);
+		if(type != null) that.ol.map.addLayer(type.ol.olayer);
         that.ol.map.setLayerIndex(that.ol.vectorLayer, 20);
         that.ol.map.setLayerIndex(that.ol.markerLayer, 21);
     });
@@ -385,12 +385,12 @@ google.maps.Map.prototype.getBounds = function() {
 }
 
 google.maps.Map.prototype.setMapTypeId = function(name) {
+	if(this.mapTypes.registry[name] == null) return;
 	if(this.currentMapType != null) {
 		this.ol.map.removeLayer(this.currentMapType.ol.blayer);
 		this.currentMapType = null;
 	}
 	// set map type before adding layers so that it's available to event listeners
-	if(this.mapTypes.registry[name] == null) return;
 	this.currentMapType = this.mapTypes.registry[name];
 	this.currentMapType.ol.blayer.numZoomLevels = this.currentMapType.opts.maxZoom;
 	this.ol.map.addLayer(this.currentMapType.ol.blayer);
