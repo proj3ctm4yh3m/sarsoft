@@ -107,9 +107,9 @@ public class RuntimeProperties {
 				String[] layers = dir.list();
 				for(String layer : layers) {
 					boolean match = false;
-					String template = "/resource/imagery/local/" + layer + "/{Z}/{X}/{Y}.png";
+					String template = "/resource/imagery/local/" + layer + "/{Z}/{X}/{Y}";
 					for(MapSource source : mapSources) {
-						if(source.getAlias().equals(layer) || template.equals(source.getTemplate())) match = true;
+						if(source.getAlias().equals(layer) || (source.getTemplate() != null && source.getTemplate().startsWith(template))) match = true;
 					}
 					if(!match) {
 						System.out.println("Local map layer \"" + layer + "\" not in sarsoft.properties, adding it automatically.");

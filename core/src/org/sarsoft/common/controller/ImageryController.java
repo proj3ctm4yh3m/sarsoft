@@ -77,7 +77,7 @@ public class ImageryController extends JSONBaseController {
 		}
 	}
 	
-	public BufferedImage superTile(String[] layers, float[] opacity, int z, int x, int y) {
+	public BufferedImage superTile(Object[] sources, String[] cfg, float[] opacity, int z, int x, int y) {
 		BufferedImage image = new BufferedImage(1024, 1024, BufferedImage.TYPE_3BYTE_BGR);
 		Graphics2D graphics = image.createGraphics();
 		graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -85,30 +85,29 @@ public class ImageryController extends JSONBaseController {
 		graphics.setBackground(new Color(255, 255, 255, 0));
 		graphics.clearRect(0, 0, 1024, 1024);		
 
-		for(int i = 0; i < layers.length; i++) {
-			String layer = layers[i];
-			String cfg = "";
-			
-			if(layer.indexOf("_") > 0) {
-				cfg = layer.split("_")[1];
-				layer = layer.split("_")[0];
-			}
-			MapSource source = RuntimeProperties.getMapSourceByAlias(layer);
-			
-			if(source.getType() == MapSource.Type.WMS) {
-				double[] bounds = WebMercator.TileLatLngBounds(x, WebMercator.GoogleY(y, z), z);
-				BufferedImage tile = tileservice.getWMS(source, bounds, 1024, true);
-				graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
-				graphics.drawImage(tile, 0, 0, 1024, 1024, 0, 0, 1024, 1024, null);
-			} else {
+		for(int i = 0; i < sources.length; i++) {
+			if(sources[i] instanceof MapSource) {
+				MapSource source = (MapSource) sources[i];
 				for(int dx = 0; dx < 4; dx++) {
 					for(int dy = 0; dy < 4; dy++) {
 						try {
-							BufferedImage tile = tileservice.getTile(source, cfg, z+2, x*4+dx, y*4+dy);
+							BufferedImage tile = tileservice.getTile(source, cfg[i], z+2, x*4+dx, y*4+dy);
 							graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, source.isAlphaOverlay() ? opacity[i] * source.getOpacity() / 100 : opacity[i])); 
 							graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
 						} catch (Exception e) {
 							// don't write missing or corrupted tiles
+						}
+					}
+				}
+			} else if(sources[i] instanceof GeoRef) {
+				for(int dx = 0; dx < 4; dx++) {
+					for(int dy = 0; dy < 4; dy++) {
+						GeoRef gr = (GeoRef) sources[i];
+						BufferedImage src = tileservice.getImage(gr.getUrl(), true);
+						if(src != null) {
+							BufferedImage tile = projectGeoRefTile(gr, src, z+2, x*4+dx, y*4+dy);
+							graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity[i]));
+							graphics.drawImage(tile, 256*dx, 256*dy, 256*(dx+1), 256*(dy+1), 0, 0, 255, 255, null);
 						}
 					}
 				}
@@ -133,11 +132,11 @@ public class ImageryController extends JSONBaseController {
 		}
 	}
 	
-	@RequestMapping(value="/resource/imagery/local/{alias}/{z}/{x}/{y}.png", method = RequestMethod.GET)
-	public void getLocalTile(HttpServletResponse response, @PathVariable("alias") String alias, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-		respond(tileservice.getImage("/resource/imagery/tiles/" + alias + "/" + z + "/" + x + "/" + y + ".png", false), response);
+	@RequestMapping(value="/resource/imagery/local/{alias}/{z}/{x}/{y}.{ext}", method = RequestMethod.GET)
+	public void getLocalTile(HttpServletResponse response, @PathVariable("alias") String alias, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y, @PathVariable("ext") String ext) {
+		respond(tileservice.getImage("/resource/imagery/tiles/" + alias + "/" + z + "/" + x + "/" + y + "." + ext, false), response);
 	}
-	
+
 	@RequestMapping(value="/resource/imagery/compositetile/{layers}/{z}/{x}/{y}.png", method = RequestMethod.GET)
 	public void getCompositeTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layers") String layer, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
 		String[] layers = layer.split(",");
@@ -167,25 +166,6 @@ public class ImageryController extends JSONBaseController {
 		respond(tileservice.composite(images, opacity, 256, 256), response);
 	}
 	
-    @RequestMapping(value="/resource/imagery/supertile/{layer}/{z}/{x}/{y}", method = RequestMethod.GET)
-    public void getSuperTile(HttpServletResponse response, HttpServletRequest request, @PathVariable("layer") String layerNames, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y) {
-    	String[] layers = layerNames.split(",");
-    	float[] opacity = new float[layers.length];
-    	
-    	for(int i = 0; i < layers.length; i++) {
-    		int idx = layers[i].indexOf("@");
-    		if(idx > 0) {
-    			opacity[i] = Float.parseFloat(layers[i].substring(idx+1))/100;
-    			layers[i] = layers[i].substring(0, idx);
-    		} else {
-    			opacity[i] = 1f;
-    		}
-    		String layer = layers[i];
-    	}
-
-		respond(superTile(layers, opacity, z, x, y), response);
-    }
- 
 	@RequestMapping(value="/resource/imagery/icons/circle/{rgb}.png", method = RequestMethod.GET)
 	public void getCircle(HttpServletResponse response, @PathVariable("rgb") String rgb) {
 		response.setContentType("image/png");
@@ -237,20 +217,6 @@ public class ImageryController extends JSONBaseController {
 	public BufferedImage projectGeoRefTile(GeoRef gr, BufferedImage src, int z, int x, int y) {
 		double[] bounds = WebMercator.TileBounds(x, WebMercator.GoogleY(y, z), z);
 		return projectGeoRef(gr, src, new double[] { bounds[0], bounds[1] }, new double[] { bounds[2], bounds[3] }, new int[] { 256, 256 });
-	}
-	
-	@RequestMapping(value="/resource/imagery/georef/", method = RequestMethod.GET)
-	public void getGeoTile(HttpServletRequest request, HttpServletResponse response) {
-		GeoRef gr = new GeoRef();
-		gr.setUrl("http://mattj.net/mb.jpg");
-		gr.setLat1(37.31491);
-		gr.setLng1(-122.18716);
-		gr.setLat2(37.32473);
-		gr.setLng2(-122.16778);
-		gr.setX1(542);
-		gr.setY1(534);
-		gr.setX2(2461);
-		gr.setY2(2606);
 	}
 	
 }
