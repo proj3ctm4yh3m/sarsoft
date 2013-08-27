@@ -1346,7 +1346,7 @@ org.sarsoft.view.MapSizeForm.prototype._getMarginRule = function() {
 		var sheet = document.styleSheets[i];
 		var rules = sheet.cssRules;
 		if(rules == null) rules = sheet.rules;
-		for(var j = 0; j < rules.length; j++) {
+		if(rules != null) for(var j = 0; j < rules.length; j++) {
 			if(rules[j].cssText != null && rules[j].cssText.indexOf("@page") >= 0 && rules[j].cssText.indexOf("margin") >= 0) return rules[j];
 		}
 	}
