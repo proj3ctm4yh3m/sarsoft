@@ -67,6 +67,10 @@ public class ServerInfo {
 			common.put("garmin_hostname", "http://" + RuntimeProperties.getServerName());
 			common.put("garmin_devicekey", this.getProperty("garmin.key." + RuntimeProperties.getServerName()));
 			if(constants.size() > 0) common.put("constants", constants);
+			common.put("pdf_sizes", getProperty("sarsoft.pdf.sizes"));
+			common.put("pdf_scales", getProperty("sarsoft.pdf.scales"));
+			common.put("view_layers", getProperty("sarsoft.view.layers"));
+			common.put("view_altitudes", getProperty("sarsoft.view.altitudes"));
 			
 			Map map = new HashMap();
 			common.put("map", map);
@@ -85,7 +89,7 @@ public class ServerInfo {
 			map.put("layers_visible", RuntimeProperties.getVisibleMapSources());
 			map.put("datum", "WGS84");
 			map.put("icons", Icon.byname);
-			
+						
 		}
 		
 		Map<String, Object> m = new HashMap<String, Object>();
