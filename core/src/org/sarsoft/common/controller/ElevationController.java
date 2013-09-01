@@ -58,16 +58,17 @@ public class ElevationController extends JSONBaseController {
 			int x = Math.max(Math.min(10800 - (int) Math.round(olng*10800), 10799), 0);
 			return img.getData(new Rectangle(x, y, 1, 1)).getSampleFloat(x, y, 0);
 		} catch (Exception e) {
-			try {
-				int[] tilexy = getTileXY(lat, -1*lng, 14);
-				int x = tilexy[0];
-				int y = tilexy[1];
-				int px_x = tilexy[2];
-				int px_y = tilexy[3];
-				BufferedImage elevation = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("elevation"), null, 14, x, y);
-				return elevation.getData().getSample(px_x, px_y, 0);
-			} catch (Exception e2) {
-			}
+		} catch (NoClassDefFoundError e) {
+		}
+		try {
+			int[] tilexy = getTileXY(lat, -1*lng, 14);
+			int x = tilexy[0];
+			int y = tilexy[1];
+			int px_x = tilexy[2];
+			int px_y = tilexy[3];
+			BufferedImage elevation = imageryController.tileservice.getTile(RuntimeProperties.getMapSourceByAlias("elevation"), null, 14, x, y);
+			return elevation.getData().getSample(px_x, px_y, 0);
+		} catch (Exception e) {
 		}
 		// return 0 if unable to read elevation
 		return 0F;
