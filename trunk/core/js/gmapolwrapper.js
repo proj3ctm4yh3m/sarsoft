@@ -524,7 +524,7 @@ google.maps.MapCanvasProjection = function(map) {
 }
 
 google.maps.MapCanvasProjection.prototype.fromLatLngToContainerPixel = function(gll) {
-	return this.map.ol.map.getViewPortPxFromLonLat(google.maps.LatLng.toLonLat(gll));
+	return this.map.ol.map.getViewPortDecimalPxFromLonLat(google.maps.LatLng.toLonLat(gll));
 }
 
 google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(px) {
@@ -532,7 +532,7 @@ google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(
 }
 
 google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(gll) {
-	return this.map.ol.map.getLayerPxFromLonLat(google.maps.LatLng.toLonLat(gll));
+	return this.map.ol.map.getLayerDecimalPxFromLonLat(google.maps.LatLng.toLonLat(gll));
 }
 
 google.maps.MapCanvasProjection.prototype.fromDivPixelToLatLng = function(px) {
@@ -634,8 +634,12 @@ google.maps.Poly.prototype.getEditable = function() {
 }
 
 google.maps.Poly.prototype.setPath = function(path) {
+	var removed = false;
 	if(this.path != null) {
-		if(this.map != null) this.map.ol.vectorLayer.removeFeatures([this.ol.vector]);
+		if(this.map != null) {
+			this.map.ol.vectorLayer.removeFeatures([this.ol.vector]);
+			removed = true;
+		}
 		this.ol.vector = null;
 	}
 	var that = this;
@@ -663,6 +667,8 @@ google.maps.Poly.prototype.setPath = function(path) {
 		that.vertices.splice(i);
 		that.updateGeometry();
 	});
+	
+	return removed;
 }
 
 google.maps.Poly.prototype.getPath = function() {
@@ -689,15 +695,17 @@ google.maps.Polygon = function(opts) {
 google.maps.Polygon.prototype = new google.maps.Poly();
 
 google.maps.Polygon.prototype.setPath = function(path) {
-	google.maps.Poly.prototype.setPath.call(this, path);
+	var that = this;
+	var removed = google.maps.Poly.prototype.setPath.call(this, path);
 
 	this.ol.geometry = new OpenLayers.Geometry.LinearRing(this.vertices);
 	
 	if(this.ol.vector == null) {
 		this.ol.vector = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Polygon([this.ol.geometry]), null, this.ol.style);
 		this.ol.vector.goverlay = this;
+		if(removed) window.setTimeout(function() { that.map.ol.vectorLayer.addFeatures([that.ol.vector]); }, 100);
 	}
-	
+
 	this.updateGeometry();
 }
 
@@ -741,6 +749,7 @@ google.maps.Polyline.prototype.setPath = function(path) {
 	if(this.ol.vector == null) {
 		this.ol.vector = new OpenLayers.Feature.Vector(this.ol.geometry, null, this.ol.style);
 		this.ol.vector.goverlay = this;
+		if(this.map != null) this.map.ol.vectorLayer.addFeatures([this.ol.vector]);
 	}
 	
 	this.updateGeometry();
