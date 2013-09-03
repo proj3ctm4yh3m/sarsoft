@@ -117,7 +117,7 @@ public class TileService {
 		}
 		
 		InputStream stream = null;
-		if(url.indexOf("/resource/imagery/tiles/") == 0) {
+		if(url.indexOf("/resource/imagery/local/") == 0) {
 			stream = getLocalImageStream(url.substring(24));
 		} else if(url.indexOf("/") == 0) {
 			stream = getRemoteImageStream("http://localhost:" + RuntimeProperties.getServerPort() + url);

@@ -524,7 +524,7 @@ google.maps.MapCanvasProjection = function(map) {
 }
 
 google.maps.MapCanvasProjection.prototype.fromLatLngToContainerPixel = function(gll) {
-	return this.map.ol.map.getViewPortDecimalPxFromLonLat(google.maps.LatLng.toLonLat(gll));
+	return this.map.ol.map.getViewPortPxFromLonLat(google.maps.LatLng.toLonLat(gll));
 }
 
 google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(px) {
@@ -532,7 +532,7 @@ google.maps.MapCanvasProjection.prototype.fromContainerPixelToLatLng = function(
 }
 
 google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(gll) {
-	return this.map.ol.map.getLayerDecimalPxFromLonLat(google.maps.LatLng.toLonLat(gll));
+	return this.map.ol.map.getLayerPxFromLonLat(google.maps.LatLng.toLonLat(gll));
 }
 
 google.maps.MapCanvasProjection.prototype.fromDivPixelToLatLng = function(px) {
