@@ -109,18 +109,12 @@ public class RuntimeProperties {
 					boolean match = false;
 					String template = "/resource/imagery/local/" + layer + "/{Z}/{X}/{Y}";
 					for(MapSource source : mapSources) {
-						if(source.getAlias().equals(layer) || (source.getTemplate() != null && source.getTemplate().startsWith(template))) match = true;
+						if((source.getTemplate() != null && source.getTemplate().startsWith(template))) match = true;
 					}
 					if(!match) {
-						System.out.println("Local map layer \"" + layer + "\" not in sarsoft.properties, adding it automatically.");
-						MapSource source = new MapSource();
-						source.setName(layer);
-						source.setAlias(layer);
-						source.setTemplate(template);
-						source.setType(MapSource.Type.TILE);
-						source.setDescription(layer);
 						File ldir = new File(getProperty("sarsoft.map.localTileStore") + "/" + layer);
 						String[] levels = ldir.list();
+						if(levels == null) continue;
 						int max = 0;
 						int min = 32;
 						for(String level : levels) {
@@ -131,6 +125,14 @@ public class RuntimeProperties {
 							} catch (Exception e) {
 							}
 						}
+						if(max < min) continue;
+						System.out.println("Layer template " + template + " not found in sarsoft.properties, automatically adding / updating . . .");
+						MapSource source = new MapSource();
+						source.setName(layer);
+						source.setAlias(layer);
+						source.setTemplate(template + ".png");
+						source.setType(MapSource.Type.TILE);
+						source.setDescription(layer);
 						source.setMaxresolution(max);
 						source.setMinresolution(min);
 						source.setDate(32000);
@@ -140,6 +142,7 @@ public class RuntimeProperties {
 							source.setAlphaOverlay(Boolean.valueOf(lprops.getProperty("alphaOverlay")));
 							source.setData(Boolean.valueOf(lprops.getProperty("data")));
 							source.setInfo(lprops.getProperty("info"));
+							if(Boolean.valueOf(lprops.getProperty("jpg"))) source.setTemplate(template + ".jpg");
 							if(source.isAlphaOverlay()) {
 								int opacity = 100;
 								String opacitystr = lprops.getProperty("opacity");
@@ -150,7 +153,17 @@ public class RuntimeProperties {
 							if(name != null && name.length() > 0) source.setName(name);
 						} catch (Exception e) {
 						}
-						mapSources.add(source);
+						
+						MapSource existing = null;
+						for(MapSource comparison : mapSources) {
+							if(comparison.getAlias().equals(source.getAlias())) existing = comparison;
+						}
+						if(existing != null) {
+							mapSources.set(mapSources.indexOf(existing), source);
+						} else {
+							mapSources.add(source);
+						}
+						
 					}
 				}
 			}
