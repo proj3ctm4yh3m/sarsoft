@@ -134,7 +134,7 @@ public class ImageryController extends JSONBaseController {
 	
 	@RequestMapping(value="/resource/imagery/local/{alias}/{z}/{x}/{y}.{ext}", method = RequestMethod.GET)
 	public void getLocalTile(HttpServletResponse response, @PathVariable("alias") String alias, @PathVariable("z") int z, @PathVariable("x") int x, @PathVariable("y") int y, @PathVariable("ext") String ext) {
-		respond(tileservice.getImage("/resource/imagery/tiles/" + alias + "/" + z + "/" + x + "/" + y + "." + ext, false), response);
+		respond(tileservice.getImage("/resource/imagery/local/" + alias + "/" + z + "/" + x + "/" + y + "." + ext, false), response);
 	}
 
 	@RequestMapping(value="/resource/imagery/compositetile/{layers}/{z}/{x}/{y}.png", method = RequestMethod.GET)

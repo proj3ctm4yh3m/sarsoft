@@ -1,6 +1,7 @@
 package org.sarsoft.imaging;
 
 import org.sarsoft.common.gpx.StyledGeoObject;
+import org.sarsoft.common.util.RuntimeProperties;
 
 public class PDFPage {
 	
@@ -14,7 +15,7 @@ public class PDFPage {
 	public float pdf_dpi = 72f;
 	public float img_dpi = 200f;
 	public float img_dpi_target = 200f;
-	public int px_limit = 3800;
+	public int px_limit = Integer.parseInt(RuntimeProperties.getProperty("sarsoft.pdf.pxlimit"));
 	public float in_base_height = 0.75f;
 	
 	public float px_multiplier;
