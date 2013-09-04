@@ -1,0 +1,9 @@
+Sarsoft v1.0 pre-release (No PDF)
+
+This is a pre-release version that may contain undiscovered bugs, especially in offline mode where it doesn't see as much testing.
+If you need help, or to report a bug, contact Matt Jacobs via the sarsoft.googlecode.com site.
+This open source release lacks some features, notably PDF generation.  Search and Rescue teams and other first responder
+organizations can request a free copy of the closed source, PDF enabled version.
+
+Check in at the end of September for the final release of 1.0.
+
