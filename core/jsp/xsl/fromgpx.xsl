@@ -2,7 +2,7 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:param name="template"/>
 
-<xsl:template match="/*[local-name()='kml']/*[local-name()='Document']">
+<xsl:template match="/*[local-name()='kml']">
 <a>
 	<e class="object">
 		<type type="string">null</type>
@@ -162,7 +162,14 @@
 	<type type="string">waypoint</type>
 	<xsl:call-template name="KMLStyle"/>
 	<position>
-		<lat type="number"><xsl:value-of select="substring-before(substring-after($coordinates, ','), ',')"/></lat>
+		<xsl:choose>
+			<xsl:when test="string-length(substring-before(substring-after($coordinates, ','), ',')) &gt; 0">
+				<lat type="number"><xsl:value-of select="substring-before(substring-after($coordinates, ','), ',')"/></lat>
+			</xsl:when>
+			<xsl:otherwise>
+				<lat type="number"><xsl:value-of select="substring-after($coordinates, ',')"/></lat>
+			</xsl:otherwise>
+		</xsl:choose>
 		<lng type="number"><xsl:value-of select="substring-before($coordinates, ',')"/></lng>
 	</position>
 </xsl:template>
