@@ -263,9 +263,9 @@ org.sarsoft.Loader.queue(function() {YAHOO.util.Event.throwErrors = true;});
 
 org.sarsoft.view.CreateSlider = function(container, width) {
 	if(width == null) width = 100;
-	var sliderbg = jQuery('<div class="yui-h-slider" style="background: none; border-bottom: 1px solid #808080; width: ' + (width + 5) + 'px; float: left; margin-left: 5px; height: 6px"></div>');
-	container.append('<div style="float: left"><span style="color: #606060; margin-left: 5px">0</span></div>', sliderbg, '<div style="float: left; margin-left: 5px; color: #606060">100</div>');
-	var sliderthumb = jQuery('<div class="yui-slider-thumb" style="cursor: pointer; width: 5px; height: 12px; top: 0px; background-color: black">&#32;</div>').appendTo(sliderbg);
+	var sliderbg = jQuery('<div class="yui-h-slider" style="background: none; width: ' + (width + 6) + 'px; float: left; margin-left: 2px; height: 6px"><div style="width: ' + width + 'px; height: 6px; margin-left: 6px; border-bottom: 1px solid #808080; background: none"></div></div>');
+	container.append('<div style="float: left"><span style="color: #606060; margin-left: 5px">0</span></div>', sliderbg, '<div style="float: left; margin-left: 7px; color: #606060">100</div>');
+	var sliderthumb = jQuery('<div class="yui-slider-thumb" style="cursor: pointer; width: 12px; height: 12px; top: 0px;"><img style="width: 12px; height: 12px" src="/resource/imagery/icons/circle/5a8ed7.png"/></div>').appendTo(sliderbg);
 	return YAHOO.widget.Slider.getHorizSlider(sliderbg[0], sliderthumb[0], 0, width);
 }
 
@@ -509,9 +509,9 @@ org.sarsoft.view.ContextMenu.prototype.show = function(point, subject, screenxy)
 	this.menu.show();
 }
 
-org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
+org.sarsoft.view.MenuDropdown = function(html, css, parent, auto) {
 	var that = this;
-	this.onShow = onShow;
+	this.auto = auto;
 	var container = jQuery('<span style="position: relative"></span>');
 	var trigger = jQuery('<span style="cursor: pointer"></span>').append(html).appendTo(container);
 	
@@ -528,21 +528,45 @@ org.sarsoft.view.MenuDropdown = function(html, css, parent, onShow) {
 	});
 		
 	this.content = jQuery('<div style="padding-top: 2px"></div>').appendTo(div);
-	var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; padding-right: 5px; padding-left: 5px; font-size: larger">&uarr;</span>').appendTo(this.content);
-	upArrow.click(function() {that.hide()});
-
+	if(!auto) {
+		var upArrow = jQuery('<span style="color: red; font-weight: bold; cursor: pointer; float: right; padding-right: 5px; padding-left: 5px; font-size: larger">&uarr;</span>').appendTo(this.content);
+		upArrow.click(function() {that.hide()});
+	}
+	
 	this.trigger = trigger;
 	this.container = container[0];
 	this.div = div;	
+
+	if(this.auto) {
+		container.mouseover(function() { that.autoshow(); });
+		container.mouseout(function() { that.autohide(); });
+	}
+
 }
+
+org.sarsoft.view.MenuDropdown.prototype.autoshow = function() {
+	if(this.timeout != null) {
+		window.clearTimeout(this.timeout);
+		this.timeout = null;
+	}
+	this.timestamp = new Date().getTime();
+
+	this.show();
+}
+
+org.sarsoft.view.MenuDropdown.prototype.autohide = function() {
+	var that = this;
+	that.timeout = window.setTimeout(function() { that.hide() }, 500);
+}
+
 
 org.sarsoft.view.MenuDropdown.prototype.show = function() {
 	this.div.css("visibility", "visible");
 	if(this.isArrow) this.trigger.html('&uarr;');
-	if(this.onShow != null) this.onShow();
 }
 
 org.sarsoft.view.MenuDropdown.prototype.hide = function() {
+	if(this.auto && this.timestamp != null && (new Date().getTime() - this.timestamp < 400)) return;
 	this.div.css("visibility", "hidden");
 	if(this.isArrow) this.trigger.html('&darr;');
 }
