@@ -276,11 +276,11 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 	this.baseOverlayControls = new Array();
 	this.alphaOverlayBoxes = new Array();
 
-	this.typeDM = new org.sarsoft.view.DropMenu(110);
+	this.typeDM = new org.sarsoft.view.DropMenu(110, true);
 	this.typeDM.change(function() { that.handleLayerChange() });
-
+	
 	this.alphaOverlayPlus = $('<span style="font-size: 110%; color: red; cursor: pointer; padding-left: 3px; padding-right: 3px" title="Add More Layers to Map">+0</span>');
-	this.dd = new org.sarsoft.view.MenuDropdown(this.alphaOverlayPlus, 'width: 20em');
+	this.dd = new org.sarsoft.view.MenuDropdown(this.alphaOverlayPlus, 'width: 20em', null, !org.sarsoft.touch);
 
 	this.div = jQuery('<div style="color: #5a8ed7; background-color: white; font-weight: bold; z-index: 1001; position: absolute; right: 0; top: 0" class="noprint"><img src="' + $.img('blank.gif') + '" style="vertical-align: middle; width: 1px; height: 1.7em"/></div>');
 	this.div.append(this.extras = document.createElement("span"), this.typeDM.container, this.dd.container);
@@ -304,6 +304,11 @@ org.sarsoft.MapOverlayControl = function(map, manager) {
 		}
 	}
 	
+	if(this.typeDM.select != null) {
+		this.typeDM.container.mouseover(function() { that.dd.autoshow(); });
+		this.typeDM.container.mouseout(function() { that.dd.autohide(); });
+	}
+	
 	map._overlaycontrol = this;
 	this.div.appendTo(map.getDiv());	
 	this.resetMapTypes();
@@ -318,6 +323,7 @@ org.sarsoft.MapOverlayControl.prototype.addOverlayControl = function() {
 
 	control.sliderContainer = jQuery('<div style="float: left;"><span style="float: left">Enter % or:</span></div>');
 	control.slider = org.sarsoft.view.CreateSlider(control.sliderContainer);
+
 	control.slider.subscribe('change', function() {
 		if(!that._inSliderSet) {
 			that._inSliderHandler = true;
@@ -326,14 +332,14 @@ org.sarsoft.MapOverlayControl.prototype.addOverlayControl = function() {
 			that._inSliderHandler = false;
 		}
 	});
-
+	
 	control.input.change(function() { that.handleLayerChange() });
 	control.dm.change(function() { that._inSliderHandler = true; that.handleLayerChange(); that._inSliderHandler = false; });
 
 	control.div = $('<div style="clear: both"></div>').append($('<div style="float: left; padding-top: 2px; padding-bottom: 2px"></div>').append(control.dm.container, "@", control.input, "%")).append(
 		$('<div style="clear: both; height: 15px; padding-left: 16px"></div>').append(control.sliderContainer)).appendTo(this.baseOverlayContainer);
 
-	$('<div style="cursor: pointer; float: left; font-weight: bold; color: red; width: 16px; text-align: center; padding-top: 7px">X</div>').prependTo(control.div).click(function() {
+	$('<div style="cursor: pointer; float: left; font-weight: bold; color: red; width: 16px; text-align: center; padding-top: 7px" title="Remove Layer">X</div>').prependTo(control.div).click(function() {
 		control.remove();
 	});
 
