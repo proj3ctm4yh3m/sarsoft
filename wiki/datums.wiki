@@ -1,9 +1,0 @@
-#summary Using non-WGS84 datums with Sarsoft.
-
-= Datums =
-
-Sarsoft's interntal database, your GPS, and the .gpx file format used to move data between Sarsoft and external mapping programs all work off WGS84.  In both Sarsoft and your GPS device, switching the datum only changes how coordinates are displayed, not how they're stored.
-
-This allows you to switch between datums without corrupting existing data, but can also lead to some confusion when comparing waypoints between a GPS and Sarsoft using NAD27.  The official US Government WGS84-NAD27 conversion requires a large set of lookup tables with coordinate offset information; a less accurate approach sometimes used also requires you to know the elevation of a given point.  Sarsoft uses the _abridged Molodensky_ transformation, which uses 5 ellipsoid parameters per datum and doesn't need any additional inputs beyond lat/long.
-
-The upshot of this is that when you transfer a waypoint between your GPS and Sarsoft, both of them know exactly where it is, but each is independently converting the coordinates to NAD27.  If your GPS uses a different conversion method, it will give you a different number.  The real-world difference is small (I've seen 10M listed as the max deviation for the continental US), but since the numbers on the screen will be different, it's easy to think that something's broken if you don't know what's going on behind the scenes.
