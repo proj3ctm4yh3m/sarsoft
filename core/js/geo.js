@@ -137,6 +137,15 @@ GeoUtil.wpts2path = function(waypoints) {
 	return path;
 }
 
+GeoUtil.formatSize = function(km, polygon) {
+	if(polygon) {
+		return Math.round(km*100)/100 + " km&sup2; / " + (Math.round(km*38.61)/100) + "mi&sup2;";
+	} else {
+		return Math.round(km*100)/100 + " km / " + (Math.round(km*62.137)/100) + " mi";
+	}
+}
+
+
 GeoUtil.formatDD = function(deg) {
 	return deg.toFixed(4);
 }

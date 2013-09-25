@@ -239,10 +239,12 @@ org.sarsoft.ShapeDAO.prototype.validate = function(obj, override) {
 	if(obj.formattedSize == null || override) {
 		if(obj.way.polygon) {
 			var area = google.maps.geometry.spherical.computeArea(GeoUtil.wpts2path(obj.way.waypoints))/1000000;
-			obj.formattedSize = Math.round(area*100)/100 + " km&sup2; / " + (Math.round(area*38.61)/100) + "mi&sup2;";
+			obj.formattedSize = GeoUtil.formatSize(area, true);
 		} else {
 			var distance = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(obj.way.waypoints))/1000;
-			obj.formattedSize = Math.round(distance*100)/100 + " km / " + (Math.round(distance*62.137)/100) + " mi";
+			var size = GeoUtil.formatSize(distance, false);
+			if(obj.way.sourceDistance > 0) size = size + ", originally " + GeoUtil.formatSize(obj.way.sourceDistance, false);
+			obj.formattedSize = size;
 		}
 	}
 	return obj;
@@ -454,6 +456,8 @@ org.sarsoft.controller.ShapeController.prototype.show = function(object) {
 	org.sarsoft.MapObjectController.prototype.show.call(this, object);
 
 	var line = this.DNAddLine(object);
+	var size = object.formattedSize;
+	this.dn.lines[object.id].children().first().attr("title", object.formattedSize.replace(/&sup2;/g,"2"));
 	if((object.comments || "").length > 0) this.dn.addComments(object.id, object.comments);
 
 	this.DNAddProfile(object);
