@@ -35,6 +35,7 @@ public class Way extends SarModelObject implements IPreSave {
 	private List<Waypoint> waypoints;
 	private Date updated;
 	private Integer accuracy;
+	private Double sourceDistance = new Double(0);
 
 	@SuppressWarnings("rawtypes")
 	public static Map<String, Class> classHints = new HashMap<String, Class>();
@@ -72,6 +73,7 @@ public class Way extends SarModelObject implements IPreSave {
 			}
 		}
 		this.setAccuracy(updated.getAccuracy());
+		this.setSourceDistance(updated.getSourceDistance());
 	}
 
 	@JSONSerializable
@@ -151,6 +153,9 @@ public class Way extends SarModelObject implements IPreSave {
 	}
 
 	public void filter(int epsilon) {
+		if(this.sourceDistance == 0) {
+			this.sourceDistance = getDistance();
+		}
 		this.setAccuracy(epsilon);
 		if(waypoints == null) return;	
 		List<Waypoint> filtered = filter(waypoints, epsilon);
@@ -224,6 +229,15 @@ public class Way extends SarModelObject implements IPreSave {
 		distance = distance/1000;
 		distance = Math.round(distance*100);
 		return distance/100;
+	}
+	
+	@JSONSerializable
+	public Double getSourceDistance() {
+		return sourceDistance;
+	}
+	
+	public void setSourceDistance(Double sourceDistance) {
+		this.sourceDistance = sourceDistance;
 	}
 	
 	@Transient

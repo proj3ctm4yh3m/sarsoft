@@ -552,7 +552,10 @@ org.sarsoft.widget.Importer.prototype.clear = function (url) {
 
 org.sarsoft.widget.Importer.prototype.processImportedData = function(data) {
 	for(var name in org.sarsoft.MapState.daos) {
-		if(data[name] && data[name].length > 0) org.sarsoft.MapState.daos[name].sideload(data[name]);
+		if(data[name] && data[name].length > 0) {
+			var message = org.sarsoft.MapState.daos[name].sideload(data[name]);
+			if(message != null && message.length > 0) alert(message);
+		}
 	}
 	$(this).triggerHandler('success');
 }
@@ -2023,6 +2026,23 @@ org.sarsoft.WayObjectDAO.prototype.addBoundingBox = function(way) {
 		if(wpt.lng > bb[1].lng) bb[1].lng = wpt.lng;
 	}
 	way.boundingBox=bb;
+}
+
+org.sarsoft.WayObjectDAO.prototype.sideload = function(data) {
+	org.sarsoft.MapObjectDAO.prototype.sideload.call(this, data);
+	
+	var message = "";
+	for(var i = 0; i < data.length; i++) {
+		var obj = data[i];
+		if(obj[this.wname] == null) continue;
+		var dist = google.maps.geometry.spherical.computeLength(GeoUtil.wpts2path(obj[this.wname].waypoints))/1000;
+		if(dist + 0.1 < obj[this.wname].sourceDistance) {
+			if(message.length == 0) message = "The following paths were smoothed out, giving smaller distances when viewed on " + sarsoft.version + ":\n\n";
+			message = message + obj[this.label] + ": " + (Math.round(obj[this.wname].sourceDistance*62.137)/100) + "mi -> " + Math.round(dist*62.137)/100 + "mi\n";
+		}
+	}
+	
+	return message;
 }
 
 org.sarsoft.WayObjectDAO.prototype.validate = function(obj, override) {

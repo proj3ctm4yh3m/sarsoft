@@ -173,10 +173,22 @@ public class Shape extends GeoMapObject implements IPreSave {
 	public String getFormattedSize() {
 		if(way.isPolygon()) {
 			double area = way.getArea();
-			return area + " km&sup2; / " + (((double) Math.round(area*38.61))/100) + "mi&sup2;";
+			return format(area, true);
 		} else {
 			double distance = way.getDistance();
-			return distance + " km / " + (((double) Math.round(distance*62.137))/100) + " mi";
+			String size = format(distance, false);
+			if(way.getSourceDistance() > 0) {
+				size = size + ", originally " + format(way.getSourceDistance(), false);
+			}
+			return size;
+		}
+	}
+	
+	private String format(double km, boolean polygon) {
+		if(polygon) {
+			return km + " km&sup2; / " + (((double) Math.round(km*38.61))/100) + "mi&sup2;";
+		} else {
+			return km + " km / " + (((double) Math.round(km*62.137))/100) + " mi";
 		}
 	}
 	
