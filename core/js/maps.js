@@ -1722,6 +1722,7 @@ org.sarsoft.FreehandDrawingManager.prototype.setDrawingMode = function(mode) {
 	var that = this;
 	this.mode = mode;
 	if(mode == null) {
+		this.imap.tooltip();
 		if(this.polyline != null) this._complete();
 		org.sarsoft.async(function() { that.map.setOptions({draggable: true, disableDoubleClickZoom: false}) });
 		this.actions = null;
@@ -1732,7 +1733,7 @@ org.sarsoft.FreehandDrawingManager.prototype.setDrawingMode = function(mode) {
 		for(var key in this.handlers) div.unbind(key, this.handlers[key]);
 		$(document.body).unbind("keydown", this.handler_keydown);
 	} else {
-		this.imap.message("Click=draw, ESC=undo, Shift Click=freehand, Double Click=end", 8000);
+		this.imap.tooltip("Click=draw, ESC=undo, Shift Click=freehand, Double Click=end");
 		this.map.setOptions({draggable: false, disableDoubleClickZoom: true});
 		this.map.setOptions({draggableCursor: 'crosshair'});
 
@@ -1745,6 +1746,7 @@ org.sarsoft.FreehandDrawingManager.prototype.setDrawingMode = function(mode) {
 }
 
 org.sarsoft.FreehandDrawingManager.prototype.undo = function() {
+	this.imap.tooltip();
 	if(this.actions != null && this.actions.length > 0) {
 		var idx = this.actions.pop();
 		var path = this.polyline.getPath();
@@ -1770,6 +1772,7 @@ org.sarsoft.FreehandDrawingManager.prototype.undo = function() {
 }
 
 org.sarsoft.FreehandDrawingManager.prototype._addPoint = function(gll, check) {
+	this.imap.tooltip();
 	var that = this;
 	if(this.polyline == null) {
 		var opts = new Object();
@@ -1816,6 +1819,7 @@ org.sarsoft.FreehandDrawingManager.prototype._updateLast = function(gll) {
 }
 
 org.sarsoft.FreehandDrawingManager.prototype._complete = function() {
+	this.imap.tooltip();
 	if(this.polyline == null) return;
 	var path = this.polyline.getPath();
 	while(path.getLength() > 1 && path.getAt(0).equals(path.getAt(1))) path.removeAt(0);
@@ -1874,7 +1878,6 @@ org.sarsoft.ProjectionCaptureOverlay.prototype.draw = function() {
 	this.imap.projection = this.getProjection();
 }
 
-
 org.sarsoft.InteractiveMap = function(map, options) {
 	var that = this;
 	this.map = map;
@@ -1889,6 +1892,7 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	this._contextMenu._vertex;
 	this._nextID = 0;
 	this._menuItems = [{ text: "Delete Vertex", applicable: function() {var g = that._contextMenu._gmapobj; return g != null && g.getEditable != null && g.getEditable() && that._contextMenu._vertex != null && (g.getPath().getLength() > 3 || (g.getPath().getLength() > 2 && g.getPaths == null)) }, handler: function(obj) { that._contextMenu._gmapobj.getPath().removeAt(that._contextMenu._vertex); } }];
+	this._tooltip = new YAHOO.widget.Tooltip("imaptt" + org.sarsoft.InteractiveMap._mapID++, { context: map.getDiv(), text: "", showDelay: 50, hideDelay: 50, disabled: true });
 
 	this._menuItemsOverride = null;
 	this.registered = new Object();
@@ -1943,7 +1947,10 @@ org.sarsoft.InteractiveMap = function(map, options) {
 	if(options.UTM) new org.sarsoft.UTMGridControl(this);
 
 	$(map.getDiv()).addClass("printnotransform");
+	
 }
+
+org.sarsoft.InteractiveMap._mapID = 0;
 
 org.sarsoft.InteractiveMap.prototype.checkID = function(obj) {
 	if(obj.id != null) {
@@ -2472,6 +2479,21 @@ org.sarsoft.InteractiveMap.prototype.growInitialMap = function(gll) {
 
 org.sarsoft.InteractiveMap.prototype.message = function(msg, delay) {
 	this._infomessage(msg, delay);
+}
+
+org.sarsoft.InteractiveMap.prototype.tooltip = function(msg, delay) {
+	var that = this;
+	if(this.tooltip_timer != null) window.clearTimeout(this.toolip_timer);
+	if(this._tooltip.cfg == null) return;
+	
+	if(msg == null || msg.length == 0) {
+		this._tooltip.cfg.setProperty('disabled', true);
+	} else {
+		this._tooltip.cfg.setProperty('text', msg);
+		this._tooltip.cfg.setProperty('disabled', false);
+		this.tooltip_timer = window.setTimeout(function() { that.tooltip(null); }, delay || 10000);
+	}
+	
 }
 
 org.sarsoft.InteractiveMap.prototype.register = function(type, controller) {
