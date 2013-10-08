@@ -1752,7 +1752,7 @@ org.sarsoft.MapObjectDN.prototype.addIconEdit = function(id, handler) {
 }
 
 org.sarsoft.MapObjectDN.prototype.addIconDelete = function(id, handler) {
-	this.addIcon(id, "Edit", '<span style="font-weight: bold; color: red">-</span>', handler);
+	this.addIcon(id, "Delete", '<span style="font-weight: bold; color: red">-</span>', handler);
 }
 
 org.sarsoft.MapObjectDN.prototype.addComments = function(id, comments) {
