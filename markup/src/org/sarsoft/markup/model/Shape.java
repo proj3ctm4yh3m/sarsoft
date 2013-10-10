@@ -177,7 +177,7 @@ public class Shape extends GeoMapObject implements IPreSave {
 		} else {
 			double distance = way.getDistance();
 			String size = format(distance, false);
-			if(way.getSourceDistance() > 0) {
+			if(way.getSourceDistance() != null && way.getSourceDistance() > 0) {
 				size = size + ", originally " + format(way.getSourceDistance(), false);
 			}
 			return size;
