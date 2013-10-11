@@ -435,7 +435,7 @@ org.sarsoft.AssignmentController = function(imap, background_load) {
 	});
 
 	var line = $('<div style="clear: both">Color By:</div>').appendTo(this.configDiv);
-	this.s_color = $('<select style="float: right"><option value="NA">N/A</option><option value="id">Random</option><option value="color_type">Resource Type</option><option value="probability">POD</option><option value="status">Status</option></select>').appendTo(line).change(function() {
+	this.s_color = $('<select style="float: right"><option value="NA">N/A</option><option value="id">Random</option><option value="type">Resource Type</option><option value="probability">POD</option><option value="status">Status</option></select>').appendTo(line).change(function() {
 		that.config.color = that.s_color.val();
 		that.handleSetupChange(true);
 	});
