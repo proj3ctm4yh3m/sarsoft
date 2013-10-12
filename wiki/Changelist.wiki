@@ -1,5 +1,13 @@
 #summary Changelist and migration instructions
 
+= Version 13.10 =
+
+Beginning October 2013, Sarsoft will move to a year-month versioning system.  As development increasingly focused on caltopo.com and sartopo.com, maintaining major-minor versions proved to be too much work and caused a growing rift between the last major release of Sarsoft and the currently deployed versions.
+
+The most prominent change between 0.9 and 13.10 is that numerous SAR-related pages have been removed and streamlined into a single, map-focused UI.  This makes the SAR interface a direct extension of the non-SAR UI available on CalTopo, and should make moving between the two systems more intuitive.
+
+Starting with 13.10, releases will be more frequent, backwards compatibility will be guaranteed and old versions will not be maintained - bugfixes will be supplied by upgrading to the latest version.
+
 = Version 0.9 =
 ==Major changes for 0.9==
  * Added left nav bar to map pages
