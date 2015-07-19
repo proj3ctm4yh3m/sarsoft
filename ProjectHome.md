@@ -1,0 +1,3 @@
+Sarsoft is a mapping and planning tool for volunteer Search and Rescue teams.  It is a self-contained web application that allows multiple clients to work on the same dataset **with no internet connection**.
+
+As of October 2013, and in part due to concerns about Google Code's long term future, Sarsoft has a new home at [sarsoft.org](http://sarsoft.org).  The current Google Code project will remain in place but is essentially deprecated.
